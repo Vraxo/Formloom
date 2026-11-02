@@ -68,3 +68,7 @@ Versions are centrally managed; no selected stack dependency was substituted:
 Core, renderer, desktop host and integrated generation/save UI passed Linux Release CI in PRs #4–#7. CI does not verify native Windows/WebView2 behavior. Require **Linux / Release** in `main` branch protection to enforce it; obsolete Windows check requirements should be removed.
 
 The agent sandbox is Debian 12 without a .NET SDK; per user direction, SDK-based validation is delegated to CI. GitHub's redirected artifact storage is inaccessible from this sandbox, so the generated PNG has not been visually inspected here. Download `procedural-preview` from Actions or inspect the generated preview in the Windows app. Do not mark visual acceptance complete based only on tests.
+
+## Current visual-polish pass
+
+Review of the user-provided seed-42 PNG confirmed a recognizable opaque apple, but identified weak grounding and a flat stem socket. The current renderer changes soften the broad cast shadow, add localized elliptical contact shadows beneath both lower lobes, replace the flat socket oval with a clipped, fading indentation, and draw a tapered, shaded stem with a subtle bark ridge. Wood grain, apple highlight, scene inputs and named random streams are unchanged. Contact-shadow tests are added; execution and before/after visual approval remain pending. Existing outputs will change with this renderer build while same-build repeatability is preserved.

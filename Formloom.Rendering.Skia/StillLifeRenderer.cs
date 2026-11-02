@@ -85,17 +85,13 @@ public static class StillLifeRenderer
         var left = centerX - (width / 2);
         var bottom = top + height;
         using var paint = new SKPaint { IsAntialias = true };
-        using var blur = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 19);
+        using var blur = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 14);
         paint.MaskFilter = blur;
-        paint.Color = new SKColor(12, 20, 17, 105);
-        canvas.DrawOval(centerX - (scene.LightDirection.X * 85), bottom + 8, width * 0.65f, 33, paint);
+        paint.Color = new SKColor(12, 20, 17, 80);
+        canvas.DrawOval(centerX - (scene.LightDirection.X * 65), bottom + 3, width * 0.55f, 24, paint);
         paint.MaskFilter = null;
-        using var contact = SKShader.CreateRadialGradient(
-            new SKPoint(centerX, bottom - 1), width * 0.42f,
-            [new SKColor(23, 18, 12, 160), new SKColor(23, 18, 12, 0)], null, SKShaderTileMode.Clamp);
-        paint.Shader = contact;
-        canvas.DrawOval(centerX, bottom, width * 0.42f, 16, paint);
-        paint.Shader = null;
+        DrawContactShadow(canvas, centerX - (width * 0.13f), bottom - (height * 0.009f), width * 0.22f, height * 0.035f);
+        DrawContactShadow(canvas, centerX + (width * 0.13f), bottom - (height * 0.005f), width * 0.23f, height * 0.035f);
         canvas.Save();
         canvas.Translate(left, top);
         canvas.Scale(width, height);
@@ -144,19 +140,8 @@ public static class StillLifeRenderer
         canvas.DrawRect(0, 0, 1, 1, paint);
         paint.Shader = null;
         canvas.Restore();
-        paint.Color = new SKColor(61, 34, 19, 160);
-        canvas.DrawOval(0.5f, 0.08f, 0.095f, 0.022f, paint);
-        paint.Color = new SKColor(84, 55, 29);
-        paint.Style = SKPaintStyle.Stroke;
-        paint.StrokeWidth = 0.027f;
-        paint.StrokeCap = SKStrokeCap.Round;
         var stemX = 0.5f + ((float)apple.StemLean * 0.2f);
-        using var stemBuilder = new SKPathBuilder();
-        stemBuilder.MoveTo(0.5f, 0.08f);
-        stemBuilder.CubicTo(0.49f, 0.025f, stemX, -0.035f, stemX, -0.12f);
-        using var stem = stemBuilder.Detach();
-        canvas.DrawPath(stem, paint);
-        paint.Style = SKPaintStyle.Fill;
+        DrawStemAttachment(canvas, shape, stemX);
         canvas.Save();
         canvas.Translate(stemX, -0.075f);
         canvas.RotateDegrees((float)(apple.LeafAngle * 180 / Math.PI));
@@ -184,6 +169,59 @@ public static class StillLifeRenderer
 
         canvas.Restore();
         canvas.Restore();
+    }
+
+    private static void DrawContactShadow(SKCanvas canvas, float x, float y, float radiusX, float radiusY)
+    {
+        canvas.Save();
+        canvas.Translate(x, y);
+        canvas.Scale(radiusX, radiusY);
+        using var gradient = SKShader.CreateRadialGradient(
+            SKPoint.Empty, 1,
+            [new SKColor(20, 15, 10, 205), new SKColor(20, 15, 10, 85), new SKColor(20, 15, 10, 0)],
+            [0f, 0.38f, 1f], SKShaderTileMode.Clamp);
+        using var paint = new SKPaint { IsAntialias = true, Color = SKColors.White, Shader = gradient };
+        canvas.DrawOval(0, 0, 1, 1, paint);
+        canvas.Restore();
+    }
+
+    private static void DrawStemAttachment(SKCanvas canvas, SKPath body, float stemX)
+    {
+        using var paint = new SKPaint { IsAntialias = true, Color = SKColors.White };
+        canvas.Save();
+        canvas.ClipPath(body);
+        canvas.Translate(0.5f, 0.08f);
+        canvas.Scale(0.115f, 0.055f);
+        using var indentation = SKShader.CreateRadialGradient(
+            SKPoint.Empty, 1,
+            [new SKColor(48, 23, 14, 195), new SKColor(69, 26, 17, 95), new SKColor(69, 26, 17, 0)],
+            [0f, 0.35f, 1f], SKShaderTileMode.Clamp);
+        paint.Shader = indentation;
+        canvas.DrawOval(0, 0, 1, 1, paint);
+        canvas.Restore();
+        using var stemBuilder = new SKPathBuilder();
+        stemBuilder.MoveTo(0.485f, 0.08f);
+        stemBuilder.CubicTo(0.475f, 0.025f, stemX - 0.012f, -0.04f, stemX - 0.009f, -0.12f);
+        stemBuilder.QuadTo(stemX, -0.129f, stemX + 0.009f, -0.12f);
+        stemBuilder.CubicTo(stemX + 0.008f, -0.035f, 0.509f, 0.025f, 0.515f, 0.08f);
+        stemBuilder.QuadTo(0.5f, 0.098f, 0.485f, 0.08f);
+        stemBuilder.Close();
+        using var stem = stemBuilder.Detach();
+        using var bark = SKShader.CreateLinearGradient(
+            new SKPoint(stemX - 0.018f, 0), new SKPoint(stemX + 0.025f, 0),
+            [new SKColor(133, 94, 49), new SKColor(72, 45, 24), new SKColor(45, 31, 20)],
+            null, SKShaderTileMode.Clamp);
+        paint.Shader = bark;
+        canvas.DrawPath(stem, paint);
+        paint.Shader = null;
+        paint.Color = new SKColor(170, 129, 72, 150);
+        paint.Style = SKPaintStyle.Stroke;
+        paint.StrokeWidth = 0.003f;
+        using var ridgeBuilder = new SKPathBuilder();
+        ridgeBuilder.MoveTo(0.494f, 0.06f);
+        ridgeBuilder.CubicTo(0.485f, 0.02f, stemX - 0.006f, -0.04f, stemX - 0.004f, -0.105f);
+        using var ridge = ridgeBuilder.Detach();
+        canvas.DrawPath(ridge, paint);
     }
 
     private static SKColor Lighten(SKColor color) => new(
