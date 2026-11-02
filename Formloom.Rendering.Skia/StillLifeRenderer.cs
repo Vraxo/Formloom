@@ -39,12 +39,13 @@ public static class StillLifeRenderer
             new SKPoint(0, horizon), new SKPoint(200, 1024),
             [new SKColor(161, 111, 68), new SKColor(105, 64, 38)], null, SKShaderTileMode.Clamp);
         paint.Shader = wood;
-        using var table = new SKPath();
-        table.MoveTo(0, horizon + 20);
-        table.LineTo(1024, horizon - 20);
-        table.LineTo(1024, 1024);
-        table.LineTo(0, 1024);
-        table.Close();
+        using var tableBuilder = new SKPathBuilder();
+        tableBuilder.MoveTo(0, horizon + 20);
+        tableBuilder.LineTo(1024, horizon - 20);
+        tableBuilder.LineTo(1024, 1024);
+        tableBuilder.LineTo(0, 1024);
+        tableBuilder.Close();
+        using var table = tableBuilder.Detach();
         canvas.DrawPath(table, paint);
         canvas.Save();
         canvas.ClipPath(table);
@@ -53,13 +54,14 @@ public static class StillLifeRenderer
         var random = Pcg32.ForStream(scene.Seed, "table.grain");
         for (var index = 0; index < 220; index++)
         {
-            var y = horizon + (float)random.NextDouble() * (1050 - horizon);
-            var bend = 6 + (float)random.NextDouble() * 24;
+            var y = horizon + ((float)random.NextDouble() * (1050 - horizon));
+            var bend = 6 + ((float)random.NextDouble() * 24);
             paint.Color = new SKColor(62, 33, 18, (byte)(12 + (scene.GrainStrength * 65)));
-            paint.StrokeWidth = 0.5f + (float)random.NextDouble() * 2;
-            using var grain = new SKPath();
-            grain.MoveTo(-20, y);
-            grain.CubicTo(260, y - bend, 650, y + bend, 1050, y - 38);
+            paint.StrokeWidth = 0.5f + ((float)random.NextDouble() * 2);
+            using var grainBuilder = new SKPathBuilder();
+            grainBuilder.MoveTo(-20, y);
+            grainBuilder.CubicTo(260, y - bend, 650, y + bend, 1050, y - 38);
+            using var grain = grainBuilder.Detach();
             canvas.DrawPath(grain, paint);
         }
 
@@ -98,14 +100,15 @@ public static class StillLifeRenderer
         canvas.Translate(left, top);
         canvas.Scale(width, height);
         var asymmetry = (float)apple.Asymmetry;
-        using var shape = new SKPath();
-        shape.MoveTo(0.5f, 0.08f);
-        shape.CubicTo(0.25f, -0.06f, -0.06f, 0.12f, 0.025f, 0.47f);
-        shape.CubicTo(0.06f, 0.73f, 0.17f, 1.04f, 0.38f, 0.98f);
-        shape.CubicTo(0.47f, 0.95f, 0.51f, 1.02f, 0.63f, 0.985f);
-        shape.CubicTo(0.85f + asymmetry, 1.01f, 0.99f, 0.66f, 0.985f, 0.38f);
-        shape.CubicTo(1.01f, 0.08f, 0.75f, -0.065f, 0.5f, 0.08f);
-        shape.Close();
+        using var shapeBuilder = new SKPathBuilder();
+        shapeBuilder.MoveTo(0.5f, 0.08f);
+        shapeBuilder.CubicTo(0.25f, -0.06f, -0.06f, 0.12f, 0.025f, 0.47f);
+        shapeBuilder.CubicTo(0.06f, 0.73f, 0.17f, 1.04f, 0.38f, 0.98f);
+        shapeBuilder.CubicTo(0.47f, 0.95f, 0.51f, 1.02f, 0.63f, 0.985f);
+        shapeBuilder.CubicTo(0.85f + asymmetry, 1.01f, 0.99f, 0.66f, 0.985f, 0.38f);
+        shapeBuilder.CubicTo(1.01f, 0.08f, 0.75f, -0.065f, 0.5f, 0.08f);
+        shapeBuilder.Close();
+        using var shape = shapeBuilder.Detach();
         var baseColor = apple.Color switch
         {
             AppleColor.Green => new SKColor(112, 153, 42),
@@ -144,19 +147,21 @@ public static class StillLifeRenderer
         paint.StrokeWidth = 0.027f;
         paint.StrokeCap = SKStrokeCap.Round;
         var stemX = 0.5f + ((float)apple.StemLean * 0.2f);
-        using var stem = new SKPath();
-        stem.MoveTo(0.5f, 0.08f);
-        stem.CubicTo(0.49f, 0.025f, stemX, -0.035f, stemX, -0.12f);
+        using var stemBuilder = new SKPathBuilder();
+        stemBuilder.MoveTo(0.5f, 0.08f);
+        stemBuilder.CubicTo(0.49f, 0.025f, stemX, -0.035f, stemX, -0.12f);
+        using var stem = stemBuilder.Detach();
         canvas.DrawPath(stem, paint);
         paint.Style = SKPaintStyle.Fill;
         canvas.Save();
         canvas.Translate(stemX, -0.075f);
         canvas.RotateDegrees((float)(apple.LeafAngle * 180 / Math.PI));
-        using var leaf = new SKPath();
-        leaf.MoveTo(0, 0);
-        leaf.CubicTo(0.1f, -0.13f, 0.24f, -0.1f, 0.36f, 0.01f);
-        leaf.CubicTo(0.22f, 0.10f, 0.07f, 0.10f, 0, 0);
-        leaf.Close();
+        using var leafBuilder = new SKPathBuilder();
+        leafBuilder.MoveTo(0, 0);
+        leafBuilder.CubicTo(0.1f, -0.13f, 0.24f, -0.1f, 0.36f, 0.01f);
+        leafBuilder.CubicTo(0.22f, 0.10f, 0.07f, 0.10f, 0, 0);
+        leafBuilder.Close();
+        using var leaf = leafBuilder.Detach();
         using var leafShader = SKShader.CreateLinearGradient(
             new SKPoint(0, -0.08f), new SKPoint(0, 0.08f),
             [new SKColor(112, 151, 58), new SKColor(29, 74, 34)], null, SKShaderTileMode.Clamp);
