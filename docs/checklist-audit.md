@@ -2,7 +2,7 @@
 
 This audit supersedes the earlier blanket closure wording. Delivered features, passing tests and general Windows confirmation do **not** mean that every original acceptance checkbox was exercised. Passing appropriately scoped CI tests are the user's routine gate; this document does not request repeated manual testing.
 
-Baseline: PR #12 passed Linux Release build/tests. The new `DesktopPipelineTests` and extra prompt-snapshot assertions in this change are **authored, not yet executed**. They must not be cited as passing until CI runs.
+Baseline: PR #12 passed Linux Release build/tests. `DesktopPipelineTests` and extra prompt-snapshot assertions subsequently passed in [PR #13](https://github.com/Vraxo/Formloom/pull/13). The evidence matrix below is the historical audit that motivated the final closure work; entries describing those tests as newly authored/pending are superseded by that result. New bUnit component tests are now authored but have not executed yet.
 
 ## Audit of the previously unchecked items
 
@@ -35,3 +35,11 @@ Baseline: PR #12 passed Linux Release build/tests. The new `DesktopPipelineTests
 ## Boundary of the routine gate
 
 Run solution-wide Linux Release CI and add regression coverage for changed behavior. Native/UI risks should be disclosed when affected, rather than requesting a full manual pass every time or claiming tests cover everything. No feature expansion is included in this audit. The initial acceptance checklist remains partially verified until its remaining criteria are evidenced or explicitly revised/waived; it is not fully complete just because feature implementation is delivered.
+
+## Approved scope revision after this audit
+
+The user approved adding rendered-component tests, a one-off Debug build, and explicit deferral of genuinely native/manual criteria. The D1–D6 table in [the checklist](../.agents/todo.md) is now the authoritative disposition of those criteria; it replaces the former blanket "not waived" wording with specific approved deferrals. It does not claim those actions were executed.
+
+`AppComponentTests` exercises the actual App Razor component: default inputs, label associations, oninput/form bindings, preview/alt output, validation alerts, preview retention, disabled controls during pending generation/save, Randomize and saved-image metadata after control edits. Session delegates are controlled, so native Photino dialogs are not opened. The actual service/renderer/filesystem integration remains covered separately by existing pipeline/writer tests. Await CI before treating the new component assertions as passing evidence.
+
+The CI workflow has an opt-in `verify_debug` dispatch input. Its existence does not establish a successful Debug build; record execution before closing that gate. No duplicate Debug PR job was added. Future changes use appropriately scoped automated tests as the routine gate, not repeated requests for a full Windows smoke pass.

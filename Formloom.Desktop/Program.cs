@@ -18,6 +18,10 @@ internal static class Program
         builder.Services.AddSingleton<GenerationService>();
         builder.Services.AddSingleton<PngFileWriter>();
         builder.Services.AddSingleton<PngSaveService>();
+        builder.Services.AddTransient<DesktopSession>(services => new DesktopSession(
+            services.GetRequiredService<GenerationService>().GenerateAsync,
+            services.GetRequiredService<PngSaveService>().SaveAsync,
+            services.GetRequiredService<Microsoft.Extensions.Logging.ILogger<DesktopSession>>()));
         builder.RootComponents.Add<App>("#app");
         builder.ConfigureMainWindow(window =>
         {

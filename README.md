@@ -58,6 +58,7 @@ Versions are centrally managed; no selected stack dependency was substituted:
 | PhotinoX.Blazor | 5.3.5 | Native Blazor host and asynchronous save dialog |
 | SkiaSharp | 4.154.0 | CPU raster rendering |
 | SkiaSharp.NativeAssets.Linux.NoDependencies | 4.154.0 | Linux renderer native assets |
+| bunit | 2.13.3 | Rendered Blazor component tests (test-only) |
 | xunit.v3 | 4.0.2 | Tests |
 | Microsoft.Testing.Extensions.TrxReport | 2.5.1 | Native test-runner TRX reports |
 | NewStyleCop.Analyzers | 1.2.1 | Repository analyzer |
@@ -87,3 +88,13 @@ PR #12 passed the solution-wide Linux Release build and tests in 33 seconds, inc
 ## Checklist evidence audit
 
 The initial checklist is **partially verified**, not fully closed. See [the audit](docs/checklist-audit.md) for a criterion-by-criterion mapping to passing tests, source evidence and native/UI gaps. Newly authored full-resolution session/pipeline tests and prompt-snapshot assertions are pending CI; they must not be described as executed yet. This does not change the routine Release-only CI gate or request repeated manual testing.
+
+## Final acceptance-closure work (execution pending)
+
+The user approved a revised acceptance scope: add rendered UI tests, verify Debug once without a permanent Debug PR job, and explicitly defer the native/manual cases. App now receives its existing `DesktopSession` from DI; production creates it from the real generation/save services, while bUnit supplies controlled session delegates to exercise actual Razor bindings and markup. Tests dispatch input/form/button events and assert previews, error alerts, disabled states, labels and save metadata. They do not measure browser layout, native dialogs or full accessibility.
+
+bUnit **2.13.3** is a new test-only dependency, added for this concrete gap. It is not a UI framework substitution. The preceding real pipeline tests passed PR #13; the new component tests and this DI adjustment still require CI execution.
+
+To verify Debug once, manually dispatch **CI**, select the branch containing this workflow and enable **verify_debug**. It restores once, builds Debug with warnings as errors, then runs the normal Release build/tests in the same Ubuntu job. Ordinary PRs and main pushes still perform only Release validation. Record the run URL before declaring Debug verified.
+
+The acceptance-scope table and pending execution gates are in [the checklist](.agents/todo.md). Native resizing/lifecycle, full accessibility/timing, Linux GUI startup, desktop-viewer/dialog exercises and a full app screenshot are explicitly deferred—not represented as tested. Completion under the revised scope still requires passing component/Release tests and the one-off Debug build. No broader feature work is included.

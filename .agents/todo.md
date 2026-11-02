@@ -206,9 +206,9 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
 - [x] Add a soft cast/contact shadow that anchors the apple to the table.
 - [x] Add any subtle ambient shading needed to make the scene feel integrated. Avoid excessive blur, bloom or decorative effects.
 - [x] Check object scale, margins, focal placement and negative space at the target resolution.
-- [ ] Render at the default size and at one smaller/larger size to verify that geometry and composition scale correctly.
+- [x] Verify render/decode dimensions at default, smaller/larger and rectangular sizes, plus unchanged normalized composition (passing renderer/Core tests). Visual comparison at non-default sizes is deferred under D1.
   - [x] Automated render/decode dimensions at multiple sizes and normalized scene geometry are covered by passing tests.
-  - [ ] Visual inspection of non-default-size composition remains unverified.
+  > **Deferred — D1: non-default-size and controlled low/high visual review.** This original manual clause was not individually executed; see the acceptance scope below.
 - [x] Inspect the actual PNG visually. Iterate on obvious defects such as tangencies, awkward overlaps, flat shading, distracting grain or inconsistent light direction.
 
 **Done when:** The complete result looks intentional and finished enough to be a useful first generator output, not merely a technical proof that drawing calls work.
@@ -238,10 +238,10 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
 > Renderer review status: PR #5 passed Linux CI; attempted to download its `procedural-preview` artifact, but the sandbox cannot access the redirected Azure artifact host (EOF). This limitation was later bypassed for visual review by user-uploaded PNGs; the CI artifact is still available outside this sandbox.
 
 - [x] Create a minimal `Formloom.Desktop` PhotinoX.Blazor application using the package's current documented startup API.
-- [ ] Use PhotinoX.Blazor 5.3.5, not the older original `Photino.Blazor` package. Confirm the correct native runtime assets are present for the development OS.
+- [x] Use PhotinoX.Blazor 5.3.5 and usable Windows runtime assets, evidenced by the central package and user-confirmed native Windows use. Linux native GUI launch is outside this acceptance scope (D2).
 - [x] Configure the native window title as `Formloom` and choose a sensible initial desktop size (approximately 1400 × 900).
 - [x] Register the Blazor root component and display a simple Formloom page.
-- [ ] Launch the native window and verify that the page loads, static CSS/JS assets resolve, and the app closes cleanly.
+- [x] Launch the native Windows app and use its Blazor page, as user-confirmed. Detailed lifecycle verification is deferred under D3, not claimed complete.
 
 **Done when:** A working Formloom desktop window launches before the generator is wired into it.
 
@@ -252,7 +252,7 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
 - [x] Prefill the prompt with `a red apple on a wooden table` and the seed with a fixed, reproducible value such as `42`.
 - [x] Display the selected seed and variation value clearly. The user must be able to edit the seed directly.
 - [x] Include a useful empty/initial preview state before the first generation.
-- [ ] Keep the layout responsive to ordinary desktop window resizing. Do not build a full scene-tree inspector, layer editor or history panel yet.
+> **Deferred — D3: native resizing/lifecycle verification; responsive CSS is implemented, not measured.** This original manual clause was not individually executed; see the acceptance scope below.
 
 **Done when:** The UI exposes every control needed to exercise the first vertical slice, even before generation is connected.
 
@@ -263,9 +263,9 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
 - [x] On Generate, pass the prompt, seed, variation and target dimensions through the pipeline and display the returned PNG in the preview.
 - [x] Show a clear, human-readable validation message for unsupported prompts. Keep the previous successful image visible when a later prompt fails, unless there is a compelling usability reason to clear it.
 - [x] Disable or guard duplicate Generate actions while a generation is in progress. Show a simple generating state and restore the controls on success or failure.
-- [ ] Keep the UI responsive. If rendering can block the UI thread perceptibly, run the CPU work off the UI thread and marshal only the final state update back to the component context.
+- [x] Run CPU generation through `Task.Run` and preserve asynchronous session guards (source plus passing service/session tests). Native responsiveness/timing measurement is deferred under D4.
   - [x] Generation uses `Task.Run`; pending-work session tests pass.
-  - [ ] Actual UI responsiveness/dispatcher behavior is not measured by these tests.
+  > **Deferred — D4: native timing/responsiveness measurement.** This original manual clause was not individually executed; see the acceptance scope below.
 - [x] Make Randomize Seed choose a new seed, display it, and make it easy to generate that variation. It must not silently change the seed during a supposedly deterministic generation.
 
 **Done when:** Clicking Generate in the desktop app produces and displays the image created by the actual Core + Skia pipeline.
@@ -276,20 +276,20 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
 - [x] Use a reliable desktop/WebView-compatible download or save mechanism. If a small JS helper is required for a download link/blob, keep it isolated and documented.
 - [x] Use a sensible default filename such as `formloom-apple-seed-42.png` and sanitize any user-derived filename components.
 - [x] Disable Save PNG until a successful image exists.
-- [ ] Verify the saved file opens in an independent image viewer and has the expected PNG dimensions.
+- [x] Verify filesystem PNG bytes and decode/dimensions with passing writer/renderer tests and the user-supplied outputs. Independent desktop-viewer and native-dialog cases are deferred under D5.
   - [x] Real filesystem write and PNG decoding/dimensions are tested; uploaded outputs are 1024 × 1024.
-  - [ ] Independent desktop image-viewer use and native-dialog roundtrip are not specifically evidenced.
+  > **Deferred — D5: independent desktop viewer and native-dialog roundtrip.** This original manual clause was not individually executed; see the acceptance scope below.
 
 **Done when:** A user can save a generated image as an actual PNG file.
 
 ### 3.5 Finish the first interaction details
 
-- [ ] Confirm that editing the prompt, seed or variation and pressing Generate uses the visible values, not stale component state.
-- [ ] Confirm that the same prompt/seed/variation reproduces the same image after repeated clicks.
-- [ ] Confirm that Randomize Seed changes the seed visibly and leads to a different coherent image after generation.
-- [ ] Confirm that increasing variation changes the allowed degree of procedural variation while the apple remains recognisable.
+- [x] Verify edited prompt/seed/variation snapshots in desktop session tests (PR #13). Actual rendered event-binding tests are a separate pending closure gate below.
+- [x] Verify repeated session Generate calls use the real service/renderer and reproduce PNG output (PR #13). Rendered form-event tests are a separate pending closure gate below.
+- [x] Verify Randomize updates session seed, retains the prior preview until Generate, and produces changed output through the real pipeline (PR #13). Rendered button/input wiring is a separate pending gate below.
+- [x] Verify variation scales bounded scene parameters and renders supported colors at maximum variation (passing Core/renderer tests). Specific low/high visual comparison is deferred under D1.
 - [x] Provide concise, actionable UI errors for parser failures, rendering failures and save failures. Do not expose stack traces in normal UI messages; log unexpected technical details for development.
-- [ ] Check keyboard focus, button labels, text contrast and basic accessibility of the controls.
+> **Deferred — D4: native keyboard/focus/contrast/accessibility review. Label/role markup assertions are included in the pending component tests, not a full accessibility audit.** This original manual clause was not individually executed; see the acceptance scope below.
 
 **Done when:** The complete prompt → image → variation → save loop is pleasant and reliable to use.
 
@@ -314,19 +314,19 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
   - [ ] Debug build remains unexecuted; no duplicate Debug PR job is added.
 - [x] Run `dotnet test` and ensure all Core and renderer tests pass.
 - [x] Resolve warnings and errors introduced by the implementation. Do not hide them by disabling analyzers or suppressing broad warning categories.
-- [ ] Verify that the application can be launched using the documented command from a clean build.
+> **Deferred — D3: exact clean-build command provenance on Windows; general Windows launch is confirmed.** This original manual clause was not individually executed; see the acceptance scope below.
 
 ### 4.2 Manual acceptance test
 
 - [x] Launch Formloom Desktop.
-- [ ] Generate the default `a red apple on a wooden table` prompt using seed `42` and the default variation value.
+- [x] Verify default prompt, seed 42, variation 35% and 1024 output through the real desktop pipeline (PR #13), in addition to user-supplied seed-42 output.
 - [x] Inspect the image at normal viewing size and confirm it is recognisably an apple still life with coherent lighting, organic shape, visible materials and a cast/contact shadow.
-- [ ] Generate the same inputs again and confirm the image is unchanged.
+- [x] Verify identical repeated Generate calls through the real session/service/renderer pipeline (PR #13).
 - [x] Change the seed and confirm a visibly different but coherent result.
-- [ ] Increase and decrease variation and confirm the amount of variation changes in a controlled way.
-- [ ] Enter an unsupported prompt and confirm Formloom explains the limitation without crashing or silently generating an apple anyway.
-- [ ] Save a PNG and open it outside the application.
-- [ ] Close and relaunch the app to check for startup or shutdown errors.
+- [x] Verify controlled variation bounds/deviation in Core tests and valid rendering at maximum variation. Visual low/high comparison is deferred under D1.
+- [x] Verify a real unsupported prompt yields an error and retains the previous image/metadata through the desktop pipeline (PR #13). Rendered alert tests are a pending gate below.
+- [x] Verify actual PNG file export and decoding outside the component, plus externally supplied 1024 PNGs (passing filesystem/renderer tests). Independent desktop-viewer exercise is deferred under D5.
+> **Deferred — D3: individual close/relaunch lifecycle check.** This original manual clause was not individually executed; see the acceptance scope below.
 
 ### 4.3 Documentation and agent handoff
 
@@ -334,9 +334,9 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
 - [x] Ensure this `todo.md` accurately reflects completed tasks. Do not mark future roadmap features as complete.
 - [x] Record the exact package versions used and any deviations from the chosen stack.
 - [x] Provide a concise completion report containing: project structure, key implementation decisions, build/test commands and results, where the generated PNG can be found or saved, and any remaining defects or limitations.
-- [ ] Include a screenshot of the running application and one generated output image if the agent environment supports capturing them.
+- [x] Review actual generated output images supplied by the user. A full application screenshot is explicitly deferred under D6.
   - [x] User-provided generated PNGs were visually reviewed.
-  - [ ] A full running-application screenshot has not been supplied or captured.
+  > **Deferred — D6: full running-application screenshot.** This original manual clause was not individually executed; see the acceptance scope below.
 
 ## STOP HERE — CHECK IN BEFORE CONTINUING
 
@@ -378,6 +378,28 @@ The user confirmed the refactored application works and accepted appropriately s
 
 - [x] Author real session→service→renderer tests for default 1024 output, repeated generation, unsupported-prompt retention and Randomize→Generate.
 - [x] Extend the pending-request test to capture edited prompt and preserve its metadata across subsequent edits.
-- [ ] Run the new tests and assertions in Linux Release CI; they are not yet passing evidence.
+- [x] Run the audit pipeline tests and prompt assertions in Linux Release CI: PR #13 passed in 50 seconds.
 
 No new feature milestone is selected by this audit. Unverified component event wiring, native dialog behavior, resizing, lifecycle, accessibility, Debug build and specific visual comparisons remain explicit evidence gaps rather than silently completed or waived tasks.
+
+
+## Agreed acceptance scope and final closure gates
+
+The user approved rendered-component tests, a one-off Debug verification and explicit deferral of native/manual checks instead of repeated smoke-test requests. Earlier original manual clauses above are now labeled **Deferred**, not falsely checked as executed. Passing PR #13 is established evidence; the component-test changes in this branch are not yet passing evidence.
+
+| Deferral | Original manual evidence not established | Agreed treatment |
+| --- | --- | --- |
+| D1 | Non-default-size / controlled same-seed and low/high variation visual comparisons | Automated dimensions, normalized geometry, variation bounds and pixel repeatability are the gate. Additional visual comparisons deferred. |
+| D2 | Photino native runtime launch in the Linux sandbox | Windows is the user-confirmed target. Linux CI builds and runs headless tests; Linux GUI launch deferred. |
+| D3 | Native resizing, close/relaunch, exact clean-build launch provenance | General Windows use is confirmed. These specific manual cases are deferred, not mandatory on every PR. |
+| D4 | Native responsiveness timing, keyboard/focus/contrast/accessibility | CPU work is off-thread. Component label/role/state tests do not establish full accessibility or native performance. Manual checks deferred. |
+| D5 | OS save-dialog behavior and independent desktop-viewer exercise | PNG writer/decoder/session tests are the routine gate. Native dialog cancellation/overwrite prompts are deferred. |
+| D6 | Screenshot of the full running application | Generated PNGs were reviewed. Full application screenshot deferred. |
+
+- [x] Add rendered App component tests for defaults/labels, input events, submission, alerts, retained previews, disabled controls, Randomize and save snapshot behavior.
+- [x] Add a test-only bUnit dependency and inject the existing session into App; production services still create the same session delegates.
+- [ ] Pass the rendered-component tests and full Release build in CI. Existing tests stay in the same solution-wide test command.
+- [x] Provide an opt-in `verify_debug` workflow-dispatch input for a one-off Debug build in the same Linux job; ordinary PR CI remains Release-only.
+- [ ] Execute that one-off Debug build successfully and record its run URL. Merely adding the dispatch option is not verification.
+
+Only after the two execution gates above pass may this milestone be called complete **under the revised acceptance scope**, not under every original manual criterion. No additional feature scope is authorized here.
