@@ -112,42 +112,44 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
 
 # Phase 1 — Build the smallest useful generation core
 
+> Implementation added: immutable scene types, bounded prompt grammar, PCG32 with FNV-1a named streams and normalized scene construction. Automated tests are authored but their acceptance checkboxes remain open until CI executes them. No renderer or UI changes are included.
+
 ### 1.1 Define the first scene model
 
-- [ ] Add a small set of typed, immutable scene/request types in `Formloom.Core`. They should describe the prompt-derived still life, its canvas dimensions, seed, variation amount and relevant object parameters.
-- [ ] Keep the model semantic and renderer-independent. It may describe an apple, leaf, stem, tabletop, background and light direction, but must not contain `SKCanvas`, `SKPath`, `SKPaint`, `SKBitmap` or other Skia types.
-- [ ] Validate dimensions and variation bounds at the boundary. Use explicit, understandable validation results.
-- [ ] Avoid building a universal scene graph or a generalized material framework for one still-life scene.
+- [x] Add a small set of typed, immutable scene/request types in `Formloom.Core`. They should describe the prompt-derived still life, its canvas dimensions, seed, variation amount and relevant object parameters.
+- [x] Keep the model semantic and renderer-independent. It may describe an apple, leaf, stem, tabletop, background and light direction, but must not contain `SKCanvas`, `SKPath`, `SKPaint`, `SKBitmap` or other Skia types.
+- [x] Validate dimensions and variation bounds at the boundary. Use explicit, understandable validation results.
+- [x] Avoid building a universal scene graph or a generalized material framework for one still-life scene.
 
 **Done when:** Core can describe the first still-life scene without knowing how it will be drawn.
 
 ### 1.2 Implement deterministic randomness
 
-- [ ] Implement a small seeded PRNG in Core. PCG32 is preferred, but a comparably small, documented generator is acceptable.
-- [ ] Provide the minimal operations the generator needs, such as integer ranges, normalized floating-point values and probability checks.
-- [ ] Support deterministic derived streams using stable string/identifier hashing. Give independently generated components their own streams (for example `apple.shape`, `apple.surface`, `table.grain`, `background.detail`).
-- [ ] Ensure a change in one component's random consumption does not shift the random sequence of unrelated components.
-- [ ] Keep the core generator independent of `System.Random` for image-generation decisions. A system RNG may be used by the UI solely to choose a new seed when the user presses Randomize.
+- [x] Implement a small seeded PRNG in Core. PCG32 is preferred, but a comparably small, documented generator is acceptable.
+- [x] Provide the minimal operations the generator needs, such as integer ranges, normalized floating-point values and probability checks.
+- [x] Support deterministic derived streams using stable string/identifier hashing. Give independently generated components their own streams (for example `apple.shape`, `apple.surface`, `table.grain`, `background.detail`).
+- [x] Ensure a change in one component's random consumption does not shift the random sequence of unrelated components.
+- [x] Keep the core generator independent of `System.Random` for image-generation decisions. A system RNG may be used by the UI solely to choose a new seed when the user presses Randomize.
 - [ ] Add tests for repeatability, range boundaries, distinct seeds and independent named streams.
 
 **Done when:** The same seed and stream name always produce the same sequence, and named streams remain isolated from one another.
 
 ### 1.3 Implement the initial prompt grammar
 
-- [ ] Implement a deliberately small, documented grammar for the first supported prompt family. At minimum, accept `a red apple on a wooden table` case-insensitively and tolerate harmless whitespace and terminal punctuation.
-- [ ] Support a small number of meaningful variations without pretending to understand arbitrary English. For example, allow a few apple colour adjectives such as red, green and yellow while retaining the apple-on-wooden-table construction.
-- [ ] Parse the prompt into the typed scene/request model. Keep parsing separate from rendering.
-- [ ] Reject unsupported subjects, materials or relationships with a friendly, specific message. Do not silently discard unknown words and generate an unrelated image.
+- [x] Implement a deliberately small, documented grammar for the first supported prompt family. At minimum, accept `a red apple on a wooden table` case-insensitively and tolerate harmless whitespace and terminal punctuation.
+- [x] Support a small number of meaningful variations without pretending to understand arbitrary English. For example, allow a few apple colour adjectives such as red, green and yellow while retaining the apple-on-wooden-table construction.
+- [x] Parse the prompt into the typed scene/request model. Keep parsing separate from rendering.
+- [x] Reject unsupported subjects, materials or relationships with a friendly, specific message. Do not silently discard unknown words and generate an unrelated image.
 - [ ] Add tests for valid prompts, case/whitespace handling, supported modifiers, empty input and unsupported input.
 
 **Done when:** The initial prompt family is predictable, testable and clearly bounded. No LLM or external NLP package is introduced.
 
 ### 1.4 Build the still-life scene description
 
-- [ ] Convert a successfully parsed request into a complete scene description, including object proportions, layout, light direction, background and table placement.
-- [ ] Use relative coordinates or a normalized layout so the scene can be rendered at more than one resolution without rewriting its composition.
-- [ ] Apply the seed to procedural details and the variation setting to the permitted range of shape/material irregularity. A higher variation value should create more diversity, not random structural damage.
-- [ ] Keep the apple recognisable at all variation values. Its major parts and their relationships must remain intact.
+- [x] Convert a successfully parsed request into a complete scene description, including object proportions, layout, light direction, background and table placement.
+- [x] Use relative coordinates or a normalized layout so the scene can be rendered at more than one resolution without rewriting its composition.
+- [x] Apply the seed to procedural details and the variation setting to the permitted range of shape/material irregularity. A higher variation value should create more diversity, not random structural damage.
+- [x] Keep the apple recognisable at all variation values. Its major parts and their relationships must remain intact.
 - [ ] Add tests proving that scene construction is deterministic for identical inputs and that relevant input changes affect the scene description.
 
 **Done when:** Core can produce a fully specified, reproducible still-life scene from a supported prompt, seed and variation setting.

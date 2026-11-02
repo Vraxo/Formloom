@@ -12,7 +12,11 @@ Formloom is a CPU-first, non-neural procedural image-construction project. Its f
 - `Directory.Build.props`, `Directory.Packages.props`, `.editorconfig`: shared build, centrally managed dependencies and formatting.
 - [`.agents/todo.md`](.agents/todo.md): implementation checklist and acceptance criteria.
 
-The projects are foundations only: prompt parsing, procedural rendering, desktop launch and saving are not implemented.
+Core now supports `a red apple on a wooden table`, with `green` or `yellow` in place of `red`. Parsing is case-insensitive, collapses whitespace and accepts terminal `.`, `!` or `?`. Unknown words, materials and relationships are rejected rather than ignored.
+
+`SceneGenerator.Generate(new GenerationRequest(prompt, Seed: 42, Variation: 0.35))` returns either a normalized, immutable scene or a user-facing error. Dimensions must be 64–4096 on each axis; variation must be finite and within 0–1. Defaults are 1024 × 1024. PCG32 with stable UTF-8 FNV-1a named streams isolates shape, stem, leaf, surface, grain and background randomness. Variation scales bounded offsets; zero variation uses the base composition. Coordinates and proportions are independent of output resolution.
+
+Core tests cover parsing, invalid input, a PCG reference sequence, repeatability, independent streams, helper bounds and scene variation. Execution of the new tests is pending CI. Procedural rendering, desktop launch and saving are not implemented.
 
 ## Prerequisites and commands
 

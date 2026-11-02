@@ -165,3 +165,6 @@ dotnet_diagnostic.CA1515.severity = none
 
 [CherryCode.Core/ToolExecution/Models/{ToolCall,ToolResultMessage}.cs]
 dotnet_diagnostic.CA1515.severity = none
+[Formloom.Core/**/*.cs]
+# Core types are the public contract consumed by rendering and desktop projects.
+dotnet_diagnostic.CA1515.severity = none
