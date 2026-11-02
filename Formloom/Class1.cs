@@ -1,6 +1,5 @@
 ﻿namespace Formloom;
 
-public class Class1
+internal class Class1
 {
-
 }
