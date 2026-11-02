@@ -77,6 +77,7 @@ public sealed class AppComponentTests
         {
             pending.TrySetResult(new(null, null, "Unsupported prompt. Use an apple on a wooden table."));
         }
+
         await submission;
         Assert.Contains("Unsupported prompt", component.Find("[role='alert']").TextContent);
         Assert.Equal(preview, component.Find(".preview img").GetAttribute("src"));
@@ -158,6 +159,7 @@ public sealed class AppComponentTests
         {
             pending.TrySetResult(new(true, "Could not save the PNG. Choose a writable folder."));
         }
+
         await saving;
         Assert.Contains("writable folder", component.Find("[role='alert']").TextContent);
         Assert.Equal(preview, component.Find(".preview img").GetAttribute("src"));
