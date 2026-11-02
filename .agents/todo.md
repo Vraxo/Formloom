@@ -207,6 +207,8 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
 - [x] Add any subtle ambient shading needed to make the scene feel integrated. Avoid excessive blur, bloom or decorative effects.
 - [x] Check object scale, margins, focal placement and negative space at the target resolution.
 - [ ] Render at the default size and at one smaller/larger size to verify that geometry and composition scale correctly.
+  - [x] Automated render/decode dimensions at multiple sizes and normalized scene geometry are covered by passing tests.
+  - [ ] Visual inspection of non-default-size composition remains unverified.
 - [x] Inspect the actual PNG visually. Iterate on obvious defects such as tangencies, awkward overlaps, flat shading, distracting grain or inconsistent light direction.
 
 **Done when:** The complete result looks intentional and finished enough to be a useful first generator output, not merely a technical proof that drawing calls work.
@@ -259,10 +261,12 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
 - [x] Add a small application-level generation service in Desktop that orchestrates prompt parsing, scene construction and Skia rendering.
 - [x] Keep generation logic out of Razor components. Components should collect input, call the service and present its result.
 - [x] On Generate, pass the prompt, seed, variation and target dimensions through the pipeline and display the returned PNG in the preview.
-- [ ] Show a clear, human-readable validation message for unsupported prompts. Keep the previous successful image visible when a later prompt fails, unless there is a compelling usability reason to clear it.
+- [x] Show a clear, human-readable validation message for unsupported prompts. Keep the previous successful image visible when a later prompt fails, unless there is a compelling usability reason to clear it.
 - [x] Disable or guard duplicate Generate actions while a generation is in progress. Show a simple generating state and restore the controls on success or failure.
 - [ ] Keep the UI responsive. If rendering can block the UI thread perceptibly, run the CPU work off the UI thread and marshal only the final state update back to the component context.
-- [ ] Make Randomize Seed choose a new seed, display it, and make it easy to generate that variation. It must not silently change the seed during a supposedly deterministic generation.
+  - [x] Generation uses `Task.Run`; pending-work session tests pass.
+  - [ ] Actual UI responsiveness/dispatcher behavior is not measured by these tests.
+- [x] Make Randomize Seed choose a new seed, display it, and make it easy to generate that variation. It must not silently change the seed during a supposedly deterministic generation.
 
 **Done when:** Clicking Generate in the desktop app produces and displays the image created by the actual Core + Skia pipeline.
 
@@ -273,6 +277,8 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
 - [x] Use a sensible default filename such as `formloom-apple-seed-42.png` and sanitize any user-derived filename components.
 - [x] Disable Save PNG until a successful image exists.
 - [ ] Verify the saved file opens in an independent image viewer and has the expected PNG dimensions.
+  - [x] Real filesystem write and PNG decoding/dimensions are tested; uploaded outputs are 1024 × 1024.
+  - [ ] Independent desktop image-viewer use and native-dialog roundtrip are not specifically evidenced.
 
 **Done when:** A user can save a generated image as an actual PNG file.
 
@@ -304,6 +310,8 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
 
 - [x] Run `dotnet restore` from the solution root.
 - [ ] Run `dotnet build` for the complete solution in Debug and Release configurations.
+  - [x] Release builds the full solution with warnings as errors in CI.
+  - [ ] Debug build remains unexecuted; no duplicate Debug PR job is added.
 - [x] Run `dotnet test` and ensure all Core and renderer tests pass.
 - [x] Resolve warnings and errors introduced by the implementation. Do not hide them by disabling analyzers or suppressing broad warning categories.
 - [ ] Verify that the application can be launched using the documented command from a clean build.
@@ -327,6 +335,8 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
 - [x] Record the exact package versions used and any deviations from the chosen stack.
 - [x] Provide a concise completion report containing: project structure, key implementation decisions, build/test commands and results, where the generated PNG can be found or saved, and any remaining defects or limitations.
 - [ ] Include a screenshot of the running application and one generated output image if the agent environment supports capturing them.
+  - [x] User-provided generated PNGs were visually reviewed.
+  - [ ] A full running-application screenshot has not been supplied or captured.
 
 ## STOP HERE — CHECK IN BEFORE CONTINUING
 
@@ -357,5 +367,17 @@ The user explicitly approved this limited follow-up after the initial handoff. I
 - [x] Add a dedicated `Formloom.Desktop.Tests` project (Desktop reference plus friend-assembly access), leaving the original Core/renderer test references unchanged.
 - [x] Author session, real generation-service and real filesystem tests, including failures and controlled pending tasks.
 - [x] Document Windows cancellation, resizing, keyboard and close/relaunch checks in `docs/windows-smoke-test.md`.
-- [ ] Verify the new tests/build in Linux Release CI. No new runner or package dependency was added; no local SDK installation.
-- [ ] Run the Windows smoke checklist on the refactored UI. Existing Windows confirmations apply to the earlier build, not this refactor.
+- [x] Verify the new tests/build in Linux Release CI. PR #12 passed Linux / Release in 33 seconds, including both test projects. No new runner or package dependency was added; no local SDK installation.
+- [x] Obtain user confirmation of the refactored Windows app and agree the routine verification gate. The user confirmed it works and explicitly accepted passing, appropriately scoped tests instead of repeated manual smoke checks. This supersedes requiring the full smoke checklist on every change; it does not establish execution of every individual manual case.
+
+### Checkpoint verification policy and audit
+
+The user confirmed the refactored application works and accepted appropriately scoped CI tests as the routine gate, not repeated manual smoke passes. That does not complete every original checkbox or prove GUI/native coverage. The previous blanket closure statement was premature. See [the evidence audit](../docs/checklist-audit.md) for every previously unchecked criterion, matching tests/source evidence, and outstanding gaps. Parent checkboxes stay open where only part of the original criterion is established.
+
+### Audit follow-up tests
+
+- [x] Author real session→service→renderer tests for default 1024 output, repeated generation, unsupported-prompt retention and Randomize→Generate.
+- [x] Extend the pending-request test to capture edited prompt and preserve its metadata across subsequent edits.
+- [ ] Run the new tests and assertions in Linux Release CI; they are not yet passing evidence.
+
+No new feature milestone is selected by this audit. Unverified component event wiring, native dialog behavior, resizing, lifecycle, accessibility, Debug build and specific visual comparisons remain explicit evidence gaps rather than silently completed or waived tasks.
