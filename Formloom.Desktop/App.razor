@@ -1,0 +1,28 @@
+<main>
+    <header>
+        <span class="brand">Formloom</span>
+        <span class="badge">CPU · PROCEDURAL · NO ML</span>
+    </header>
+    <section aria-labelledby="welcome-title">
+        <p class="eyebrow">A still life, built from first principles</p>
+        <h1 id="welcome-title">Shape. Material. Light.</h1>
+        <p class="intro">An inspectable image-making engine, powered by geometry and code.</p>
+        <div class="status-panel">
+            <h2>Desktop host</h2>
+            <p>The native window and Blazor page are connected. Generation controls will arrive in the next slice.</p>
+            <button type="button" @onclick="CheckInteraction">Check interaction</button>
+            <p role="status" aria-live="polite">@status</p>
+        </div>
+    </section>
+</main>
+
+@code {
+    private string status = "Ready to check the Blazor connection.";
+    private int interactionCount;
+
+    private void CheckInteraction()
+    {
+        interactionCount++;
+        status = $"Blazor interaction confirmed ({interactionCount}).";
+    }
+}

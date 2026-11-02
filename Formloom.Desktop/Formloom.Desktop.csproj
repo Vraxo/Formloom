@@ -1,8 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+  </PropertyGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="../Formloom.Core/Formloom.Core.csproj" />
     <ProjectReference Include="../Formloom.Rendering.Skia/Formloom.Rendering.Skia.csproj" />
     <PackageReference Include="PhotinoX.Blazor" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Update="wwwroot/**" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
