@@ -60,11 +60,13 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
 
 ### 0.1 Inspect the repository and environment
 
-- [ ] Inspect the repository root, current solution/projects, existing README, build configuration and Git status before changing anything.
+- [x] Inspect the repository root, current solution/projects, existing README, build configuration and Git status before changing anything.
 - [ ] Check `dotnet --info`, installed SDKs and the current target OS. Confirm that a .NET 10 SDK is available. If not, report the exact prerequisite rather than silently retargeting the project.
-- [ ] Check whether the Windows WebView2 Runtime is available. Photino uses WebView2 on Windows; document the prerequisite if it is absent.
+- [x] Check whether the Windows WebView2 Runtime is available. Photino uses WebView2 on Windows; document the prerequisite if it is absent.
 
 **Done when:** The implementation plan accounts for the existing repository and the actual build environment. Existing user files are preserved.
+
+> Inspection (2026-11-02): Debian 12 / Linux x86-64; `dotnet --info` fails with `dotnet: command not found`. Local SDK installation is not required for this session: per user direction, use Windows/.NET 10 GitHub Actions CI, modeled on `Vraxo/Lattice`, for restore/build/test validation. CI results must be checked before claiming validation. Windows WebView2 is not applicable on this host; the Windows prerequisite is documented in README. Retain the existing `.slnx` solution format rather than adding a duplicate `.sln`. SDK confirmation and subsequent build-dependent tasks remain incomplete.
 
 ### 0.2 Create or adapt the solution structure
 
