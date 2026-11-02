@@ -4,7 +4,7 @@ using Photino.NET;
 
 namespace Formloom.Desktop;
 
-internal sealed class PngSaveService(ILogger<PngSaveService> logger)
+internal sealed class PngSaveService(PngFileWriter writer, ILogger<PngSaveService> logger)
 {
     private PhotinoWindow? window;
 
@@ -19,18 +19,7 @@ internal sealed class PngSaveService(ILogger<PngSaveService> logger)
                 title: "Save Formloom PNG",
                 filters: [("PNG image", ["png"])],
                 defaultFileName: $"formloom-apple-seed-{seed}.png");
-            if (string.IsNullOrWhiteSpace(path))
-            {
-                return new(false, "Save cancelled. Your image is still available.");
-            }
-
-            if (!string.Equals(Path.GetExtension(path), ".png", StringComparison.OrdinalIgnoreCase))
-            {
-                return new(true, "Choose a filename ending in .png and save again.");
-            }
-
-            await File.WriteAllBytesAsync(path, image.PngBytes);
-            return new(false, $"Saved {Path.GetFileName(path)}.");
+            return await writer.WriteAsync(path, image);
         }
         catch (Exception exception)
         {

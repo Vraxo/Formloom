@@ -346,3 +346,16 @@ These are future possibilities, not acceptance criteria for the first slice:
 - Advanced editing features, layer trees, inpainting, selection tools or generation history.
 - Photorealism or parity with Stable Diffusion.
 - Network access, model downloads, training or any machine-learning dependency.
+
+
+## User-approved reliability follow-up (after initial checkpoint)
+
+The user explicitly approved this limited follow-up after the initial handoff. It does not authorize new subjects, composition controls or grammar expansion.
+
+- [x] Extract desktop interaction state into a session shared by Razor and headless tests; retain failed-image state and successful-image metadata and guard overlapping actions.
+- [x] Separate native destination selection from PNG writing; stage writes in the destination directory and clean up failed replacement attempts.
+- [x] Add a dedicated `Formloom.Desktop.Tests` project (Desktop reference plus friend-assembly access), leaving the original Core/renderer test references unchanged.
+- [x] Author session, real generation-service and real filesystem tests, including failures and controlled pending tasks.
+- [x] Document Windows cancellation, resizing, keyboard and close/relaunch checks in `docs/windows-smoke-test.md`.
+- [ ] Verify the new tests/build in Linux Release CI. No new runner or package dependency was added; no local SDK installation.
+- [ ] Run the Windows smoke checklist on the refactored UI. Existing Windows confirmations apply to the earlier build, not this refactor.

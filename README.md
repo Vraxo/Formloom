@@ -19,6 +19,7 @@ The integrated UI and subsequent renderer fixes passed Linux Release CI through 
 - `Formloom.Core`: immutable scene types, validation, prompt parsing, PCG32, stable UTF-8 FNV-1a named random streams and scene construction. No rendering or UI dependency.
 - `Formloom.Rendering.Skia`: disposable CPU raster resources, procedural setting/apple/stem/leaf, shading and PNG encoding. Returns dimensions and PNG bytes.
 - `Formloom.Desktop`: PhotinoX.Blazor executable, UI, generation orchestration and native PNG save service.
+- `Formloom.Desktop.Tests`: headless interaction/session, generation-service and PNG writer tests; references Desktop without starting the native window.
 - `Formloom.Tests`: Core and renderer tests, including PCG reference values, independent streams, PNG decoding/sizes, rendered-pixel repeatability and seed differences. Does not reference or launch Desktop.
 - `Formloom.slnx`, `Directory.Build.props`, `Directory.Packages.props`, `.editorconfig`, `global.json`: solution and shared configuration.
 - [`.agents/todo.md`](.agents/todo.md): implementation plan and outstanding acceptance criteria.
@@ -74,3 +75,11 @@ The agent sandbox is Debian 12 without a .NET SDK; per user direction, SDK-based
 The opacity fix, localized lower-lobe contact shadows, fading stem indentation and tapered stem are merged. Grain now uses sparse fibers over broad tonal bands, bending around a shaded seeded knot rather than concentric rings. The user-supplied outputs were reviewed as coherent illustrated still lifes. Comparisons used different seeds/builds, not a controlled same-seed comparison.
 
 Stop at this first-slice checkpoint. No broader roadmap work is included. Review the [handoff](docs/initial-milestone-handoff.md) and [remaining checklist](.agents/todo.md) before selecting the next priority.
+
+## Reliability follow-up (pending CI)
+
+A user-approved follow-up extracts the interaction state into `DesktopSession`, used by the Razor page and tested independently of Photino. It snapshots generation inputs, guards overlapping actions, retains successful images/metadata on failures and restores controls after unexpected exceptions. Tests use controlled asynchronous delegates, not timing-dependent sleeps. A dedicated Desktop.Tests project references Desktop through a narrowly scoped friend assembly; the original Core/renderer test boundaries are unchanged. No new package dependencies or CI runners are added.
+
+The native save service now only selects a destination; `PngFileWriter` handles cancellation, extension validation and file writes. Bytes are staged in the destination directory before replacement so a failed staging write does not truncate an existing file; failed replacements clean up staged files. Tests exercise real PNG writing/replacement, invalid extensions, cancellation, missing directories and failed replacement. They do not simulate native dialog behavior, disk-full conditions or OS-specific file locking.
+
+The solution-wide Linux Release test command will discover both test projects. These new tests have not run in the agent sandbox; CI validation is pending. Follow the [Windows smoke-test checklist](docs/windows-smoke-test.md) after the UI refactor to verify actual dialogs, keyboard access, resizing and close/relaunch. Headless tests are not a substitute for those checks.
