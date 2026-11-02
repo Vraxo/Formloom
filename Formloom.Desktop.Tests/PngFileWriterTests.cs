@@ -17,13 +17,13 @@ public sealed class PngFileWriterTests
         try
         {
             var path = Path.Combine(directory, "study.PNG");
-            await File.WriteAllBytesAsync(path, [0]);
+            await File.WriteAllBytesAsync(path, [0], TestContext.Current.CancellationToken);
             var scene = SceneGenerator.Generate(new("a red apple on a wooden table", Width: 64, Height: 64)).Scene!;
             var image = StillLifeRenderer.Render(scene);
             var writer = new PngFileWriter(NullLogger<PngFileWriter>.Instance);
             var result = await writer.WriteAsync(path, image);
             Assert.False(result.IsError);
-            Assert.Equal(image.PngBytes, await File.ReadAllBytesAsync(path));
+            Assert.Equal(image.PngBytes, await File.ReadAllBytesAsync(path, TestContext.Current.CancellationToken));
             using var decoded = SKBitmap.Decode(path);
             Assert.Equal(64, decoded.Width);
             Assert.Equal(64, decoded.Height);
@@ -53,11 +53,11 @@ public sealed class PngFileWriterTests
         var path = Path.Combine(Path.GetTempPath(), $"formloom-tests-{Guid.NewGuid():N}.txt");
         try
         {
-            await File.WriteAllTextAsync(path, "original");
+            await File.WriteAllTextAsync(path, "original", TestContext.Current.CancellationToken);
             var writer = new PngFileWriter(NullLogger<PngFileWriter>.Instance);
             var result = await writer.WriteAsync(path, new RenderedImage(1, 1, [1]));
             Assert.True(result.IsError);
-            Assert.Equal("original", await File.ReadAllTextAsync(path));
+            Assert.Equal("original", await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken));
         }
         finally
         {
@@ -83,13 +83,13 @@ public sealed class PngFileWriterTests
         var destination = Path.Combine(directory, "occupied.png");
         Directory.CreateDirectory(destination);
         var sentinel = Path.Combine(destination, "keep.txt");
-        await File.WriteAllTextAsync(sentinel, "original");
         try
         {
+            await File.WriteAllTextAsync(sentinel, "original", TestContext.Current.CancellationToken);
             var writer = new PngFileWriter(NullLogger<PngFileWriter>.Instance);
             var result = await writer.WriteAsync(destination, new RenderedImage(1, 1, [1]));
             Assert.True(result.IsError);
-            Assert.Equal("original", await File.ReadAllTextAsync(sentinel));
+            Assert.Equal("original", await File.ReadAllTextAsync(sentinel, TestContext.Current.CancellationToken));
             Assert.Empty(Directory.GetFiles(directory));
         }
         finally
