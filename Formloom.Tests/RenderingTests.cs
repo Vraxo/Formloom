@@ -103,6 +103,30 @@ public sealed class RenderingTests
     }
 
     [Fact]
+    public void WoodDetailChangesWithSeedWithoutChangingBackgroundPalette()
+    {
+        var scene = SceneGenerator.Generate(new("a red apple on a wooden table", Width: 256, Height: 256)).Scene!;
+        using var first = SKBitmap.Decode(StillLifeRenderer.Render(scene).PngBytes);
+        using var repeated = SKBitmap.Decode(StillLifeRenderer.Render(scene).PngBytes);
+        using var different = SKBitmap.Decode(StillLifeRenderer.Render(scene with { Seed = 43 }).PngBytes);
+        Assert.Equal(first.GetPixel(0, 0), different.GetPixel(0, 0));
+        var changedPixels = 0;
+        for (var y = 220; y < 250; y++)
+        {
+            for (var x = 10; x < 246; x += 4)
+            {
+                Assert.Equal(first.GetPixel(x, y), repeated.GetPixel(x, y));
+                if (first.GetPixel(x, y) != different.GetPixel(x, y))
+                {
+                    changedPixels++;
+                }
+            }
+        }
+
+        Assert.True(changedPixels > 0);
+    }
+
+    [Fact]
     public void DifferentSeedChangesPixels()
     {
         var request = new GenerationRequest("a red apple on a wooden table", Width: 256, Height: 256);
