@@ -119,6 +119,9 @@ public static class StillLifeRenderer
             new SKPoint(0.5f + (scene.LightDirection.X * 0.32f), 0.5f + (scene.LightDirection.Y * 0.36f)), 0.95f,
             [Lighten(baseColor), baseColor, new SKColor(53, 25, 20)],
             [0f, 0.48f, 1f], SKShaderTileMode.Clamp);
+
+        // Shader colors are multiplied by paint alpha; do not inherit shadow opacity.
+        paint.Color = SKColors.White;
         paint.Shader = body;
         canvas.DrawPath(shape, paint);
         paint.Shader = null;
@@ -136,6 +139,7 @@ public static class StillLifeRenderer
         using var highlight = SKShader.CreateRadialGradient(
             new SKPoint(0.5f + (scene.LightDirection.X * 0.31f), 0.5f + (scene.LightDirection.Y * 0.38f)), 0.22f,
             [new SKColor(255, 245, 215, 125), new SKColor(255, 245, 215, 0)], null, SKShaderTileMode.Clamp);
+        paint.Color = SKColors.White;
         paint.Shader = highlight;
         canvas.DrawRect(0, 0, 1, 1, paint);
         paint.Shader = null;
