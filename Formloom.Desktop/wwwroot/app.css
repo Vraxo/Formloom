@@ -1,0 +1,18 @@
+:root { color-scheme: dark; font-family: "Segoe UI", system-ui, sans-serif; background: #141a19; color: #edf0e8; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+main { max-width: 1400px; margin: auto; padding: 36px 48px; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-bottom: 28px; border-bottom: 1px solid #35403a; }
+.brand { font-family: Georgia, serif; font-size: 30px; letter-spacing: -1px; }
+.badge, .eyebrow { color: #bbcbb0; font-size: 12px; letter-spacing: 2px; }
+section { max-width: 800px; margin: 90px auto; }
+h1 { font-family: Georgia, serif; font-size: clamp(36px, 5vw, 68px); font-weight: 400; margin: 20px 0; }
+.intro { font-size: 18px; color: #bac2b8; line-height: 1.7; }
+.status-panel { background: #1f2925; border: 1px solid #3c4940; border-radius: 12px; padding: 28px; margin-top: 40px; }
+h2 { margin-top: 0; font-size: 18px; }
+p { line-height: 1.6; }
+button { background: #c4d5aa; color: #192418; border: none; border-radius: 6px; padding: 12px 20px; font: inherit; font-weight: 600; cursor: pointer; }
+button:hover { background: #dae6ca; }
+button:focus-visible { outline: 3px solid #f2e2ad; outline-offset: 4px; }
+[role="status"] { color: #c7d6bd; margin-bottom: 0; }
+@media (max-width: 640px) { main { padding: 24px; } header { align-items: flex-start; flex-direction: column; gap: 12px; } section { margin: 48px auto; } }

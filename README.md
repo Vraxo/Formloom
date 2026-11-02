@@ -7,7 +7,7 @@ Formloom is a CPU-first, non-neural procedural image-construction project. Its f
 - `Formloom.slnx`: solution, retaining the existing modern solution format.
 - `Formloom.Core`: renderer-independent generation library.
 - `Formloom.Rendering.Skia`: CPU raster renderer library, referencing Core.
-- `Formloom.Desktop`: Razor library scaffold with PhotinoX.Blazor, referencing Core and Rendering.Skia. The executable host and UI are not implemented yet.
+- `Formloom.Desktop`: PhotinoX.Blazor executable host, referencing Core and Rendering.Skia. It currently displays a minimal desktop welcome page and an interaction check, not generation controls.
 - `Formloom.Tests`: xUnit v3 test project, referencing Core and Rendering.Skia. The initial smoke test loads Core and checks for forbidden rendering/UI dependencies.
 - `Directory.Build.props`, `Directory.Packages.props`, `.editorconfig`: shared build, centrally managed dependencies and formatting.
 - [`.agents/todo.md`](.agents/todo.md): implementation checklist and acceptance criteria.
@@ -18,7 +18,7 @@ Core now supports `a red apple on a wooden table`, with `green` or `yellow` in p
 
 Core tests cover parsing, invalid input, a PCG reference sequence, repeatability, independent streams, helper bounds and scene variation; they passed Linux Release CI in PR #4. `StillLifeRenderer.Render(scene)` now creates a CPU raster PNG using only procedural paths, gradients and seeded detail. The setting includes a shaded background, angled tabletop, directional grain and a knot; the apple includes an asymmetric silhouette, stem, leaf, surface speckles, directional shading and soft cast/contact shadows. The renderer owns and disposes its native Skia resources; only dimensions and PNG bytes cross its public boundary. No finished artwork or textures are embedded.
 
-Renderer tests cover PNG decoding and dimensions at 256, 1024 and 1280 square pixels plus a rectangular canvas, pixel repeatability, seed differences and all supported colors. CI will upload a **procedural-preview** artifact containing `formloom-apple-seed-42.png` from the default-scene export test, for visual review. Locally the export is placed beside the test assembly under `artifacts/bin/Formloom.Tests/`. These new tests have not yet run in CI, and visual quality has not been inspected. Desktop launch and saving are not implemented.
+Renderer tests cover PNG decoding and dimensions at 256, 1024 and 1280 square pixels plus a rectangular canvas, pixel repeatability, seed differences and all supported colors. CI will upload a **procedural-preview** artifact containing `formloom-apple-seed-42.png` from the default-scene export test, for visual review. Locally the export is placed beside the test assembly under `artifacts/bin/Formloom.Tests/`. These new tests have not yet run in CI, and visual quality has not been inspected. The desktop host is implemented but has not been launched in the agent environment. Generator UI integration and saving are not implemented.
 
 ## Prerequisites and commands
 
@@ -36,7 +36,17 @@ dotnet build Formloom.slnx --configuration Release --no-restore
 dotnet test --solution Formloom.slnx --configuration Release --no-build --report-trx --results-directory TestResults
 ```
 
-There is no desktop run command yet because the desktop project is not an executable host.
+On Windows with WebView2 installed, launch the desktop host:
+
+```sh
+dotnet run --project Formloom.Desktop/Formloom.Desktop.csproj --configuration Release
+```
+
+The expected window is titled **Formloom**, starts at 1400 × 900, and displays a dark welcome page. Click **Check interaction** to verify Blazor event handling; the status count should change. Resize, close, and relaunch to verify the host lifecycle. This is a host smoke check, not the generation UI.
+
+Startup follows the upstream [PhotinoX.Blazor 5.3.5 HelloWorld sample](https://github.com/ivanvoyager/PhotinoX.Blazor/tree/master/Samples/HelloWorld): `CreateBuilder`, root component registration, `ConfigureMainWindow`, `Build`, and `Run`, with explicit disposal and an STA entry point. The package still exposes the `Photino.Blazor` namespace; the dependency remains **PhotinoX.Blazor**, not the original Photino package. Content is resolved from the executable directory, and `wwwroot` is copied for build and publish so launching does not depend on the shell working directory.
+
+Linux CI compiles this host but does not launch it. Native asset loading, WebView2, CSS/JS resolution, interaction, and clean shutdown require a Windows manual check; they are not yet verified.
 
 ## Dependencies
 

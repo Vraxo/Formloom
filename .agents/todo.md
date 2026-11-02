@@ -225,9 +225,13 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
 
 ### 3.1 Create the PhotinoX Blazor host
 
-- [ ] Create a minimal `Formloom.Desktop` PhotinoX.Blazor application using the package's current documented startup API.
+> Host implementation added using the upstream 5.3.5 startup API and sample: STA entry point, 1400 × 900 Formloom window, root component, copied static content and disposable application lifetime. The welcome page includes a Blazor interaction check. Build verification is pending CI; native launch/static assets/interaction/shutdown must be verified on Windows before host acceptance is complete. Generator wiring has deliberately not started.
+>
+> Renderer review status: PR #5 passed Linux CI; attempted to download its `procedural-preview` artifact, but the sandbox cannot access the redirected Azure artifact host (EOF). Visual inspection remains open; the artifact can be downloaded from GitHub Actions outside this sandbox.
+
+- [x] Create a minimal `Formloom.Desktop` PhotinoX.Blazor application using the package's current documented startup API.
 - [ ] Use PhotinoX.Blazor 5.3.5, not the older original `Photino.Blazor` package. Confirm the correct native runtime assets are present for the development OS.
-- [ ] Configure the native window title as `Formloom` and choose a sensible initial desktop size (approximately 1400 × 900).
+- [x] Configure the native window title as `Formloom` and choose a sensible initial desktop size (approximately 1400 × 900).
 - [ ] Register the Blazor root component and display a simple Formloom page.
 - [ ] Launch the native window and verify that the page loads, static CSS/JS assets resolve, and the app closes cleanly.
 
