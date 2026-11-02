@@ -16,7 +16,7 @@ public sealed class AppComponentTests
         await using var context = new BunitContext();
         context.Services.AddSingleton(CreateSession(_ => Task.FromResult(Success())));
         var component = context.Render<App>();
-        Assert.Equal("a red apple on a wooden table", component.Find("#prompt").TextContent);
+        Assert.Equal("a red apple on a wooden table", component.Find("#prompt").GetAttribute("value"));
         Assert.Equal("42", component.Find("#seed").GetAttribute("value"));
         Assert.Equal("0.35", component.Find("#variation").GetAttribute("value"));
         Assert.True(component.Find(".secondary").HasAttribute("disabled"));
