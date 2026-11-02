@@ -71,6 +71,7 @@ public sealed class DesktopSessionTests
                 saves++;
                 return Task.FromResult(new SaveResult(false, "Saved"));
             });
+        session.Prompt = "a yellow apple on a wooden table";
         session.SeedText = "18446744073709551615";
         session.Variation = 0.8;
         var generation = session.GenerateAsync();
@@ -81,11 +82,14 @@ public sealed class DesktopSessionTests
         Assert.Equal("18446744073709551615", session.SeedText);
         Assert.Equal(1, calls);
         Assert.Equal(0, saves);
+        session.Prompt = "edited while pending";
         session.SeedText = "77";
         session.Variation = 0.1;
         pending.SetResult(Success());
         await generation;
         Assert.NotNull(captured);
+        Assert.Equal("a yellow apple on a wooden table", captured.Prompt);
+        Assert.Equal("a yellow apple on a wooden table", session.ImageDescription);
         Assert.Equal(ulong.MaxValue, captured.Seed);
         Assert.Equal(0.8, session.RenderedVariation);
         Assert.Equal(ulong.MaxValue, session.RenderedSeed);

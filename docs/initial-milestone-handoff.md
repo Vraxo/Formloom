@@ -60,3 +60,13 @@ The renderer export test writes `formloom-apple-seed-42.png` beside the test ass
 - Visual inspection of smaller/larger renders and a controlled same-seed comparison across the polish changes.
 
 These are verification gaps, not newly reproduced defects. See [the checklist](../.agents/todo.md) for task-level status. Stop at this checkpoint: choose further priorities only after review; do not infer authorization for more subjects, a scene editor or an expanded language system.
+
+## Post-handoff verification: reliability follow-up
+
+PR #12 merged after [Linux Release CI](https://github.com/Vraxo/Formloom/actions/runs/41499515371) passed in 33 seconds. Headless Desktop.Tests now covers session guards, image retention, metadata snapshots, failure recovery, real generation-service results and filesystem save/replacement paths. Core/renderer test references remain unchanged. The user confirmed the refactored Windows application works and chose passing, appropriately scoped tests as the routine verification gate instead of repeated manual smoke checks.
+
+The historical unverified items above remain accurate evidence limits, not recurring requests for user testing. The smoke checklist is available when troubleshooting native/UI changes. No claim is made that native dialogs, Razor event wiring, visual appearance or every OS failure mode is covered by the automated suite. The reliability implementation passed CI, but that does not close every original acceptance criterion. A subsequent feature milestone must be explicitly selected; see the audit below before treating the checklist as complete.
+
+## Acceptance audit correction
+
+The earlier closure wording conflated delivered implementation with full checklist verification. The [checklist evidence audit](checklist-audit.md) now maps all previously unchecked criteria to actual evidence and remaining gaps, splits partially fulfilled tasks, and identifies newly authored real-pipeline tests (not yet executed). Historical individual native/UI checks are neither asserted as run nor silently waived. Passing CI is the routine gate; repeated manual smoke checks are not required for every change, but automation boundaries remain explicit.
