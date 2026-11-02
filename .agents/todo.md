@@ -289,6 +289,8 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
 
 > Visual defect reported by user: apple appeared translucent. The renderer reused shadow paint alpha (105/255) for the body gradient. Paint opacity is now explicitly reset before the body and highlight; a regression test varies the setting and checks that interior apple pixels do not change. Fix execution and visual confirmation remain pending.
 
+> User confirmed the opacity fix works and supplied the actual seed-42 PNG for review. The agreed next polish is limited to contact and stem attachment: tighter lower-lobe contact shadows, a softer cast shadow, a fading stem indentation and a tapered shaded stem. Wood grain and body highlight are deliberately unchanged for a focused comparison. Contact-shadow tests were authored; this visual pass still requires CI and before/after review.
+
 # Phase 4 — Final verification and checkpoint
 
 > Verification update (2026-11-02): PR #7 merged after Linux / Release CI passed (36 seconds), covering restore, warnings-as-errors Release compilation of the full solution and Core/renderer tests. The user subsequently confirmed the integrated app works on Windows. This is not evidence that every individual manual case below was exercised. Debug compilation remains unverified and intentionally is not duplicated in PR CI, per user direction. No further feature expansion before visual review and checkpoint signoff.

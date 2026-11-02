@@ -79,6 +79,29 @@ public sealed class RenderingTests
         }
     }
 
+    [Theory]
+    [InlineData(256, 0.0)]
+    [InlineData(256, 1.0)]
+    [InlineData(1024, 0.35)]
+    public void ContactShadowDarkensTableDirectlyBelowBothLobes(int size, double variation)
+    {
+        var scene = SceneGenerator.Generate(new(
+            "a red apple on a wooden table", Variation: variation, Width: size, Height: size)).Scene!;
+        using var bitmap = SKBitmap.Decode(StillLifeRenderer.Render(scene).PngBytes);
+        var apple = scene.Apple;
+        var y = (int)((apple.Center.Y + (apple.Size.Y * 0.51f)) * size);
+        var referenceX = (int)((apple.Center.X + (apple.Size.X * 0.85f)) * size);
+        var reference = bitmap.GetPixel(referenceX, y);
+        var referenceBrightness = reference.Red + reference.Green + reference.Blue;
+        float[] lobeOffsets = [-0.13f, 0.13f];
+        foreach (var lobe in lobeOffsets)
+        {
+            var x = (int)((apple.Center.X + (apple.Size.X * lobe)) * size);
+            var contact = bitmap.GetPixel(x, y);
+            Assert.True(contact.Red + contact.Green + contact.Blue < referenceBrightness);
+        }
+    }
+
     [Fact]
     public void DifferentSeedChangesPixels()
     {
