@@ -16,6 +16,7 @@ internal static class Program
             WebRootPath = "wwwroot",
         });
         builder.Services.AddSingleton<GenerationService>();
+        builder.Services.AddSingleton<PngFileWriter>();
         builder.Services.AddSingleton<PngSaveService>();
         builder.RootComponents.Add<App>("#app");
         builder.ConfigureMainWindow(window =>

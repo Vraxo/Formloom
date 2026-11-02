@@ -13,4 +13,5 @@
   <Project Path="Formloom.Rendering.Skia/Formloom.Rendering.Skia.csproj" />
   <Project Path="Formloom.Desktop/Formloom.Desktop.csproj" />
   <Project Path="Formloom.Tests/Formloom.Tests.csproj" />
+  <Project Path="Formloom.Desktop.Tests/Formloom.Desktop.Tests.csproj" />
 </Solution>
