@@ -49,6 +49,36 @@ public sealed class RenderingTests
         Assert.Equal(first.Bytes, second.Bytes);
     }
 
+    [Theory]
+    [InlineData("red", 256)]
+    [InlineData("green", 256)]
+    [InlineData("yellow", 256)]
+    [InlineData("red", 1024)]
+    public void OpaqueAppleInteriorDoesNotRevealChangesToSetting(string color, int size)
+    {
+        var scene = SceneGenerator.Generate(new($"a {color} apple on a wooden table", Width: size, Height: size)).Scene!;
+        var changedSetting = scene with
+        {
+            BackgroundWarmth = 0.95,
+            TableHorizon = 0.40,
+            GrainStrength = 0.8,
+        };
+        using var original = SKBitmap.Decode(StillLifeRenderer.Render(scene).PngBytes);
+        using var changed = SKBitmap.Decode(StillLifeRenderer.Render(changedSetting).PngBytes);
+        Assert.NotEqual(original.GetPixel(0, 0), changed.GetPixel(0, 0));
+
+        // Samples are well inside the body, away from antialiased silhouette edges.
+        for (var row = 48; row <= 70; row += 2)
+        {
+            for (var column = 46; column <= 54; column += 2)
+            {
+                var x = (size * column) / 100;
+                var y = (size * row) / 100;
+                Assert.Equal(original.GetPixel(x, y), changed.GetPixel(x, y));
+            }
+        }
+    }
+
     [Fact]
     public void DifferentSeedChangesPixels()
     {

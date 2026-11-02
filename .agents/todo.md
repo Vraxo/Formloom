@@ -287,19 +287,24 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
 
 ---
 
+> Visual defect reported by user: apple appeared translucent. The renderer reused shadow paint alpha (105/255) for the body gradient. Paint opacity is now explicitly reset before the body and highlight; a regression test varies the setting and checks that interior apple pixels do not change. Fix execution and visual confirmation remain pending.
+
 # Phase 4 — Final verification and checkpoint
+
+> Verification update (2026-11-02): PR #7 merged after Linux / Release CI passed (36 seconds), covering restore, warnings-as-errors Release compilation of the full solution and Core/renderer tests. The user subsequently confirmed the integrated app works on Windows. This is not evidence that every individual manual case below was exercised. Debug compilation remains unverified and intentionally is not duplicated in PR CI, per user direction. No further feature expansion before visual review and checkpoint signoff.
+
 
 ### 4.1 Automated verification
 
-- [ ] Run `dotnet restore` from the solution root.
+- [x] Run `dotnet restore` from the solution root.
 - [ ] Run `dotnet build` for the complete solution in Debug and Release configurations.
-- [ ] Run `dotnet test` and ensure all Core and renderer tests pass.
+- [x] Run `dotnet test` and ensure all Core and renderer tests pass.
 - [ ] Resolve warnings and errors introduced by the implementation. Do not hide them by disabling analyzers or suppressing broad warning categories.
 - [ ] Verify that the application can be launched using the documented command from a clean build.
 
 ### 4.2 Manual acceptance test
 
-- [ ] Launch Formloom Desktop.
+- [x] Launch Formloom Desktop.
 - [ ] Generate the default `a red apple on a wooden table` prompt using seed `42` and the default variation value.
 - [ ] Inspect the image at normal viewing size and confirm it is recognisably an apple still life with coherent lighting, organic shape, visible materials and a cast/contact shadow.
 - [ ] Generate the same inputs again and confirm the image is unchanged.
@@ -311,9 +316,9 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
 
 ### 4.3 Documentation and agent handoff
 
-- [ ] Update README with the implemented feature set, exact prerequisites, build/test/run commands and any known platform limitations.
+- [x] Update README with the implemented feature set, exact prerequisites, build/test/run commands and any known platform limitations.
 - [ ] Ensure this `todo.md` accurately reflects completed tasks. Do not mark future roadmap features as complete.
-- [ ] Record the exact package versions used and any deviations from the chosen stack.
+- [x] Record the exact package versions used and any deviations from the chosen stack.
 - [ ] Provide a concise completion report containing: project structure, key implementation decisions, build/test commands and results, where the generated PNG can be found or saved, and any remaining defects or limitations.
 - [ ] Include a screenshot of the running application and one generated output image if the agent environment supports capturing them.
 
