@@ -54,3 +54,11 @@ jobs:
           name: test-results-Release
           path: TestResults/**/*.trx
           if-no-files-found: ignore
+
+      - name: Upload procedural preview
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: procedural-preview
+          path: artifacts/bin/Formloom.Tests/**/formloom-apple-seed-42.png
+          if-no-files-found: error

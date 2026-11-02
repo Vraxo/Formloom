@@ -16,7 +16,9 @@ Core now supports `a red apple on a wooden table`, with `green` or `yellow` in p
 
 `SceneGenerator.Generate(new GenerationRequest(prompt, Seed: 42, Variation: 0.35))` returns either a normalized, immutable scene or a user-facing error. Dimensions must be 64–4096 on each axis; variation must be finite and within 0–1. Defaults are 1024 × 1024. PCG32 with stable UTF-8 FNV-1a named streams isolates shape, stem, leaf, surface, grain and background randomness. Variation scales bounded offsets; zero variation uses the base composition. Coordinates and proportions are independent of output resolution.
 
-Core tests cover parsing, invalid input, a PCG reference sequence, repeatability, independent streams, helper bounds and scene variation. Execution of the new tests is pending CI. Procedural rendering, desktop launch and saving are not implemented.
+Core tests cover parsing, invalid input, a PCG reference sequence, repeatability, independent streams, helper bounds and scene variation; they passed Linux Release CI in PR #4. `StillLifeRenderer.Render(scene)` now creates a CPU raster PNG using only procedural paths, gradients and seeded detail. The setting includes a shaded background, angled tabletop, directional grain and a knot; the apple includes an asymmetric silhouette, stem, leaf, surface speckles, directional shading and soft cast/contact shadows. The renderer owns and disposes its native Skia resources; only dimensions and PNG bytes cross its public boundary. No finished artwork or textures are embedded.
+
+Renderer tests cover PNG decoding and dimensions at 256, 1024 and 1280 square pixels plus a rectangular canvas, pixel repeatability, seed differences and all supported colors. CI will upload a **procedural-preview** artifact containing `formloom-apple-seed-42.png` from the default-scene export test, for visual review. Locally the export is placed beside the test assembly under `artifacts/bin/Formloom.Tests/`. These new tests have not yet run in CI, and visual quality has not been inspected. Desktop launch and saving are not implemented.
 
 ## Prerequisites and commands
 
@@ -44,6 +46,7 @@ Versions are declared once in `Directory.Packages.props`:
 | --- | --- | --- |
 | PhotinoX.Blazor | 5.3.5 | Planned native Blazor host |
 | SkiaSharp | 4.154.0 | CPU raster rendering |
+| SkiaSharp.NativeAssets.Linux.NoDependencies | 4.154.0 | CPU native assets for Linux renderer tests |
 | xunit.v3 | 4.0.2 | Tests |
 | Microsoft.Testing.Extensions.TrxReport | 2.5.1 | Native Microsoft.Testing.Platform TRX reports |
 | NewStyleCop.Analyzers | 1.2.1 | Existing repository analyzer |
@@ -56,6 +59,6 @@ Versions are declared once in `Directory.Packages.props`:
 
 Require **Linux / Release** in the `main` ruleset/branch protection to enforce passing CI before merging. Remove the previous **Windows / Debug** and **Windows / Release** requirements if configured, or they will block merging while waiting for checks that no longer run. A workflow alone does not prevent merging a failing PR.
 
-Linux CI validates managed compilation and tests, not the Windows desktop runtime. Native window launch, WebView2 integration, visual quality and PNG saving still require Windows acceptance testing. Future Skia rendering tests must include compatible Linux native assets; the current smoke test does not invoke Skia or launch Photino.
+Linux CI validates managed compilation and tests, not the Windows desktop runtime. Native window launch, WebView2 integration, visual quality and PNG saving still require Windows acceptance testing. Skia renderer tests use the explicit Linux native-assets package; tests do not launch Photino.
 
 The agent environment is Debian 12 / Linux x86-64 without a .NET SDK. Per project direction, no local SDK is installed; GitHub Actions is the build/test validation path. The Ubuntu workflow remains unverified until CI runs. The previous Windows scaffold jobs failed because Microsoft.Testing.Platform rejected the VSTest path on .NET 10. The native runner configuration addresses that reported error; CI must confirm the fix.
