@@ -80,12 +80,10 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
   ├── Directory.Packages.props
   ├── README.md
   ├── todo.md
-  ├── src/
-  │   ├── Formloom.Core/
-  │   ├── Formloom.Rendering.Skia/
-  │   └── Formloom.Desktop/
-  └── tests/
-      └── Formloom.Tests/
+  ├── Formloom.Core/
+  ├── Formloom.Rendering.Skia/
+  ├── Formloom.Desktop/
+  └── Formloom.Tests/
   ```
 
 - [x] Target all projects at `net10.0`. Enable nullable reference types and implicit usings. Use consistent formatting and sensible compiler warnings; do not suppress warnings wholesale.
@@ -99,6 +97,8 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
 - [ ] Restore and build the empty solution. Create the test project early and verify that `dotnet test` discovers and executes a trivial passing test.
 
 **Done when:** The solution restores, builds and runs its test project. Core remains independent of rendering and UI packages.
+
+> Layout update: per user preference, all four projects live directly at the repository root; no `src/` or `tests/` wrapper directories.
 
 > Scaffold update: retained `Formloom.slnx`; added the four prescribed projects and central package versions. Desktop is a Razor library until the Phase 3 executable host is implemented. A Core dependency smoke test and native Microsoft.Testing.Platform runner with TRX reporting are in place. Restore/build/test acceptance remains unchecked pending Linux Release CI; no local SDK was installed.
 
