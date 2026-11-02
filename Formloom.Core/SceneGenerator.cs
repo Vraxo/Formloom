@@ -39,7 +39,7 @@ public static class SceneGenerator
             -0.16 + Offset(stem, 0.2, amount),
             -0.45 + Offset(leaf, 0.25, amount),
             0.12 + Offset(surface, 0.08, amount));
-        return new(new StillLifeScene(
+        var scene = new StillLifeScene(
             request.Width,
             request.Height,
             request.Seed,
@@ -48,7 +48,8 @@ public static class SceneGenerator
             0.64,
             0.2 + Offset(table, 0.1, amount),
             0.5 + Offset(background, 0.15, amount),
-            Vector2.Normalize(new Vector2(-1, -1))), null);
+            Vector2.Normalize(new Vector2(-1, -1)));
+        return new(scene, null);
     }
 
     private static double Offset(Pcg32 random, double range, double variation) =>

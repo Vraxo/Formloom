@@ -19,6 +19,7 @@ public sealed class Pcg32
     public static Pcg32 ForStream(ulong seed, string name)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
+
         // FNV-1a over UTF-8 provides a stable, process-independent stream identifier.
         var hash = 14695981039346656037UL;
         foreach (var value in Encoding.UTF8.GetBytes(name))
