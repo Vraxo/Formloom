@@ -9,12 +9,8 @@
     <File Path="README.md" />
     <File Path=".agents/todo.md" />
   </Folder>
-  <Folder Name="/src/">
-    <Project Path="src/Formloom.Core/Formloom.Core.csproj" />
-    <Project Path="src/Formloom.Rendering.Skia/Formloom.Rendering.Skia.csproj" />
-    <Project Path="src/Formloom.Desktop/Formloom.Desktop.csproj" />
-  </Folder>
-  <Folder Name="/tests/">
-    <Project Path="tests/Formloom.Tests/Formloom.Tests.csproj" />
-  </Folder>
+  <Project Path="Formloom.Core/Formloom.Core.csproj" />
+  <Project Path="Formloom.Rendering.Skia/Formloom.Rendering.Skia.csproj" />
+  <Project Path="Formloom.Desktop/Formloom.Desktop.csproj" />
+  <Project Path="Formloom.Tests/Formloom.Tests.csproj" />
 </Solution>

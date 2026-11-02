@@ -5,10 +5,10 @@ Formloom is a CPU-first, non-neural procedural image-construction project. Its f
 ## Current structure
 
 - `Formloom.slnx`: solution, retaining the existing modern solution format.
-- `src/Formloom.Core`: renderer-independent generation library.
-- `src/Formloom.Rendering.Skia`: CPU raster renderer library, referencing Core.
-- `src/Formloom.Desktop`: Razor library scaffold with PhotinoX.Blazor, referencing Core and Rendering.Skia. The executable host and UI are not implemented yet.
-- `tests/Formloom.Tests`: xUnit v3 test project, referencing Core and Rendering.Skia. The initial smoke test loads Core and checks for forbidden rendering/UI dependencies.
+- `Formloom.Core`: renderer-independent generation library.
+- `Formloom.Rendering.Skia`: CPU raster renderer library, referencing Core.
+- `Formloom.Desktop`: Razor library scaffold with PhotinoX.Blazor, referencing Core and Rendering.Skia. The executable host and UI are not implemented yet.
+- `Formloom.Tests`: xUnit v3 test project, referencing Core and Rendering.Skia. The initial smoke test loads Core and checks for forbidden rendering/UI dependencies.
 - `Directory.Build.props`, `Directory.Packages.props`, `.editorconfig`: shared build, centrally managed dependencies and formatting.
 - [`.agents/todo.md`](.agents/todo.md): implementation checklist and acceptance criteria.
 
