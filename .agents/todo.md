@@ -112,7 +112,7 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
 
 # Phase 1 — Build the smallest useful generation core
 
-> Implementation added: immutable scene types, bounded prompt grammar, PCG32 with FNV-1a named streams and normalized scene construction. Automated tests are authored but their acceptance checkboxes remain open until CI executes them. No renderer or UI changes are included.
+> Implementation added: immutable scene types, bounded prompt grammar, PCG32 with FNV-1a named streams and normalized scene construction. Core tests passed Linux Release CI in PR #4 (27 seconds). No renderer or UI changes are included.
 
 ### 1.1 Define the first scene model
 
@@ -130,7 +130,7 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
 - [x] Support deterministic derived streams using stable string/identifier hashing. Give independently generated components their own streams (for example `apple.shape`, `apple.surface`, `table.grain`, `background.detail`).
 - [x] Ensure a change in one component's random consumption does not shift the random sequence of unrelated components.
 - [x] Keep the core generator independent of `System.Random` for image-generation decisions. A system RNG may be used by the UI solely to choose a new seed when the user presses Randomize.
-- [ ] Add tests for repeatability, range boundaries, distinct seeds and independent named streams.
+- [x] Add tests for repeatability, range boundaries, distinct seeds and independent named streams.
 
 **Done when:** The same seed and stream name always produce the same sequence, and named streams remain isolated from one another.
 
@@ -140,7 +140,7 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
 - [x] Support a small number of meaningful variations without pretending to understand arbitrary English. For example, allow a few apple colour adjectives such as red, green and yellow while retaining the apple-on-wooden-table construction.
 - [x] Parse the prompt into the typed scene/request model. Keep parsing separate from rendering.
 - [x] Reject unsupported subjects, materials or relationships with a friendly, specific message. Do not silently discard unknown words and generate an unrelated image.
-- [ ] Add tests for valid prompts, case/whitespace handling, supported modifiers, empty input and unsupported input.
+- [x] Add tests for valid prompts, case/whitespace handling, supported modifiers, empty input and unsupported input.
 
 **Done when:** The initial prompt family is predictable, testable and clearly bounded. No LLM or external NLP package is introduced.
 
@@ -150,13 +150,15 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
 - [x] Use relative coordinates or a normalized layout so the scene can be rendered at more than one resolution without rewriting its composition.
 - [x] Apply the seed to procedural details and the variation setting to the permitted range of shape/material irregularity. A higher variation value should create more diversity, not random structural damage.
 - [x] Keep the apple recognisable at all variation values. Its major parts and their relationships must remain intact.
-- [ ] Add tests proving that scene construction is deterministic for identical inputs and that relevant input changes affect the scene description.
+- [x] Add tests proving that scene construction is deterministic for identical inputs and that relevant input changes affect the scene description.
 
 **Done when:** Core can produce a fully specified, reproducible still-life scene from a supported prompt, seed and variation setting.
 
 ---
 
 # Phase 2 — Render an actual procedural image
+
+> Renderer implementation added: CPU raster surfaces, runtime path geometry, gradients, directional wood grain, apple/stem/leaf, seeded surface detail and cast/contact shadows. The renderer returns dimensions plus PNG bytes and owns its native resources. Linux native assets and invariant/repeatability tests are included. Phase 2 acceptance remains open: these changes have not run in CI and no actual output has been visually inspected; do not treat visual-quality tasks as complete.
 
 ### 2.1 Establish the Skia rendering boundary
 
