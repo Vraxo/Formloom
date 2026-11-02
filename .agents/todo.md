@@ -70,8 +70,8 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
 
 ### 0.2 Create or adapt the solution structure
 
-- [ ] Create or adapt `Formloom.sln`.
-- [ ] Establish this initial structure (adjust only if the repository already has a sound equivalent):
+- [x] Create or adapt `Formloom.sln`.
+- [x] Establish this initial structure (adjust only if the repository already has a sound equivalent):
 
   ```text
   Formloom/
@@ -88,23 +88,25 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
       └── Formloom.Tests/
   ```
 
-- [ ] Target all projects at `net10.0`. Enable nullable reference types and implicit usings. Use consistent formatting and sensible compiler warnings; do not suppress warnings wholesale.
-- [ ] Use Central Package Management in `Directory.Packages.props` so package versions are declared once.
-- [ ] Add the projects to the solution and establish only these references:
+- [x] Target all projects at `net10.0`. Enable nullable reference types and implicit usings. Use consistent formatting and sensible compiler warnings; do not suppress warnings wholesale.
+- [x] Use Central Package Management in `Directory.Packages.props` so package versions are declared once.
+- [x] Add the projects to the solution and establish only these references:
   - `Formloom.Rendering.Skia` references `Formloom.Core`.
   - `Formloom.Desktop` references `Formloom.Core` and `Formloom.Rendering.Skia`.
   - `Formloom.Tests` references `Formloom.Core` and `Formloom.Rendering.Skia`.
   - `Formloom.Core` must not reference SkiaSharp, Photino, Blazor or desktop/UI assemblies.
-- [ ] Add the selected package dependencies to the appropriate projects: PhotinoX.Blazor to Desktop, SkiaSharp to Rendering.Skia, and xUnit v3 to Tests.
+- [x] Add the selected package dependencies to the appropriate projects: PhotinoX.Blazor to Desktop, SkiaSharp to Rendering.Skia, and xUnit v3 to Tests.
 - [ ] Restore and build the empty solution. Create the test project early and verify that `dotnet test` discovers and executes a trivial passing test.
 
 **Done when:** The solution restores, builds and runs its test project. Core remains independent of rendering and UI packages.
 
+> Scaffold update: retained `Formloom.slnx`; added the four prescribed projects and central package versions. Desktop is a Razor library until the Phase 3 executable host is implemented. A Core dependency smoke test and VSTest adapter are in place. Restore/build/test acceptance remains unchecked pending Windows CI; no local SDK was installed.
+
 ### 0.3 Add a minimal developer README
 
-- [ ] Document the project purpose, the no-ML/CPU-first constraint, the project layout, required .NET SDK and the Windows WebView2 prerequisite.
+- [x] Document the project purpose, the no-ML/CPU-first constraint, the project layout, required .NET SDK and the Windows WebView2 prerequisite.
 - [ ] Add the exact commands to restore, build, test and run the desktop app.
-- [ ] Keep the README factual and short; do not document future features as if they already exist.
+- [x] Keep the README factual and short; do not document future features as if they already exist.
 
 ---
 

@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="../Formloom.Core/Formloom.Core.csproj" />
+    <ProjectReference Include="../Formloom.Rendering.Skia/Formloom.Rendering.Skia.csproj" />
+    <PackageReference Include="PhotinoX.Blazor" />
+  </ItemGroup>
+</Project>
