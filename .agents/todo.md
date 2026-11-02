@@ -66,7 +66,7 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
 
 **Done when:** The implementation plan accounts for the existing repository and the actual build environment. Existing user files are preserved.
 
-> Inspection (2026-11-02): Debian 12 / Linux x86-64; `dotnet --info` fails with `dotnet: command not found`. Local SDK installation is not required for this session: per user direction, use Windows/.NET 10 GitHub Actions CI, modeled on `Vraxo/Lattice`, for restore/build/test validation. CI results must be checked before claiming validation. Windows WebView2 is not applicable on this host; the Windows prerequisite is documented in README. Retain the existing `.slnx` solution format rather than adding a duplicate `.sln`. SDK confirmation and subsequent build-dependent tasks remain incomplete.
+> Inspection (2026-11-02): Debian 12 / Linux x86-64; `dotnet --info` fails with `dotnet: command not found`. Local SDK installation is not required for this session: per user direction, use Linux/.NET 10 Release GitHub Actions CI (adapted from `Vraxo/Lattice`), for restore/build/test validation. CI results must be checked before claiming validation. Windows WebView2 is not applicable on this host; the Windows prerequisite is documented in README. Retain the existing `.slnx` solution format rather than adding a duplicate `.sln`. SDK confirmation and subsequent build-dependent tasks remain incomplete.
 
 ### 0.2 Create or adapt the solution structure
 
@@ -100,7 +100,7 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
 
 **Done when:** The solution restores, builds and runs its test project. Core remains independent of rendering and UI packages.
 
-> Scaffold update: retained `Formloom.slnx`; added the four prescribed projects and central package versions. Desktop is a Razor library until the Phase 3 executable host is implemented. A Core dependency smoke test and VSTest adapter are in place. Restore/build/test acceptance remains unchecked pending Windows CI; no local SDK was installed.
+> Scaffold update: retained `Formloom.slnx`; added the four prescribed projects and central package versions. Desktop is a Razor library until the Phase 3 executable host is implemented. A Core dependency smoke test and native Microsoft.Testing.Platform runner with TRX reporting are in place. Restore/build/test acceptance remains unchecked pending Linux Release CI; no local SDK was installed.
 
 ### 0.3 Add a minimal developer README
 

@@ -7,7 +7,6 @@
     <PackageVersion Include="PhotinoX.Blazor" Version="5.3.5" />
     <PackageVersion Include="SkiaSharp" Version="4.154.0" />
     <PackageVersion Include="xunit.v3" Version="4.0.2" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.4" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.5.1" />
   </ItemGroup>
 </Project>
