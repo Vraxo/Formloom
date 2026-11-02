@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewStyleCop.Analyzers" Version="1.2.1" Condition="'$(RunAnalyzers)' != 'false'">
+    <PackageReference Include="NewStyleCop.Analyzers" Condition="'$(RunAnalyzers)' != 'false'">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>

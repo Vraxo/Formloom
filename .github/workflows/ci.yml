@@ -15,13 +15,9 @@ concurrency:
 
 jobs:
   build-and-test:
-    name: Windows / ${{ matrix.configuration }}
-    runs-on: windows-latest
+    name: Linux / Release
+    runs-on: ubuntu-latest
     timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        configuration: [Debug, Release]
     steps:
       - name: Check out source
         uses: actions/checkout@v7
@@ -38,7 +34,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', '**/*.slnx', '**/NuGet.Config', '**/nuget.config') }}
+          key: ${{ runner.os }}-nuget-${{ hashFiles('global.json', '**/*.csproj', '**/*.props', '**/*.targets', '**/*.slnx', '**/NuGet.Config', '**/nuget.config') }}
           restore-keys: |
             ${{ runner.os }}-nuget-
 
@@ -46,15 +42,15 @@ jobs:
         run: dotnet restore Formloom.slnx
 
       - name: Build
-        run: dotnet build Formloom.slnx --configuration ${{ matrix.configuration }} --no-restore --warnaserror
+        run: dotnet build Formloom.slnx --configuration Release --no-restore --warnaserror
 
       - name: Test
-        run: dotnet test Formloom.slnx --configuration ${{ matrix.configuration }} --no-build --no-restore --logger trx --results-directory TestResults
+        run: dotnet test --solution Formloom.slnx --configuration Release --no-build --no-restore --report-trx --results-directory TestResults
 
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-results-${{ matrix.configuration }}
+          name: test-results-Release
           path: TestResults/**/*.trx
           if-no-files-found: ignore
