@@ -223,6 +223,10 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
 
 # Phase 3 — Put the generator inside Formloom Desktop
 
+> Current desktop wiring: prompt, uint64 seed, Randomize, variation, background generation, preview and native asynchronous Save PNG are implemented. A failed request retains the latest successful image and its seed/variation metadata. Expected validation and unexpected generation/save failures are presented without stack traces; unexpected details are logged. Save uses actual PNG bytes and the successful image's seed. No new packages were added.
+>
+> User confirmed the preceding host's interaction check on Windows (`Blazor interaction confirmed (4)`). This verifies the prior native page and event handling, not the new generation/save flow, close/relaunch or visual acceptance. The new UI has not yet run in CI or on Windows; manual acceptance remains open. See README for exact checks.
+
 ### 3.1 Create the PhotinoX Blazor host
 
 > Host implementation added using the upstream 5.3.5 startup API and sample: STA entry point, 1400 × 900 Formloom window, root component, copied static content and disposable application lifetime. The welcome page includes a Blazor interaction check. Build verification is pending CI; native launch/static assets/interaction/shutdown must be verified on Windows before host acceptance is complete. Generator wiring has deliberately not started.
@@ -241,17 +245,17 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
 
 - [ ] Create a clean, restrained dark desktop layout with Formloom branding. Prioritize the image preview over decorative chrome.
 - [ ] Include a prompt field, Generate button, numeric seed field, Randomize Seed action, variation slider, image-preview area and Save PNG action.
-- [ ] Prefill the prompt with `a red apple on a wooden table` and the seed with a fixed, reproducible value such as `42`.
+- [x] Prefill the prompt with `a red apple on a wooden table` and the seed with a fixed, reproducible value such as `42`.
 - [ ] Display the selected seed and variation value clearly. The user must be able to edit the seed directly.
-- [ ] Include a useful empty/initial preview state before the first generation.
+- [x] Include a useful empty/initial preview state before the first generation.
 - [ ] Keep the layout responsive to ordinary desktop window resizing. Do not build a full scene-tree inspector, layer editor or history panel yet.
 
 **Done when:** The UI exposes every control needed to exercise the first vertical slice, even before generation is connected.
 
 ### 3.3 Connect the UI to the generator
 
-- [ ] Add a small application-level generation service in Desktop that orchestrates prompt parsing, scene construction and Skia rendering.
-- [ ] Keep generation logic out of Razor components. Components should collect input, call the service and present its result.
+- [x] Add a small application-level generation service in Desktop that orchestrates prompt parsing, scene construction and Skia rendering.
+- [x] Keep generation logic out of Razor components. Components should collect input, call the service and present its result.
 - [ ] On Generate, pass the prompt, seed, variation and target dimensions through the pipeline and display the returned PNG in the preview.
 - [ ] Show a clear, human-readable validation message for unsupported prompts. Keep the previous successful image visible when a later prompt fails, unless there is a compelling usability reason to clear it.
 - [ ] Disable or guard duplicate Generate actions while a generation is in progress. Show a simple generating state and restore the controls on success or failure.
@@ -262,10 +266,10 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
 
 ### 3.4 Implement PNG saving
 
-- [ ] Implement Save PNG using the actual bytes from the latest successful generation, not a screenshot of the preview UI.
+- [x] Implement Save PNG using the actual bytes from the latest successful generation, not a screenshot of the preview UI.
 - [ ] Use a reliable desktop/WebView-compatible download or save mechanism. If a small JS helper is required for a download link/blob, keep it isolated and documented.
-- [ ] Use a sensible default filename such as `formloom-apple-seed-42.png` and sanitize any user-derived filename components.
-- [ ] Disable Save PNG until a successful image exists.
+- [x] Use a sensible default filename such as `formloom-apple-seed-42.png` and sanitize any user-derived filename components.
+- [x] Disable Save PNG until a successful image exists.
 - [ ] Verify the saved file opens in an independent image viewer and has the expected PNG dimensions.
 
 **Done when:** A user can save a generated image as an actual PNG file.

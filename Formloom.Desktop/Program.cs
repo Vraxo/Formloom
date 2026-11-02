@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Photino.Blazor;
 using PhotinoX.App;
 
@@ -14,6 +15,8 @@ internal static class Program
             ContentRootPath = AppContext.BaseDirectory,
             WebRootPath = "wwwroot",
         });
+        builder.Services.AddSingleton<GenerationService>();
+        builder.Services.AddSingleton<PngSaveService>();
         builder.RootComponents.Add<App>("#app");
         builder.ConfigureMainWindow(window =>
         {
@@ -21,6 +24,7 @@ internal static class Program
         });
 
         using var app = builder.Build();
+        app.Services.GetRequiredService<PngSaveService>().Initialize(app.MainWindow);
         return app.Run();
     }
 }
