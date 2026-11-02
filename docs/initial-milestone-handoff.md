@@ -70,3 +70,9 @@ The historical unverified items above remain accurate evidence limits, not recur
 ## Acceptance audit correction
 
 The earlier closure wording conflated delivered implementation with full checklist verification. The [checklist evidence audit](checklist-audit.md) now maps all previously unchecked criteria to actual evidence and remaining gaps, splits partially fulfilled tasks, and identifies newly authored real-pipeline tests (not yet executed). Historical individual native/UI checks are neither asserted as run nor silently waived. Passing CI is the routine gate; repeated manual smoke checks are not required for every change, but automation boundaries remain explicit.
+
+## Final acceptance scope (approved; execution pending)
+
+After reviewing the remaining checkboxes, the user approved rendered-component coverage, one-off Debug verification and explicit deferral of the native/manual checks. The [checklist D1–D6 table](../.agents/todo.md) records the precise deferrals; these are not claims of manual execution. Actual component events/markup are exercised by new bUnit tests, alongside the real pipeline tests that passed PR #13. Component tests plus the DI adjustment have not run yet. Debug can now be requested through the optional `verify_debug` manual workflow input, but has not yet been executed.
+
+Milestone closure under this revised scope requires both execution gates to pass. The full original manual criteria are not all established. Routine PR CI remains one Linux Release job, and no composition controls or other feature expansion are authorized here.

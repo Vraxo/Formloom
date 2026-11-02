@@ -5,6 +5,12 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      verify_debug:
+        description: 'Run a one-off full-solution Debug build before Release validation'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -40,6 +46,10 @@ jobs:
 
       - name: Restore
         run: dotnet restore Formloom.slnx
+
+      - name: One-off Debug verification
+        if: github.event_name == 'workflow_dispatch' && inputs.verify_debug
+        run: dotnet build Formloom.slnx --configuration Debug --no-restore --warnaserror
 
       - name: Build
         run: dotnet build Formloom.slnx --configuration Release --no-restore --warnaserror

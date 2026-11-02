@@ -1,6 +1,4 @@
-@inject GenerationService Generator
-@inject PngSaveService Saver
-@inject Microsoft.Extensions.Logging.ILogger<DesktopSession> SessionLogger
+@inject DesktopSession Session
 
 <main>
     <header>
@@ -12,33 +10,33 @@
             <p class="eyebrow">THE STILL-LIFE STUDY</p>
             <h1 id="create-title">Shape.<br />Material. Light.</h1>
             <p class="intro">An image, constructed from geometry and code. Yours to vary.</p>
-            <form @onsubmit="session.GenerateAsync" @onsubmit:preventDefault>
-                <fieldset disabled="@session.IsBusy">
+            <form @onsubmit="Session.GenerateAsync" @onsubmit:preventDefault>
+                <fieldset disabled="@Session.IsBusy">
                     <label for="prompt">Describe your still life</label>
-                    <textarea id="prompt" rows="3" @bind="session.Prompt" @bind:event="oninput" aria-describedby="prompt-help"></textarea>
+                    <textarea id="prompt" rows="3" @bind="Session.Prompt" @bind:event="oninput" aria-describedby="prompt-help"></textarea>
                     <p id="prompt-help" class="help">Try a red, green or yellow apple on a wooden table.</p>
                     <div class="label-row">
                         <label for="seed">Seed</label>
-                        <button type="button" class="text-button" @onclick="session.RandomizeSeed">Randomize</button>
+                        <button type="button" class="text-button" @onclick="Session.RandomizeSeed">Randomize</button>
                     </div>
-                    <input id="seed" type="text" inputmode="numeric" @bind="session.SeedText" @bind:event="oninput" aria-describedby="seed-help" />
+                    <input id="seed" type="text" inputmode="numeric" @bind="Session.SeedText" @bind:event="oninput" aria-describedby="seed-help" />
                     <p id="seed-help" class="help">Same inputs, same image. Use a whole number from 0 to 18446744073709551615.</p>
                     <div class="label-row">
                         <label for="variation">Variation</label>
-                        <output for="variation">@session.Variation.ToString("P0", System.Globalization.CultureInfo.InvariantCulture)</output>
+                        <output for="variation">@Session.Variation.ToString("P0", System.Globalization.CultureInfo.InvariantCulture)</output>
                     </div>
-                    <input id="variation" type="range" min="0" max="1" step="0.01" @bind="session.Variation" @bind:event="oninput" />
+                    <input id="variation" type="range" min="0" max="1" step="0.01" @bind="Session.Variation" @bind:event="oninput" />
                     <p class="help">Subtle at the left. More organic at the right.</p>
-                    <button class="primary" type="submit">@(session.Generating ? "Generating…" : "Generate image") <span aria-hidden="true">↗</span></button>
+                    <button class="primary" type="submit">@(Session.Generating ? "Generating…" : "Generate image") <span aria-hidden="true">↗</span></button>
                 </fieldset>
             </form>
             <p class="specification">1024 × 1024 · PNG · CPU raster</p>
         </section>
-        <section class="image-panel" aria-label="Generated image" aria-busy="@session.Generating">
+        <section class="image-panel" aria-label="Generated image" aria-busy="@Session.Generating">
             <div class="preview">
-                @if (session.PreviewUrl is not null)
+                @if (Session.PreviewUrl is not null)
                 {
-                    <img src="@session.PreviewUrl" alt="@session.ImageDescription" width="1024" height="1024" />
+                    <img src="@Session.PreviewUrl" alt="@Session.ImageDescription" width="1024" height="1024" />
                 }
                 else
                 {
@@ -50,15 +48,15 @@
                 }
             </div>
             <div class="preview-footer">
-                <p>@(session.Image is null ? "Your first study is waiting." : $"Seed {session.RenderedSeed} · Variation {session.RenderedVariation:P0}")</p>
-                <button type="button" class="secondary" disabled="@(session.Image is null || session.IsBusy)" @onclick="session.SaveAsync">@(session.Saving ? "Saving…" : "Save PNG")</button>
+                <p>@(Session.Image is null ? "Your first study is waiting." : $"Seed {Session.RenderedSeed} · Variation {Session.RenderedVariation:P0}")</p>
+                <button type="button" class="secondary" disabled="@(Session.Image is null || Session.IsBusy)" @onclick="Session.SaveAsync">@(Session.Saving ? "Saving…" : "Save PNG")</button>
             </div>
         </section>
     </div>
-    @if (session.Error is not null)
+    @if (Session.Error is not null)
     {
-        <p class="message error" role="alert">@session.Error</p>
+        <p class="message error" role="alert">@Session.Error</p>
     }
-    <p class="message" role="status" aria-live="polite">@session.Status</p>
+    <p class="message" role="status" aria-live="polite">@Session.Status</p>
     <footer>BUILT FROM FIRST PRINCIPLES <span>One apple. Infinite small differences.</span></footer>
 </main>
