@@ -291,6 +291,8 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
 
 > User confirmed the opacity fix works and supplied the actual seed-42 PNG for review. The agreed next polish is limited to contact and stem attachment: tighter lower-lobe contact shadows, a softer cast shadow, a fading stem indentation and a tapered shaded stem. Wood grain and body highlight are deliberately unchanged for a focused comparison. Contact-shadow tests were authored; this visual pass still requires CI and before/after review.
 
+> Next user-approved visual pass: table grain only. Replaced the dense parallel strokes and concentric ring knot with broader low-contrast tonal bands, sparser perspective-scaled fibers and a shared flow field that bends around a shaded, seeded knot. Apple geometry, lighting and contact shadows remain unchanged. Added table-region repeatability/seed coverage. CI execution and same-seed visual comparison remain pending.
+
 # Phase 4 — Final verification and checkpoint
 
 > Verification update (2026-11-02): PR #7 merged after Linux / Release CI passed (36 seconds), covering restore, warnings-as-errors Release compilation of the full solution and Core/renderer tests. The user subsequently confirmed the integrated app works on Windows. This is not evidence that every individual manual case below was exercised. Debug compilation remains unverified and intentionally is not duplicated in PR CI, per user direction. No further feature expansion before visual review and checkpoint signoff.

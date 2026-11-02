@@ -72,3 +72,7 @@ The agent sandbox is Debian 12 without a .NET SDK; per user direction, SDK-based
 ## Current visual-polish pass
 
 Review of the user-provided seed-42 PNG confirmed a recognizable opaque apple, but identified weak grounding and a flat stem socket. The current renderer changes soften the broad cast shadow, add localized elliptical contact shadows beneath both lower lobes, replace the flat socket oval with a clipped, fading indentation, and draw a tapered, shaded stem with a subtle bark ridge. Wood grain, apple highlight, scene inputs and named random streams are unchanged. Contact-shadow tests are added; execution and before/after visual approval remain pending. Existing outputs will change with this renderer build while same-build repeatability is preserved.
+
+### Wood-grain refinement
+
+Following review of the seed-17512344472955961833 image, table detail now uses sparse, irregularly spaced fibers over broader low-contrast tonal bands. Both follow the same continuous flow field, bending around a seeded, shaded knot instead of overlapping concentric rings. Spacing and stroke width increase toward the foreground. The existing table palette, apple, lighting and contact shadows are unchanged, and randomness remains isolated in `table.grain`. A table-region repeatability/seed test is included. Build/test execution and visual approval of this pass are pending; regenerate the same seed for a focused comparison.

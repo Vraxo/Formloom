@@ -49,29 +49,7 @@ public static class StillLifeRenderer
         canvas.DrawPath(table, paint);
         canvas.Save();
         canvas.ClipPath(table);
-        paint.Shader = null;
-        paint.Style = SKPaintStyle.Stroke;
-        var random = Pcg32.ForStream(scene.Seed, "table.grain");
-        for (var index = 0; index < 220; index++)
-        {
-            var y = horizon + ((float)random.NextDouble() * (1050 - horizon));
-            var bend = 6 + ((float)random.NextDouble() * 24);
-            paint.Color = new SKColor(62, 33, 18, (byte)(12 + (scene.GrainStrength * 65)));
-            paint.StrokeWidth = 0.5f + ((float)random.NextDouble() * 2);
-            using var grainBuilder = new SKPathBuilder();
-            grainBuilder.MoveTo(-20, y);
-            grainBuilder.CubicTo(260, y - bend, 650, y + bend, 1050, y - 38);
-            using var grain = grainBuilder.Detach();
-            canvas.DrawPath(grain, paint);
-        }
-
-        paint.Color = new SKColor(61, 32, 18, 55);
-        paint.StrokeWidth = 1.2f;
-        for (var ring = 1; ring < 12; ring++)
-        {
-            canvas.DrawOval(820, 828, ring * 5, ring * 1.5f, paint);
-        }
-
+        WoodGrain.Draw(canvas, scene, horizon);
         canvas.Restore();
     }
 
