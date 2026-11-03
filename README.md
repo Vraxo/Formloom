@@ -69,7 +69,7 @@ Versions are centrally managed; no selected stack dependency was substituted:
 
 Core, renderer, desktop host and integrated generation/save UI passed Linux Release CI in PRs #4–#10, including opacity, contact-shadow and table-grain regression tests. CI does not verify native Windows/WebView2 behavior. Require **Linux / Release** in `main` branch protection to enforce it; obsolete Windows check requirements should be removed.
 
-The agent sandbox is Debian 12 without a .NET SDK; per user direction, SDK-based validation is delegated to CI. GitHub's redirected artifact storage is inaccessible here, but user-uploaded PNGs enabled visual output review. No full application screenshot or Windows GUI automation was captured. Debug builds, close/relaunch, accessibility and specific UI/save edge cases are not individually signed off; the handoff lists them without claiming failures.
+The agent sandbox is Debian 12 without a .NET SDK; per user direction, SDK-based validation is delegated to CI. GitHub's redirected artifact storage is inaccessible here, but user-uploaded PNGs enabled visual output review. No full application screenshot or Windows GUI automation was captured. Close/relaunch, accessibility and specific native UI/save edge cases are explicitly deferred; the handoff lists them without claiming failures.
 
 ## Visual-review checkpoint
 
@@ -85,16 +85,18 @@ The native save service now only selects a destination; `PngFileWriter` handles 
 
 PR #12 passed the solution-wide Linux Release build and tests in 33 seconds, including both test projects. The user confirmed the refactored app works and accepted passing, appropriately scoped tests as the routine verification gate; repeated manual smoke checks are not required for each change. The [Windows smoke-test checklist](docs/windows-smoke-test.md) remains a troubleshooting/reference tool, not a recurring gate. Headless tests do not cover native dialogs, actual Razor event wiring or visual quality; future changes must account for the affected boundary rather than assume full GUI coverage. No local SDK was installed.
 
-## Checklist evidence audit
+## Acceptance closure
 
-The initial checklist is **partially verified**, not fully closed. See [the audit](docs/checklist-audit.md) for a criterion-by-criterion mapping to passing tests, source evidence and native/UI gaps. Newly authored full-resolution session/pipeline tests and prompt-snapshot assertions are pending CI; they must not be described as executed yet. This does not change the routine Release-only CI gate or request repeated manual testing.
+The milestone is complete **under the user-approved revised scope**, not every original manual criterion. [PR #14 CI](https://github.com/Vraxo/Formloom/actions/runs/41511913612) passed Release compilation and tests, including rendered-component coverage, in 46 seconds. The user subsequently reported a successful Windows Debug build of all five projects in 10.5 seconds with warnings as errors. This was a local build, not a GitHub Debug run; no workflow run URL exists for it.
 
-## Final acceptance-closure work (execution pending)
+bUnit **2.13.3** exercises actual Razor input/form/button events, error alerts, preview retention, disabled controls, labels and save metadata. Production injects the existing session with real generation/save delegates. Native resizing/lifecycle, full accessibility/timing, Linux GUI startup, desktop-viewer/dialog exercises and a full app screenshot remain explicitly deferred, not represented as tested. See the [checklist](.agents/todo.md), [audit](docs/checklist-audit.md) and [handoff](docs/initial-milestone-handoff.md).
 
-The user approved a revised acceptance scope: add rendered UI tests, verify Debug once without a permanent Debug PR job, and explicitly defer the native/manual cases. App now receives its existing `DesktopSession` from DI; production creates it from the real generation/save services, while bUnit supplies controlled session delegates to exercise actual Razor bindings and markup. Tests dispatch input/form/button events and assert previews, error alerts, disabled states, labels and save metadata. They do not measure browser layout, native dialogs or full accessibility.
+Ordinary PR CI remains Release-only. The optional `verify_debug` workflow input is available for future one-off checks; it was not needed for the user's successful local Debug build.
 
-bUnit **2.13.3** is a new test-only dependency, added for this concrete gap. It is not a UI framework substitution. The preceding real pipeline tests passed PR #13; the new component tests and this DI adjustment still require CI execution.
+For a one-off build on a machine with multiple unmapped feeds causing NU1507, select a source for that command without modifying repository/global source policy:
 
-To verify Debug once, manually dispatch **CI**, select the branch containing this workflow and enable **verify_debug**. It restores once, builds Debug with warnings as errors, then runs the normal Release build/tests in the same Ubuntu job. Ordinary PRs and main pushes still perform only Release validation. Record the run URL before declaring Debug verified.
+```powershell
+dotnet build Formloom.slnx --configuration Debug --warnaserror -p:RestoreSources=https://api.nuget.org/v3/index.json
+```
 
-The acceptance-scope table and pending execution gates are in [the checklist](.agents/todo.md). Native resizing/lifecycle, full accessibility/timing, Linux GUI startup, desktop-viewer/dialog exercises and a full app screenshot are explicitly deferred—not represented as tested. Completion under the revised scope still requires passing component/Release tests and the one-off Debug build. No broader feature work is included.
+This requires access to the official feed. No repository NuGet source override is included. No broader feature work is authorized by acceptance closure.
