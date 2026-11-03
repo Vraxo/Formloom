@@ -86,12 +86,79 @@ public sealed class FruitRenderingTests
             silhouettes.Add(mask.Bytes);
             using var image = SKImage.FromBitmap(mask);
             using var encoded = image.Encode(SKEncodedImageFormat.Png, 100);
-            File.WriteAllBytes(Path.Combine(AppContext.BaseDirectory, $"formloom-{scene.Subject.ToString().ToLowerInvariant()}-silhouette.png"), encoded.ToArray());
+            File.WriteAllBytes(Path.Combine(AppContext.BaseDirectory, $"formloom-{scene.Subject.ToString().ToLowerInvariant()}-body-silhouette.png"), encoded.ToArray());
         }
 
         Assert.False(silhouettes[0].SequenceEqual(silhouettes[1]));
         Assert.False(silhouettes[1].SequenceEqual(silhouettes[2]));
         Assert.False(silhouettes[0].SequenceEqual(silhouettes[2]));
+    }
+
+    [Theory]
+    [InlineData("a red apple on a wooden table", 42, 0)]
+    [InlineData("a red apple on a wooden table", 1337, 1)]
+    [InlineData("a green pear on a wooden table", 42, 0)]
+    [InlineData("a green pear on a wooden table", 1337, 1)]
+    [InlineData("a yellow pear on a wooden table", 42, 0.35)]
+    [InlineData("an orange on a wooden table", 42, 0)]
+    [InlineData("an orange on a wooden table", 1337, 1)]
+    public void CompleteSilhouettesIncludeAttachmentsWithoutSettingOrClipping(string prompt, int seed, double variation)
+    {
+        var scene = SceneGenerator.Generate(new(prompt, (ulong)seed, variation, Width: 256, Height: 256)).Scene!;
+        var rendered = StillLifeRenderer.RenderSilhouette(scene);
+        using var complete = SKBitmap.Decode(rendered.PngBytes);
+        using var repeated = SKBitmap.Decode(StillLifeRenderer.RenderSilhouette(scene).PngBytes);
+        using var body = DrawMask(scene, includePlacement: true);
+        Assert.Equal(complete.Bytes, repeated.Bytes);
+        var addedPixels = 0;
+        var bodyPixels = 0;
+        for (var y = 0; y < scene.Height; y++)
+        {
+            for (var x = 0; x < scene.Width; x++)
+            {
+                var pixel = complete.GetPixel(x, y);
+                Assert.Equal((byte)0, pixel.Red);
+                Assert.Equal((byte)0, pixel.Green);
+                Assert.Equal((byte)0, pixel.Blue);
+                if (x == 0 || y == 0 || x == scene.Width - 1 || y == scene.Height - 1)
+                {
+                    Assert.Equal((byte)0, pixel.Alpha);
+                }
+
+                if (body.GetPixel(x, y).Alpha == 255)
+                {
+                    bodyPixels++;
+                    Assert.Equal((byte)255, pixel.Alpha);
+                }
+                else if (body.GetPixel(x, y).Alpha == 0 && pixel.Alpha == 255)
+                {
+                    addedPixels++;
+                }
+            }
+        }
+
+        Assert.True(bodyPixels > 1000);
+        if (scene.Subject != FruitKind.Orange)
+        {
+            Assert.True(addedPixels > 50);
+            var attachment = OrganicForms.Create(scene.Subject, scene.Body.Asymmetry, scene.Seed, scene.Variation).TopAttachment;
+            var angle = scene.Body.LeafAngle;
+            var leafX = attachment.X + (scene.Body.StemLean * 0.2) + (0.17 * Math.Cos(angle));
+            var leafY = attachment.Y - 0.155 + (0.17 * Math.Sin(angle));
+            var x = (int)((scene.Body.Center.X + ((leafX - 0.5) * scene.Body.Size.X)) * scene.Width);
+            var y = (int)((scene.Body.Center.Y + ((leafY - 0.5) * scene.Body.Size.Y)) * scene.Height);
+            Assert.Equal((byte)255, complete.GetPixel(x, y).Alpha);
+            Assert.Equal((byte)0, body.GetPixel(x, y).Alpha);
+        }
+
+        using var review = new SKBitmap(scene.Width, scene.Height);
+        using var canvas = new SKCanvas(review);
+        canvas.Clear(SKColors.White);
+        canvas.DrawBitmap(complete, 0, 0);
+        using var image = SKImage.FromBitmap(review);
+        using var encoded = image.Encode(SKEncodedImageFormat.Png, 100);
+        var name = FormattableString.Invariant($"formloom-{scene.Subject.ToString().ToLowerInvariant()}-complete-silhouette-seed-{seed}-variation-{variation:0.00}.png");
+        File.WriteAllBytes(Path.Combine(AppContext.BaseDirectory, name), encoded.ToArray());
     }
 
     [Theory]
@@ -125,6 +192,11 @@ public sealed class FruitRenderingTests
         {
             canvas.Translate(scene.Body.Center.X - (scene.Body.Size.X / 2), scene.Body.Center.Y - (scene.Body.Size.Y / 2));
             canvas.Scale(scene.Body.Size.X, scene.Body.Size.Y);
+        }
+        else
+        {
+            canvas.Translate(0.06f, 0.06f);
+            canvas.Scale(0.88f, 0.88f);
         }
 
         var contour = OrganicForms.Create(scene.Subject, scene.Body.Asymmetry, scene.Seed, scene.Variation);

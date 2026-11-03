@@ -6,7 +6,11 @@ namespace Formloom.Rendering.Skia;
 
 public static class StillLifeRenderer
 {
-    public static RenderedImage Render(StillLifeScene scene)
+    public static RenderedImage Render(StillLifeScene scene) => RenderCore(scene, silhouette: false);
+
+    public static RenderedImage RenderSilhouette(StillLifeScene scene) => RenderCore(scene, silhouette: true);
+
+    private static RenderedImage RenderCore(StillLifeScene scene, bool silhouette)
     {
         ArgumentNullException.ThrowIfNull(scene);
         if (scene.Width is < 64 or > 4096 || scene.Height is < 64 or > 4096)
@@ -23,8 +27,13 @@ public static class StillLifeRenderer
         using var surface = SKSurface.Create(info) ?? throw new InvalidOperationException("Could not allocate raster surface.");
         var canvas = surface.Canvas;
         canvas.Scale(scene.Width / 1024f, scene.Height / 1024f);
-        DrawSetting(canvas, scene);
-        DrawFruit(canvas, scene);
+        canvas.Clear(SKColors.Transparent);
+        if (!silhouette)
+        {
+            DrawSetting(canvas, scene);
+        }
+
+        DrawFruit(canvas, scene, silhouette);
         using var image = surface.Snapshot();
         using var encoded = image.Encode(SKEncodedImageFormat.Png, 100);
         return new(scene.Width, scene.Height, encoded.ToArray(), scene.Subject.ToString().ToLowerInvariant());
@@ -58,7 +67,7 @@ public static class StillLifeRenderer
         canvas.Restore();
     }
 
-    private static void DrawFruit(SKCanvas canvas, StillLifeScene scene)
+    private static void DrawFruit(SKCanvas canvas, StillLifeScene scene, bool silhouette)
     {
         var apple = scene.Body;
         var centerX = apple.Center.X * 1024;
@@ -68,51 +77,64 @@ public static class StillLifeRenderer
         var left = centerX - (width / 2);
         var bottom = top + height;
         using var paint = new SKPaint { IsAntialias = true };
-        using var blur = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 14);
-        paint.MaskFilter = blur;
-        paint.Color = new SKColor(12, 20, 17, 80);
-        canvas.DrawOval(centerX - (scene.LightDirection.X * 65), bottom + 3, width * 0.55f, 24, paint);
-        paint.MaskFilter = null;
-        DrawContactShadow(canvas, centerX - (width * 0.13f), bottom - (height * 0.009f), width * 0.22f, height * 0.035f);
-        DrawContactShadow(canvas, centerX + (width * 0.13f), bottom - (height * 0.005f), width * 0.23f, height * 0.035f);
+        if (!silhouette)
+        {
+            using var blur = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 14);
+            paint.MaskFilter = blur;
+            paint.Color = new SKColor(12, 20, 17, 80);
+            canvas.DrawOval(centerX - (scene.LightDirection.X * 65), bottom + 3, width * 0.55f, 24, paint);
+            paint.MaskFilter = null;
+            DrawContactShadow(canvas, centerX - (width * 0.13f), bottom - (height * 0.009f), width * 0.22f, height * 0.035f);
+            DrawContactShadow(canvas, centerX + (width * 0.13f), bottom - (height * 0.005f), width * 0.23f, height * 0.035f);
+        }
+
         canvas.Save();
         canvas.Translate(left, top);
         canvas.Scale(width, height);
         var contour = OrganicForms.Create(scene.Subject, apple.Asymmetry, scene.Seed, scene.Variation);
         using var shape = CreatePath(contour);
-        var material = FruitMaterial.For(scene);
-        var baseColor = material.BaseColor;
-        using var body = SKShader.CreateRadialGradient(
-            new SKPoint(0.5f + (scene.LightDirection.X * 0.32f), 0.5f + (scene.LightDirection.Y * 0.36f)), 0.95f,
-            [Lighten(baseColor), baseColor, new SKColor(53, 25, 20)],
-            [0f, 0.48f, 1f], SKShaderTileMode.Clamp);
+        if (silhouette)
+        {
+            paint.Color = SKColors.Black;
+            canvas.DrawPath(shape, paint);
+        }
+        else
+        {
+            var material = FruitMaterial.For(scene);
+            var baseColor = material.BaseColor;
+            using var body = SKShader.CreateRadialGradient(
+                new SKPoint(0.5f + (scene.LightDirection.X * 0.32f), 0.5f + (scene.LightDirection.Y * 0.36f)), 0.95f,
+                [Lighten(baseColor), baseColor, new SKColor(53, 25, 20)],
+                [0f, 0.48f, 1f], SKShaderTileMode.Clamp);
 
-        // Shader colors are multiplied by paint alpha; do not inherit shadow opacity.
-        paint.Color = SKColors.White;
-        paint.Shader = body;
-        canvas.DrawPath(shape, paint);
-        paint.Shader = null;
-        canvas.Save();
-        canvas.ClipPath(shape);
-        DrawSurface(canvas, scene, material, paint);
+            // Shader colors are multiplied by paint alpha; do not inherit shadow opacity.
+            paint.Color = SKColors.White;
+            paint.Shader = body;
+            canvas.DrawPath(shape, paint);
+            paint.Shader = null;
+            canvas.Save();
+            canvas.ClipPath(shape);
+            DrawSurface(canvas, scene, material, paint);
 
-        using var highlight = SKShader.CreateRadialGradient(
-            new SKPoint(0.5f + (scene.LightDirection.X * 0.31f), 0.5f + (scene.LightDirection.Y * 0.38f)), material.HighlightRadius,
-            [new SKColor(255, 245, 215, material.HighlightAlpha), new SKColor(255, 245, 215, 0)], null, SKShaderTileMode.Clamp);
-        paint.Color = SKColors.White;
-        paint.Shader = highlight;
-        canvas.DrawRect(0, 0, 1, 1, paint);
-        paint.Shader = null;
-        canvas.Restore();
+            using var highlight = SKShader.CreateRadialGradient(
+                new SKPoint(0.5f + (scene.LightDirection.X * 0.31f), 0.5f + (scene.LightDirection.Y * 0.38f)), material.HighlightRadius,
+                [new SKColor(255, 245, 215, material.HighlightAlpha), new SKColor(255, 245, 215, 0)], null, SKShaderTileMode.Clamp);
+            paint.Color = SKColors.White;
+            paint.Shader = highlight;
+            canvas.DrawRect(0, 0, 1, 1, paint);
+            paint.Shader = null;
+            canvas.Restore();
+        }
+
         if (scene.Subject == FruitKind.Orange)
         {
-            DrawCalyx(canvas, contour.TopAttachment, paint);
+            DrawCalyx(canvas, contour.TopAttachment, paint, silhouette);
             canvas.Restore();
             return;
         }
 
         var stemX = 0.5f + ((float)apple.StemLean * 0.2f);
-        DrawStemAttachment(canvas, shape, stemX, contour.TopAttachment);
+        DrawStemAttachment(canvas, shape, stemX, contour.TopAttachment, silhouette);
         canvas.Save();
         canvas.Translate(stemX + contour.TopAttachment.X - 0.5f, contour.TopAttachment.Y - 0.155f);
         canvas.RotateDegrees((float)(apple.LeafAngle * 180 / Math.PI));
@@ -125,8 +147,16 @@ public static class StillLifeRenderer
         using var leafShader = SKShader.CreateLinearGradient(
             new SKPoint(0, -0.08f), new SKPoint(0, 0.08f),
             [new SKColor(112, 151, 58), new SKColor(29, 74, 34)], null, SKShaderTileMode.Clamp);
-        paint.Shader = leafShader;
+        paint.Color = silhouette ? SKColors.Black : SKColors.White;
+        paint.Shader = silhouette ? null : leafShader;
         canvas.DrawPath(leaf, paint);
+        if (silhouette)
+        {
+            canvas.Restore();
+            canvas.Restore();
+            return;
+        }
+
         paint.Shader = null;
         paint.Color = new SKColor(167, 181, 91, 180);
         paint.StrokeWidth = 0.004f;
@@ -156,20 +186,24 @@ public static class StillLifeRenderer
         canvas.Restore();
     }
 
-    private static void DrawStemAttachment(SKCanvas canvas, SKPath body, float stemX, System.Numerics.Vector2 attachment)
+    private static void DrawStemAttachment(SKCanvas canvas, SKPath body, float stemX, System.Numerics.Vector2 attachment, bool silhouette)
     {
         using var paint = new SKPaint { IsAntialias = true, Color = SKColors.White };
-        canvas.Save();
-        canvas.ClipPath(body);
-        canvas.Translate(attachment.X, attachment.Y);
-        canvas.Scale(0.115f, 0.055f);
-        using var indentation = SKShader.CreateRadialGradient(
-            SKPoint.Empty, 1,
-            [new SKColor(48, 23, 14, 195), new SKColor(69, 26, 17, 95), new SKColor(69, 26, 17, 0)],
-            [0f, 0.35f, 1f], SKShaderTileMode.Clamp);
-        paint.Shader = indentation;
-        canvas.DrawOval(0, 0, 1, 1, paint);
-        canvas.Restore();
+        if (!silhouette)
+        {
+            canvas.Save();
+            canvas.ClipPath(body);
+            canvas.Translate(attachment.X, attachment.Y);
+            canvas.Scale(0.115f, 0.055f);
+            using var indentation = SKShader.CreateRadialGradient(
+                SKPoint.Empty, 1,
+                [new SKColor(48, 23, 14, 195), new SKColor(69, 26, 17, 95), new SKColor(69, 26, 17, 0)],
+                [0f, 0.35f, 1f], SKShaderTileMode.Clamp);
+            paint.Shader = indentation;
+            canvas.DrawOval(0, 0, 1, 1, paint);
+            canvas.Restore();
+        }
+
         canvas.Save();
         canvas.Translate(attachment.X - 0.5f, attachment.Y - 0.08f);
         using var stemBuilder = new SKPathBuilder();
@@ -184,8 +218,15 @@ public static class StillLifeRenderer
             new SKPoint(stemX - 0.018f, 0), new SKPoint(stemX + 0.025f, 0),
             [new SKColor(133, 94, 49), new SKColor(72, 45, 24), new SKColor(45, 31, 20)],
             null, SKShaderTileMode.Clamp);
-        paint.Shader = bark;
+        paint.Color = silhouette ? SKColors.Black : SKColors.White;
+        paint.Shader = silhouette ? null : bark;
         canvas.DrawPath(stem, paint);
+        if (silhouette)
+        {
+            canvas.Restore();
+            return;
+        }
+
         paint.Shader = null;
         paint.Color = new SKColor(170, 129, 72, 150);
         paint.Style = SKPaintStyle.Stroke;
@@ -238,11 +279,11 @@ public static class StillLifeRenderer
         }
     }
 
-    private static void DrawCalyx(SKCanvas canvas, System.Numerics.Vector2 attachment, SKPaint paint)
+    private static void DrawCalyx(SKCanvas canvas, System.Numerics.Vector2 attachment, SKPaint paint, bool silhouette)
     {
-        paint.Color = new SKColor(92, 91, 35);
+        paint.Color = silhouette ? SKColors.Black : new SKColor(92, 91, 35);
         canvas.DrawOval(attachment.X, attachment.Y + 0.012f, 0.035f, 0.012f, paint);
-        paint.Color = new SKColor(154, 134, 58);
+        paint.Color = silhouette ? SKColors.Black : new SKColor(154, 134, 58);
         paint.StrokeWidth = 0.004f;
         for (var index = 0; index < 5; index++)
         {

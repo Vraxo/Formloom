@@ -51,7 +51,7 @@ Continue tolerating the existing case, whitespace, and terminal-punctuation vari
 
 The implementation is merged in PR #16. [Post-merge Linux Release CI](https://github.com/Vraxo/Formloom/actions/runs/41584177007) passed restore, warnings-as-errors build, both test projects and artifact uploads at commit `d6aa8ff`. The PR run reported 115 passing tests with no failures or skips. The user's Windows Release restore/build also succeeded after correcting inherited NuGet sources. No local sandbox SDK was installed.
 
-The user supplied all 14 CI PNGs on 2026-11-03. Actual apple, green/yellow pear and orange images, seed 42 variation 0/0.35/1, alternate seed 1337 and black silhouettes were visually inspected. Transparent black body-only silhouettes (no stems/leaves/calyx) were composited onto white for inspection only. Complete-subject silhouette exports are not implemented. Visual findings and limitations are recorded in the handoff; no new GUI execution or golden-image pixel comparison is claimed. The scoped visual review passes for this stylized renderer. Generated images remain uncommitted.
+The user supplied all 14 CI PNGs on 2026-11-03. Actual apple, green/yellow pear and orange images, seed 42 variation 0/0.35/1, alternate seed 1337 and black silhouettes were visually inspected. Transparent black body-only silhouettes (no stems/leaves/calyx) were composited onto white for inspection only. Complete-subject silhouette exports are authored in the follow-up below, pending fresh CI and visual review. Visual findings and limitations are recorded in the handoff; no new GUI execution or golden-image pixel comparison is claimed. The scoped visual review passes for this stylized renderer. Generated images remain uncommitted.
 
 ## Sequential implementation checklist
 
@@ -209,3 +209,12 @@ The user supplied all 14 CI PNGs on 2026-11-03. Actual apple, green/yellow pear 
 ## Working instruction
 
 Implement this milestone directly in the existing repository, in small coherent steps, with tests as the system grows. Make reasonable engineering decisions without asking the user to design the internal architecture. Do not stop after writing a plan or only documenting the work: complete the scoped implementation. If the current architecture reveals a genuine blocker or a requirement would force a disproportionate redesign, explain the evidence and propose the smallest alternative before expanding scope. Stop at the acceptance checkpoint above.
+## Follow-up: complete subject silhouettes
+
+- [x] Author a shared renderer silhouette mode including stems/leaves/calyx, without scene/shadow content.
+- [x] Distinguish body-only and complete-subject export filenames; add body-mask presentation padding.
+- [x] Author attachment/body inclusion, repeatability and transparent-border coverage.
+- [ ] Run Release CI for the silhouette follow-up; prior runs do not validate these edits.
+- [ ] Inspect newly exported complete-subject silhouettes, including attachments, after CI.
+
+This follow-up changes the previously documented body-only export limitation; it is not a new subject family. Normal fruit rendering is intended to remain unchanged and still requires regression confirmation in CI.

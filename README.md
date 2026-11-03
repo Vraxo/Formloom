@@ -117,3 +117,6 @@ an orange on a wooden table
 ```
 
 Unsupported colors/adjectives/combinations are rejected rather than defaulted. Save filenames use the successful subject (`formloom-pear-seed-42.png`, for example), not an edited prompt awaiting generation. The test-export artifact now includes all fruit samples, alternate seeds/variation extremes and silhouettes for review. **Release CI passed, and the generated fruit/seed/variation samples were visually reviewed.** See [implementation/handoff notes](docs/organic-forms-handoff.md) and [the new checklist](.agents/todo-2.md). No subsequent milestone is started here.
+
+
+Silhouette follow-up (pending CI): body masks are explicitly named `body-silhouette`; complete-subject review exports include stems/leaves/calyx and use a white background. The shared renderer also exposes transparent black subject PNGs through `RenderSilhouette`. These new exports/tests still require execution and image review; earlier verification above describes the merged Phase 2 renders.
