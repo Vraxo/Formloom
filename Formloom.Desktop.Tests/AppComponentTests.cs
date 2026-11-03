@@ -27,8 +27,12 @@ public sealed class AppComponentTests
         Assert.Equal("polite", component.Find("[role='status']").GetAttribute("aria-live"));
     }
 
-    [Fact]
-    public async Task InputEventsAndSubmitUseEditedValuesAndRenderPreview()
+    [Theory]
+    [InlineData("a green apple on a wooden table")]
+    [InlineData("a green pear on a wooden table")]
+    [InlineData("a yellow pear on a wooden table")]
+    [InlineData("an orange on a wooden table")]
+    public async Task InputEventsAndSubmitUseEditedValuesAndRenderPreview(string prompt)
     {
         await using var context = new BunitContext();
         GenerationRequest? captured = null;
@@ -38,12 +42,12 @@ public sealed class AppComponentTests
             return Task.FromResult(Success());
         }));
         var component = context.Render<App>();
-        await component.Find("#prompt").InputAsync("a green apple on a wooden table");
+        await component.Find("#prompt").InputAsync(prompt);
         await component.Find("#seed").InputAsync("123");
         await component.Find("#variation").InputAsync("0.8");
         await component.Find("form").TriggerEventAsync("onsubmit", EventArgs.Empty);
         Assert.NotNull(captured);
-        Assert.Equal("a green apple on a wooden table", captured.Prompt);
+        Assert.Equal(prompt, captured.Prompt);
         Assert.Equal(123UL, captured.Seed);
         Assert.Equal(0.8, captured.Variation);
         Assert.Equal(Success().PreviewUrl, component.Find(".preview img").GetAttribute("src"));

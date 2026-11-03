@@ -70,5 +70,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: procedural-preview
-          path: artifacts/bin/Formloom.Tests/**/formloom-apple-seed-42.png
+          path: artifacts/bin/Formloom.Tests/**/formloom-*.png
           if-no-files-found: error

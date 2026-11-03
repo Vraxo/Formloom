@@ -100,3 +100,20 @@ dotnet build Formloom.slnx --configuration Debug --warnaserror -p:RestoreSources
 ```
 
 This requires access to the official feed. No repository NuGet source override is included. No broader feature work is authorized by acceptance closure.
+
+## Organic forms: apple, pear and orange (implementation pending CI/review)
+
+The next milestone adds a shared Core cubic-contour representation and fruit profiles to the existing CPU pipeline. Apple preserves its reviewed Bezier silhouette; pears have a narrow upper neck and broad lower belly; oranges have restrained irregularity, a calyx and clipped peel micro-detail. Material styling is separate from geometry. Existing seed, variation, preview retention and PNG saving remain in the same service path. No new packages, projects or UI panels are added.
+
+Exact supported forms (case/whitespace/terminal punctuation tolerated):
+
+```text
+a red apple on a wooden table
+a green apple on a wooden table
+a yellow apple on a wooden table
+a green pear on a wooden table
+a yellow pear on a wooden table
+an orange on a wooden table
+```
+
+Unsupported colors/adjectives/combinations are rejected rather than defaulted. Save filenames use the successful subject (`formloom-pear-seed-42.png`, for example), not an edited prompt awaiting generation. The test-export artifact now includes all fruit samples, alternate seeds/variation extremes and silhouettes for review. **New build/tests and actual-image inspection are not yet verified.** See [implementation/handoff notes](docs/organic-forms-handoff.md) and [the new checklist](.agents/todo-2.md). No subsequent milestone is started here.

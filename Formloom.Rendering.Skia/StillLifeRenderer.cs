@@ -14,15 +14,20 @@ public static class StillLifeRenderer
             throw new ArgumentOutOfRangeException(nameof(scene));
         }
 
+        if (!double.IsFinite(scene.SurfaceDetail) || scene.SurfaceDetail is < 0 or > 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(scene));
+        }
+
         var info = new SKImageInfo(scene.Width, scene.Height, SKColorType.Rgba8888, SKAlphaType.Premul);
         using var surface = SKSurface.Create(info) ?? throw new InvalidOperationException("Could not allocate raster surface.");
         var canvas = surface.Canvas;
         canvas.Scale(scene.Width / 1024f, scene.Height / 1024f);
         DrawSetting(canvas, scene);
-        DrawApple(canvas, scene);
+        DrawFruit(canvas, scene);
         using var image = surface.Snapshot();
         using var encoded = image.Encode(SKEncodedImageFormat.Png, 100);
-        return new(scene.Width, scene.Height, encoded.ToArray());
+        return new(scene.Width, scene.Height, encoded.ToArray(), scene.Subject.ToString().ToLowerInvariant());
     }
 
     private static void DrawSetting(SKCanvas canvas, StillLifeScene scene)
@@ -53,9 +58,9 @@ public static class StillLifeRenderer
         canvas.Restore();
     }
 
-    private static void DrawApple(SKCanvas canvas, StillLifeScene scene)
+    private static void DrawFruit(SKCanvas canvas, StillLifeScene scene)
     {
-        var apple = scene.Apple;
+        var apple = scene.Body;
         var centerX = apple.Center.X * 1024;
         var top = (apple.Center.Y - (apple.Size.Y / 2)) * 1024;
         var width = apple.Size.X * 1024;
@@ -73,22 +78,10 @@ public static class StillLifeRenderer
         canvas.Save();
         canvas.Translate(left, top);
         canvas.Scale(width, height);
-        var asymmetry = (float)apple.Asymmetry;
-        using var shapeBuilder = new SKPathBuilder();
-        shapeBuilder.MoveTo(0.5f, 0.08f);
-        shapeBuilder.CubicTo(0.25f, -0.06f, -0.06f, 0.12f, 0.025f, 0.47f);
-        shapeBuilder.CubicTo(0.06f, 0.73f, 0.17f, 1.04f, 0.38f, 0.98f);
-        shapeBuilder.CubicTo(0.47f, 0.95f, 0.51f, 1.02f, 0.63f, 0.985f);
-        shapeBuilder.CubicTo(0.85f + asymmetry, 1.01f, 0.99f, 0.66f, 0.985f, 0.38f);
-        shapeBuilder.CubicTo(1.01f, 0.08f, 0.75f, -0.065f, 0.5f, 0.08f);
-        shapeBuilder.Close();
-        using var shape = shapeBuilder.Detach();
-        var baseColor = apple.Color switch
-        {
-            AppleColor.Green => new SKColor(112, 153, 42),
-            AppleColor.Yellow => new SKColor(218, 168, 40),
-            _ => new SKColor(180, 38, 37),
-        };
+        var contour = OrganicForms.Create(scene.Subject, apple.Asymmetry, scene.Seed, scene.Variation);
+        using var shape = CreatePath(contour);
+        var material = FruitMaterial.For(scene);
+        var baseColor = material.BaseColor;
         using var body = SKShader.CreateRadialGradient(
             new SKPoint(0.5f + (scene.LightDirection.X * 0.32f), 0.5f + (scene.LightDirection.Y * 0.36f)), 0.95f,
             [Lighten(baseColor), baseColor, new SKColor(53, 25, 20)],
@@ -101,27 +94,27 @@ public static class StillLifeRenderer
         paint.Shader = null;
         canvas.Save();
         canvas.ClipPath(shape);
-        var random = Pcg32.ForStream(scene.Seed, "apple.surface");
-        for (var index = 0; index < 1100; index++)
-        {
-            var x = (float)random.NextDouble();
-            var y = (float)random.NextDouble();
-            paint.Color = new SKColor(255, 220, 144, (byte)(10 + (apple.SurfaceVariation * 110)));
-            canvas.DrawOval(x, y, 0.001f + ((float)random.NextDouble() * 0.0015f), 0.002f, paint);
-        }
+        DrawSurface(canvas, scene, material, paint);
 
         using var highlight = SKShader.CreateRadialGradient(
-            new SKPoint(0.5f + (scene.LightDirection.X * 0.31f), 0.5f + (scene.LightDirection.Y * 0.38f)), 0.22f,
-            [new SKColor(255, 245, 215, 125), new SKColor(255, 245, 215, 0)], null, SKShaderTileMode.Clamp);
+            new SKPoint(0.5f + (scene.LightDirection.X * 0.31f), 0.5f + (scene.LightDirection.Y * 0.38f)), material.HighlightRadius,
+            [new SKColor(255, 245, 215, material.HighlightAlpha), new SKColor(255, 245, 215, 0)], null, SKShaderTileMode.Clamp);
         paint.Color = SKColors.White;
         paint.Shader = highlight;
         canvas.DrawRect(0, 0, 1, 1, paint);
         paint.Shader = null;
         canvas.Restore();
+        if (scene.Subject == FruitKind.Orange)
+        {
+            DrawCalyx(canvas, contour.TopAttachment, paint);
+            canvas.Restore();
+            return;
+        }
+
         var stemX = 0.5f + ((float)apple.StemLean * 0.2f);
-        DrawStemAttachment(canvas, shape, stemX);
+        DrawStemAttachment(canvas, shape, stemX, contour.TopAttachment);
         canvas.Save();
-        canvas.Translate(stemX, -0.075f);
+        canvas.Translate(stemX + contour.TopAttachment.X - 0.5f, contour.TopAttachment.Y - 0.155f);
         canvas.RotateDegrees((float)(apple.LeafAngle * 180 / Math.PI));
         using var leafBuilder = new SKPathBuilder();
         leafBuilder.MoveTo(0, 0);
@@ -163,12 +156,12 @@ public static class StillLifeRenderer
         canvas.Restore();
     }
 
-    private static void DrawStemAttachment(SKCanvas canvas, SKPath body, float stemX)
+    private static void DrawStemAttachment(SKCanvas canvas, SKPath body, float stemX, System.Numerics.Vector2 attachment)
     {
         using var paint = new SKPaint { IsAntialias = true, Color = SKColors.White };
         canvas.Save();
         canvas.ClipPath(body);
-        canvas.Translate(0.5f, 0.08f);
+        canvas.Translate(attachment.X, attachment.Y);
         canvas.Scale(0.115f, 0.055f);
         using var indentation = SKShader.CreateRadialGradient(
             SKPoint.Empty, 1,
@@ -177,6 +170,8 @@ public static class StillLifeRenderer
         paint.Shader = indentation;
         canvas.DrawOval(0, 0, 1, 1, paint);
         canvas.Restore();
+        canvas.Save();
+        canvas.Translate(attachment.X - 0.5f, attachment.Y - 0.08f);
         using var stemBuilder = new SKPathBuilder();
         stemBuilder.MoveTo(0.485f, 0.08f);
         stemBuilder.CubicTo(0.475f, 0.025f, stemX - 0.012f, -0.04f, stemX - 0.009f, -0.12f);
@@ -200,6 +195,62 @@ public static class StillLifeRenderer
         ridgeBuilder.CubicTo(0.485f, 0.02f, stemX - 0.006f, -0.04f, stemX - 0.004f, -0.105f);
         using var ridge = ridgeBuilder.Detach();
         canvas.DrawPath(ridge, paint);
+        canvas.Restore();
+    }
+
+    private static SKPath CreatePath(OrganicContour contour)
+    {
+        using var builder = new SKPathBuilder();
+        var start = contour.Segments[0].Start;
+        builder.MoveTo(start.X, start.Y);
+        foreach (var segment in contour.Segments)
+        {
+            builder.CubicTo(segment.Control1.X, segment.Control1.Y, segment.Control2.X, segment.Control2.Y, segment.End.X, segment.End.Y);
+        }
+
+        builder.Close();
+        return builder.Detach();
+    }
+
+    private static void DrawSurface(SKCanvas canvas, StillLifeScene scene, FruitMaterial material, SKPaint paint)
+    {
+        var stream = scene.Subject.ToString().ToLowerInvariant() + ".surface";
+        var random = Pcg32.ForStream(scene.Seed, stream);
+        for (var index = 0; index < material.DetailCount; index++)
+        {
+            var x = (float)random.NextDouble();
+            var y = (float)random.NextDouble();
+            var radius = 0.001f + ((float)random.NextDouble() * 0.0015f);
+            if (scene.Subject == FruitKind.Orange)
+            {
+                var light = Math.Clamp(1 - x, 0.2f, 1);
+                paint.Color = new SKColor(109, 55, 16, (byte)(scene.SurfaceDetail * 22));
+                canvas.DrawOval(x, y, radius, radius * 0.75f, paint);
+                paint.Color = new SKColor(255, 211, 121, (byte)(scene.SurfaceDetail * light * 28));
+                canvas.DrawOval(x - (radius * 0.4f), y - (radius * 0.5f), radius * 0.65f, radius * 0.4f, paint);
+            }
+            else
+            {
+                var alpha = scene.Subject == FruitKind.Apple ? 10 + (scene.Body.SurfaceVariation * 110) : 16;
+                paint.Color = new SKColor(255, 220, 144, (byte)(alpha * scene.SurfaceDetail));
+                canvas.DrawOval(x, y, radius, 0.002f, paint);
+            }
+        }
+    }
+
+    private static void DrawCalyx(SKCanvas canvas, System.Numerics.Vector2 attachment, SKPaint paint)
+    {
+        paint.Color = new SKColor(92, 91, 35);
+        canvas.DrawOval(attachment.X, attachment.Y + 0.012f, 0.035f, 0.012f, paint);
+        paint.Color = new SKColor(154, 134, 58);
+        paint.StrokeWidth = 0.004f;
+        for (var index = 0; index < 5; index++)
+        {
+            var angle = index * MathF.Tau / 5;
+            canvas.DrawLine(
+                attachment.X, attachment.Y + 0.012f,
+                attachment.X + (MathF.Cos(angle) * 0.03f), attachment.Y + 0.012f + (MathF.Sin(angle) * 0.008f), paint);
+        }
     }
 
     private static SKColor Lighten(SKColor color) => new(
