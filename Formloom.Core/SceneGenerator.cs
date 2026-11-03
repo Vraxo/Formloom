@@ -22,7 +22,7 @@ public static class SceneGenerator
         var parsed = PromptParser.ParseScene(request.Prompt);
         if (parsed is null)
         {
-            return new(null, "Use one to three fruits (a red/green/yellow apple, a green/yellow pear, an orange), joined by 'and', on a wooden table. Three-fruit lists may use commas.");
+            return new(null, "That prompt is not supported. Use one to three fruits (a red/green/yellow apple, a green/yellow pear, an orange), joined by 'and', on a wooden table. Three-fruit lists may use commas.");
         }
 
         var fruits = ImmutableArray.CreateBuilder<FruitInstance>(parsed.Value.Length);
