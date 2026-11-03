@@ -91,8 +91,42 @@ Body-only exports are now explicitly named `formloom-{subject}-body-silhouette.p
 The complete-subject silhouette follow-up passes visual review. No further renderer edits were needed for this review. Documentation changes are uncommitted; no new subject family or feature milestone has begun.
 
 
-## Remaining CPU-performance evidence (timing instrumentation pending CI)
+## CPU-performance evidence (CI executed; supplied measurements assessed)
 
 The existing ten 1024×1024 sample-export cases now write per-sample `formloom-*.timing.json` sidecars, uploaded alongside PNGs in `procedural-preview`. Stopwatch covers only the real CPU renderer and PNG encoding, not scene construction, artifact writes, desktop dispatch or GUI presentation. Reports include subject/prompt, seed/variation, dimensions, elapsed milliseconds, PNG byte length and runtime/OS/logical-processor context. No additional renders, packages, jobs or SDK installation are introduced.
 
-These are advisory shared-runner observations, not isolated microbenchmarks: first-use/JIT, concurrent tests and runner load can affect individual samples. There is deliberately no arbitrary wall-clock assertion or promise of Windows desktop latency. Actual timing values have not been collected for these edits; the performance checkbox remains open until the fresh CI sidecars are inspected. Earlier aggregate test-suite durations alone are not treated as per-render performance measurements.
+These are advisory shared-runner observations, not isolated microbenchmarks: first-use/JIT, concurrent tests and runner load can affect individual samples. There is deliberately no arbitrary wall-clock assertion or promise of Windows desktop latency. The user supplied all ten timing sidecars from post-merge run 41612817131, and they were assessed on 2026-11-03; results follow. Earlier aggregate test-suite durations alone are not treated as per-render performance measurements.
+
+
+### Measured render-and-encode results — 2026-11-03
+
+PR #20 run 41612605431 and [post-merge run 41612817131](https://github.com/Vraxo/Formloom/actions/runs/41612817131) passed Linux Release CI. Post-merge implementation commit: `3c4c624`. All ten supplied reports describe 1024×1024 rendering, Ubuntu 24.04.5 LTS, .NET 10.0.14 and four logical processors.
+
+| Subject | Samples | Minimum (ms) | Median across samples (ms) | Maximum (ms) |
+| --- | ---: | ---: | ---: | ---: |
+| Apple | 1 | 110.37 | 110.37 | 110.37 |
+| Pear | 5 | 116.37 | 144.30 | 183.07 |
+| Orange | 4 | 118.12 | 127.75 | 139.49 |
+
+These medians describe different settings, not repeated trials of one workload or statistical latency percentiles. Individual reports:
+
+| Prompt subject/color | Seed | Variation | Render + PNG encode (ms) |
+| --- | ---: | ---: | ---: |
+| a red apple | 42 | 0.35 | 110.37 |
+| an orange | 1337 | 0.35 | 118.12 |
+| an orange | 42 | 0.00 | 123.83 |
+| an orange | 42 | 0.35 | 131.67 |
+| an orange | 42 | 1.00 | 139.49 |
+| a green pear | 1337 | 0.35 | 116.37 |
+| a green pear | 42 | 0.00 | 144.30 |
+| a green pear | 42 | 0.35 | 144.03 |
+| a green pear | 42 | 1.00 | 183.07 |
+| a yellow pear | 42 | 0.35 | 148.07 |
+
+**Assessment:** all observed default-size renders, including PNG encoding, took approximately 0.11–0.18 seconds. This supports suitable ordinary CPU performance for this scoped still-image generator; no renderer optimization is justified by these observations. It does not establish a desktop latency guarantee, performance at 4096px, isolated benchmark results, or the cause of clean-build/whole-suite times. The default-size performance acceptance item is satisfied with these explicit evidence limits.
+
+## Phase 2 acceptance checkpoint
+
+The scoped apple/green-and-yellow-pear/orange pipeline, reusable geometry/material foundation, strict grammar, named seeded randomness, headless desktop integration, PNG/save metadata, automated regressions, normal-image visual review, complete-subject silhouettes and default-size CPU assessment are verified by the evidence above. Remaining limitations are documented, not represented as executed native checks: no fresh native-window smoke test, historical golden-image comparison or isolated benchmark; revised apple/orange body-only exports were not visually supplied, though complete silhouettes were reviewed.
+
+Implementation and evidence collection are complete for this scope. Stop at this checkpoint: no new fruit or other subject family, UI panels, generalized grammar or additional feature milestone is authorized. The current final evidence/checklist documentation edits are uncommitted and have passed `git diff --check`; a new docs PR would have its own CI gate.

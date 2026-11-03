@@ -120,3 +120,6 @@ Unsupported colors/adjectives/combinations are rejected rather than defaulted. S
 
 
 Silhouette follow-up (Release CI and complete-subject image review verified): body masks are explicitly named `body-silhouette`; complete-subject review exports include stems/leaves/calyx and use a white background. The shared renderer also exposes transparent black subject PNGs through `RenderSilhouette`. The follow-up build/tests and artifact exports passed in post-merge CI run 41598698403. User-supplied complete-subject silhouettes were subsequently inspected: apple/pear attachments are present, the fruit profiles remain distinct, and all supplied complete outlines have canvas margins.
+
+
+Default-size CPU assessment: ten CI samples at 1024×1024 took **110–183 ms for rendering plus PNG encoding** on a four-logical-processor Ubuntu runner (.NET 10.0.14). This supports the scoped still-image workload, not a desktop latency guarantee or isolated benchmark. See the handoff for individual results and evidence limits. Phase 2 is at its acceptance checkpoint; no subsequent feature milestone is started.
