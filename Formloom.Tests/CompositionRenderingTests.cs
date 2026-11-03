@@ -139,20 +139,22 @@ public sealed class CompositionRenderingTests
         timer.Stop();
         var stem = FormattableString.Invariant($"formloom-group-{name}-seed-{seed}-variation-{variation:0.00}");
         File.WriteAllBytes(Path.Combine(AppContext.BaseDirectory, stem + ".png"), rendered.PngBytes);
-        var report = System.Text.Json.JsonSerializer.Serialize(new
-        {
-            Prompt = prompt,
-            Count = scene.Fruits.Length,
-            rendered.Width,
-            rendered.Height,
-            Framework = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription,
-            OperatingSystem = System.Runtime.InteropServices.RuntimeInformation.OSDescription,
-            scene.Seed,
-            scene.Variation,
-            RenderAndEncodeMilliseconds = timer.Elapsed.TotalMilliseconds,
-            ProcessorCount = Environment.ProcessorCount,
-            Placements = scene.Fruits,
-        }, new System.Text.Json.JsonSerializerOptions { IncludeFields = true });
+        var report = System.Text.Json.JsonSerializer.Serialize(
+            new
+            {
+                Prompt = prompt,
+                Count = scene.Fruits.Length,
+                rendered.Width,
+                rendered.Height,
+                Framework = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription,
+                OperatingSystem = System.Runtime.InteropServices.RuntimeInformation.OSDescription,
+                scene.Seed,
+                scene.Variation,
+                RenderAndEncodeMilliseconds = timer.Elapsed.TotalMilliseconds,
+                ProcessorCount = Environment.ProcessorCount,
+                Placements = scene.Fruits,
+            },
+            new System.Text.Json.JsonSerializerOptions { IncludeFields = true });
         File.WriteAllText(Path.Combine(AppContext.BaseDirectory, stem + ".timing.json"), report);
         File.WriteAllBytes(Path.Combine(AppContext.BaseDirectory, stem + "-silhouette.png"), StillLifeRenderer.RenderSilhouette(scene).PngBytes);
     }
