@@ -67,8 +67,14 @@ Restore/build/test commands and CI policy are unchanged. No permanent Debug job 
 Remaining evidence boundaries: no new native desktop smoke test, no dedicated CPU benchmark, no historical golden-image comparison. Existing headless desktop coverage and full Release CI passed. No additional subject family or feature is started. This documentation update does not change renderer behavior.
 
 
-## Review clarifications
+## Review clarifications (before the silhouette follow-up)
 
 The current black silhouette exports are **body-only contour masks**: they intentionally omit stems/leaves and the orange calyx. They verify body-profile recognition, not the outline of the complete rendered subject. Complete-subject silhouette exports, reusing the renderer's attachment geometry with sufficient padding, were discussed but are not implemented by this documentation change. Body-only masks remain useful for contour/peel-clipping tests.
 
 With seed 42 held constant, changing fruit variation leaves the table/background fixed. This is intentional: named setting streams are independent of the fruit's geometry/detail streams. Changing the seed can change the wood grain as well. No control was renamed in this update.
+
+## Complete-subject silhouette follow-up (pending CI)
+
+Added `StillLifeRenderer.RenderSilhouette` through the same body/stem/leaf/calyx drawing path as normal rendering. It omits the setting, cast/contact shadows, skin shading and internal decorative lines; all subject geometry is black on transparent. Normal rendering retains its existing transforms and materials. Review PNGs composite the complete subject onto white at its existing scene placement, leaving room for attachments.
+
+Body-only exports are now explicitly named `formloom-{subject}-body-silhouette.png` and have a presentation inset to prevent edge clipping. Their placed mask variant remains unchanged for peel-containment tests. Complete exports have distinct `complete-silhouette` filenames with seed/variation labels. New tests cover repeatability, black pixels, transparent image borders, body inclusion, and a geometric leaf-interior point outside the body for apple/pear across seeds and variation extremes. These changes are authored, not yet compiled/run or visually reviewed; no local SDK was installed. Prior passing CI evidence applies to the pre-follow-up implementation, not these edits.
