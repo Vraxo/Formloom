@@ -20,12 +20,12 @@ The milestone is successful when the existing prompt-to-PNG pipeline can produce
 
 - [x] Preserve the existing stack, package versions, project boundaries, and CPU-first/offline/non-neural design.
 - [x] Keep Core independent of Skia and desktop UI code.
-- [ ] Preserve seeded deterministic generation and independent named random streams.
-- [ ] Preserve every existing single-fruit prompt and its visual behavior as far as possible.
+- [x] Preserve seeded deterministic generation and independent named random streams.
+- [x] Preserve every existing single-fruit prompt and its visual behavior as far as possible.
 - [x] Keep the UI simple: existing prompt, seed, variation, Generate, preview, and Save PNG controls remain sufficient.
 - [x] Do not add a new project, framework, package, network dependency, downloaded asset, font, texture, or image model without a demonstrated necessity and explicit approval.
 - [x] Avoid speculative abstractions, universal scene-graph frameworks, plugin systems, and generic editors.
-- [ ] Do not start another milestone or add subject families after this checklist's acceptance checkpoint.
+- [x] Do not start another milestone or add subject families after this checklist's acceptance checkpoint.
 
 ## Scope
 
@@ -74,7 +74,7 @@ CI has generated the PNG/timing artifacts. The user supplied 20 group PNGs, whic
 - [x] Trace the existing single-fruit generation path from prompt parsing through PNG encoding and save metadata.
 - [x] Identify assumptions that enforce exactly one subject (for example, singular body properties, fixed center placement, one attachment origin, or subject-specific filename metadata).
 - [x] Identify which current geometry, material, attachment, shading, and shadow helpers can already render an independently transformed fruit instance.
-- [ ] Write a brief implementation note in the PR description describing the smallest set of Core, renderer, parser, and test changes needed.
+- [x] Write a brief implementation note in the PR description describing the smallest set of Core, renderer, parser, and test changes needed.
 - [x] Do not redesign unrelated Phase 2 systems or rewrite accepted fruit profiles.
 
 ### 1. Introduce a small multi-instance scene representation
@@ -83,59 +83,59 @@ CI has generated the PNG/timing artifacts. The user supplied 20 group PNGs, whic
 - [x] Give each instance an explicit subject/appearance description and a normalized scene transform (position, scale, and depth/order as appropriate to the existing coordinate model).
 - [x] Keep scene-level setting/background information separate from per-fruit instance information.
 - [x] Preserve or deliberately migrate existing single-fruit public APIs with a narrow compatibility path where existing callers/tests require it.
-- [ ] Validate instance count, finite transform values, scale bounds, and normalized placement before rendering.
-- [ ] Ensure invalid or empty scene collections fail with useful validation results rather than producing malformed output.
+- [x] Validate instance count, finite transform values, scale bounds, and normalized placement before rendering.
+- [x] Ensure invalid or empty scene collections fail with useful validation results rather than producing malformed output.
 - [x] Keep Core free of Skia, pixel, bitmap, or UI types.
 - [x] Do not introduce a generic arbitrary-object scene graph; the scene model should remain focused on the existing fruit vocabulary.
 
 ### 2. Implement deterministic composition/layout
 
 - [x] Add a small layout/composition component that accepts the scene's fruit instances and produces valid placements in the existing still-life coordinate system.
-- [ ] Support one-fruit placement that remains visually consistent with the current centered single-fruit composition.
-- [ ] Support a balanced two-fruit arrangement with distinct, readable silhouettes and natural spacing.
-- [ ] Support a balanced three-fruit cluster with clear visibility of all requested fruit types.
-- [ ] Account for each fruit's aspect ratio and attachment extent when estimating its occupied space.
-- [ ] Keep every complete subject (including stems/leaves/calyx) within safe canvas margins.
-- [ ] Prevent accidental subject clipping and unintended collisions with canvas edges.
-- [ ] Allow restrained, intentional overlap where it improves depth and still-life cohesion, without hiding the identity-defining silhouette or attachments of a fruit.
-- [ ] Establish a clear front-to-back draw order so overlap is stable and predictable.
-- [ ] Keep all fruit grounded on the same table plane; do not let scale/position changes create floating objects or detached contact shadows.
+- [x] Support one-fruit placement that remains visually consistent with the current centered single-fruit composition.
+- [x] Support a balanced two-fruit arrangement with distinct, readable silhouettes and natural spacing.
+- [x] Support a balanced three-fruit cluster with clear visibility of all requested fruit types.
+- [x] Account for each fruit's aspect ratio and attachment extent when estimating its occupied space.
+- [x] Keep every complete subject (including stems/leaves/calyx) within safe canvas margins.
+- [x] Prevent accidental subject clipping and unintended collisions with canvas edges.
+- [x] Allow restrained, intentional overlap where it improves depth and still-life cohesion, without hiding the identity-defining silhouette or attachments of a fruit.
+- [x] Establish a clear front-to-back draw order so overlap is stable and predictable.
+- [x] Keep all fruit grounded on the same table plane; do not let scale/position changes create floating objects or detached contact shadows.
 - [x] Use a scene/composition random stream separate from each fruit's geometry, material, and detail streams.
-- [ ] Derive stable per-instance random stream identities so adding a different fruit does not perturb an existing instance's shape/detail stream unnecessarily.
-- [ ] Make same seed + same prompt + same variation produce the same placements and pixels.
-- [ ] Allow a different seed to produce a meaningfully different but still coherent composition.
-- [ ] Keep variation bounded: it may influence layout subtly, but must not change requested subject count or make the arrangement collapse.
-- [ ] Ensure one-fruit scenes do not acquire unnecessary positional randomness merely because multi-fruit support exists.
+- [x] Derive stable per-instance random stream identities so adding a different fruit does not perturb an existing instance's shape/detail stream unnecessarily.
+- [x] Make same seed + same prompt + same variation produce the same placements and pixels.
+- [x] Allow a different seed to produce a meaningfully different but still coherent composition.
+- [x] Keep variation bounded: it may influence layout subtly, but must not change requested subject count or make the arrangement collapse.
+- [x] Ensure one-fruit scenes do not acquire unnecessary positional randomness merely because multi-fruit support exists.
 - [x] Prefer a few understandable deterministic arrangement strategies over a generic physics engine, force solver, or optimization framework.
 
 ### 3. Render multiple transformed fruit instances
 
 - [x] Refactor the renderer's top-level scene pass to draw the setting once and then draw all fruit instances in deterministic depth order.
 - [x] Reuse the existing shared organic contour, fruit material, attachment, lighting, and clipped-detail code for each instance.
-- [ ] Apply each instance's transform consistently to body contours, stems, leaves, calyx, highlights, and surface details.
-- [ ] Ensure each instance's material and seeded surface details remain independent of the other instances.
-- [ ] Compute or adapt contact shadows for each fruit's actual position and scale.
-- [ ] Keep cast shadows coherent with the existing scene lighting direction and prevent shadow ordering from looking detached or contradictory.
-- [ ] Ensure overlapping subjects are composited in the expected depth order without attachments being accidentally drawn behind their own fruit body.
+- [x] Apply each instance's transform consistently to body contours, stems, leaves, calyx, highlights, and surface details.
+- [x] Ensure each instance's material and seeded surface details remain independent of the other instances.
+- [x] Compute or adapt contact shadows for each fruit's actual position and scale.
+- [x] Keep cast shadows coherent with the existing scene lighting direction and prevent shadow ordering from looking detached or contradictory.
+- [x] Ensure overlapping subjects are composited in the expected depth order without attachments being accidentally drawn behind their own fruit body.
 - [x] Keep the table grain and background scene-level and unchanged by the number of fruit instances.
-- [ ] Preserve the existing single-fruit renderer output as closely as practical; investigate any visible regression rather than accepting it as an incidental side effect.
-- [ ] Maintain sensible memory use and CPU performance when rendering three fruits at 1024 × 1024. CPU evidence assessed: five supplied trio reports took 175.39–291.43 ms for render plus PNG encoding; no isolated peak-memory benchmark is claimed. Resource ownership/source audit remains part of closure.
-- [ ] Keep resource ownership/disposal correct when a scene contains multiple instances.
+- [x] Preserve the existing single-fruit renderer output as closely as practical; investigate any visible regression rather than accepting it as an incidental side effect.
+- [x] Maintain sensible memory use and CPU performance when rendering three fruits at 1024 × 1024. CPU evidence assessed: five supplied trio reports took 175.39–291.43 ms for render plus PNG encoding. Source ownership audit confirms scoped native disposals, one raster surface and bounded 1–3 instance processing; no isolated peak-memory benchmark is claimed.
+- [x] Keep resource ownership/disposal correct when a scene contains multiple instances.
 
 ### 4. Extend the strict prompt grammar
 
-- [ ] Retain all currently supported single-fruit prompts exactly.
-- [ ] Parse two fruit descriptions joined by `and` followed by the existing wooden-table setting.
-- [ ] Parse three fruit descriptions joined by commas and a final `and`.
-- [ ] Support the existing apple color variants, pear color variants, and orange in any valid list position.
-- [ ] Preserve existing case, whitespace, and terminal-punctuation normalization.
-- [ ] Preserve subject order from the prompt in the parsed scene description, even if the layout pass later chooses a separate depth order.
-- [ ] Reject unsupported colors, adjectives, objects, list lengths, conjunctions, and malformed combinations explicitly.
-- [ ] Do not silently drop a requested fruit or fall back to a single-fruit scene after a parse or layout error.
-- [ ] Keep error messages actionable and consistent with the existing Result/error-handling conventions.
-- [ ] Keep the desktop generation service, preview retention, seed handling, randomize action, and PNG-saving path shared by single- and multi-fruit scenes.
-- [ ] Update save filename metadata to describe a multi-fruit scene safely and predictably without relying on untrusted raw prompt text.
-- [ ] Ensure editing the prompt without generating does not relabel the image already displayed in the preview.
+- [x] Retain all currently supported single-fruit prompts exactly.
+- [x] Parse two fruit descriptions joined by `and` followed by the existing wooden-table setting.
+- [x] Parse three fruit descriptions joined by commas and a final `and`.
+- [x] Support the existing apple color variants, pear color variants, and orange in any valid list position.
+- [x] Preserve existing case, whitespace, and terminal-punctuation normalization.
+- [x] Preserve subject order from the prompt in the parsed scene description, even if the layout pass later chooses a separate depth order.
+- [x] Reject unsupported colors, adjectives, objects, list lengths, conjunctions, and malformed combinations explicitly.
+- [x] Do not silently drop a requested fruit or fall back to a single-fruit scene after a parse or layout error.
+- [x] Keep error messages actionable and consistent with the existing Result/error-handling conventions.
+- [x] Keep the desktop generation service, preview retention, seed handling, randomize action, and PNG-saving path shared by single- and multi-fruit scenes.
+- [x] Update save filename metadata to describe a multi-fruit scene safely and predictably without relying on untrusted raw prompt text.
+- [x] Ensure editing the prompt without generating does not relabel the image already displayed in the preview.
 
 ### 5. Add automated Core and composition coverage
 
@@ -160,9 +160,9 @@ CI has generated the PNG/timing artifacts. The user supplied 20 group PNGs, whic
 - [x] Test identical multi-fruit inputs produce identical decoded pixels.
 - [x] Test different seeds produce controlled pixel differences without losing or changing the requested subject set.
 - [x] Test that the renderer draws all requested bodies and their corresponding attachments.
-- [ ] Test that contact/cast shadows are present and do not appear detached from their fruit. Contact-darkness test passed; cast-shadow/intersection visual review remains pending.
-- [ ] Test that surface details remain clipped to the correct fruit body when objects overlap. Outside-complete-mask detail invariant passed; overlap-specific assessment remains open.
-- [ ] Test that no fruit, attachment, or required shadow is accidentally clipped by the canvas. Complete-subject transparent-border tests passed; required-shadow extent review remains pending.
+- [ ] Test that contact/cast shadows are present and do not appear detached from their fruit. Contact darkness and actual crop review passed. New isolated shadow-mask contact/cast samples and transparent-border tests are authored; execution is pending fresh CI.
+- [ ] Test that surface details remain clipped to the correct fruit body when objects overlap. Existing outside-complete-mask invariant and visual overlap review passed. New deliberate-overlap per-instance detail and foreground-pixel tests are authored; execution is pending fresh CI.
+- [ ] Test that no fruit, attachment, or required shadow is accidentally clipped by the canvas. Complete-subject border tests and visual review passed. New transparent-border tests of the isolated shared shadow pass are authored; execution is pending fresh CI.
 - [x] Test that existing apple opacity, fruit silhouettes, pear/orange materials, wood grain, and single-fruit regression coverage still pass.
 - [x] Extend desktop generation/session/component tests to prove multi-fruit prompts use the existing real generation pipeline.
 - [x] Test that failed multi-fruit prompts retain the previous successful preview and its metadata.
@@ -190,8 +190,8 @@ CI has generated the PNG/timing artifacts. The user supplied 20 group PNGs, whic
 ### 8. Documentation and verification
 
 - [x] Update README with the exact supported single- and multi-fruit prompt syntax and current limitations.
-- [ ] Update the Formloom handoff with the scene-instance model, layout approach, ordering/overlap rules, named-stream strategy, tests, visual findings, and known limitations.
-- [ ] Update this checklist accurately as tasks are completed; leave unverified claims unchecked and document blockers.
+- [x] Update the Formloom handoff with the scene-instance model, layout approach, ordering/overlap rules, named-stream strategy, tests, visual findings, and known limitations.
+- [x] Update this checklist accurately as tasks are completed; leave unverified claims unchecked and document blockers.
 - [x] Run the full existing restore/build/test workflow.
 - [x] Ensure all projects build with warnings as errors and every test project passes.
 - [x] Keep the established Linux Release CI as the routine automated gate; do not add a new permanent job/runner for this milestone.
@@ -201,21 +201,28 @@ CI has generated the PNG/timing artifacts. The user supplied 20 group PNGs, whic
 
 ## Acceptance checklist
 
-- [ ] Existing single-fruit prompts still generate successfully through the current desktop pipeline.
-- [ ] Two-fruit prompts generate two distinct, recognizable fruit instances in one coherent composition.
-- [ ] Three-fruit prompts generate all three requested instances in one coherent composition.
-- [ ] The renderer draws the setting once and reuses the same fruit construction/material pipeline for every instance.
-- [ ] Composition is deterministic for a given prompt, seed, and variation; different seeds can produce controlled alternative layouts.
-- [ ] Instance geometry/detail streams are independent enough that adding another fruit does not arbitrarily alter existing fruit details.
-- [ ] Every fruit remains inside the canvas, recognizably visible, correctly layered, and grounded on the table.
+- [x] Existing single-fruit prompts still generate successfully through the current desktop pipeline.
+- [x] Two-fruit prompts generate two distinct, recognizable fruit instances in one coherent composition.
+- [x] Three-fruit prompts generate all three requested instances in one coherent composition.
+- [x] The renderer draws the setting once and reuses the same fruit construction/material pipeline for every instance.
+- [x] Composition is deterministic for a given prompt, seed, and variation; different seeds can produce controlled alternative layouts.
+- [x] Instance geometry/detail streams are independent enough that adding another fruit does not arbitrarily alter existing fruit details.
+- [x] Every fruit remains inside the canvas, recognizably visible, correctly layered, and grounded on the table.
 - [ ] Contact/cast shadows, attachments, lighting, and surface-detail clipping remain coherent in multi-fruit scenes.
-- [ ] Strict parsing rejects unsupported or malformed requests rather than silently omitting subjects.
-- [x] Automated Core, renderer, desktop integration, and existing regression tests pass.
+- [x] Strict parsing rejects unsupported or malformed requests rather than silently omitting subjects.
+- [ ] Automated Core, renderer, desktop integration, and existing regression tests pass. The merged implementation passed; the newly authored invariant tests require a fresh CI run.
 - [x] Actual single-, two-, and three-fruit sample images have been visually reviewed and supplied as artifacts or report attachments. Final batch supplied the remaining normal pear/orange pair and current single baselines; findings recorded in the handoff.
-- [ ] README and handoff accurately record the implemented prompt grammar, composition behavior, evidence, and limitations.
-- [x] The completed change passes the repository's Release CI gate.
+- [x] README and handoff accurately record the implemented prompt grammar, composition behavior, evidence, and limitations.
+- [ ] The completed change passes the repository's Release CI gate. PR #22/#23 gates passed; this uncommitted invariant-test follow-up has not run in CI.
 - [ ] The agent stops and reports at this milestone; no new props or subject family is started.
 
 ## Working instruction
 
 Implement this milestone directly in the existing repository, in small coherent steps, with tests as the system grows. Make reasonable engineering decisions without asking the user to design internal architecture. Complete the scoped implementation rather than stopping after a plan. If inspection reveals that a requirement would force a disproportionate redesign, document the evidence and choose the smallest alternative that still meets the acceptance criteria. Do not expand the grammar or object vocabulary beyond this scope. Keep this checklist updated in the repository as work progresses, and stop at the acceptance checkpoint.
+
+
+## Final coverage reconciliation follow-up (authored; not executed)
+
+Existing passing Core/service/component/renderer tests, the PR #22 implementation note, the supplied image reviews and eight timing reports establish the previously unchecked implementation tasks. The native-resource audit found local `using` ownership for surface/snapshot/encoding, paints, shaders, mask filters, paths and builders, with at most three immutable instances and no retained renderer cache. This is source evidence plus successful prior renders, not a leak-stress/peak-RSS benchmark.
+
+New `CompositionInvariantTests` deliberately overlap two fruit bodies, toggle detail for one depth at a time, compare actual overlapping foreground pixels to the independently rendered foreground, and inspect the isolated real contact/cast-shadow pass across seeds/variation extremes for contact, directional extent and transparent borders. Internal friend-only renderer hooks reuse the exact draw code; no public render option, UI control, package or new review exports are added. Normal rendering is intended to remain unchanged; regression confirmation and all new-test checkboxes await CI. No extra manual PNG uploads are required for this test-focused change.

@@ -10,7 +10,12 @@ public static class StillLifeRenderer
 
     public static RenderedImage RenderSilhouette(StillLifeScene scene) => RenderCore(scene, silhouette: true);
 
-    private static RenderedImage RenderCore(StillLifeScene scene, bool silhouette)
+    internal static RenderedImage RenderShadowMask(StillLifeScene scene) => RenderCore(scene, silhouette: false, shadowMask: true);
+
+    internal static RenderedImage RenderWithoutInstanceDetail(StillLifeScene scene, int depth) =>
+        RenderCore(scene, silhouette: false, omittedDetailDepth: depth);
+
+    private static RenderedImage RenderCore(StillLifeScene scene, bool silhouette, bool shadowMask = false, int? omittedDetailDepth = null)
     {
         ArgumentNullException.ThrowIfNull(scene);
         if (scene.Width is < 64 or > 4096 || scene.Height is < 64 or > 4096)
@@ -34,23 +39,33 @@ public static class StillLifeRenderer
         var canvas = surface.Canvas;
         canvas.Scale(scene.Width / 1024f, scene.Height / 1024f);
         canvas.Clear(SKColors.Transparent);
-        if (!silhouette)
+        if (!silhouette && !shadowMask)
         {
             DrawSetting(canvas, scene);
         }
 
         var ordered = scene.Fruits.OrderBy(fruit => fruit.Depth).ToArray();
-        if (ordered.Length > 1 && !silhouette)
+        if (shadowMask)
         {
             foreach (var fruit in ordered)
             {
-                DrawFruit(canvas, ForInstance(scene, fruit), silhouette: false, shadowsOnly: true);
+                DrawFruit(canvas, ForInstance(scene, fruit), silhouette: false, shadowsOnly: ordered.Length > 1, skipBody: true);
             }
         }
-
-        foreach (var fruit in ordered)
+        else
         {
-            DrawFruit(canvas, ForInstance(scene, fruit), silhouette, skipShadows: ordered.Length > 1);
+            if (ordered.Length > 1 && !silhouette)
+            {
+                foreach (var fruit in ordered)
+                {
+                    DrawFruit(canvas, ForInstance(scene, fruit, omittedDetailDepth), silhouette: false, shadowsOnly: true);
+                }
+            }
+
+            foreach (var fruit in ordered)
+            {
+                DrawFruit(canvas, ForInstance(scene, fruit, omittedDetailDepth), silhouette, skipShadows: ordered.Length > 1);
+            }
         }
 
         using var image = surface.Snapshot();
@@ -58,12 +73,13 @@ public static class StillLifeRenderer
         return new(scene.Width, scene.Height, encoded.ToArray(), scene.SubjectToken);
     }
 
-    private static StillLifeScene ForInstance(StillLifeScene scene, FruitInstance fruit) => scene with
+    private static StillLifeScene ForInstance(StillLifeScene scene, FruitInstance fruit, int? omittedDetailDepth = null) => scene with
     {
         Apple = fruit.Body,
         Subject = fruit.Subject,
         Seed = fruit.Seed,
         Instances = null,
+        SurfaceDetail = fruit.Depth == omittedDetailDepth ? 0 : scene.SurfaceDetail,
     };
 
     private static void DrawSetting(SKCanvas canvas, StillLifeScene scene)
@@ -94,7 +110,7 @@ public static class StillLifeRenderer
         canvas.Restore();
     }
 
-    private static void DrawFruit(SKCanvas canvas, StillLifeScene scene, bool silhouette, bool skipShadows = false, bool shadowsOnly = false)
+    private static void DrawFruit(SKCanvas canvas, StillLifeScene scene, bool silhouette, bool skipShadows = false, bool shadowsOnly = false, bool skipBody = false)
     {
         var apple = scene.Body;
         var centerX = apple.Center.X * 1024;
@@ -116,7 +132,7 @@ public static class StillLifeRenderer
             DrawContactShadow(canvas, centerX + (width * 0.13f), bottom - (height * 0.005f), width * 0.23f, height * 0.035f);
         }
 
-        if (shadowsOnly)
+        if (shadowsOnly || skipBody)
         {
             return;
         }
