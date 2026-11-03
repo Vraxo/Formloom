@@ -284,9 +284,9 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
 
 ### 3.5 Finish the first interaction details
 
-- [x] Verify edited prompt/seed/variation snapshots in desktop session tests (PR #13). Actual rendered event-binding tests are a separate pending closure gate below.
-- [x] Verify repeated session Generate calls use the real service/renderer and reproduce PNG output (PR #13). Rendered form-event tests are a separate pending closure gate below.
-- [x] Verify Randomize updates session seed, retains the prior preview until Generate, and produces changed output through the real pipeline (PR #13). Rendered button/input wiring is a separate pending gate below.
+- [x] Verify edited prompt/seed/variation snapshots in desktop session tests (PR #13). Actual rendered event-binding tests passed in PR #14.
+- [x] Verify repeated session Generate calls use the real service/renderer and reproduce PNG output (PR #13). Rendered form-event tests passed in PR #14.
+- [x] Verify Randomize updates session seed, retains the prior preview until Generate, and produces changed output through the real pipeline (PR #13). Rendered button/input tests passed in PR #14.
 - [x] Verify variation scales bounded scene parameters and renders supported colors at maximum variation (passing Core/renderer tests). Specific low/high visual comparison is deferred under D1.
 - [x] Provide concise, actionable UI errors for parser failures, rendering failures and save failures. Do not expose stack traces in normal UI messages; log unexpected technical details for development.
 > **Deferred — D4: native keyboard/focus/contrast/accessibility review. Label/role markup assertions are included in the pending component tests, not a full accessibility audit.** This original manual clause was not individually executed; see the acceptance scope below.
@@ -303,15 +303,15 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
 
 # Phase 4 — Final verification and checkpoint
 
-> Verification update (2026-11-02): PR #7 merged after Linux / Release CI passed (36 seconds), covering restore, warnings-as-errors Release compilation of the full solution and Core/renderer tests. The user subsequently confirmed the integrated app works on Windows. This is not evidence that every individual manual case below was exercised. Debug compilation remains unverified and intentionally is not duplicated in PR CI, per user direction. Visual review has since been performed on user-supplied output through PR #10. Stop at this checkpoint; remaining unchecked verification is listed in the handoff.
+> Verification update (2026-11-02): PR #7 merged after Linux / Release CI passed (36 seconds), covering restore, warnings-as-errors Release compilation of the full solution and Core/renderer tests. The user subsequently confirmed the integrated app works on Windows. This is not evidence that every individual manual case below was exercised. Debug was later verified by the user on Windows; it is intentionally not duplicated in PR CI. Visual review has since been performed on user-supplied output through PR #10. Stop at this checkpoint; remaining unchecked verification is listed in the handoff.
 
 
 ### 4.1 Automated verification
 
 - [x] Run `dotnet restore` from the solution root.
-- [ ] Run `dotnet build` for the complete solution in Debug and Release configurations.
+- [x] Run `dotnet build` for the complete solution in Debug and Release configurations (Release: PR #14 CI; Debug: user-reported Windows build, all five projects).
   - [x] Release builds the full solution with warnings as errors in CI.
-  - [ ] Debug build remains unexecuted; no duplicate Debug PR job is added.
+  - [x] Debug build succeeded on Windows in 10.5 seconds using warnings as errors and a command-scoped source override; no duplicate Debug PR job is added.
 - [x] Run `dotnet test` and ensure all Core and renderer tests pass.
 - [x] Resolve warnings and errors introduced by the implementation. Do not hide them by disabling analyzers or suppressing broad warning categories.
 > **Deferred — D3: exact clean-build command provenance on Windows; general Windows launch is confirmed.** This original manual clause was not individually executed; see the acceptance scope below.
@@ -324,7 +324,7 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
 - [x] Verify identical repeated Generate calls through the real session/service/renderer pipeline (PR #13).
 - [x] Change the seed and confirm a visibly different but coherent result.
 - [x] Verify controlled variation bounds/deviation in Core tests and valid rendering at maximum variation. Visual low/high comparison is deferred under D1.
-- [x] Verify a real unsupported prompt yields an error and retains the previous image/metadata through the desktop pipeline (PR #13). Rendered alert tests are a pending gate below.
+- [x] Verify a real unsupported prompt yields an error and retains the previous image/metadata through the desktop pipeline (PR #13). Rendered alert tests passed in PR #14.
 - [x] Verify actual PNG file export and decoding outside the component, plus externally supplied 1024 PNGs (passing filesystem/renderer tests). Independent desktop-viewer exercise is deferred under D5.
 > **Deferred — D3: individual close/relaunch lifecycle check.** This original manual clause was not individually executed; see the acceptance scope below.
 
@@ -385,7 +385,7 @@ No new feature milestone is selected by this audit. Unverified component event w
 
 ## Agreed acceptance scope and final closure gates
 
-The user approved rendered-component tests, a one-off Debug verification and explicit deferral of native/manual checks instead of repeated smoke-test requests. Earlier original manual clauses above are now labeled **Deferred**, not falsely checked as executed. Passing PR #13 is established evidence; the component-test changes in this branch are not yet passing evidence.
+The user approved rendered-component tests, a one-off Debug verification and explicit deferral of native/manual checks instead of repeated smoke-test requests. Earlier original manual clauses above are now labeled **Deferred**, not falsely checked as executed. Passing PR #13 is established evidence; the component tests subsequently passed in PR #14.
 
 | Deferral | Original manual evidence not established | Agreed treatment |
 | --- | --- | --- |
@@ -398,8 +398,8 @@ The user approved rendered-component tests, a one-off Debug verification and exp
 
 - [x] Add rendered App component tests for defaults/labels, input events, submission, alerts, retained previews, disabled controls, Randomize and save snapshot behavior.
 - [x] Add a test-only bUnit dependency and inject the existing session into App; production services still create the same session delegates.
-- [ ] Pass the rendered-component tests and full Release build in CI. Existing tests stay in the same solution-wide test command.
+- [x] Pass rendered-component tests and the full Release build in CI: PR #14, run 41511913612, success in 46 seconds.
 - [x] Provide an opt-in `verify_debug` workflow-dispatch input for a one-off Debug build in the same Linux job; ordinary PR CI remains Release-only.
-- [ ] Execute that one-off Debug build successfully and record its run URL. Merely adding the dispatch option is not verification.
+- [x] Execute the one-off Debug build: the user reported all five projects succeeded on Windows in 10.5 seconds. Command: `dotnet build Formloom.slnx --configuration Debug --warnaserror -p:RestoreSources=https://api.nuget.org/v3/index.json`. This was local verification, not a dispatched run; dispatch was blocked by HTTP 403, so no Debug run URL is claimed.
 
-Only after the two execution gates above pass may this milestone be called complete **under the revised acceptance scope**, not under every original manual criterion. No additional feature scope is authorized here.
+Both execution gates above now pass. The milestone is complete **under the revised acceptance scope**, not under every original manual criterion. D1–D6 remain explicitly deferred. No additional feature scope is authorized here.

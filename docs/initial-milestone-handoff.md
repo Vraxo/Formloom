@@ -76,3 +76,14 @@ The earlier closure wording conflated delivered implementation with full checkli
 After reviewing the remaining checkboxes, the user approved rendered-component coverage, one-off Debug verification and explicit deferral of the native/manual checks. The [checklist D1–D6 table](../.agents/todo.md) records the precise deferrals; these are not claims of manual execution. Actual component events/markup are exercised by new bUnit tests, alongside the real pipeline tests that passed PR #13. Component tests plus the DI adjustment have not run yet. Debug can now be requested through the optional `verify_debug` manual workflow input, but has not yet been executed.
 
 Milestone closure under this revised scope requires both execution gates to pass. The full original manual criteria are not all established. Routine PR CI remains one Linux Release job, and no composition controls or other feature expansion are authorized here.
+
+## Final verification result (supersedes earlier pending statements)
+
+Both remaining execution gates are satisfied:
+
+- [PR #14 Release CI](https://github.com/Vraxo/Formloom/actions/runs/41511913612) passed, including rendered-component tests, in 46 seconds.
+- The user reported a successful Windows Debug build of all five projects in 10.5 seconds, using `dotnet build Formloom.slnx --configuration Debug --warnaserror -p:RestoreSources=https://api.nuget.org/v3/index.json`. This was a local build, not a Debug workflow run. The dispatch attempt received HTTP 403; no successful Debug run URL is claimed.
+
+The command-scoped source override addressed the user's inherited multiple-feed NU1507 warning without changing global or repository feed policy. The proposed repository NuGet configuration was removed before commit.
+
+The initial milestone is complete under the revised acceptance scope. Earlier audit entries describe historical evidence gaps; new component coverage and the Debug result supersede those pending gates. D1–D6 native/manual deferrals remain explicit and are not recast as executed checks. Routine CI remains Linux Release-only. No further feature scope is selected by this closure.
