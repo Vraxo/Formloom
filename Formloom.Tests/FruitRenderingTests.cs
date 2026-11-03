@@ -154,7 +154,7 @@ public sealed class FruitRenderingTests
         using var review = new SKBitmap(scene.Width, scene.Height);
         using var canvas = new SKCanvas(review);
         canvas.Clear(SKColors.White);
-        canvas.DrawBitmap(complete, 0, 0);
+        canvas.DrawBitmap(complete, 0, 0, new SKSamplingOptions(SKFilterMode.Nearest));
         using var image = SKImage.FromBitmap(review);
         using var encoded = image.Encode(SKEncodedImageFormat.Png, 100);
         var name = FormattableString.Invariant($"formloom-{scene.Subject.ToString().ToLowerInvariant()}-complete-silhouette-seed-{seed}-variation-{variation:0.00}.png");
