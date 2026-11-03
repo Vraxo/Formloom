@@ -175,9 +175,26 @@ public sealed class FruitRenderingTests
     public void ExportReviewSamples(string prompt, string name, int seed, double variation)
     {
         var scene = SceneGenerator.Generate(new(prompt, (ulong)seed, variation)).Scene!;
+        var timer = System.Diagnostics.Stopwatch.StartNew();
         var rendered = StillLifeRenderer.Render(scene);
+        timer.Stop();
         var filename = FormattableString.Invariant($"formloom-{name}-seed-{seed}-variation-{variation:0.00}.png");
         File.WriteAllBytes(Path.Combine(AppContext.BaseDirectory, filename), rendered.PngBytes);
+        var timing = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            Subject = scene.Subject.ToString(),
+            Prompt = prompt,
+            scene.Seed,
+            scene.Variation,
+            rendered.Width,
+            rendered.Height,
+            RenderAndEncodeMilliseconds = timer.Elapsed.TotalMilliseconds,
+            PngBytes = rendered.PngBytes.Length,
+            ProcessorCount = Environment.ProcessorCount,
+            Framework = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription,
+            OperatingSystem = System.Runtime.InteropServices.RuntimeInformation.OSDescription,
+        });
+        File.WriteAllText(Path.Combine(AppContext.BaseDirectory, Path.ChangeExtension(filename, ".timing.json")), timing);
         Assert.Equal(1024, rendered.Width);
         Assert.Equal(1024, rendered.Height);
     }
