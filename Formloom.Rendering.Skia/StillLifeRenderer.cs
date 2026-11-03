@@ -23,6 +23,12 @@ public static class StillLifeRenderer
             throw new ArgumentOutOfRangeException(nameof(scene));
         }
 
+        var error = SceneValidator.Validate(scene);
+        if (error is not null)
+        {
+            throw new ArgumentException(error, nameof(scene));
+        }
+
         var info = new SKImageInfo(scene.Width, scene.Height, SKColorType.Rgba8888, SKAlphaType.Premul);
         using var surface = SKSurface.Create(info) ?? throw new InvalidOperationException("Could not allocate raster surface.");
         var canvas = surface.Canvas;
@@ -33,11 +39,32 @@ public static class StillLifeRenderer
             DrawSetting(canvas, scene);
         }
 
-        DrawFruit(canvas, scene, silhouette);
+        var ordered = scene.Fruits.OrderBy(fruit => fruit.Depth).ToArray();
+        if (ordered.Length > 1 && !silhouette)
+        {
+            foreach (var fruit in ordered)
+            {
+                DrawFruit(canvas, ForInstance(scene, fruit), silhouette: false, shadowsOnly: true);
+            }
+        }
+
+        foreach (var fruit in ordered)
+        {
+            DrawFruit(canvas, ForInstance(scene, fruit), silhouette, skipShadows: ordered.Length > 1);
+        }
+
         using var image = surface.Snapshot();
         using var encoded = image.Encode(SKEncodedImageFormat.Png, 100);
-        return new(scene.Width, scene.Height, encoded.ToArray(), scene.Subject.ToString().ToLowerInvariant());
+        return new(scene.Width, scene.Height, encoded.ToArray(), scene.SubjectToken);
     }
+
+    private static StillLifeScene ForInstance(StillLifeScene scene, FruitInstance fruit) => scene with
+    {
+        Apple = fruit.Body,
+        Subject = fruit.Subject,
+        Seed = fruit.Seed,
+        Instances = null,
+    };
 
     private static void DrawSetting(SKCanvas canvas, StillLifeScene scene)
     {
@@ -67,7 +94,7 @@ public static class StillLifeRenderer
         canvas.Restore();
     }
 
-    private static void DrawFruit(SKCanvas canvas, StillLifeScene scene, bool silhouette)
+    private static void DrawFruit(SKCanvas canvas, StillLifeScene scene, bool silhouette, bool skipShadows = false, bool shadowsOnly = false)
     {
         var apple = scene.Body;
         var centerX = apple.Center.X * 1024;
@@ -77,15 +104,21 @@ public static class StillLifeRenderer
         var left = centerX - (width / 2);
         var bottom = top + height;
         using var paint = new SKPaint { IsAntialias = true };
-        if (!silhouette)
+        if (!silhouette && !skipShadows)
         {
-            using var blur = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 14);
+            var shadowScale = shadowsOnly ? width / (0.43f * 1024) : 1;
+            using var blur = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 14 * shadowScale);
             paint.MaskFilter = blur;
             paint.Color = new SKColor(12, 20, 17, 80);
-            canvas.DrawOval(centerX - (scene.LightDirection.X * 65), bottom + 3, width * 0.55f, 24, paint);
+            canvas.DrawOval(centerX - (scene.LightDirection.X * 65 * shadowScale), bottom + (3 * shadowScale), width * (shadowsOnly ? 0.5f : 0.55f), 24 * shadowScale, paint);
             paint.MaskFilter = null;
             DrawContactShadow(canvas, centerX - (width * 0.13f), bottom - (height * 0.009f), width * 0.22f, height * 0.035f);
             DrawContactShadow(canvas, centerX + (width * 0.13f), bottom - (height * 0.005f), width * 0.23f, height * 0.035f);
+        }
+
+        if (shadowsOnly)
+        {
+            return;
         }
 
         canvas.Save();

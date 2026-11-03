@@ -123,3 +123,19 @@ Silhouette follow-up (Release CI and complete-subject image review verified): bo
 
 
 Default-size CPU assessment: ten CI samples at 1024×1024 took **110–183 ms for rendering plus PNG encoding** on a four-logical-processor Ubuntu runner (.NET 10.0.14). This supports the scoped still-image workload, not a desktop latency guarantee or isolated benchmark. See the handoff for individual results and evidence limits. Phase 2 is at its acceptance checkpoint; no subsequent feature milestone is started.
+
+## Phase 3: multi-fruit composition (implementation pending CI and visual review)
+
+The existing single-fruit forms are retained. Lists of two or three supported descriptors can share the wooden-table setting:
+
+```text
+a red apple and a green pear on a wooden table
+a green pear and an orange on a wooden table
+a red apple, a green pear, and an orange on a wooden table
+a yellow apple, a yellow pear and an orange on a wooden table
+an orange and an orange on a wooden table
+```
+
+Descriptors remain exactly `a red apple`, `a green apple`, `a yellow apple`, `a green pear`, `a yellow pear`, `an orange`. Pairs require `and`; triples support `x and y and z`, `x, y and z`, or `x, y, and z`. Case, whitespace and terminal punctuation are normalized. Repeats are allowed; quantities/plurals, unsupported colors/adjectives, positional instructions and more than three fruits are rejected.
+
+Layout uses deterministic slots, attachment-aware margins and stable depth order, with a shared background/table and per-instance fruit rendering. Groups save as `formloom-fruit-group-seed-42.png`, based on the successfully rendered image rather than later prompt edits. No controls or dependencies are added. New tests/sample exporters are authored but **not yet executed or visually reviewed**. See [Phase 3 notes](docs/composition-handoff.md) and [checklist](.agents/todo-3.md).

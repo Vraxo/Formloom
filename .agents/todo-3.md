@@ -18,13 +18,13 @@ The milestone is successful when the existing prompt-to-PNG pipeline can produce
 
 ## Project constraints
 
-- [ ] Preserve the existing stack, package versions, project boundaries, and CPU-first/offline/non-neural design.
-- [ ] Keep Core independent of Skia and desktop UI code.
+- [x] Preserve the existing stack, package versions, project boundaries, and CPU-first/offline/non-neural design.
+- [x] Keep Core independent of Skia and desktop UI code.
 - [ ] Preserve seeded deterministic generation and independent named random streams.
 - [ ] Preserve every existing single-fruit prompt and its visual behavior as far as possible.
-- [ ] Keep the UI simple: existing prompt, seed, variation, Generate, preview, and Save PNG controls remain sufficient.
-- [ ] Do not add a new project, framework, package, network dependency, downloaded asset, font, texture, or image model without a demonstrated necessity and explicit approval.
-- [ ] Avoid speculative abstractions, universal scene-graph frameworks, plugin systems, and generic editors.
+- [x] Keep the UI simple: existing prompt, seed, variation, Generate, preview, and Save PNG controls remain sufficient.
+- [x] Do not add a new project, framework, package, network dependency, downloaded asset, font, texture, or image model without a demonstrated necessity and explicit approval.
+- [x] Avoid speculative abstractions, universal scene-graph frameworks, plugin systems, and generic editors.
 - [ ] Do not start another milestone or add subject families after this checklist's acceptance checkpoint.
 
 ## Scope
@@ -59,32 +59,36 @@ Use the existing explicit fruit/color vocabulary. Repeated fruit descriptions ma
 - New backgrounds, rooms, landscapes, camera systems, 3D, GPU rendering, neural models, or photorealism claims.
 - UI panels or controls for manually positioning/scaling individual objects.
 
+## Implementation status
+
+Started at `36eaf70` on the existing session branch with a clean working tree. The first scoped implementation and tests are authored; see [inspection/design and handoff](../docs/composition-handoff.md). No .NET SDK is installed locally, no tests/build have been executed for these changes, and no new PNGs have been generated/reviewed. Source-reviewed implementation items below are distinguished from still-open runtime/visual gates. Changes remain uncommitted.
+
 ## Sequential implementation checklist
 
 ### 0. Inspect the current implementation
 
-- [ ] Start from the latest `main`; record the exact starting commit and confirm the working tree is clean.
-- [ ] Read the Phase 2 handoff, scene types, prompt parser, scene generator, fruit profiles, named random-stream implementation, renderer transforms, shadow/grounding code, desktop generation service, and relevant tests.
-- [ ] Trace the existing single-fruit generation path from prompt parsing through PNG encoding and save metadata.
-- [ ] Identify assumptions that enforce exactly one subject (for example, singular body properties, fixed center placement, one attachment origin, or subject-specific filename metadata).
-- [ ] Identify which current geometry, material, attachment, shading, and shadow helpers can already render an independently transformed fruit instance.
+- [x] Start from the latest `main`; record the exact starting commit and confirm the working tree is clean.
+- [x] Read the Phase 2 handoff, scene types, prompt parser, scene generator, fruit profiles, named random-stream implementation, renderer transforms, shadow/grounding code, desktop generation service, and relevant tests.
+- [x] Trace the existing single-fruit generation path from prompt parsing through PNG encoding and save metadata.
+- [x] Identify assumptions that enforce exactly one subject (for example, singular body properties, fixed center placement, one attachment origin, or subject-specific filename metadata).
+- [x] Identify which current geometry, material, attachment, shading, and shadow helpers can already render an independently transformed fruit instance.
 - [ ] Write a brief implementation note in the PR description describing the smallest set of Core, renderer, parser, and test changes needed.
-- [ ] Do not redesign unrelated Phase 2 systems or rewrite accepted fruit profiles.
+- [x] Do not redesign unrelated Phase 2 systems or rewrite accepted fruit profiles.
 
 ### 1. Introduce a small multi-instance scene representation
 
-- [ ] Extend the Core scene model to represent a collection of fruit instances rather than assuming one fruit body per scene.
-- [ ] Give each instance an explicit subject/appearance description and a normalized scene transform (position, scale, and depth/order as appropriate to the existing coordinate model).
-- [ ] Keep scene-level setting/background information separate from per-fruit instance information.
-- [ ] Preserve or deliberately migrate existing single-fruit public APIs with a narrow compatibility path where existing callers/tests require it.
+- [x] Extend the Core scene model to represent a collection of fruit instances rather than assuming one fruit body per scene.
+- [x] Give each instance an explicit subject/appearance description and a normalized scene transform (position, scale, and depth/order as appropriate to the existing coordinate model).
+- [x] Keep scene-level setting/background information separate from per-fruit instance information.
+- [x] Preserve or deliberately migrate existing single-fruit public APIs with a narrow compatibility path where existing callers/tests require it.
 - [ ] Validate instance count, finite transform values, scale bounds, and normalized placement before rendering.
 - [ ] Ensure invalid or empty scene collections fail with useful validation results rather than producing malformed output.
-- [ ] Keep Core free of Skia, pixel, bitmap, or UI types.
-- [ ] Do not introduce a generic arbitrary-object scene graph; the scene model should remain focused on the existing fruit vocabulary.
+- [x] Keep Core free of Skia, pixel, bitmap, or UI types.
+- [x] Do not introduce a generic arbitrary-object scene graph; the scene model should remain focused on the existing fruit vocabulary.
 
 ### 2. Implement deterministic composition/layout
 
-- [ ] Add a small layout/composition component that accepts the scene's fruit instances and produces valid placements in the existing still-life coordinate system.
+- [x] Add a small layout/composition component that accepts the scene's fruit instances and produces valid placements in the existing still-life coordinate system.
 - [ ] Support one-fruit placement that remains visually consistent with the current centered single-fruit composition.
 - [ ] Support a balanced two-fruit arrangement with distinct, readable silhouettes and natural spacing.
 - [ ] Support a balanced three-fruit cluster with clear visibility of all requested fruit types.
@@ -94,24 +98,24 @@ Use the existing explicit fruit/color vocabulary. Repeated fruit descriptions ma
 - [ ] Allow restrained, intentional overlap where it improves depth and still-life cohesion, without hiding the identity-defining silhouette or attachments of a fruit.
 - [ ] Establish a clear front-to-back draw order so overlap is stable and predictable.
 - [ ] Keep all fruit grounded on the same table plane; do not let scale/position changes create floating objects or detached contact shadows.
-- [ ] Use a scene/composition random stream separate from each fruit's geometry, material, and detail streams.
+- [x] Use a scene/composition random stream separate from each fruit's geometry, material, and detail streams.
 - [ ] Derive stable per-instance random stream identities so adding a different fruit does not perturb an existing instance's shape/detail stream unnecessarily.
 - [ ] Make same seed + same prompt + same variation produce the same placements and pixels.
 - [ ] Allow a different seed to produce a meaningfully different but still coherent composition.
 - [ ] Keep variation bounded: it may influence layout subtly, but must not change requested subject count or make the arrangement collapse.
 - [ ] Ensure one-fruit scenes do not acquire unnecessary positional randomness merely because multi-fruit support exists.
-- [ ] Prefer a few understandable deterministic arrangement strategies over a generic physics engine, force solver, or optimization framework.
+- [x] Prefer a few understandable deterministic arrangement strategies over a generic physics engine, force solver, or optimization framework.
 
 ### 3. Render multiple transformed fruit instances
 
-- [ ] Refactor the renderer's top-level scene pass to draw the setting once and then draw all fruit instances in deterministic depth order.
-- [ ] Reuse the existing shared organic contour, fruit material, attachment, lighting, and clipped-detail code for each instance.
+- [x] Refactor the renderer's top-level scene pass to draw the setting once and then draw all fruit instances in deterministic depth order.
+- [x] Reuse the existing shared organic contour, fruit material, attachment, lighting, and clipped-detail code for each instance.
 - [ ] Apply each instance's transform consistently to body contours, stems, leaves, calyx, highlights, and surface details.
 - [ ] Ensure each instance's material and seeded surface details remain independent of the other instances.
 - [ ] Compute or adapt contact shadows for each fruit's actual position and scale.
 - [ ] Keep cast shadows coherent with the existing scene lighting direction and prevent shadow ordering from looking detached or contradictory.
 - [ ] Ensure overlapping subjects are composited in the expected depth order without attachments being accidentally drawn behind their own fruit body.
-- [ ] Keep the table grain and background scene-level and unchanged by the number of fruit instances.
+- [x] Keep the table grain and background scene-level and unchanged by the number of fruit instances.
 - [ ] Preserve the existing single-fruit renderer output as closely as practical; investigate any visible regression rather than accepting it as an incidental side effect.
 - [ ] Maintain sensible memory use and CPU performance when rendering three fruits at 1024 × 1024.
 - [ ] Keep resource ownership/disposal correct when a scene contains multiple instances.
@@ -188,7 +192,7 @@ Use the existing explicit fruit/color vocabulary. Repeated fruit descriptions ma
 - [ ] Update this checklist accurately as tasks are completed; leave unverified claims unchecked and document blockers.
 - [ ] Run the full existing restore/build/test workflow.
 - [ ] Ensure all projects build with warnings as errors and every test project passes.
-- [ ] Keep the established Linux Release CI as the routine automated gate; do not add a new permanent job/runner for this milestone.
+- [x] Keep the established Linux Release CI as the routine automated gate; do not add a new permanent job/runner for this milestone.
 - [ ] Confirm the latest post-merge Release CI run passes before declaring completion.
 - [ ] Report the starting/ending commits, changed files, key design decisions, tests and CI evidence, sample PNGs, and known limitations.
 - [ ] Stop at the acceptance checkpoint below; do not begin additional object families or props.

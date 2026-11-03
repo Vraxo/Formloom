@@ -22,6 +22,8 @@ public sealed class GenerationServiceTests
     [InlineData("a green pear on a wooden table", "pear")]
     [InlineData("a yellow pear on a wooden table", "pear")]
     [InlineData("an orange on a wooden table", "orange")]
+    [InlineData("a red apple and a green pear on a wooden table", "fruit-group")]
+    [InlineData("a red apple, a green pear, and an orange on a wooden table", "fruit-group")]
     public async Task NewFruitUsesRealPipelineAndSaveSnapshot(string prompt, string subject)
     {
         var generator = new GenerationService(NullLogger<GenerationService>.Instance);
@@ -42,7 +44,9 @@ public sealed class GenerationServiceTests
         Assert.NotNull(session.Image);
         Assert.Equal(subject, session.Image.Subject);
         var preview = session.PreviewUrl;
-        session.Prompt = "a red pear on a wooden table";
+        session.Prompt = subject == "fruit-group"
+            ? "a red apple and a blue pear on a wooden table"
+            : "a red pear on a wooden table";
         session.SeedText = "99";
         await session.GenerateAsync();
         Assert.NotNull(session.Error);
