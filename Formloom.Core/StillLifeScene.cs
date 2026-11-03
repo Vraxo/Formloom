@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Numerics;
 
 namespace Formloom.Core;
@@ -13,6 +14,14 @@ public sealed record StillLifeScene(
     double BackgroundWarmth,
     Vector2 LightDirection)
 {
+    public ImmutableArray<FruitInstance>? Instances { get; init; }
+
+    public ImmutableArray<FruitInstance> Fruits => Instances ?? ImmutableArray.Create(new FruitInstance(Subject, Apple, Seed, 0));
+
+    public string SubjectToken => Fruits.Length == 1
+        ? Fruits[0].Subject.ToString().ToLowerInvariant()
+        : "fruit-group";
+
     public double SurfaceDetail { get; init; } = 1;
 
     public FruitKind Subject { get; init; } = FruitKind.Apple;

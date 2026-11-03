@@ -32,6 +32,8 @@ public sealed class AppComponentTests
     [InlineData("a green pear on a wooden table")]
     [InlineData("a yellow pear on a wooden table")]
     [InlineData("an orange on a wooden table")]
+    [InlineData("a red apple and a green pear on a wooden table")]
+    [InlineData("a red apple, a green pear, and an orange on a wooden table")]
     public async Task InputEventsAndSubmitUseEditedValuesAndRenderPreview(string prompt)
     {
         await using var context = new BunitContext();
