@@ -57,11 +57,11 @@ The user supplied all 14 CI PNGs on 2026-11-03. Actual apple, green/yellow pear 
 
 **Checklist rules for the agent**
 
-- [ ] Work through the sections in order; do not skip ahead to implementation before inspecting the existing code.
-- [ ] Mark a checkbox `[x]` only after the task is actually completed and verified.
-- [ ] Keep this file updated in the repository as work progresses, so the user can inspect the remaining work at any point.
-- [ ] Do not mark a test, visual review, documentation update, or CI check complete merely because it was planned or authored; it must actually be performed.
-- [ ] If a task is blocked, leave it unchecked and record the blocker and evidence next to it.
+- Work through the sections in order; do not skip ahead to implementation before inspecting the existing code.
+- Mark a checkbox `[x]` only after the task is actually completed and verified.
+- Keep this file updated in the repository as work progresses, so the user can inspect the remaining work at any point.
+- Do not mark a test, visual review, documentation update, or CI check complete merely because it was planned or authored; it must actually be performed.
+- If a task is blocked, leave it unchecked and record the blocker and evidence next to it.
 
 ### 0. Inspect the current implementation
 
@@ -107,7 +107,7 @@ The user supplied all 14 CI PNGs on 2026-11-03. Actual apple, green/yellow pear 
 - [x] Ensure the orange texture does not resemble polka dots, glitter, or a flat noise overlay.
 - [x] Use deterministic, named random streams for every seeded detail; keep geometry, materials, and surface-detail randomness independent.
 - [x] Keep the existing wood, background, and overall composition unchanged unless a small adjustment is necessary to support all three fruits consistently.
-- [ ] Ensure performance remains suitable for ordinary CPU use at the default 1024 × 1024 output. Advisory render/PNG-encode timing sidecars are now authored in existing 1024px sample tests; fresh CI measurements and assessment are pending (see handoff).
+- [x] Ensure performance remains suitable for ordinary CPU use at the default 1024 × 1024 output. All ten supplied post-merge CI timing sidecars were assessed: render plus PNG encode took 110.37–183.07 ms on a four-logical-processor Ubuntu runner. Advisory observations, not a desktop latency guarantee or isolated benchmark; see handoff.
 
 ### 4. Extend scene construction and the strict prompt grammar
 
@@ -192,8 +192,8 @@ The user supplied all 14 CI PNGs on 2026-11-03. Actual apple, green/yellow pear 
 - [x] Automated Core, renderer, and desktop integration tests cover the new behavior and all existing tests pass.
 - [x] README and milestone handoff accurately describe the new capability and its limits.
 - [x] The completed change passes the repository's Release CI gate.
-- [ ] The agent stops and reports implementation decisions, tests/CI evidence, known limitations, and sample PNGs.
-- [ ] Do not continue to another subject family or feature milestone without review.
+- [x] The agent stops and reports implementation decisions, tests/CI evidence, known limitations, and sample PNGs. Reports and user-supplied PNG reviews are recorded in the handoff; final timing assessment closes the remaining implementation acceptance gate.
+- [x] Do not continue to another subject family or feature milestone without review. Stopped at the Phase 2 checkpoint; no next milestone started.
 
 ## Explicitly out of scope
 
@@ -222,4 +222,4 @@ This follow-up changes the previously documented body-only export limitation; it
 
 ## Final acceptance evidence reconciliation
 
-Desktop pipeline acceptance is supported by passing real `GenerationService`/`DesktopSession` tests for green pear, yellow pear and orange, including failed-prompt preview retention and saved-image metadata. This is not a new native-window smoke test. Shared construction and deterministic/bounded output acceptance are supported by the reviewed source, passing Core/render tests and inspected samples. Latest merged documentation CI run 41603169902 passed at `327d25c`; it predates the timing instrumentation authored here. Stop/new-milestone and final-report boxes remain open until the remaining performance evidence is assessed.
+Desktop pipeline acceptance is supported by passing real `GenerationService`/`DesktopSession` tests for green pear, yellow pear and orange, including failed-prompt preview retention and saved-image metadata. This is not a new native-window smoke test. Shared construction and deterministic/bounded output acceptance are supported by the reviewed source, passing Core/render tests and inspected samples. Latest merged documentation CI run 41603169902 passed at `327d25c`; it predates the timing instrumentation authored here. The ten supplied timing reports have now been assessed (110.37–183.07 ms per 1024px render plus encoding), closing the remaining performance evidence gate. Post-merge timing implementation CI run 41612817131 passed at `3c4c624`. The final evidence documentation changes are uncommitted; prior CI validates the implementation, not these new documentation edits.
