@@ -61,7 +61,9 @@ Use the existing explicit fruit/color vocabulary. Repeated fruit descriptions ma
 
 ## Implementation status
 
-Started at `36eaf70` on the existing session branch with a clean working tree. The first scoped implementation and tests are authored; see [inspection/design and handoff](../docs/composition-handoff.md). No .NET SDK is installed locally, no tests/build have been executed for these changes, and no new PNGs have been generated/reviewed. Source-reviewed implementation items below are distinguished from still-open runtime/visual gates. Changes remain uncommitted.
+Started at `36eaf70` with a clean working tree. Implementation is merged in PR #22 at `f49b2be`. [Post-merge Linux Release run 41622641615](https://github.com/Vraxo/Formloom/actions/runs/41622641615) passed restore, warnings-as-errors build, tests and artifact uploads. PR run 41622276993 also passed after fixing JSON argument formatting and restoring unsupported-prompt error wording. No local SDK was installed.
+
+CI has generated the PNG/timing artifacts. The user supplied 20 group PNGs, which were visually reviewed (including white-composited silhouettes and attachment/shadow crops); **all required normal group cases and single-fruit baselines have now been supplied and visually reviewed; eight supplied group timing reports have been assessed**. The sandbox cannot retrieve GitHub's redirected artifact-storage hosts; user-supplied `procedural-preview` PNGs and timing JSON are needed. Source/test results do not replace visual review. Current evidence-documentation edits are uncommitted.
 
 ## Sequential implementation checklist
 
@@ -117,7 +119,7 @@ Started at `36eaf70` on the existing session branch with a clean working tree. T
 - [ ] Ensure overlapping subjects are composited in the expected depth order without attachments being accidentally drawn behind their own fruit body.
 - [x] Keep the table grain and background scene-level and unchanged by the number of fruit instances.
 - [ ] Preserve the existing single-fruit renderer output as closely as practical; investigate any visible regression rather than accepting it as an incidental side effect.
-- [ ] Maintain sensible memory use and CPU performance when rendering three fruits at 1024 × 1024.
+- [ ] Maintain sensible memory use and CPU performance when rendering three fruits at 1024 × 1024. CPU evidence assessed: five supplied trio reports took 175.39–291.43 ms for render plus PNG encoding; no isolated peak-memory benchmark is claimed. Resource ownership/source audit remains part of closure.
 - [ ] Keep resource ownership/disposal correct when a scene contains multiple instances.
 
 ### 4. Extend the strict prompt grammar
@@ -137,63 +139,63 @@ Started at `36eaf70` on the existing session branch with a clean working tree. T
 
 ### 5. Add automated Core and composition coverage
 
-- [ ] Test parsing of every existing single-fruit prompt after the parser extension.
-- [ ] Test valid two-fruit prompts with different subject orders and color combinations.
-- [ ] Test valid three-fruit prompts, including Oxford-comma syntax.
-- [ ] Test unsupported list sizes, malformed separators, duplicate conjunctions, unsupported colors, and unknown adjectives/subjects.
-- [ ] Test that parsed scene instance count and subject/color order match the prompt.
-- [ ] Test scene validation for zero instances, excess instances, invalid transforms, and out-of-range scales.
-- [ ] Test that layout is deterministic for identical inputs.
-- [ ] Test that different seeds can change composition while retaining the same subject set.
-- [ ] Test that layout preserves all requested instances and does not generate non-finite or out-of-bounds transforms.
-- [ ] Test that complete-subject bounds include attachments and respect safe canvas margins.
-- [ ] Test that two- and three-fruit layouts maintain readable spacing/visibility within defined tolerances.
-- [ ] Test that per-instance random streams remain independent when another fruit is added or reordered.
-- [ ] Test that a single-fruit prompt still uses the intended single-fruit placement behavior.
+- [x] Test parsing of every existing single-fruit prompt after the parser extension.
+- [x] Test valid two-fruit prompts with different subject orders and color combinations.
+- [x] Test valid three-fruit prompts, including Oxford-comma syntax.
+- [x] Test unsupported list sizes, malformed separators, duplicate conjunctions, unsupported colors, and unknown adjectives/subjects.
+- [x] Test that parsed scene instance count and subject/color order match the prompt.
+- [x] Test scene validation for zero instances, excess instances, invalid transforms, and out-of-range scales.
+- [x] Test that layout is deterministic for identical inputs.
+- [x] Test that different seeds can change composition while retaining the same subject set.
+- [x] Test that layout preserves all requested instances and does not generate non-finite or out-of-bounds transforms.
+- [x] Test that complete-subject bounds include attachments and respect safe canvas margins.
+- [x] Test that two- and three-fruit layouts maintain readable spacing/visibility within defined tolerances.
+- [x] Test that per-instance random streams remain independent when another fruit is added or reordered.
+- [x] Test that a single-fruit prompt still uses the intended single-fruit placement behavior.
 
 ### 6. Add renderer and desktop integration coverage
 
-- [ ] Test valid PNG generation for one-, two-, and three-fruit scenes at 1024 × 1024.
-- [ ] Test at representative smaller, larger, and rectangular output sizes already supported by the renderer.
-- [ ] Test identical multi-fruit inputs produce identical decoded pixels.
-- [ ] Test different seeds produce controlled pixel differences without losing or changing the requested subject set.
-- [ ] Test that the renderer draws all requested bodies and their corresponding attachments.
-- [ ] Test that contact/cast shadows are present and do not appear detached from their fruit.
-- [ ] Test that surface details remain clipped to the correct fruit body when objects overlap.
-- [ ] Test that no fruit, attachment, or required shadow is accidentally clipped by the canvas.
-- [ ] Test that existing apple opacity, fruit silhouettes, pear/orange materials, wood grain, and single-fruit regression coverage still pass.
-- [ ] Extend desktop generation/session/component tests to prove multi-fruit prompts use the existing real generation pipeline.
-- [ ] Test that failed multi-fruit prompts retain the previous successful preview and its metadata.
-- [ ] Test that PNG save filenames/metadata correctly describe the last successful single- or multi-fruit scene.
-- [ ] Do not claim native Photino dialog or window behavior is tested by headless component/service tests.
+- [x] Test valid PNG generation for one-, two-, and three-fruit scenes at 1024 × 1024.
+- [x] Test at representative smaller, larger, and rectangular output sizes already supported by the renderer.
+- [x] Test identical multi-fruit inputs produce identical decoded pixels.
+- [x] Test different seeds produce controlled pixel differences without losing or changing the requested subject set.
+- [x] Test that the renderer draws all requested bodies and their corresponding attachments.
+- [ ] Test that contact/cast shadows are present and do not appear detached from their fruit. Contact-darkness test passed; cast-shadow/intersection visual review remains pending.
+- [ ] Test that surface details remain clipped to the correct fruit body when objects overlap. Outside-complete-mask detail invariant passed; overlap-specific assessment remains open.
+- [ ] Test that no fruit, attachment, or required shadow is accidentally clipped by the canvas. Complete-subject transparent-border tests passed; required-shadow extent review remains pending.
+- [x] Test that existing apple opacity, fruit silhouettes, pear/orange materials, wood grain, and single-fruit regression coverage still pass.
+- [x] Extend desktop generation/session/component tests to prove multi-fruit prompts use the existing real generation pipeline.
+- [x] Test that failed multi-fruit prompts retain the previous successful preview and its metadata.
+- [x] Test that PNG save filenames/metadata correctly describe the last successful single- or multi-fruit scene.
+- [x] Do not claim native Photino dialog or window behavior is tested by headless component/service tests.
 
 ### 7. Generate and visually review actual scenes
 
-- [ ] Generate a single-fruit baseline for each existing subject family to check that Phase 2 quality has not regressed.
-- [ ] Generate at least three different two-fruit combinations, including apple + pear and pear + orange.
-- [ ] Generate at least two three-fruit combinations containing all three fruit types.
-- [ ] Generate alternate-seed variants for at least one two-fruit and one three-fruit prompt.
-- [ ] Inspect all samples at normal viewing size and inspect representative crops for attachment/shadow intersections.
-- [ ] Confirm that two-fruit scenes read as one composed still life rather than two unrelated centered cut-outs.
-- [ ] Confirm that three-fruit scenes have a clear visual hierarchy and that every requested fruit remains recognizable.
-- [ ] Confirm scale relationships feel plausible without making any fruit arbitrarily tiny or dominant.
-- [ ] Confirm overlap and depth order are visually understandable.
-- [ ] Confirm every fruit rests on the table and has a believable contact shadow.
-- [ ] Confirm the common lighting direction remains coherent across all subjects.
-- [ ] Confirm stems, leaves, and calyxes are not unintentionally hidden, detached, or clipped.
-- [ ] Confirm different seeds change composition in a controlled way rather than merely shifting the entire group off-center.
-- [ ] Confirm low/high variation remains readable and does not cause collisions, clipping, or loss of subject identity.
-- [ ] Include reviewable sample PNGs in the completion report or generated CI artifact; do not commit bulky generated output unless the repository already establishes that convention.
+- [x] Generate a single-fruit baseline for each existing subject family to check that Phase 2 quality has not regressed.
+- [x] Generate at least three different two-fruit combinations, including apple + pear and pear + orange.
+- [x] Generate at least two three-fruit combinations containing all three fruit types.
+- [x] Generate alternate-seed variants for at least one two-fruit and one three-fruit prompt.
+- [x] Inspect all samples at normal viewing size and inspect representative crops for attachment/shadow intersections. Ten supplied normal group renders and representative attachment/overlap/grounding crops inspected; the subsequent upload supplied the remaining normal pair and single baselines, all inspected.
+- [x] Confirm that two-fruit scenes read as one composed still life rather than two unrelated centered cut-outs. Supplied apple/pear and orange/apple pairs pass; normal pear/orange pair subsequently supplied and reviewed.
+- [x] Confirm that three-fruit scenes have a clear visual hierarchy and that every requested fruit remains recognizable. Verified in the supplied group samples; see visual findings in the handoff.
+- [x] Confirm scale relationships feel plausible without making any fruit arbitrarily tiny or dominant. Verified in the supplied group samples; see visual findings in the handoff.
+- [x] Confirm overlap and depth order are visually understandable. Verified in the supplied group samples; see visual findings in the handoff.
+- [x] Confirm every fruit rests on the table and has a believable contact shadow. Supplied normal groups pass visual review; remaining normal pair/baseline samples were subsequently supplied and inspected.
+- [x] Confirm the common lighting direction remains coherent across all subjects. Supplied normal groups pass visual review; remaining normal pair/baseline samples were subsequently supplied and inspected.
+- [x] Confirm stems, leaves, and calyxes are not unintentionally hidden, detached, or clipped. Supplied normal groups pass visual review; remaining normal pair/baseline samples were subsequently supplied and inspected.
+- [x] Confirm different seeds change composition in a controlled way rather than merely shifting the entire group off-center. Verified in the supplied group samples; see visual findings in the handoff.
+- [x] Confirm low/high variation remains readable and does not cause collisions, clipping, or loss of subject identity. Verified in the supplied group samples; see visual findings in the handoff.
+- [x] Include reviewable sample PNGs in the completion report or generated CI artifact; do not commit bulky generated output unless the repository already establishes that convention.
 
 ### 8. Documentation and verification
 
-- [ ] Update README with the exact supported single- and multi-fruit prompt syntax and current limitations.
+- [x] Update README with the exact supported single- and multi-fruit prompt syntax and current limitations.
 - [ ] Update the Formloom handoff with the scene-instance model, layout approach, ordering/overlap rules, named-stream strategy, tests, visual findings, and known limitations.
 - [ ] Update this checklist accurately as tasks are completed; leave unverified claims unchecked and document blockers.
-- [ ] Run the full existing restore/build/test workflow.
-- [ ] Ensure all projects build with warnings as errors and every test project passes.
+- [x] Run the full existing restore/build/test workflow.
+- [x] Ensure all projects build with warnings as errors and every test project passes.
 - [x] Keep the established Linux Release CI as the routine automated gate; do not add a new permanent job/runner for this milestone.
-- [ ] Confirm the latest post-merge Release CI run passes before declaring completion.
+- [x] Confirm the latest post-merge Release CI run passes before declaring completion.
 - [ ] Report the starting/ending commits, changed files, key design decisions, tests and CI evidence, sample PNGs, and known limitations.
 - [ ] Stop at the acceptance checkpoint below; do not begin additional object families or props.
 
@@ -208,10 +210,10 @@ Started at `36eaf70` on the existing session branch with a clean working tree. T
 - [ ] Every fruit remains inside the canvas, recognizably visible, correctly layered, and grounded on the table.
 - [ ] Contact/cast shadows, attachments, lighting, and surface-detail clipping remain coherent in multi-fruit scenes.
 - [ ] Strict parsing rejects unsupported or malformed requests rather than silently omitting subjects.
-- [ ] Automated Core, renderer, desktop integration, and existing regression tests pass.
-- [ ] Actual single-, two-, and three-fruit sample images have been visually reviewed and supplied as artifacts or report attachments.
+- [x] Automated Core, renderer, desktop integration, and existing regression tests pass.
+- [x] Actual single-, two-, and three-fruit sample images have been visually reviewed and supplied as artifacts or report attachments. Final batch supplied the remaining normal pear/orange pair and current single baselines; findings recorded in the handoff.
 - [ ] README and handoff accurately record the implemented prompt grammar, composition behavior, evidence, and limitations.
-- [ ] The completed change passes the repository's Release CI gate.
+- [x] The completed change passes the repository's Release CI gate.
 - [ ] The agent stops and reports at this milestone; no new props or subject family is started.
 
 ## Working instruction
