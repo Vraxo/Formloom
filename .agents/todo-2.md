@@ -47,6 +47,10 @@ Add these explicit prompts:
 
 Continue tolerating the existing case, whitespace, and terminal-punctuation variations. Do not silently interpret arbitrary extra adjectives or unsupported colors. Document the exact supported prompt forms in the README.
 
+## Implementation status
+
+The scoped implementation is authored; see [inspection/implementation notes](../docs/organic-forms-handoff.md) for files, reuse decisions, compatibility boundaries and verification limitations. No local .NET SDK is installed; Linux Release CI must execute the new tests. Sample export code is authored, but actual PNG generation/visual review and latest CI are **not yet performed**. Their checkboxes remain open. No generated binary artifacts are committed.
+
 ## Sequential implementation checklist
 
 **Checklist rules for the agent**
@@ -59,63 +63,63 @@ Continue tolerating the existing case, whitespace, and terminal-punctuation vari
 
 ### 0. Inspect the current implementation
 
-- [ ] Start from the latest `main` and confirm the working tree is clean.
-- [ ] Read the current scene model, prompt grammar, scene construction, apple geometry, material/shading code, random-stream naming, renderer tests, and desktop prompt tests.
-- [ ] Identify which parts of the apple implementation are genuinely reusable and which are apple-specific.
-- [ ] Write a short implementation note in the task/PR description naming the existing files to be extended and the intended new files, if any.
-- [ ] Choose the smallest clean extension that fits the existing architecture; do not redesign the architecture before inspection.
+- [x] Start from the latest `main` and confirm the working tree is clean.
+- [x] Read the current scene model, prompt grammar, scene construction, apple geometry, material/shading code, random-stream naming, renderer tests, and desktop prompt tests.
+- [x] Identify which parts of the apple implementation are genuinely reusable and which are apple-specific.
+- [x] Write a short implementation note in the task/PR description naming the existing files to be extended and the intended new files, if any.
+- [x] Choose the smallest clean extension that fits the existing architecture; do not redesign the architecture before inspection.
 
 ### 1. Introduce a reusable organic-form representation
 
-- [ ] Extract a small, reusable way to describe and construct a smooth, closed, normalized 2D organic contour.
-- [ ] Support meaningful form characteristics such as relative width by height, upper/lower taper, shoulders, lobes, indentations, and restrained asymmetry.
-- [ ] Support distinct semantic profiles rather than one generic blob with only its color changed.
-- [ ] Keep geometric construction separate from material appearance: fruit profiles describe shape; material/appearance descriptions control color, shading, and surface detail.
-- [ ] Keep geometry pure and testable where it fits the current Core/renderer boundary; do not introduce Skia types into Core.
+- [x] Extract a small, reusable way to describe and construct a smooth, closed, normalized 2D organic contour.
+- [x] Support meaningful form characteristics such as relative width by height, upper/lower taper, shoulders, lobes, indentations, and restrained asymmetry.
+- [x] Support distinct semantic profiles rather than one generic blob with only its color changed.
+- [x] Keep geometric construction separate from material appearance: fruit profiles describe shape; material/appearance descriptions control color, shading, and surface detail.
+- [x] Keep geometry pure and testable where it fits the current Core/renderer boundary; do not introduce Skia types into Core.
 - [ ] Use a smooth closed curve or equivalent robust contour construction; avoid brittle collections of hand-authored renderer path points for every subject.
 - [ ] Keep coordinates normalized and bounded, and ensure forms remain stable at all currently supported output sizes.
-- [ ] Use independent, named random streams for seeded irregularity so new fruit details do not perturb unrelated apple details.
-- [ ] Avoid building a universal vector graphics system, arbitrary polygon editor, node graph, or plugin architecture.
+- [x] Use independent, named random streams for seeded irregularity so new fruit details do not perturb unrelated apple details.
+- [x] Avoid building a universal vector graphics system, arbitrary polygon editor, node graph, or plugin architecture.
 
 ### 2. Express the three fruit forms through the shared system
 
 - [ ] Refactor the current apple to use the reusable representation without losing its recognizable silhouette, lobes, top indentation, stem attachment, or existing visual quality.
-- [ ] Add a pear profile with a clearly broad lower body, narrower upper neck, and natural shoulder transition.
+- [x] Add a pear profile with a clearly broad lower body, narrower upper neck, and natural shoulder transition.
 - [ ] Verify that the pear silhouette reads as a pear even when rendered as a flat black shape.
-- [ ] Add an orange profile that is broadly round but not a mathematically perfect circle, with restrained natural irregularity and an appropriate top/bottom feature.
+- [x] Add an orange profile that is broadly round but not a mathematically perfect circle, with restrained natural irregularity and an appropriate top/bottom feature.
 - [ ] Verify that the orange reads as a real orange rather than a generic disk.
 - [ ] Give each form independent, bounded shape parameters and seeded asymmetry; avoid excessive wobble or noise.
-- [ ] Derive attachment points (such as the stem) from the form/profile or explicit attachment data, not unrelated hard-coded screen coordinates.
-- [ ] Reuse stem/leaf construction where visually appropriate, while allowing fruit-specific details where needed; do not force identical stem/leaf arrangements.
+- [x] Derive attachment points (such as the stem) from the form/profile or explicit attachment data, not unrelated hard-coded screen coordinates.
+- [x] Reuse stem/leaf construction where visually appropriate, while allowing fruit-specific details where needed; do not force identical stem/leaf arrangements.
 
 ### 3. Separate and reuse the fruit rendering pipeline
 
-- [ ] Build on the existing CPU Skia rendering path.
-- [ ] Reuse common body drawing, contour clipping, lighting, and shadow behavior instead of maintaining three complete independent rendering pipelines.
-- [ ] Keep fruit-specific appearance in small, explicit material/style descriptions.
+- [x] Build on the existing CPU Skia rendering path.
+- [x] Reuse common body drawing, contour clipping, lighting, and shadow behavior instead of maintaining three complete independent rendering pipelines.
+- [x] Keep fruit-specific appearance in small, explicit material/style descriptions.
 - [ ] Preserve coherent scene lighting, volume, highlights, contact shadows, and cast shadows so each fruit sits naturally on the table.
 - [ ] Retain the apple's existing smooth, subtly varied skin and accepted polished appearance.
 - [ ] Give pears a distinct green/yellow skin appearance, slightly more matte and subtly varied than the apple, without heavy noise.
 - [ ] Give the orange a recognizable peel appearance using restrained procedural pores or peel texture.
 - [ ] Clip orange surface details to the body contour, scale them sensibly with output size, make them respect lighting, and keep them subtle at normal viewing size.
 - [ ] Ensure the orange texture does not resemble polka dots, glitter, or a flat noise overlay.
-- [ ] Use deterministic, named random streams for every seeded detail; keep geometry, materials, and surface-detail randomness independent.
-- [ ] Keep the existing wood, background, and overall composition unchanged unless a small adjustment is necessary to support all three fruits consistently.
+- [x] Use deterministic, named random streams for every seeded detail; keep geometry, materials, and surface-detail randomness independent.
+- [x] Keep the existing wood, background, and overall composition unchanged unless a small adjustment is necessary to support all three fruits consistently.
 - [ ] Ensure performance remains suitable for ordinary CPU use at the default 1024 × 1024 output.
 
 ### 4. Extend scene construction and the strict prompt grammar
 
-- [ ] Extend the existing scene model and builder to represent fruit type and relevant appearance/profile.
-- [ ] Route all three subjects through the same generation service and renderer entry point.
+- [x] Extend the existing scene model and builder to represent fruit type and relevant appearance/profile.
+- [x] Route all three subjects through the same generation service and renderer entry point.
 - [ ] Retain all currently supported apple prompts and their existing behavior.
-- [ ] Add support for `a green pear on a wooden table`.
-- [ ] Add support for `a yellow pear on a wooden table`.
-- [ ] Add support for `an orange on a wooden table`.
-- [ ] Continue tolerating the existing case, whitespace, and terminal-punctuation variations.
-- [ ] Reject unsupported object/color combinations with a useful error rather than silently falling back to an apple or default color.
-- [ ] Keep parser output explicit and validated; do not silently interpret arbitrary extra adjectives or unsupported colors.
+- [x] Add support for `a green pear on a wooden table`.
+- [x] Add support for `a yellow pear on a wooden table`.
+- [x] Add support for `an orange on a wooden table`.
+- [x] Continue tolerating the existing case, whitespace, and terminal-punctuation variations.
+- [x] Reject unsupported object/color combinations with a useful error rather than silently falling back to an apple or default color.
+- [x] Keep parser output explicit and validated; do not silently interpret arbitrary extra adjectives or unsupported colors.
 - [ ] Keep seed, variation, output dimensions, preview retention on failures, and save metadata working as before.
-- [ ] Do not add composition controls or new UI panels; the existing prompt field is sufficient for this milestone.
+- [x] Do not add composition controls or new UI panels; the existing prompt field is sufficient for this milestone.
 
 ### 5. Add automated coverage
 
@@ -167,13 +171,13 @@ Continue tolerating the existing case, whitespace, and terminal-punctuation vari
 
 ### 7. Documentation and verification
 
-- [ ] Update README with the new supported prompts and a concise description of organic-form/fruit support.
-- [ ] Update or add a short milestone handoff describing the reusable system, its boundaries, supported prompts, known limitations, and verification evidence.
+- [x] Update README with the new supported prompts and a concise description of organic-form/fruit support.
+- [x] Update or add a short milestone handoff describing the reusable system, its boundaries, supported prompts, known limitations, and verification evidence.
 - [ ] Update this task checklist accurately; do not mark visual or native checks complete unless they were actually performed.
 - [ ] Run the full existing restore/build/test workflow.
 - [ ] Ensure the solution builds with warnings as errors and all test projects pass.
-- [ ] Keep the established CI policy: Linux Release CI is the routine automated gate.
-- [ ] Do not add a permanent Debug CI job or new runner just for this milestone.
+- [x] Keep the established CI policy: Linux Release CI is the routine automated gate.
+- [x] Do not add a permanent Debug CI job or new runner just for this milestone.
 - [ ] Confirm the latest CI run for the completed change passes before reporting completion.
 
 ## Acceptance checklist

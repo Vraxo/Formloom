@@ -10,6 +10,12 @@ internal sealed class PngSaveService(PngFileWriter writer, ILogger<PngSaveServic
 
     public void Initialize(PhotinoWindow mainWindow) => window = mainWindow;
 
+    public static string SuggestedFileName(RenderedImage image, ulong seed)
+    {
+        var subject = image.Subject is "apple" or "pear" or "orange" ? image.Subject : "fruit";
+        return FormattableString.Invariant($"formloom-{subject}-seed-{seed}.png");
+    }
+
     public async Task<SaveResult> SaveAsync(RenderedImage image, ulong seed)
     {
         try
@@ -18,7 +24,7 @@ internal sealed class PngSaveService(PngFileWriter writer, ILogger<PngSaveServic
             var path = await host.ShowSaveFileAsync(
                 title: "Save Formloom PNG",
                 filters: [("PNG image", ["png"])],
-                defaultFileName: $"formloom-apple-seed-{seed}.png");
+                defaultFileName: SuggestedFileName(image, seed));
             return await writer.WriteAsync(path, image);
         }
         catch (Exception exception)

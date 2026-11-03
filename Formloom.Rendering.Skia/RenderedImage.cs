@@ -1,3 +1,3 @@
 namespace Formloom.Rendering.Skia;
 
-public sealed record RenderedImage(int Width, int Height, byte[] PngBytes);
+public sealed record RenderedImage(int Width, int Height, byte[] PngBytes, string Subject = "apple");

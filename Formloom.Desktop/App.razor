@@ -14,7 +14,7 @@
                 <fieldset disabled="@Session.IsBusy">
                     <label for="prompt">Describe your still life</label>
                     <textarea id="prompt" rows="3" @bind="Session.Prompt" @bind:event="oninput" aria-describedby="prompt-help"></textarea>
-                    <p id="prompt-help" class="help">Try a red, green or yellow apple on a wooden table.</p>
+                    <p id="prompt-help" class="help">Try a red/green/yellow apple, green/yellow pear, or an orange on a wooden table.</p>
                     <div class="label-row">
                         <label for="seed">Seed</label>
                         <button type="button" class="text-button" @onclick="Session.RandomizeSeed">Randomize</button>
@@ -58,5 +58,5 @@
         <p class="message error" role="alert">@Session.Error</p>
     }
     <p class="message" role="status" aria-live="polite">@Session.Status</p>
-    <footer>BUILT FROM FIRST PRINCIPLES <span>One apple. Infinite small differences.</span></footer>
+    <footer>BUILT FROM FIRST PRINCIPLES <span>Three fruits. Infinite small differences.</span></footer>
 </main>
