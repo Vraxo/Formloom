@@ -214,7 +214,7 @@ Implement this milestone directly in the existing repository, in small coherent 
 - [x] Author a shared renderer silhouette mode including stems/leaves/calyx, without scene/shadow content.
 - [x] Distinguish body-only and complete-subject export filenames; add body-mask presentation padding.
 - [x] Author attachment/body inclusion, repeatability and transparent-border coverage.
-- [ ] Run Release CI for the silhouette follow-up; prior runs do not validate these edits.
-- [ ] Inspect newly exported complete-subject silhouettes, including attachments, after CI.
+- [x] Run Release CI for the silhouette follow-up: PR run 41598590278 passed after the Skia sampling-overload fix; post-merge run 41598698403 passed at `f53b8cd`, including restore, warnings-as-errors build, tests and preview upload.
+- [x] Inspect newly exported complete-subject silhouettes, including attachments, after CI: user supplied apple/pear/orange exports for seeds 42/1337 on 2026-11-03; stems/leaves are present on apple/pear, outlines are recognizable and clear of canvas edges.
 
-This follow-up changes the previously documented body-only export limitation; it is not a new subject family. Normal fruit rendering is intended to remain unchanged and still requires regression confirmation in CI.
+This follow-up changes the previously documented body-only export limitation; it is not a new subject family. Existing normal-render regression tests passed in the follow-up CI. Visual inspection of the supplied complete-subject silhouettes passes. The supplied body-only mask in this batch is pear; no new visual claim is made for absent apple/orange body-mask exports.

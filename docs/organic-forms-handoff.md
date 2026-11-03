@@ -73,8 +73,19 @@ The current black silhouette exports are **body-only contour masks**: they inten
 
 With seed 42 held constant, changing fruit variation leaves the table/background fixed. This is intentional: named setting streams are independent of the fruit's geometry/detail streams. Changing the seed can change the wood grain as well. No control was renamed in this update.
 
-## Complete-subject silhouette follow-up (pending CI)
+## Complete-subject silhouette follow-up (CI and visual review verified)
 
 Added `StillLifeRenderer.RenderSilhouette` through the same body/stem/leaf/calyx drawing path as normal rendering. It omits the setting, cast/contact shadows, skin shading and internal decorative lines; all subject geometry is black on transparent. Normal rendering retains its existing transforms and materials. Review PNGs composite the complete subject onto white at its existing scene placement, leaving room for attachments.
 
-Body-only exports are now explicitly named `formloom-{subject}-body-silhouette.png` and have a presentation inset to prevent edge clipping. Their placed mask variant remains unchanged for peel-containment tests. Complete exports have distinct `complete-silhouette` filenames with seed/variation labels. New tests cover repeatability, black pixels, transparent image borders, body inclusion, and a geometric leaf-interior point outside the body for apple/pear across seeds and variation extremes. These changes are authored, not yet compiled/run or visually reviewed; no local SDK was installed. Prior passing CI evidence applies to the pre-follow-up implementation, not these edits.
+Body-only exports are now explicitly named `formloom-{subject}-body-silhouette.png` and have a presentation inset to prevent edge clipping. Their placed mask variant remains unchanged for peel-containment tests. Complete exports have distinct `complete-silhouette` filenames with seed/variation labels. New tests cover repeatability, black pixels, transparent image borders, body inclusion, and a geometric leaf-interior point outside the body for apple/pear across seeds and variation extremes. PR #18 merged after run 41598590278 passed with the explicit Skia sampling-options fix (`a5a3662`). [Post-merge run 41598698403](https://github.com/Vraxo/Formloom/actions/runs/41598698403) passed restore, warnings-as-errors build, tests and artifact uploads at `f53b8cd`. No local SDK was installed. The user subsequently supplied the new complete-subject PNGs for actual visual review on 2026-11-03; findings follow.
+
+
+### Complete-subject review findings (2026-11-03)
+
+- Inspected supplied apple and pear silhouettes at seed 42/variation 0 and seed 1337/variation 1, plus pear seed 42/variation 0.35. Stems and leaves are visibly included and connected to each body, with no apparent detached components. Apple indentation/lobes and pear neck/belly remain recognizable.
+- Inspected both supplied orange complete silhouettes (seed 42/variation 0, seed 1337/variation 1). Their outlines are smooth, slightly irregular and fully inside the canvas. The calyx lies on the body and therefore disappears into its solid black fill; its lack of a separate visible mark is expected, not missing geometry.
+- All supplied complete silhouettes have clear white margins, including above the leaves. Black fills contain no scene, shadows, highlights or internal leaf veins.
+- Normal apple/orange renders were also supplied and look consistent with the earlier reviewed styling. No historical pixel-identity claim is made.
+- Only the pear body-mask export was attached in this batch; revised apple/orange body-mask exports were not visually inspected. The complete orange export itself is no longer edge-clipped. This distinction avoids claiming review of absent files.
+
+The complete-subject silhouette follow-up passes visual review. No further renderer edits were needed for this review. Documentation changes are uncommitted; no new subject family or feature milestone has begun.
