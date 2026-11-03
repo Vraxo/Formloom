@@ -135,3 +135,20 @@ The pear/orange pair has readable separation, coherent upper-left lighting, rest
 No further user image uploads are needed for the current visual acceptance gate. The previously documented missing normal PNGs have now been received; earlier partial-batch notes describe their historical status. Eight group timing reports are already sufficient for the stated advisory assessment; the three unreceived reports are not being requested merely for completeness. Automated overlap-specific clipping, cast-shadow extent and resource-ownership/checklist reconciliation remain separate from visual approval.
 
 The user reports a 20-file upload limit and ZIP uploads are unsupported in this interface; the earlier ZIP suggestion was incorrect for this environment. Repeated manual artifact transfer is a tooling constraint, not a required test ritual. Future workflow simplification should retain automated coverage but consolidate reviewer-facing output and reserve visual review for meaningful visual changes/milestone gates, not documentation or unchanged rendering. No new workflow policy or preview-generation code has been implemented by this documentation update.
+
+
+## Final automated coverage and ownership reconciliation (pending CI)
+
+Added `CompositionInvariantTests` to close the remaining targeted gaps without requesting more manual PNGs:
+
+- Deliberate orange/apple overlap, rather than relying on layout centers being separate. Friend-only `RenderWithoutInstanceDetail` suppresses detail for exactly one depth while retaining all other geometry/materials. Differences must stay inside that instance's Core-derived body mask. Fully opaque overlap pixels must match the independently rendered foreground; back detail cannot show through it. Positive overlap and changed-pixel counts prevent vacuous success.
+- Friend-only `RenderShadowMask` draws the existing shadow pass onto transparent pixels, not a duplicate approximation. Tests check every canvas-border pixel and sample contact plus directional cast extent for pairs/trios, seeds 0/42/1337 and variation 0/1.
+- A normal-render repeatability test surrounds diagnostic passes, guarding against leaked diagnostic state.
+
+Only `Formloom.Tests` receives internal access through the renderer project's SDK friend-assembly item. Hooks stay out of the public API and UI. Public calls retain the existing pass ordering, transforms, material settings and enabled details. The `skipBody` switch lets tests obtain single-fruit shadows without accidentally changing their scaling to group-shadow rules. No assets, additional review images, packages or CI jobs are introduced. No local SDK installation/build/test execution is claimed; fresh Release CI is required.
+
+### Resource ownership audit
+
+Source review confirms one scoped raster surface per render, scoped snapshot/PNG encoding, and scoped paints, shaders, mask filters, paths and builders. The surface owns its canvas; all body/attachment and contact-shadow save/restore pairs balance, including diagnostic early returns. The shadow-only return occurs before body transforms are pushed. The renderer retains no static bitmap/native cache and processes a validated maximum of three immutable instances; temporary native objects are released per call/pass rather than accumulated across instances. Existing CPU timings and prior successful repeated renders support the scoped workload. This is not a measured peak-memory or native leak-stress guarantee.
+
+The checklist now distinguishes already established implementation evidence from the unexecuted follow-up tests. Full Phase 3 closure still requires fresh CI and post-merge confirmation for this follow-up; earlier CI does not validate these edits. No more manual image transfer is requested for unchanged normal output.
