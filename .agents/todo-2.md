@@ -107,7 +107,7 @@ The user supplied all 14 CI PNGs on 2026-11-03. Actual apple, green/yellow pear 
 - [x] Ensure the orange texture does not resemble polka dots, glitter, or a flat noise overlay.
 - [x] Use deterministic, named random streams for every seeded detail; keep geometry, materials, and surface-detail randomness independent.
 - [x] Keep the existing wood, background, and overall composition unchanged unless a small adjustment is necessary to support all three fruits consistently.
-- [ ] Ensure performance remains suitable for ordinary CPU use at the default 1024 × 1024 output.
+- [ ] Ensure performance remains suitable for ordinary CPU use at the default 1024 × 1024 output. Advisory render/PNG-encode timing sidecars are now authored in existing 1024px sample tests; fresh CI measurements and assessment are pending (see handoff).
 
 ### 4. Extend scene construction and the strict prompt grammar
 
@@ -185,12 +185,12 @@ The user supplied all 14 CI PNGs on 2026-11-03. Actual apple, green/yellow pear 
 ## Acceptance checklist
 
 - [x] Existing apple prompts and behavior still work, and the apple remains visually acceptable.
-- [ ] Green and yellow pears and an orange can be generated through the existing desktop prompt-to-PNG pipeline.
-- [ ] The three subjects share a small, genuinely reusable organic-form and rendering foundation while retaining distinct silhouettes and appearances.
+- [x] Green and yellow pears and an orange can be generated through the existing desktop prompt-to-PNG pipeline.
+- [x] The three subjects share a small, genuinely reusable organic-form and rendering foundation while retaining distinct silhouettes and appearances.
 - [x] Pear and orange look recognizably different from the apple and from each other at normal viewing size.
-- [ ] Seeded output is deterministic, random streams are isolated, and shape/detail variation remains bounded.
+- [x] Seeded output is deterministic, random streams are isolated, and shape/detail variation remains bounded.
 - [x] Automated Core, renderer, and desktop integration tests cover the new behavior and all existing tests pass.
-- [ ] README and milestone handoff accurately describe the new capability and its limits.
+- [x] README and milestone handoff accurately describe the new capability and its limits.
 - [x] The completed change passes the repository's Release CI gate.
 - [ ] The agent stops and reports implementation decisions, tests/CI evidence, known limitations, and sample PNGs.
 - [ ] Do not continue to another subject family or feature milestone without review.
@@ -218,3 +218,8 @@ Implement this milestone directly in the existing repository, in small coherent 
 - [x] Inspect newly exported complete-subject silhouettes, including attachments, after CI: user supplied apple/pear/orange exports for seeds 42/1337 on 2026-11-03; stems/leaves are present on apple/pear, outlines are recognizable and clear of canvas edges.
 
 This follow-up changes the previously documented body-only export limitation; it is not a new subject family. Existing normal-render regression tests passed in the follow-up CI. Visual inspection of the supplied complete-subject silhouettes passes. The supplied body-only mask in this batch is pear; no new visual claim is made for absent apple/orange body-mask exports.
+
+
+## Final acceptance evidence reconciliation
+
+Desktop pipeline acceptance is supported by passing real `GenerationService`/`DesktopSession` tests for green pear, yellow pear and orange, including failed-prompt preview retention and saved-image metadata. This is not a new native-window smoke test. Shared construction and deterministic/bounded output acceptance are supported by the reviewed source, passing Core/render tests and inspected samples. Latest merged documentation CI run 41603169902 passed at `327d25c`; it predates the timing instrumentation authored here. Stop/new-milestone and final-report boxes remain open until the remaining performance evidence is assessed.

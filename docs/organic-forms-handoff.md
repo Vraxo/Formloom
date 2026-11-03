@@ -89,3 +89,10 @@ Body-only exports are now explicitly named `formloom-{subject}-body-silhouette.p
 - Only the pear body-mask export was attached in this batch; revised apple/orange body-mask exports were not visually inspected. The complete orange export itself is no longer edge-clipped. This distinction avoids claiming review of absent files.
 
 The complete-subject silhouette follow-up passes visual review. No further renderer edits were needed for this review. Documentation changes are uncommitted; no new subject family or feature milestone has begun.
+
+
+## Remaining CPU-performance evidence (timing instrumentation pending CI)
+
+The existing ten 1024×1024 sample-export cases now write per-sample `formloom-*.timing.json` sidecars, uploaded alongside PNGs in `procedural-preview`. Stopwatch covers only the real CPU renderer and PNG encoding, not scene construction, artifact writes, desktop dispatch or GUI presentation. Reports include subject/prompt, seed/variation, dimensions, elapsed milliseconds, PNG byte length and runtime/OS/logical-processor context. No additional renders, packages, jobs or SDK installation are introduced.
+
+These are advisory shared-runner observations, not isolated microbenchmarks: first-use/JIT, concurrent tests and runner load can affect individual samples. There is deliberately no arbitrary wall-clock assertion or promise of Windows desktop latency. Actual timing values have not been collected for these edits; the performance checkbox remains open until the fresh CI sidecars are inspected. Earlier aggregate test-suite durations alone are not treated as per-render performance measurements.
