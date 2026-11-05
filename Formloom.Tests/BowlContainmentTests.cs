@@ -77,34 +77,51 @@ public sealed class BowlContainmentTests
         Assert.NotNull(PromptParser.ParseContainment(prompt));
     }
 
+    // Every rejected containment phrasing. Shared with the diagnostics harness.
+    public static readonly string[] Rejected =
+    [
+        "a red apple in a blue ceramic cup on a wooden table",
+        "a red apple in a blue ceramic vase on a wooden table",
+        "a green pear in a cream ceramic cup on a wooden table",
+        "a blue ceramic bowl with a red apple on a wooden table",
+        "a blue ceramic bowl containing a red apple on a wooden table",
+        "a blue ceramic bowl with an apple inside on a wooden table",
+        "a red apple in a blue ceramic bowl",
+        "a red apple in a blue ceramic bowl on a table",
+        "a red apple in a blue ceramic bowl on a wooden table and a green pear",
+        "a red apple in a blue ceramic bowl and a green pear on a wooden table",
+        "a red apple and a green pear in a blue ceramic bowl on a wooden table",
+        "a red apple in a blue ceramic bowl and a cream ceramic bowl on a wooden table",
+        "a red apple in a blue ceramic bowl and a blue ceramic cup on a wooden table",
+        "in a blue ceramic bowl on a wooden table",
+        "two red apples in a blue ceramic bowl on a wooden table",
+        "apples in a blue ceramic bowl on a wooden table",
+        "a big red apple in a blue ceramic bowl on a wooden table",
+        "a red apple in a large blue ceramic bowl on a wooden table",
+        "a shiny red apple in a blue ceramic bowl on a wooden table",
+        "a red apple in a blue ceramic bowl in a cream ceramic cup on a wooden table",
+        "a red apple in a blue ceramic bowl on a wooden table, a green pear",
+        "an apple in a blue ceramic bowl on a wooden table",
+        "a red apple in the blue ceramic bowl on a wooden table",
+        "a red apple in a ceramic bowl on a wooden table",
+        "a red apple on a wooden table",
+        "a blue ceramic bowl on a wooden table",
+        "",
+    ];
+
+    public static TheoryData<string> RejectedCases()
+    {
+        var data = new TheoryData<string>();
+        foreach (var prompt in Rejected)
+        {
+            data.Add(prompt);
+        }
+
+        return data;
+    }
+
     [Theory]
-    [InlineData("a red apple in a blue ceramic cup on a wooden table")]
-    [InlineData("a red apple in a blue ceramic vase on a wooden table")]
-    [InlineData("a green pear in a cream ceramic cup on a wooden table")]
-    [InlineData("a blue ceramic bowl with a red apple on a wooden table")]
-    [InlineData("a blue ceramic bowl containing a red apple on a wooden table")]
-    [InlineData("a blue ceramic bowl with an apple inside on a wooden table")]
-    [InlineData("a red apple in a blue ceramic bowl")]
-    [InlineData("a red apple in a blue ceramic bowl on a table")]
-    [InlineData("a red apple in a blue ceramic bowl on a wooden table and a green pear")]
-    [InlineData("a red apple in a blue ceramic bowl and a green pear on a wooden table")]
-    [InlineData("a red apple and a green pear in a blue ceramic bowl on a wooden table")]
-    [InlineData("a red apple in a blue ceramic bowl and a cream ceramic bowl on a wooden table")]
-    [InlineData("a red apple in a blue ceramic bowl and a blue ceramic cup on a wooden table")]
-    [InlineData("in a blue ceramic bowl on a wooden table")]
-    [InlineData("two red apples in a blue ceramic bowl on a wooden table")]
-    [InlineData("apples in a blue ceramic bowl on a wooden table")]
-    [InlineData("a big red apple in a blue ceramic bowl on a wooden table")]
-    [InlineData("a red apple in a large blue ceramic bowl on a wooden table")]
-    [InlineData("a shiny red apple in a blue ceramic bowl on a wooden table")]
-    [InlineData("a red apple in a blue ceramic bowl in a cream ceramic cup on a wooden table")]
-    [InlineData("a red apple in a blue ceramic bowl on a wooden table, a green pear")]
-    [InlineData("an apple in a blue ceramic bowl on a wooden table")]
-    [InlineData("a red apple in the blue ceramic bowl on a wooden table")]
-    [InlineData("a red apple in a ceramic bowl on a wooden table")]
-    [InlineData("a red apple on a wooden table")]
-    [InlineData("a blue ceramic bowl on a wooden table")]
-    [InlineData("")]
+    [MemberData(nameof(RejectedCases))]
     public void UnsupportedContainmentPhrasingsAreRejected(string prompt)
     {
         Assert.Null(PromptParser.ParseContainment(prompt));
