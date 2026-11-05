@@ -68,7 +68,7 @@ jobs:
               with open(path, encoding='utf-8') as handle:
                   report = json.load(handle)
               name = path.rsplit('/', 1)[-1].replace('.timing.json', '')
-              print(f"::notice title={name}::{report['RenderAndEncodeMilliseconds']:.2f} ms for {report['Count']} objects at {report['rendered']['Width']}x{report['rendered']['Height']}")
+              print(f"::notice title={name}::{report['RenderAndEncodeMilliseconds']:.2f} ms for {report['Count']} objects at {report['Width']}x{report['Height']}")
           for path in sorted(glob.glob('artifacts/**/formloom-ceramic-*.png', recursive=True)):
               print(f"::notice title=artifact::{path.rsplit('/', 1)[-1]}")
           PY
