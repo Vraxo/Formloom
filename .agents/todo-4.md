@@ -254,7 +254,7 @@ Do not add `beside`, `in`, `inside`, `on top of`, `behind`, left/right, plural f
 - [x] Confirm all existing and new test projects pass in the latest PR and post-merge Linux Release CI runs.
 - [x] Do not add a permanent Debug job, Windows runner, package or workflow solely for this milestone.
 - [x] Do not claim native Photino/WebView2 dialog or OS-specific GUI testing from headless component tests or Linux CI.
-- [ ] Record exact PR, merge commit and passing CI run URLs in the handoff. PR #26 and the passing PR run URLs are recorded; the merge commit cannot be recorded before the PR is merged and is filled in by the follow-up change.
+- [x] Record exact PR, merge commit and passing CI run URLs in the handoff. PR #26 merged as `8a83391`; PR runs 42005432452 and 42006254568 and post-merge run 42006648475 are recorded there.
 - [x] Reconcile the checklist with the handoff and actual changed files; identify anything authored but not executed.
 - [x] Stop at the acceptance checkpoint below and report implementation decisions, test/CI evidence, visual-review status, timing evidence, artifact location and known limitations.
 

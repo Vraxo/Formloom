@@ -57,7 +57,7 @@ All existing fruit, fruit-group, shadow, clipping, PNG, resource-ownership and r
 
 ## CI evidence
 
-[PR #26](https://github.com/Vraxo/Formloom/pull/26) is the phase PR. `Linux / Release` runs restore, the warnings-as-errors build of the whole solution, both test projects and both artifact uploads.
+[PR #26](https://github.com/Vraxo/Formloom/pull/26) is the phase PR, merged as `8a83391`; the post-merge Linux Release run [42006648475](https://github.com/Vraxo/Formloom/actions/runs/42006648475) passed at that commit. `Linux / Release` runs restore, the warnings-as-errors build of the whole solution, both test projects and both artifact uploads.
 
 - First run failed on an obsolete `SKCanvas.DrawBitmap` overload (warnings as errors) and then on `MoveToImmutable` capacity in `PromptParser`; both were fixed in-branch.
 - One test-only assertion conflated layout scaling with stream stability and was corrected.
