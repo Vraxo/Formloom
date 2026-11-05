@@ -59,16 +59,17 @@ jobs:
 
       - name: Report ceramic timing sidecars (temporary diagnostic)
         if: always()
+        continue-on-error: true
         run: |
           python3 - <<'PY'
           import glob
           import json
-          for path in sorted(glob.glob('artifacts/bin/Formloom.Tests/**/formloom-ceramic-*.timing.json', recursive=True)):
+          for path in sorted(glob.glob('artifacts/**/formloom-ceramic-*.timing.json', recursive=True)):
               with open(path, encoding='utf-8') as handle:
                   report = json.load(handle)
               name = path.rsplit('/', 1)[-1].replace('.timing.json', '')
               print(f"::notice title={name}::{report['RenderAndEncodeMilliseconds']:.2f} ms for {report['Count']} objects at {report['rendered']['Width']}x{report['rendered']['Height']}")
-          for path in sorted(glob.glob('artifacts/bin/Formloom.Tests/**/formloom-ceramic-*.png', recursive=True)):
+          for path in sorted(glob.glob('artifacts/**/formloom-ceramic-*.png', recursive=True)):
               print(f"::notice title=artifact::{path.rsplit('/', 1)[-1]}")
           PY
 
