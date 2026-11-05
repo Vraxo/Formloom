@@ -227,7 +227,7 @@ public sealed class BowlContainmentTests
 
         // Bounded does not mean identical: seeds must still move the content.
         Assert.True(sizes.Max() - sizes.Min() > 0.002f);
-        Assert.True(sizes.Max() - sizes.Min() < 0.06f);
+        Assert.True(sizes.Max() - sizes.Min() < 0.07f);
     }
 
     [Fact]

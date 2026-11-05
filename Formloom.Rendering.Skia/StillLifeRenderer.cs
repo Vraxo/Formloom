@@ -455,7 +455,7 @@ public static class StillLifeRenderer
         canvas.Scale(radiusX, radiusY);
         using var gradient = SKShader.CreateRadialGradient(
             SKPoint.Empty, 1,
-            [new SKColor(18, 14, 10, alpha), new SKColor(18, 14, 10, (byte)(alpha * 0.8f)), new SKColor(18, 14, 10, 0)],
+            [new SKColor(8, 8, 10, alpha), new SKColor(8, 8, 10, (byte)(alpha * 0.8f)), new SKColor(8, 8, 10, 0)],
             [0f, 0.62f, 1f], SKShaderTileMode.Clamp);
         using var paint = new SKPaint { IsAntialias = true, Color = SKColors.White, Shader = gradient };
         canvas.DrawOval(0, 0, 1, 1, paint);
