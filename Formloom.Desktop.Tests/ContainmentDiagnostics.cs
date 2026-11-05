@@ -26,7 +26,7 @@ public sealed class ContainmentDiagnostics
             checks.Add(($"pipeline[{prompt}]", new Action(() => pipeline.ContainedPromptsUseTheRealPipelineAndKeepThePreviewOnRejection(prompt, subject).GetAwaiter().GetResult())));
         }
 
-        checks.Add(("whitelist", new Action(() => pipeline.SaveNamesWhitelistContainmentTokens().GetAwaiter().GetResult())));
+        checks.Add(("whitelist", new Action(() => pipeline.SaveNamesWhitelistContainmentTokens())));
         foreach (var prompt in new[]
         {
             "a red apple in a blue ceramic bowl on a wooden table",
