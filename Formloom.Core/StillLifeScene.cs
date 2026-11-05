@@ -14,13 +14,64 @@ public sealed record StillLifeScene(
     double BackgroundWarmth,
     Vector2 LightDirection)
 {
+    // Fruit-only scenes keep using Instances. Scenes that contain a ceramic vessel use
+    // the mixed Entries projection, which also carries prompt order across categories.
     public ImmutableArray<FruitInstance>? Instances { get; init; }
 
-    public ImmutableArray<FruitInstance> Fruits => Instances ?? ImmutableArray.Create(new FruitInstance(Subject, Apple, Seed, 0));
+    public ImmutableArray<SceneEntry>? Entries { get; init; }
 
-    public string SubjectToken => Fruits.Length == 1
-        ? Fruits[0].Subject.ToString().ToLowerInvariant()
-        : "fruit-group";
+    public ImmutableArray<SceneEntry> Objects
+    {
+        get
+        {
+            if (Entries is { } entries)
+            {
+                return entries.IsDefault ? ImmutableArray<SceneEntry>.Empty : entries;
+            }
+
+            if (Instances is { } fruits)
+            {
+                return fruits.IsDefault
+                    ? ImmutableArray<SceneEntry>.Empty
+                    : ImmutableArray.CreateRange(fruits.Select(fruit => SceneEntry.ForFruit(fruit)));
+            }
+
+            return ImmutableArray.Create(SceneEntry.ForFruit(new FruitInstance(Subject, Apple, Seed, 0)));
+        }
+    }
+
+    public ImmutableArray<FruitInstance> Fruits => Entries is null
+        ? Instances ?? ImmutableArray.Create(new FruitInstance(Subject, Apple, Seed, 0))
+        : ImmutableArray.CreateRange(Objects.Where(entry => entry.Fruit is not null).Select(entry => entry.Fruit!));
+
+    public ImmutableArray<CeramicInstance> Ceramics => Entries is null
+        ? ImmutableArray<CeramicInstance>.Empty
+        : ImmutableArray.CreateRange(Objects.Where(entry => entry.Ceramic is not null).Select(entry => entry.Ceramic!));
+
+    public string SubjectToken
+    {
+        get
+        {
+            var objects = Objects;
+            if (objects.Length == 1)
+            {
+                var entry = objects[0];
+                return entry.Fruit is { } fruit
+                    ? fruit.Subject.ToString().ToLowerInvariant()
+                    : "ceramic-" + entry.Ceramic!.Kind.ToString().ToLowerInvariant();
+            }
+
+            var hasFruit = false;
+            var hasCeramic = false;
+            foreach (var entry in objects)
+            {
+                hasFruit |= entry.IsFruit;
+                hasCeramic |= entry.IsCeramic;
+            }
+
+            return hasFruit && hasCeramic ? "still-life-group" : hasCeramic ? "ceramic-group" : "fruit-group";
+        }
+    }
 
     public double SurfaceDetail { get; init; } = 1;
 

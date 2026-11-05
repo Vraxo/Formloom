@@ -12,7 +12,10 @@ internal sealed class PngSaveService(PngFileWriter writer, ILogger<PngSaveServic
 
     public static string SuggestedFileName(RenderedImage image, ulong seed)
     {
-        var subject = image.Subject is "apple" or "pear" or "orange" or "fruit-group" ? image.Subject : "fruit";
+        var subject = image.Subject is "apple" or "pear" or "orange" or "fruit-group"
+            or "ceramic-group" or "still-life-group" or "ceramic-bowl" or "ceramic-cup" or "ceramic-vase"
+            ? image.Subject
+            : "fruit";
         return FormattableString.Invariant($"formloom-{subject}-seed-{seed}.png");
     }
 

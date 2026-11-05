@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using Formloom.Core;
 using Formloom.Core.Randomness;
 using SkiaSharp;
@@ -44,33 +45,52 @@ public static class StillLifeRenderer
             DrawSetting(canvas, scene);
         }
 
-        var ordered = scene.Fruits.OrderBy(fruit => fruit.Depth).ToArray();
+        var ordered = scene.Objects.OrderBy(entry => entry.Depth).ToArray();
         if (shadowMask)
         {
-            foreach (var fruit in ordered)
+            foreach (var entry in ordered)
             {
-                DrawFruit(canvas, ForInstance(scene, fruit), silhouette: false, shadowsOnly: ordered.Length > 1, skipBody: true);
+                DrawObject(canvas, scene, entry, silhouette: false, shadowsOnly: ordered.Length > 1, skipBody: true);
             }
         }
         else
         {
             if (ordered.Length > 1 && !silhouette)
             {
-                foreach (var fruit in ordered)
+                foreach (var entry in ordered)
                 {
-                    DrawFruit(canvas, ForInstance(scene, fruit, omittedDetailDepth), silhouette: false, shadowsOnly: true);
+                    DrawObject(canvas, scene, entry, silhouette: false, shadowsOnly: true, omittedDetailDepth: omittedDetailDepth);
                 }
             }
 
-            foreach (var fruit in ordered)
+            foreach (var entry in ordered)
             {
-                DrawFruit(canvas, ForInstance(scene, fruit, omittedDetailDepth), silhouette, skipShadows: ordered.Length > 1);
+                DrawObject(canvas, scene, entry, silhouette, skipShadows: ordered.Length > 1, omittedDetailDepth: omittedDetailDepth);
             }
         }
 
         using var image = surface.Snapshot();
         using var encoded = image.Encode(SKEncodedImageFormat.Png, 100);
         return new(scene.Width, scene.Height, encoded.ToArray(), scene.SubjectToken);
+    }
+
+    private static void DrawObject(
+        SKCanvas canvas,
+        StillLifeScene scene,
+        SceneEntry entry,
+        bool silhouette,
+        bool skipShadows = false,
+        bool shadowsOnly = false,
+        bool skipBody = false,
+        int? omittedDetailDepth = null)
+    {
+        if (entry.Fruit is { } fruit)
+        {
+            DrawFruit(canvas, ForInstance(scene, fruit, omittedDetailDepth), silhouette, skipShadows, shadowsOnly, skipBody);
+            return;
+        }
+
+        DrawCeramic(canvas, scene, entry.Ceramic!, silhouette, skipShadows, shadowsOnly, skipBody, entry.Depth == omittedDetailDepth);
     }
 
     private static StillLifeScene ForInstance(StillLifeScene scene, FruitInstance fruit, int? omittedDetailDepth = null) => scene with
@@ -221,6 +241,186 @@ public static class StillLifeRenderer
         canvas.Restore();
     }
 
+    private static void DrawCeramic(
+        SKCanvas canvas,
+        StillLifeScene scene,
+        CeramicInstance ceramic,
+        bool silhouette,
+        bool skipShadows,
+        bool shadowsOnly,
+        bool skipBody,
+        bool omitDetail)
+    {
+        var profile = CeramicForms.For(ceramic.Kind);
+        var body = ceramic.Body;
+        var centerX = body.Center.X * 1024;
+        var top = (body.Center.Y - (body.Size.Y / 2)) * 1024;
+        var width = body.Size.X * 1024;
+        var height = body.Size.Y * 1024;
+        var left = centerX - (width / 2);
+        var contactY = top + (profile.BaseBottom * height);
+        using var paint = new SKPaint { IsAntialias = true };
+        if (!silhouette && !skipShadows)
+        {
+            var shadowScale = shadowsOnly ? width / (0.43f * 1024) : 1;
+            using var blur = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 14 * shadowScale);
+            paint.MaskFilter = blur;
+            paint.Color = new SKColor(12, 20, 17, 80);
+            canvas.DrawOval(centerX - (scene.LightDirection.X * 65 * shadowScale), contactY + (3 * shadowScale), width * (shadowsOnly ? 0.5f : 0.55f), 24 * shadowScale, paint);
+            paint.MaskFilter = null;
+            var baseHalf = width * profile.BaseWidth * 0.28f;
+            DrawContactShadow(canvas, centerX - baseHalf, contactY - (height * 0.006f), width * 0.17f, height * 0.03f);
+            DrawContactShadow(canvas, centerX + baseHalf, contactY - (height * 0.003f), width * 0.18f, height * 0.03f);
+        }
+
+        if (shadowsOnly || skipBody)
+        {
+            return;
+        }
+
+        canvas.Save();
+        canvas.Translate(left, top);
+        canvas.Scale(width, height);
+        var material = CeramicMaterial.For(ceramic, scene.Variation, omitDetail ? 0 : scene.SurfaceDetail);
+        if (profile.Handle is { } handle)
+        {
+            using var ring = CreateRing(handle);
+            if (silhouette)
+            {
+                paint.Color = SKColors.Black;
+                paint.Shader = null;
+            }
+            else
+            {
+                using var ringShader = SKShader.CreateLinearGradient(
+                    new SKPoint(handle.Center.X - handle.OuterRadius.X, handle.Center.Y - handle.OuterRadius.Y),
+                    new SKPoint(handle.Center.X + handle.OuterRadius.X, handle.Center.Y + handle.OuterRadius.Y),
+                    [material.LipColor, material.BaseColor, material.EdgeColor], null, SKShaderTileMode.Clamp);
+                paint.Color = SKColors.White;
+                paint.Shader = ringShader;
+            }
+
+            canvas.DrawPath(ring, paint);
+            paint.Shader = null;
+        }
+
+        using var outline = CreatePath(profile.Outline);
+        if (silhouette)
+        {
+            paint.Color = SKColors.Black;
+            canvas.DrawPath(outline, paint);
+            canvas.Restore();
+            return;
+        }
+
+        using var glaze = SKShader.CreateRadialGradient(
+            new SKPoint(0.5f + (scene.LightDirection.X * 0.30f), 0.5f + (scene.LightDirection.Y * 0.34f)), 1.05f,
+            [Lighten(material.BaseColor), material.BaseColor, material.EdgeColor],
+            [0f, 0.46f, 1f], SKShaderTileMode.Clamp);
+        paint.Color = SKColors.White;
+        paint.Shader = glaze;
+        canvas.DrawPath(outline, paint);
+        paint.Shader = null;
+        canvas.Save();
+        canvas.ClipPath(outline);
+        DrawGlazeMottle(canvas, ceramic, material);
+        DrawMouth(canvas, scene, profile, material, paint);
+        using var highlight = SKShader.CreateRadialGradient(
+            new SKPoint(0.5f + (scene.LightDirection.X * 0.30f), 0.5f + (scene.LightDirection.Y * 0.36f)), material.HighlightRadius,
+            [new SKColor(255, 250, 235, material.HighlightAlpha), new SKColor(255, 250, 235, 0)], null, SKShaderTileMode.Clamp);
+        paint.Color = SKColors.White;
+        paint.Shader = highlight;
+        canvas.DrawRect(0, 0, 1, 1, paint);
+        paint.Shader = null;
+        canvas.Restore();
+        paint.Style = SKPaintStyle.Stroke;
+        paint.StrokeWidth = 0.006f;
+        paint.Color = material.EdgeColor.WithAlpha(140);
+        canvas.DrawPath(outline, paint);
+        paint.Style = SKPaintStyle.Fill;
+        canvas.Restore();
+    }
+
+    private static void DrawGlazeMottle(SKCanvas canvas, CeramicInstance ceramic, CeramicMaterial material)
+    {
+        if (material.MottleAlpha == 0)
+        {
+            return;
+        }
+
+        var random = Pcg32.ForStream(ceramic.Seed, ceramic.Kind.ToString().ToLowerInvariant() + ".glaze.detail");
+        using var paint = new SKPaint { IsAntialias = true, Color = SKColors.White };
+        for (var index = 0; index < 3; index++)
+        {
+            var x = 0.2f + ((float)random.NextDouble() * 0.6f);
+            var y = 0.2f + ((float)random.NextDouble() * 0.6f);
+            var radius = 0.18f + ((float)random.NextDouble() * 0.16f);
+            using var shader = SKShader.CreateRadialGradient(
+                new SKPoint(x, y), radius,
+                [new SKColor(255, 252, 240, material.MottleAlpha), new SKColor(255, 252, 240, 0)], null, SKShaderTileMode.Clamp);
+            paint.Shader = shader;
+            canvas.DrawRect(0, 0, 1, 1, paint);
+        }
+
+        paint.Shader = null;
+    }
+
+    private static void DrawMouth(SKCanvas canvas, StillLifeScene scene, CeramicProfile profile, CeramicMaterial material, SKPaint paint)
+    {
+        var center = profile.MouthCenter;
+        var radius = profile.MouthRadius;
+        using var cavity = SKShader.CreateRadialGradient(
+            new SKPoint(center.X + (scene.LightDirection.X * 0.02f), center.Y + (profile.CavityDepth * 0.9f)), radius.X * 1.15f,
+            [material.CavityColor.WithAlpha(240), material.CavityColor, Darken(material.BaseColor)],
+            [0f, 0.62f, 1f], SKShaderTileMode.Clamp);
+        paint.Color = SKColors.White;
+        paint.Shader = cavity;
+        canvas.DrawOval(center.X, center.Y, radius.X, radius.Y, paint);
+        paint.Shader = null;
+        paint.Color = material.LipColor.WithAlpha(38);
+        canvas.DrawOval(center.X, center.Y - (radius.Y * 0.28f), radius.X * 0.7f, radius.Y * 0.48f, paint);
+        paint.Color = material.CavityColor.WithAlpha(215);
+        canvas.DrawOval(center.X, center.Y + (profile.CavityDepth * 0.5f), radius.X * 0.54f, radius.Y * 0.5f, paint);
+        paint.Style = SKPaintStyle.Stroke;
+        paint.StrokeWidth = profile.RimThickness;
+        paint.Color = material.LipColor.WithAlpha(225);
+        canvas.DrawOval(center.X, center.Y, radius.X, radius.Y, paint);
+        var mouth = new SKRect(center.X - radius.X, center.Y - radius.Y, center.X + radius.X, center.Y + radius.Y);
+        paint.StrokeWidth = profile.RimThickness * 2.2f;
+        paint.Color = material.LipColor.WithAlpha(235);
+        canvas.DrawArc(mouth, 0, 180, false, paint);
+        paint.Style = SKPaintStyle.Fill;
+    }
+
+    private static SKPath CreateRing(CeramicHandle handle)
+    {
+        using var builder = new SKPathBuilder();
+        AppendEllipse(builder, handle.Center, handle.OuterRadius, clockwise: true);
+        AppendEllipse(builder, handle.Center, handle.InnerRadius, clockwise: false);
+        builder.Close();
+        return builder.Detach();
+    }
+
+    private static void AppendEllipse(SKPathBuilder builder, System.Numerics.Vector2 center, System.Numerics.Vector2 radius, bool clockwise)
+    {
+        const int Steps = 40;
+        for (var index = 0; index <= Steps; index++)
+        {
+            var step = clockwise ? index : Steps - index;
+            var angle = step * MathF.Tau / Steps;
+            var x = center.X + (MathF.Cos(angle) * radius.X);
+            var y = center.Y + (MathF.Sin(angle) * radius.Y);
+            if (index == 0)
+            {
+                builder.MoveTo(x, y);
+            }
+            else
+            {
+                builder.LineTo(x, y);
+            }
+        }
+    }
+
     private static void DrawContactShadow(SKCanvas canvas, float x, float y, float radiusX, float radiusY)
     {
         canvas.Save();
@@ -302,6 +502,20 @@ public static class StillLifeRenderer
         return builder.Detach();
     }
 
+    private static SKPath CreatePath(ImmutableArray<CubicSegment> segments)
+    {
+        using var builder = new SKPathBuilder();
+        var start = segments[0].Start;
+        builder.MoveTo(start.X, start.Y);
+        foreach (var segment in segments)
+        {
+            builder.CubicTo(segment.Control1.X, segment.Control1.Y, segment.Control2.X, segment.Control2.Y, segment.End.X, segment.End.Y);
+        }
+
+        builder.Close();
+        return builder.Detach();
+    }
+
     private static void DrawSurface(SKCanvas canvas, StillLifeScene scene, FruitMaterial material, SKPaint paint)
     {
         var stream = scene.Subject.ToString().ToLowerInvariant() + ".surface";
@@ -347,4 +561,9 @@ public static class StillLifeRenderer
         (byte)Math.Min(255, color.Red + 58),
         (byte)Math.Min(255, color.Green + 60),
         (byte)Math.Min(255, color.Blue + 35));
+
+    private static SKColor Darken(SKColor color) => new(
+        (byte)(color.Red * 0.42),
+        (byte)(color.Green * 0.42),
+        (byte)(color.Blue * 0.44));
 }

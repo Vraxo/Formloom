@@ -6,6 +6,15 @@ namespace Formloom.Core;
 
 public static class SceneGenerator
 {
+    private static readonly AppleDescription NeutralBody = new(
+        AppleColor.Red,
+        new Vector2(0.5f, 0.55f),
+        new Vector2(0.43f, 0.44f),
+        0.025,
+        -0.16,
+        -0.45,
+        0.12);
+
     public static GenerationResult Generate(GenerationRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -19,29 +28,39 @@ public static class SceneGenerator
             return new(null, "Variation must be a finite number between 0 and 1.");
         }
 
-        var parsed = PromptParser.ParseScene(request.Prompt);
+        var parsed = PromptParser.ParseObjects(request.Prompt);
         if (parsed is null)
         {
-            return new(null, "That prompt is not supported. Use one to three fruits (a red/green/yellow apple, a green/yellow pear, an orange), joined by 'and', on a wooden table. Three-fruit lists may use commas.");
+            return new(null, "That prompt is not supported. Use one to three objects on a wooden table: a red/green/yellow apple, a green/yellow pear, an orange, or a blue/cream ceramic bowl, cup or vase. Join objects with 'and'; three-object lists may use commas.");
         }
 
-        var fruits = ImmutableArray.CreateBuilder<FruitInstance>(parsed.Value.Length);
-        var occurrences = new Dictionary<FruitPrompt, int>();
+        var entries = ImmutableArray.CreateBuilder<SceneEntry>(parsed.Value.Length);
+        var occurrences = new Dictionary<string, int>();
         foreach (var description in parsed.Value)
         {
-            occurrences.TryGetValue(description, out var occurrence);
-            occurrences[description] = occurrence + 1;
+            occurrences.TryGetValue(description.Key, out var occurrence);
+            occurrences[description.Key] = occurrence + 1;
             var instanceSeed = request.Seed;
             if (occurrence > 0)
             {
-                var stream = Pcg32.ForStream(request.Seed, $"instance.{description.Kind}.{description.Color}.{occurrence}");
+                var stream = Pcg32.ForStream(request.Seed, $"instance.{description.Key}.{occurrence}");
                 instanceSeed = ((ulong)stream.NextUInt32() << 32) | stream.NextUInt32();
             }
 
-            fruits.Add(new(description.Kind, CreateBody(description, request with { Seed = instanceSeed }), instanceSeed, 0));
+            var seeded = request with { Seed = instanceSeed };
+            if (description.Fruit is { } fruit)
+            {
+                entries.Add(SceneEntry.ForFruit(new(fruit.Kind, CreateBody(fruit, seeded), instanceSeed, 0)));
+            }
+            else
+            {
+                var ceramic = description.Ceramic!;
+                entries.Add(SceneEntry.ForCeramic(new(ceramic.Kind, ceramic.Glaze, CreateCeramicBody(ceramic, seeded), instanceSeed, 0)));
+            }
         }
 
-        var instances = FruitComposition.Arrange(fruits.MoveToImmutable(), request.Seed, request.Variation);
+        var arranged = Arrange(entries.MoveToImmutable(), request);
+        var lead = arranged.FirstOrDefault(entry => entry.Fruit is not null).Fruit;
         var table = Pcg32.ForStream(request.Seed, "table.grain");
         var background = Pcg32.ForStream(request.Seed, "background.detail");
         var amount = request.Variation;
@@ -50,17 +69,34 @@ public static class SceneGenerator
             request.Height,
             request.Seed,
             amount,
-            instances[0].Body,
+            lead?.Body ?? NeutralBody,
             0.64,
             0.2 + Offset(table, 0.1, amount),
             0.5 + Offset(background, 0.15, amount),
             Vector2.Normalize(new Vector2(-1, -1)))
         {
-            Subject = instances[0].Subject,
-            Instances = instances.Length == 1 ? null : instances,
+            Subject = lead?.Subject ?? FruitKind.Apple,
+            Instances = arranged.Any(entry => entry.IsCeramic) || arranged.Length == 1
+                ? null
+                : ImmutableArray.CreateRange(arranged.Select(entry => entry.Fruit!)),
+            Entries = arranged.Any(entry => entry.IsCeramic) ? arranged : null,
         };
         var error = SceneValidator.Validate(scene);
         return error is null ? new(scene, null) : new(null, error);
+    }
+
+    private static ImmutableArray<SceneEntry> Arrange(ImmutableArray<SceneEntry> entries, GenerationRequest request)
+    {
+        if (entries.All(entry => entry.IsFruit))
+        {
+            var fruits = FruitComposition.Arrange(
+                ImmutableArray.CreateRange(entries.Select(entry => entry.Fruit!)),
+                request.Seed,
+                request.Variation);
+            return ImmutableArray.CreateRange(fruits.Select(fruit => SceneEntry.ForFruit(fruit)));
+        }
+
+        return MixedComposition.Arrange(entries, request.Seed, request.Variation);
     }
 
     private static AppleDescription CreateBody(FruitPrompt parsed, GenerationRequest request)
@@ -89,6 +125,29 @@ public static class SceneGenerator
         }
 
         return apple;
+    }
+
+    private static CeramicDescription CreateCeramicBody(CeramicPrompt parsed, GenerationRequest request)
+    {
+        var name = parsed.Kind.ToString().ToLowerInvariant();
+        var shape = Pcg32.ForStream(request.Seed, $"{name}.form");
+        var amount = request.Variation;
+        var profile = CeramicForms.For(parsed.Kind);
+        var baseSize = parsed.Kind switch
+        {
+            CeramicKind.Bowl => new Vector2(0.56f, 0.40f),
+            CeramicKind.Cup => new Vector2(0.40f, 0.48f),
+            _ => new Vector2(0.34f, 0.70f),
+        };
+        var size = new Vector2(
+            baseSize.X * (float)(1 + Offset(shape, 0.035, amount)),
+            baseSize.Y * (float)(1 + Offset(shape, 0.04, amount)));
+        var visualCenter = (profile.OutlineLeft + profile.OutlineRight) / 2;
+        var horizontal = 0.5f - ((visualCenter - 0.5f) * size.X);
+        return new(
+            new Vector2(horizontal + (float)Offset(shape, 0.012, amount), 0.775f - ((profile.BaseBottom - 0.5f) * size.Y)),
+            size,
+            0.1 + Offset(shape, 0.06, amount));
     }
 
     private static double Offset(Pcg32 random, double range, double variation) =>
