@@ -131,9 +131,10 @@ The existing `procedural-preview` artifact was extended (no new artifact or work
 
 ## Verification
 
-- PR: [#29](https://github.com/Vraxo/Formloom/pull/29) (merged as `MERGE_SHA`)
-- CI run on the final PR head: [42033719927](https://github.com/Vraxo/Formloom/actions/runs/42033719927) — restore, warnings-as-errors Release build, both test projects, test-results upload and a 12.6 MB `procedural-preview` upload all green.
-- Post-merge run: [POST_MERGE_RUN](https://github.com/Vraxo/Formloom/actions/runs/POST_MERGE_RUN_ID)
+- PR: [#29](https://github.com/Vraxo/Formloom/pull/29) — merged as [`ed99fee`](https://github.com/Vraxo/Formloom/commit/ed99fee442da6664e201129e73535a4b96a88c44)
+- CI run on the final PR head (`2220afc`, after the temporary diagnostics were removed): [42034014762](https://github.com/Vraxo/Formloom/actions/runs/42034014762) — restore, warnings-as-errors Release build, both test projects, test-results upload and a 12.6 MB `procedural-preview` upload all green.
+- Post-merge run on `ed99fee`: [42034266225](https://github.com/Vraxo/Formloom/actions/runs/42034266225) — success, `procedural-preview` 12.3 MB, `test-results-Release` 78 KB.
+- This record itself lands through the documentation-only follow-up PR #30; its own post-merge run is confirmed in the session report.
 
 The workflow is unchanged: one Ubuntu **Linux / Release** job — restore, warnings-as-errors build, both test projects, test-results upload and the `procedural-preview` upload. No new package, project, runner or workflow step was added.
 
@@ -180,3 +181,11 @@ Renderer: `StillLifeRenderer.cs` (containment draw path and cavity contact shado
 Desktop: `PngSaveService.cs` (token whitelist), `App.razor` (prompt help).
 Tests: `BowlContainmentTests.cs`, `BowlContainmentRenderingTests.cs`, `ContainmentPipelineTests.cs` (new); `AppComponentTests.cs` (edited).
 Docs: `README.md`, `.agents/todo-5.md`, this file.
+
+## Authored but not executed
+
+Everything added in Phase 5 is exercised by the CI run above with three exceptions, stated plainly:
+
+- **The review sheet's visual content.** `formloom-containment-sheet.png` and the individual renders are produced and uploaded, but no one has looked at them yet: the sandbox cannot reach GitHub artifact storage and cannot run .NET, so the pixel-level acceptance items stay unchecked. The sheet is a plain row-major grid; use `formloom-containment-sheet.timing.json` to map a cell to its prompt.
+- **Timing numbers.** The exporter writes them; they were never read back, so no containment timings are quoted.
+- **The prompt-help sentence in `App.razor`.** It is now asserted by `AppComponentTests.PromptHelpMentionsContainment`, so this one is executed after all — it is listed here only because it is UI text, not behaviour.

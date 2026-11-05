@@ -241,12 +241,12 @@ The relationship is always expressed as `fruit in bowl`, with exactly one fruit 
 - [x] Leave blocked, unexecuted, or human-review tasks unchecked and explain the blocker/evidence beside them.
 - [x] Run the established solution restore, Release warnings-as-errors build, and full solution test workflow through the existing CI gate.
 - [x] Confirm all existing and new test projects pass on the latest PR CI run.
-- [ ] Confirm the post-merge Linux Release CI run passes before closing the milestone.
+- [x] Confirm the post-merge Linux Release CI run passes before closing the milestone.
 - [x] Do not add a permanent Debug job, Windows runner, package, project, or workflow solely for this milestone.
 - [x] Do not claim native Photino/WebView2 dialog, window-lifecycle, resize, or accessibility testing from headless component tests or Linux CI.
-- [ ] Record exact PR, merge commit, and passing CI run URLs in the handoff.
-- [ ] Reconcile this checklist with the handoff and actual changed files; identify anything authored but not executed.
-- [ ] Stop at the acceptance checkpoint below and report implementation decisions, test/CI evidence, visual-review status, artifact location, timing observations, and known limitations.
+- [x] Record exact PR, merge commit, and passing CI run URLs in the handoff.
+- [x] Reconcile this checklist with the handoff and actual changed files; identify anything authored but not executed.
+- [x] Stop at the acceptance checkpoint below and report implementation decisions, test/CI evidence, visual-review status, artifact location, timing observations, and known limitations.
 
 ## Acceptance checklist
 
@@ -263,8 +263,8 @@ The relationship is always expressed as `fruit in bowl`, with exactly one fruit 
 - [x] Core, renderer, desktop-session, and rendered-component tests cover containment, and all existing tests pass.
 - [x] Generated visual-review artifacts are available; the handoff accurately distinguishes automated evidence from inspected pixels.
 - [x] README, prompt help, safe save metadata, and handoff describe the implemented feature and its limits accurately.
-- [ ] The completed change passes the existing Linux Release CI gate and the post-merge run is recorded.
-- [ ] The agent stops and reports the results; it does not begin a new object family or relationship type.
+- [x] The completed change passes the existing Linux Release CI gate and the post-merge run is recorded.
+- [x] The agent stops and reports the results; it does not begin a new object family or relationship type.
 
 ## Explicitly out of scope
 
