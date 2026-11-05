@@ -425,10 +425,9 @@ public sealed class BowlContainmentRenderingTests
         using var sheet = new SKBitmap(Cell * Columns, Cell * rows);
         using var canvas = new SKCanvas(sheet);
         canvas.Clear(new SKColor(20, 22, 24));
-        using var typeface = SKTypeface.Default;
-        using var font = typeface is null ? new SKFont() : new SKFont(typeface, 15);
-        using var label = new SKPaint { Color = new SKColor(238, 236, 230), IsAntialias = true };
-        using var strip = new SKPaint { Color = new SKColor(12, 14, 16, 190), IsAntialias = true };
+
+        // No text: the CI image has no font stack, so the sheet is a plain row-major grid and
+        // the sidecar manifest is the authoritative key for every cell.
         var manifest = new List<object>();
         for (var index = 0; index < Exports.Length; index++)
         {
@@ -447,14 +446,6 @@ public sealed class BowlContainmentRenderingTests
                     new SKSamplingOptions(SKFilterMode.Linear));
             }
 
-            canvas.DrawRect(new SKRect(left, top + Cell - 30, left + Cell, top + Cell), strip);
-            canvas.DrawText(
-                FormattableString.Invariant($"{name}  seed {seed}  v{variation:0.00}"),
-                left + 8,
-                top + Cell - 10,
-                SKTextAlign.Left,
-                font,
-                label);
             manifest.Add(new
             {
                 name,
@@ -483,6 +474,7 @@ public sealed class BowlContainmentRenderingTests
                     Columns,
                     Rows = rows,
                     Generated = DateTimeOffset.UtcNow,
+                    Layout = "row-major, left to right, top to bottom",
                     Cases = manifest,
                 },
                 new System.Text.Json.JsonSerializerOptions { IncludeFields = true }));

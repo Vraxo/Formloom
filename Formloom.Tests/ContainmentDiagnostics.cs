@@ -49,9 +49,18 @@ public sealed class ContainmentDiagnostics
         };
 
         var passed = 0;
+        var index = 0;
         var failures = new List<string>();
+        var last = string.Empty;
         foreach (var (name, body) in checks)
         {
+            index++;
+            last = name;
+            if (index % 8 == 0)
+            {
+                Emit($"progress={index}/{checks.Count} last={last} failures={failures.Count}");
+            }
+
             try
             {
                 body();
@@ -63,7 +72,7 @@ public sealed class ContainmentDiagnostics
             }
         }
 
-        Emit($"detail-tests: passed={passed} failed={failures.Count} -> {string.Join("  ##  ", failures)}");
+        Emit($"detail-tests: passed={passed} failed={failures.Count} last={last} -> {string.Join("  ##  ", failures)}");
     }
 
     private static string Truncate(string value)
