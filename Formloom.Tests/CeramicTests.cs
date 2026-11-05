@@ -267,8 +267,12 @@ public sealed class CeramicTests
         var cupMixed = withCup.Ceramics[0];
         Assert.Equal(cupAlone.Seed, cupMixed.Seed);
         Assert.Equal(cupAlone.Body.SurfaceVariation, cupMixed.Body.SurfaceVariation);
-        Assert.Equal(cupAlone.Body.Size, cupMixed.Body.Size);
         Assert.Equal(cupMixed.Seed, reversed.Ceramics[0].Seed);
+
+        // The pre-layout vessel body is identical; only the shared pair layout factor differs.
+        var ratio = cupMixed.Body.Size / cupAlone.Body.Size;
+        Assert.Equal(0.72f, ratio.X, 3);
+        Assert.Equal(0.72f, ratio.Y, 3);
 
         var duplicates = SceneGenerator.Generate(new("a blue ceramic bowl and a blue ceramic bowl on a wooden table")).Scene!;
         Assert.NotEqual(duplicates.Ceramics[0].Seed, duplicates.Ceramics[1].Seed);
