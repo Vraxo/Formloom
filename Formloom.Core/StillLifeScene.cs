@@ -20,6 +20,10 @@ public sealed record StillLifeScene(
 
     public ImmutableArray<SceneEntry>? Entries { get; init; }
 
+    // The only containment relationship the grammar supports. When present the bowl is
+    // drawn first and the content is clipped against the near wall in front of it.
+    public BowlContainment? Containment { get; init; }
+
     public ImmutableArray<SceneEntry> Objects
     {
         get
@@ -52,6 +56,11 @@ public sealed record StillLifeScene(
     {
         get
         {
+            if (Containment is { } containment)
+            {
+                return containment.SubjectToken;
+            }
+
             var objects = Objects;
             if (objects.Length == 1)
             {

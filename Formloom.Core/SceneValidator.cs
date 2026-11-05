@@ -1,3 +1,5 @@
+using System.Collections.Immutable;
+
 namespace Formloom.Core;
 
 public static class SceneValidator
@@ -26,12 +28,16 @@ public static class SceneValidator
             return "A scene must contain one, two or three objects.";
         }
 
+        var containment = scene.Containment;
         var margin = objects.Length == 1 ? 0 : 0.03f;
         foreach (var entry in objects)
         {
             if (entry.Fruit is { } fruit)
             {
-                var error = ValidateFruit(scene, fruit);
+                // Contained fruit is held by the bowl, not by the table, so the horizon
+                // rule belongs to the vessel that actually touches the surface.
+                var contained = containment is not null && fruit == containment.Content;
+                var error = ValidateFruit(scene, fruit, restsOnTable: !contained);
                 if (error is not null)
                 {
                     return error;
@@ -57,10 +63,53 @@ public static class SceneValidator
             }
         }
 
+        return containment is null ? null : ValidateContainment(objects, containment);
+    }
+
+    private static string? ValidateContainment(ImmutableArray<SceneEntry> objects, BowlContainment containment)
+    {
+        if (containment.Bowl.Kind != CeramicKind.Bowl)
+        {
+            return "Only a bowl can contain fruit.";
+        }
+
+        var hasBowl = false;
+        var hasContent = false;
+        foreach (var entry in objects)
+        {
+            hasBowl |= entry.Ceramic == containment.Bowl;
+            hasContent |= entry.Fruit == containment.Content;
+        }
+
+        if (objects.Length != 2 || !hasBowl || !hasContent)
+        {
+            return "A containment scene must contain exactly one bowl and the fruit inside it.";
+        }
+
+        if (containment.Content.Depth != containment.Bowl.Depth + 1)
+        {
+            return "A contained fruit must sit directly inside its bowl.";
+        }
+
+        if (containment.OccludedFraction is < 0.15f or > 0.55f)
+        {
+            return "A contained fruit must be seated with its base behind the near rim.";
+        }
+
+        if (containment.OpeningCoverage is < 0.25f or > 0.8f)
+        {
+            return "A contained fruit must fit inside the bowl's opening.";
+        }
+
+        if (Math.Abs(containment.Content.Body.Center.X - containment.OpeningCenter.X) + (containment.Content.Body.Size.X / 2) > containment.OpeningRadius.X)
+        {
+            return "A contained fruit must keep a horizontal margin inside the bowl's inner width.";
+        }
+
         return null;
     }
 
-    private static string? ValidateFruit(StillLifeScene scene, FruitInstance fruit)
+    private static string? ValidateFruit(StillLifeScene scene, FruitInstance fruit, bool restsOnTable = true)
     {
         if (fruit.Body is null)
         {
@@ -86,7 +135,7 @@ public static class SceneValidator
             return "Pears must be green or yellow.";
         }
 
-        if (body.Center.Y + (body.Size.Y / 2) <= scene.TableHorizon)
+        if (restsOnTable && body.Center.Y + (body.Size.Y / 2) <= scene.TableHorizon)
         {
             return "Every object must rest below the table horizon.";
         }

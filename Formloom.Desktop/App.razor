@@ -14,7 +14,7 @@
                 <fieldset disabled="@Session.IsBusy">
                     <label for="prompt">Describe your still life</label>
                     <textarea id="prompt" rows="3" @bind="Session.Prompt" @bind:event="oninput" aria-describedby="prompt-help"></textarea>
-                    <p id="prompt-help" class="help">Use one to three objects on a wooden table. Try a red apple and a green pear on a wooden table, or a cream ceramic cup and an orange on a wooden table.</p>
+                    <p id="prompt-help" class="help">Use one to three objects on a wooden table, or place one fruit inside a bowl. Try a red apple and a green pear on a wooden table, a cream ceramic cup and an orange on a wooden table, or a red apple in a blue ceramic bowl on a wooden table.</p>
                     <div class="label-row">
                         <label for="seed">Seed</label>
                         <button type="button" class="text-button" @onclick="Session.RandomizeSeed">Randomize</button>

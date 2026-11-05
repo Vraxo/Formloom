@@ -6,16 +6,24 @@ namespace Formloom.Desktop;
 
 internal sealed class PngSaveService(PngFileWriter writer, ILogger<PngSaveService> logger)
 {
+    // Subject tokens the renderer can emit. Anything else falls back to "fruit", so a new
+    // subject token has to be whitelisted here before it can reach a file name.
+    private static readonly string[] KnownSubjects =
+    [
+        "apple", "pear", "orange", "fruit-group",
+        "ceramic-group", "still-life-group", "ceramic-bowl", "ceramic-cup", "ceramic-vase",
+        "apple-in-blue-bowl", "apple-in-cream-bowl",
+        "pear-in-blue-bowl", "pear-in-cream-bowl",
+        "orange-in-blue-bowl", "orange-in-cream-bowl",
+    ];
+
     private PhotinoWindow? window;
 
     public void Initialize(PhotinoWindow mainWindow) => window = mainWindow;
 
     public static string SuggestedFileName(RenderedImage image, ulong seed)
     {
-        var subject = image.Subject is "apple" or "pear" or "orange" or "fruit-group"
-            or "ceramic-group" or "still-life-group" or "ceramic-bowl" or "ceramic-cup" or "ceramic-vase"
-            ? image.Subject
-            : "fruit";
+        var subject = Array.IndexOf(KnownSubjects, image.Subject) >= 0 ? image.Subject : "fruit";
         return FormattableString.Invariant($"formloom-{subject}-seed-{seed}.png");
     }
 
