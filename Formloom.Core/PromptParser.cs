@@ -9,6 +9,8 @@ public static class PromptParser
 
     private const string CeramicDescriptor = @"a (?:blue|cream) ceramic (?:bowl|cup|vase)";
 
+    private const string Setting = " on a wooden table";
+
     public static AppleColor? Parse(string? prompt)
     {
         var parsed = ParseFruit(prompt);
@@ -53,22 +55,43 @@ public static class PromptParser
         return fruits.ToImmutable();
     }
 
+    // A single fruit contained by a single bowl. Roles are typed, so a caller cannot
+    // mistake the content for a neighbour, and anything wider than the exact
+    // "<fruit> in <bowl> on a wooden table" shape is rejected outright.
+    public static ContainmentPrompt? ParseContainment(string? prompt)
+    {
+        var normalized = Normalize(prompt);
+        if (normalized is null)
+        {
+            return null;
+        }
+
+        var match = Regex.Match(
+            normalized[..^Setting.Length],
+            @"\A(?<fruit>" + FruitDescriptor + @") in (?<bowl>" + CeramicDescriptor + @")\z");
+        if (!match.Success)
+        {
+            return null;
+        }
+
+        var bowl = ParseDescriptor(match.Groups["bowl"].Value).Ceramic;
+        if (bowl is null || bowl.Kind != CeramicKind.Bowl)
+        {
+            return null;
+        }
+
+        return new(ParseDescriptor(match.Groups["fruit"].Value).Fruit!, bowl);
+    }
+
     public static ImmutableArray<ObjectPrompt>? ParseObjects(string? prompt)
     {
-        if (string.IsNullOrWhiteSpace(prompt))
+        var normalized = Normalize(prompt);
+        if (normalized is null)
         {
             return null;
         }
 
-        var normalized = string.Join(" ", prompt.Trim().TrimEnd('.', '!', '?').Split(
-            (char[]?)null, StringSplitOptions.RemoveEmptyEntries)).ToLowerInvariant();
-        const string setting = " on a wooden table";
-        if (!normalized.EndsWith(setting, StringComparison.Ordinal))
-        {
-            return null;
-        }
-
-        var list = Regex.Replace(normalized[..^setting.Length], @"\s*,\s*", ", ");
+        var list = Regex.Replace(normalized[..^Setting.Length], @"\s*,\s*", ", ");
         const string descriptor = "(?:" + FruitDescriptor + "|" + CeramicDescriptor + ")";
         var match = Regex.Match(
             list,
@@ -85,6 +108,19 @@ public static class PromptParser
         }
 
         return result.ToImmutable();
+    }
+
+    // Shared prompt normalization; returns null unless the prompt names the table setting.
+    private static string? Normalize(string? prompt)
+    {
+        if (string.IsNullOrWhiteSpace(prompt))
+        {
+            return null;
+        }
+
+        var normalized = string.Join(" ", prompt.Trim().TrimEnd('.', '!', '?').Split(
+            (char[]?)null, StringSplitOptions.RemoveEmptyEntries)).ToLowerInvariant();
+        return normalized.EndsWith(Setting, StringComparison.Ordinal) ? normalized : null;
     }
 
     private static ObjectPrompt ParseDescriptor(string value) => value switch

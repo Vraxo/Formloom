@@ -46,7 +46,11 @@ public static class StillLifeRenderer
         }
 
         var ordered = scene.Objects.OrderBy(entry => entry.Depth).ToArray();
-        if (shadowMask)
+        if (scene.Containment is { } containment)
+        {
+            DrawContainment(canvas, scene, containment, silhouette, shadowMask, omittedDetailDepth);
+        }
+        else if (shadowMask)
         {
             foreach (var entry in ordered)
             {
@@ -338,6 +342,123 @@ public static class StillLifeRenderer
         paint.Color = material.EdgeColor.WithAlpha(140);
         canvas.DrawPath(outline, paint);
         paint.Style = SKPaintStyle.Fill;
+        canvas.Restore();
+    }
+
+    // A contained scene draws the bowl whole and then clips the fruit away wherever the
+    // bowl's near wall and lip sit in front of it. Clipping rather than repainting keeps
+    // every bowl pixel identical to a standalone bowl, so the only changed pixels are the
+    // content itself and its cavity contact shadow.
+    private static void DrawContainment(
+        SKCanvas canvas,
+        StillLifeScene scene,
+        BowlContainment containment,
+        bool silhouette,
+        bool shadowMask,
+        int? omittedDetailDepth)
+    {
+        var bowl = containment.Bowl;
+        var content = containment.Content;
+        if (shadowMask)
+        {
+            // Only the bowl touches the table; contained fruit casts no tabletop shadow.
+            DrawCeramic(canvas, scene, bowl, silhouette: false, skipShadows: false, shadowsOnly: false, skipBody: true, omitDetail: false);
+            return;
+        }
+
+        DrawCeramic(
+            canvas,
+            scene,
+            bowl,
+            silhouette,
+            skipShadows: false,
+            shadowsOnly: false,
+            skipBody: false,
+            omitDetail: bowl.Depth == omittedDetailDepth);
+        if (!silhouette)
+        {
+            DrawCavityContactShadow(canvas, containment);
+        }
+
+        canvas.Save();
+        using (var near = CreateCanvasPath(containment, BowlGeometry.FrontWall(containment.Profile)))
+        {
+            canvas.ClipPath(near, SKClipOperation.Difference, antialias: true);
+        }
+
+        DrawFruit(
+            canvas,
+            ForInstance(scene, content, content.Depth == omittedDetailDepth ? content.Depth : null),
+            silhouette,
+            skipShadows: true);
+        canvas.Restore();
+    }
+
+    // Maps normalized bowl-local segments onto the canvas. The near-wall band (the
+    // opening's lower arc plus the bowl's front chain) is everything in front of the
+    // contained fruit; the opening itself clips the cavity contact shadow.
+    private static SKPath CreateCanvasPath(BowlContainment containment, ImmutableArray<CubicSegment> segments)
+    {
+        var body = containment.Bowl.Body;
+        var width = body.Size.X * 1024;
+        var height = body.Size.Y * 1024;
+        var left = (body.Center.X * 1024) - (width / 2);
+        var top = (body.Center.Y - (body.Size.Y / 2)) * 1024;
+        using var builder = new SKPathBuilder();
+        var start = segments[0].Start;
+        builder.MoveTo(left + (start.X * width), top + (start.Y * height));
+        foreach (var segment in segments)
+        {
+            builder.CubicTo(
+                left + (segment.Control1.X * width), top + (segment.Control1.Y * height),
+                left + (segment.Control2.X * width), top + (segment.Control2.Y * height),
+                left + (segment.End.X * width), top + (segment.End.Y * height));
+        }
+
+        builder.Close();
+        return builder.Detach();
+    }
+
+    // Subtle contact shadow clipped to the cavity, hugging the inside of the near rim under
+    // the fruit. It is painted before the content, so the fruit covers its middle and only
+    // the pool around the base stays visible. It never leaves the opening.
+    private static void DrawCavityContactShadow(SKCanvas canvas, BowlContainment containment)
+    {
+        var body = containment.Bowl.Body;
+        var profile = containment.Profile;
+        var width = body.Size.X * 1024;
+        var height = body.Size.Y * 1024;
+        var left = (body.Center.X * 1024) - (width / 2);
+        var top = (body.Center.Y - (body.Size.Y / 2)) * 1024;
+        var centerX = left + (profile.MouthCenter.X * width);
+        var centerY = top + (profile.MouthCenter.Y * height);
+        var radiusY = profile.MouthRadius.Y * height;
+        var frontRim = centerY + radiusY;
+        var contentWidth = containment.Content.Body.Size.X * 1024;
+        canvas.Save();
+        using (var opening = CreateCanvasPath(containment, BowlGeometry.Opening(profile)))
+        {
+            canvas.ClipPath(opening);
+        }
+
+        // The content is wider than the visible cavity sliver on either side, so the shadow
+        // is a pool that spreads out from under it into both side lobes of the opening.
+        DrawCavityPool(canvas, centerX, frontRim - (radiusY * 0.30f), contentWidth * 1.05f, radiusY * 0.80f, 86);
+        DrawCavityPool(canvas, centerX, frontRim - (radiusY * 0.10f), contentWidth * 0.75f, radiusY * 0.45f, 120);
+        canvas.Restore();
+    }
+
+    private static void DrawCavityPool(SKCanvas canvas, float x, float y, float radiusX, float radiusY, byte alpha)
+    {
+        canvas.Save();
+        canvas.Translate(x, y);
+        canvas.Scale(radiusX, radiusY);
+        using var gradient = SKShader.CreateRadialGradient(
+            SKPoint.Empty, 1,
+            [new SKColor(8, 8, 10, alpha), new SKColor(8, 8, 10, (byte)(alpha * 0.8f)), new SKColor(8, 8, 10, 0)],
+            [0f, 0.62f, 1f], SKShaderTileMode.Clamp);
+        using var paint = new SKPaint { IsAntialias = true, Color = SKColors.White, Shader = gradient };
+        canvas.DrawOval(0, 0, 1, 1, paint);
         canvas.Restore();
     }
 

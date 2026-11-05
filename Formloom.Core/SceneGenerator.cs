@@ -28,10 +28,15 @@ public static class SceneGenerator
             return new(null, "Variation must be a finite number between 0 and 1.");
         }
 
+        if (PromptParser.ParseContainment(request.Prompt) is { } containment)
+        {
+            return GenerateContainment(containment, request);
+        }
+
         var parsed = PromptParser.ParseObjects(request.Prompt);
         if (parsed is null)
         {
-            return new(null, "That prompt is not supported. Use one to three objects on a wooden table: a red/green/yellow apple, a green/yellow pear, an orange, or a blue/cream ceramic bowl, cup or vase. Join objects with 'and'; three-object lists may use commas.");
+            return new(null, "That prompt is not supported. Use one to three objects on a wooden table: a red/green/yellow apple, a green/yellow pear, an orange, or a blue/cream ceramic bowl, cup or vase. Join objects with 'and'; three-object lists may use commas. One fruit may also be placed inside a bowl: '<fruit> in a blue ceramic bowl on a wooden table'.");
         }
 
         var entries = ImmutableArray.CreateBuilder<SceneEntry>(parsed.Value.Length);
@@ -80,6 +85,50 @@ public static class SceneGenerator
                 ? null
                 : ImmutableArray.CreateRange(arranged.Select(entry => entry.Fruit!)),
             Entries = arranged.Any(entry => entry.IsCeramic) ? arranged : null,
+        };
+        var error = SceneValidator.Validate(scene);
+        return error is null ? new(scene, null) : new(null, error);
+    }
+
+    // Containment keeps a single, typed relation instead of a scene graph: the bowl is the
+    // container, the fruit is its content, and the fruit's transform is derived from the
+    // bowl's. The setting streams match the other scene types so the table and background
+    // stay consistent for a given seed.
+    private static GenerationResult GenerateContainment(ContainmentPrompt prompt, GenerationRequest request)
+    {
+        var bowlPrompt = prompt.Bowl with { Kind = CeramicKind.Bowl };
+        var bowl = new CeramicInstance(
+            CeramicKind.Bowl,
+            bowlPrompt.Glaze,
+            CreateCeramicBody(bowlPrompt, request),
+            request.Seed,
+            0);
+        var contentSeed = BowlContainmentPlacement.ContentSeed(request.Seed);
+        var content = new FruitInstance(
+            prompt.Content.Kind,
+            CreateBody(prompt.Content, request with { Seed = contentSeed }),
+            contentSeed,
+            1);
+        var containment = BowlContainmentPlacement.Place(bowl, content, request.Seed, request.Variation);
+        var table = Pcg32.ForStream(request.Seed, "table.grain");
+        var background = Pcg32.ForStream(request.Seed, "background.detail");
+        var amount = request.Variation;
+        var scene = new StillLifeScene(
+            request.Width,
+            request.Height,
+            request.Seed,
+            amount,
+            containment.Content.Body,
+            0.64,
+            0.2 + Offset(table, 0.1, amount),
+            0.5 + Offset(background, 0.15, amount),
+            Vector2.Normalize(new Vector2(-1, -1)))
+        {
+            Subject = containment.Content.Subject,
+            Entries = ImmutableArray.Create(
+                SceneEntry.ForCeramic(containment.Bowl),
+                SceneEntry.ForFruit(containment.Content)),
+            Containment = containment,
         };
         var error = SceneValidator.Validate(scene);
         return error is null ? new(scene, null) : new(null, error);
