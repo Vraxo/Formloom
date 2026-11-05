@@ -64,13 +64,14 @@ jobs:
           python3 - <<'PY'
           import glob
           import json
+          entries = []
           for path in sorted(glob.glob('artifacts/**/formloom-ceramic-*.timing.json', recursive=True)):
               with open(path, encoding='utf-8') as handle:
                   report = json.load(handle)
               name = path.rsplit('/', 1)[-1].replace('.timing.json', '')
-              print(f"::notice title={name}::{report['RenderAndEncodeMilliseconds']:.2f} ms for {report['Count']} objects at {report['Width']}x{report['Height']}")
-          for path in sorted(glob.glob('artifacts/**/formloom-ceramic-*.png', recursive=True)):
-              print(f"::notice title=artifact::{path.rsplit('/', 1)[-1]}")
+              entries.append(f"{name}={report['RenderAndEncodeMilliseconds']:.2f}ms/{report['Count']}obj/{report['Width']}x{report['Height']}")
+          print("::notice title=ceramic-timings::" + " | ".join(entries))
+          print("::notice title=ceramic-artifacts::" + str(len(glob.glob('artifacts/**/formloom-ceramic-*.png', recursive=True))) + " png files")
           PY
 
       - name: Upload test results
