@@ -318,6 +318,47 @@ public sealed class BowlContainmentRenderingTests
     }
 
     [Theory]
+    [InlineData(256, 256)]
+    [InlineData(640, 480)]
+    [InlineData(2048, 1024)]
+    public void ContainmentRendersAtOtherSupportedDimensions(int width, int height)
+    {
+        var scene = SceneGenerator.Generate(new(
+            "a green pear in a cream ceramic bowl on a wooden table",
+            Seed: 42,
+            Variation: 0.35,
+            Width: width,
+            Height: height)).Scene!;
+        var image = StillLifeRenderer.Render(scene);
+        Assert.Equal(width, image.Width);
+        Assert.Equal(height, image.Height);
+        Assert.Equal(image.PngBytes, StillLifeRenderer.Render(scene).PngBytes);
+        using var bitmap = Decode(image.PngBytes);
+        Assert.Equal(width, bitmap.Width);
+        Assert.Equal(height, bitmap.Height);
+
+        // The scene still fills the frame, and the content still lands inside the bowl.
+        var containment = scene.Containment!;
+        var contentX = Math.Clamp((int)(containment.Content.Body.Center.X * width), 0, width - 1);
+        var contentY = Math.Clamp((int)(containment.Content.Body.Center.Y * height), 0, height - 1);
+        Assert.Equal(255, bitmap.GetPixel(contentX, contentY).Alpha);
+
+        var opaque = 0;
+        for (var y = 0; y < height; y += Math.Max(1, height / 32))
+        {
+            for (var x = 0; x < width; x += Math.Max(1, width / 32))
+            {
+                if (bitmap.GetPixel(x, y).Alpha == 255)
+                {
+                    opaque++;
+                }
+            }
+        }
+
+        Assert.True(opaque > 300);
+    }
+
+    [Theory]
     [MemberData(nameof(ExportCases))]
     public void ExportContainmentScenesTimingsAndSilhouettes(string prompt, string name, int seed, double variation)
     {
