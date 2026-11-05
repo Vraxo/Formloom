@@ -27,6 +27,17 @@ public sealed class AppComponentTests
         Assert.Equal("polite", component.Find("[role='status']").GetAttribute("aria-live"));
     }
 
+    [Fact]
+    public async Task PromptHelpMentionsContainment()
+    {
+        await using var context = new BunitContext();
+        context.Services.AddSingleton(CreateSession(_ => Task.FromResult(Success())));
+        var component = context.Render<App>();
+        var help = component.Find("#prompt-help").TextContent;
+        Assert.Contains("inside a bowl", help, StringComparison.Ordinal);
+        Assert.Contains("in a blue ceramic bowl on a wooden table", help, StringComparison.Ordinal);
+    }
+
     [Theory]
     [InlineData("a green apple on a wooden table")]
     [InlineData("a green pear on a wooden table")]
