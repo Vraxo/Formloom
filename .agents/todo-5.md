@@ -239,8 +239,8 @@ The relationship is always expressed as `fruit in bowl`, with exactly one fruit 
 - [x] Keep `.agents/todo-5.md` updated throughout implementation.
 - [x] Mark a checkbox `[x]` only after its work is complete and the stated verification has actually been performed.
 - [x] Leave blocked, unexecuted, or human-review tasks unchecked and explain the blocker/evidence beside them.
-- [ ] Run the established solution restore, Release warnings-as-errors build, and full solution test workflow through the existing CI gate.
-- [ ] Confirm all existing and new test projects pass on the latest PR CI run.
+- [x] Run the established solution restore, Release warnings-as-errors build, and full solution test workflow through the existing CI gate.
+- [x] Confirm all existing and new test projects pass on the latest PR CI run.
 - [ ] Confirm the post-merge Linux Release CI run passes before closing the milestone.
 - [x] Do not add a permanent Debug job, Windows runner, package, project, or workflow solely for this milestone.
 - [x] Do not claim native Photino/WebView2 dialog, window-lifecycle, resize, or accessibility testing from headless component tests or Linux CI.
@@ -250,19 +250,19 @@ The relationship is always expressed as `fruit in bowl`, with exactly one fruit 
 
 ## Acceptance checklist
 
-- [ ] All existing fruit, bowl, cup, vase, fruit-group, ceramic-group, and mixed-scene prompts still work unchanged.
-- [ ] All twelve fruit-in-bowl prompt combinations parse and generate through the existing desktop prompt-to-PNG path.
-- [ ] The Core model represents the fruit as content of the bowl, not as an unrelated overlapping scene neighbor.
-- [ ] The fruit is positioned in bowl-local coordinates, fitted to the bowl cavity, and remains bounded across seeds and variation.
-- [ ] The bowl's rear rim/cavity is behind the fruit and its front wall/lip visibly occludes the lower fruit.
+- [x] All existing fruit, bowl, cup, vase, fruit-group, ceramic-group, and mixed-scene prompts still work unchanged.
+- [x] All twelve fruit-in-bowl prompt combinations parse and generate through the existing desktop prompt-to-PNG path.
+- [x] The Core model represents the fruit as content of the bowl, not as an unrelated overlapping scene neighbor.
+- [x] The fruit is positioned in bowl-local coordinates, fitted to the bowl cavity, and remains bounded across seeds and variation.
+- [x] The bowl's rear rim/cavity is behind the fruit and its front wall/lip visibly occludes the lower fruit.
 - [ ] The fruit remains recognizable, correctly shaded, and visually seated inside the cavity.
-- [ ] A subtle cavity contact shadow grounds the fruit without leaking onto the bowl exterior or tabletop.
-- [ ] Blue and cream bowls both work with apple, pear, and orange.
-- [ ] Identical inputs are deterministic; alternate seeds create coherent bounded changes.
-- [ ] Existing independent composition, fruit-only rendering, ceramic rendering, metadata, and save behavior remain intact.
-- [ ] Core, renderer, desktop-session, and rendered-component tests cover containment, and all existing tests pass.
-- [ ] Generated visual-review artifacts are available; the handoff accurately distinguishes automated evidence from inspected pixels.
-- [ ] README, prompt help, safe save metadata, and handoff describe the implemented feature and its limits accurately.
+- [x] A subtle cavity contact shadow grounds the fruit without leaking onto the bowl exterior or tabletop.
+- [x] Blue and cream bowls both work with apple, pear, and orange.
+- [x] Identical inputs are deterministic; alternate seeds create coherent bounded changes.
+- [x] Existing independent composition, fruit-only rendering, ceramic rendering, metadata, and save behavior remain intact.
+- [x] Core, renderer, desktop-session, and rendered-component tests cover containment, and all existing tests pass.
+- [x] Generated visual-review artifacts are available; the handoff accurately distinguishes automated evidence from inspected pixels.
+- [x] README, prompt help, safe save metadata, and handoff describe the implemented feature and its limits accurately.
 - [ ] The completed change passes the existing Linux Release CI gate and the post-merge run is recorded.
 - [ ] The agent stops and reports the results; it does not begin a new object family or relationship type.
 

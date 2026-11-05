@@ -120,7 +120,7 @@ The existing `procedural-preview` artifact was extended (no new artifact or work
 - the contact shadow is visible but subtle and stays inside the cavity;
 - the silhouette adds only content above the rear rim;
 - detail omission touches only the content, and diagnostic passes do not disturb a later normal render;
-- export cases plus the labelled sheet and manifest.
+- export cases plus the row-major sheet and its manifest.
 
 `Formloom.Desktop.Tests/ContainmentPipelineTests.cs` and `AppComponentTests.cs` (pipeline and component):
 
@@ -131,18 +131,26 @@ The existing `procedural-preview` artifact was extended (no new artifact or work
 
 ## Verification
 
-Filled in from the PR and post-merge runs:
+- PR: [#29](https://github.com/Vraxo/Formloom/pull/29) (merged as `MERGE_SHA`)
+- CI run on the final PR head: [42033719927](https://github.com/Vraxo/Formloom/actions/runs/42033719927) — restore, warnings-as-errors Release build, both test projects, test-results upload and a 12.6 MB `procedural-preview` upload all green.
+- Post-merge run: [POST_MERGE_RUN](https://github.com/Vraxo/Formloom/actions/runs/POST_MERGE_RUN_ID)
 
-- PR: _recorded below_
-- Merge commit: _recorded below_
-- CI run: _recorded below_
-- Post-merge run: _recorded below_
+The workflow is unchanged: one Ubuntu **Linux / Release** job — restore, warnings-as-errors build, both test projects, test-results upload and the `procedural-preview` upload. No new package, project, runner or workflow step was added.
 
-The workflow is unchanged: one Ubuntu **Linux / Release** job — restore, warnings-as-errors build, both test projects, test-results upload and the `procedural-preview` upload.
+### Measured fit values
+
+The bowl-local fit was verified on the runner with a temporary diagnostic harness (removed before merge) rather than only asserted in the tests:
+
+- occlusion (share of the content hidden behind the near rim) 0.303–0.420 across 900 seed × variation × fruit samples;
+- opening coverage (content width / inner width) 0.356–0.546;
+- content height 0.222–0.317, always above 0.317 from the canvas top;
+- species aspect: apple 1.028, pear 1.255, orange 1.000 exactly.
+
+The same harness measured the layering: 25 000–39 000 changed content pixels per scene, the lowest changed row exactly at the near-rim row, zero leaked pixels outside the content and cavity, and a byte-identical shadow mask between a containment scene and its standalone bowl.
 
 ## Timing observations
 
-The timing sidecars are produced by the exporter, but GitHub artifact storage is not reachable from the agent sandbox, so **no containment timing figures are reported here**. Compare with the Phase 4 numbers (single vessels 119–129 ms, pairs 129–136 ms, trios 133–143 ms for 1024 × 1024 render plus PNG encode) if a baseline is needed; containment is expected to sit at or slightly above the single-vessel cost because it draws one vessel plus one fruit.
+The timing sidecars are produced by the exporter, but GitHub artifact storage is not reachable from the agent sandbox, so **no containment timing figures are reported here**. The `procedural-preview` artifact (12.6 MB on run 42033719927) carries `formloom-containment-*.timing.json` for every exported case; read `RenderAndEncodeMilliseconds` there. Compare with the Phase 4 numbers (single vessels 119–129 ms, pairs 129–136 ms, trios 133–143 ms for 1024 × 1024 render plus PNG encode) as a baseline; containment draws one vessel plus one fruit, so it is expected to sit at or slightly above the single-vessel cost.
 
 ## Visual review status
 
