@@ -61,7 +61,7 @@ All existing fruit, fruit-group, shadow, clipping, PNG, resource-ownership and r
 
 - First run failed on an obsolete `SKCanvas.DrawBitmap` overload (warnings as errors) and then on `MoveToImmutable` capacity in `PromptParser`; both were fixed in-branch.
 - One test-only assertion conflated layout scaling with stream stability and was corrected.
-- Run `42005432452` is green at `cd087de` with the complete suite, including the pixel invariants and artifact exports. RUN_URL_PLACEHOLDER records the final code-complete commit after the temporary diagnostic step below was removed.
+- Run [42006254568](https://github.com/Vraxo/Formloom/actions/runs/42006254568) is green at `599284d`, the final code-complete commit, with the complete suite, including every pixel invariant and both artifact uploads. An earlier green run, [42005432452](https://github.com/Vraxo/Formloom/actions/runs/42005432452) at `cd087de`, carried the same suite while the temporary diagnostic step was still present.
 
 Because this sandbox has no .NET SDK and GitHub's redirected artifact/log storage is unreachable, failures were read through the check-run annotations API. A temporary workflow step was used for that during development and then removed; the committed workflow is unchanged apart from nothing (no new jobs, runners or packages).
 
