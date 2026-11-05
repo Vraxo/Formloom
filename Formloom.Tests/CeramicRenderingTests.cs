@@ -409,7 +409,8 @@ public sealed class CeramicRenderingTests
             using var cell = SKBitmap.Decode(StillLifeRenderer.Render(scene).PngBytes);
             canvas.DrawBitmap(
                 cell,
-                new SKRect((index % Columns) * Cell, (index / Columns) * Cell, ((index % Columns) + 1) * Cell, ((index / Columns) + 1) * Cell));
+                new SKRect((index % Columns) * Cell, (index / Columns) * Cell, ((index % Columns) + 1) * Cell, ((index / Columns) + 1) * Cell),
+                new SKSamplingOptions(SKFilterMode.Linear));
         }
 
         using var image = SKImage.FromBitmap(sheet);
