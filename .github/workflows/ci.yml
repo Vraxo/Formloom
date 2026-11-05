@@ -57,23 +57,6 @@ jobs:
       - name: Test
         run: dotnet test --solution Formloom.slnx --configuration Release --no-build --no-restore --report-trx --results-directory TestResults
 
-      - name: Report ceramic timing sidecars (temporary diagnostic)
-        if: always()
-        continue-on-error: true
-        run: |
-          python3 - <<'PY'
-          import glob
-          import json
-          entries = []
-          for path in sorted(glob.glob('artifacts/**/formloom-ceramic-*.timing.json', recursive=True)):
-              with open(path, encoding='utf-8') as handle:
-                  report = json.load(handle)
-              name = path.rsplit('/', 1)[-1].replace('.timing.json', '')
-              entries.append(f"{name}={report['RenderAndEncodeMilliseconds']:.2f}ms/{report['Count']}obj/{report['Width']}x{report['Height']}")
-          print("::notice title=ceramic-timings::" + " | ".join(entries))
-          print("::notice title=ceramic-artifacts::" + str(len(glob.glob('artifacts/**/formloom-ceramic-*.png', recursive=True))) + " png files")
-          PY
-
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
