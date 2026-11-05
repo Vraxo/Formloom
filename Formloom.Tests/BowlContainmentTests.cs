@@ -261,17 +261,18 @@ public sealed class BowlContainmentTests
         var profile = CeramicForms.For(bowl.Kind);
 
         // The outline starts at the left rim and reaches the right rim partway round, so the
-        // near wall is a prefix and the far rim a suffix.
-        Assert.Equal(BowlGeometry.LeftRim(profile), profile.Outline[0].Start);
+        // near wall is a prefix and the far rim a suffix. Derived rim points differ from the
+        // authored outline nodes by float rounding, so compare with a tolerance.
+        AssertClose(BowlGeometry.LeftRim(profile), profile.Outline[0].Start);
         var front = BowlGeometry.FrontChainLength(profile);
         Assert.Equal(12, front);
-        Assert.Equal(BowlGeometry.RightRim(profile), profile.Outline[front - 1].End);
+        AssertClose(BowlGeometry.RightRim(profile), profile.Outline[front - 1].End);
 
         var wall = BowlGeometry.FrontWall(profile);
         Assert.True(wall.Length > front);
-        Assert.Equal(BowlGeometry.LeftRim(profile), wall[0].Start);
-        Assert.Equal(BowlGeometry.LeftRim(profile), wall[^1].End);
-        Assert.Equal(new Vector2(profile.MouthCenter.X, profile.MouthCenter.Y + profile.MouthRadius.Y), wall[1].End);
+        AssertClose(BowlGeometry.LeftRim(profile), wall[0].Start);
+        AssertClose(BowlGeometry.LeftRim(profile), wall[^1].End);
+        AssertClose(new Vector2(profile.MouthCenter.X, profile.MouthCenter.Y + profile.MouthRadius.Y), wall[1].End);
 
         // The band must reach the base of the bowl, otherwise the near wall would not hide
         // the seated part of the content. Its top edge is the rim line: the band starts at the
@@ -282,8 +283,8 @@ public sealed class BowlContainmentTests
 
         var opening = BowlGeometry.Opening(profile);
         Assert.Equal(4, opening.Length);
-        Assert.Equal(BowlGeometry.LeftRim(profile), opening[0].Start);
-        Assert.Equal(BowlGeometry.LeftRim(profile), opening[^1].End);
+        AssertClose(BowlGeometry.LeftRim(profile), opening[0].Start);
+        AssertClose(BowlGeometry.LeftRim(profile), opening[^1].End);
     }
 
     [Fact]
@@ -379,6 +380,9 @@ public sealed class BowlContainmentTests
         Assert.InRange(second.OccludedFraction, 0.15f, 0.55f);
         Assert.InRange(second.OpeningCoverage, 0.25f, 0.8f);
     }
+
+    private static void AssertClose(Vector2 expected, Vector2 actual) =>
+        Assert.True(Vector2.Distance(expected, actual) < 0.001f, $"expected {expected} but found {actual}");
 
     private static StillLifeScene Rebuild(StillLifeScene scene, BowlContainment containment) => scene with
     {

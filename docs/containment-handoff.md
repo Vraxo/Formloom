@@ -96,8 +96,8 @@ The existing `procedural-preview` artifact was extended (no new artifact or work
 - `formloom-containment-{name}-seed-{seed}-variation-{v}.png` — full-resolution 1024 × 1024 renders, six default combinations plus an alternate seed for apple and pear and the variation 0 / 1 ends.
 - `…-silhouette.png` for every exported case.
 - `….timing.json` sidecars with prompt, subject token, containment fit numbers, seed, variation, framework/OS and render-plus-encode time.
-- `formloom-containment-sheet.png` — a labelled 5 × 2 review sheet (name, seed, variation per cell).
-- `formloom-containment-sheet.timing.json` — the manifest: name, prompt, seed, variation, subject token, cell/column/row and per-cell timing, so every cell is identifiable even if the labels cannot be rendered.
+- `formloom-containment-sheet.png` — a 5 × 2 review sheet in row-major order. It carries no text: the CI image has no font stack, so drawing labels there would be a runtime hazard rather than a feature.
+- `formloom-containment-sheet.timing.json` — the manifest and authoritative key: name, prompt, seed, variation, subject token, cell/column/row and per-cell timing, so every cell is unambiguously identifiable.
 
 ## Test coverage
 
@@ -148,7 +148,7 @@ The timing sidecars are produced by the exporter, but GitHub artifact storage is
 
 **Pending.** The agent sandbox has no .NET SDK and cannot download the generated PNGs, so the pixels produced by this change have not been inspected by the agent. Per the standing rule, no visual pass is claimed.
 
-To close the gate, review `procedural-preview` → `formloom-containment-sheet.png` (labelled 5 × 2 sheet, `formloom-containment-sheet.timing.json` for the manifest) or the individual 1024 × 1024 renders, and check:
+To close the gate, review `procedural-preview` → `formloom-containment-sheet.png` (5 × 2 row-major grid; use `formloom-containment-sheet.timing.json` to map a cell to its prompt, seed and variation) or the individual 1024 × 1024 renders, and check:
 
 1. the fruit reads as sitting **inside** the bowl — not floating above it, pasted on the front, or hidden behind the whole vessel;
 2. the front rim and lip clearly occlude the lower fruit while the fruit stays recognizably an apple, pear or orange;
