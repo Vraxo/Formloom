@@ -57,6 +57,25 @@ jobs:
       - name: Test
         run: dotnet test --solution Formloom.slnx --configuration Release --no-build --no-restore --report-trx --results-directory TestResults
 
+      - name: Report failing tests as annotations (temporary diagnostic)
+        if: failure()
+        run: |
+          python3 - <<'PY'
+          import glob
+          import xml.etree.ElementTree as ET
+          ns = {'t': 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}
+          for path in glob.glob('TestResults/**/*.trx', recursive=True):
+              root = ET.parse(path).getroot()
+              for result in root.iter('{http://microsoft.com/schemas/VisualStudio/TeamTest/2010}UnitTestResult'):
+                  if result.get('outcome') != 'Failed':
+                      continue
+                  message = result.find('.//t:Message', ns)
+                  text = ' '.join((message.text or '').split())[:700] if message is not None else 'no message'
+                  stack = result.find('.//t:StackTrace', ns)
+                  where = ' '.join((stack.text or '').split())[:300] if stack is not None else ''
+                  print(f"::error title={result.get('testName')}::{text} || {where}")
+          PY
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
