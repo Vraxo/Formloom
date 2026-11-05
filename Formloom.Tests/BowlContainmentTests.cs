@@ -274,10 +274,11 @@ public sealed class BowlContainmentTests
         Assert.Equal(new Vector2(profile.MouthCenter.X, profile.MouthCenter.Y + profile.MouthRadius.Y), wall[1].End);
 
         // The band must reach the base of the bowl, otherwise the near wall would not hide
-        // the seated part of the content.
+        // the seated part of the content. Its top edge is the rim line: the band starts at the
+        // left rim, follows the opening's lower half and returns along the front chain.
         var extent = CurveBuilder.Extent(wall);
         Assert.True(Math.Abs(profile.OutlineBottom - extent.Bottom) < 0.002f);
-        Assert.True(Math.Abs(profile.MouthCenter.Y - profile.MouthRadius.Y - extent.Top) < 0.002f);
+        Assert.True(Math.Abs(profile.MouthCenter.Y - extent.Top) < 0.002f, $"band top {extent.Top} should be the rim line {profile.MouthCenter.Y}");
 
         var opening = BowlGeometry.Opening(profile);
         Assert.Equal(4, opening.Length);
