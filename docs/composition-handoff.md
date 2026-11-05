@@ -137,7 +137,7 @@ No further user image uploads are needed for the current visual acceptance gate.
 The user reports a 20-file upload limit and ZIP uploads are unsupported in this interface; the earlier ZIP suggestion was incorrect for this environment. Repeated manual artifact transfer is a tooling constraint, not a required test ritual. Future workflow simplification should retain automated coverage but consolidate reviewer-facing output and reserve visual review for meaningful visual changes/milestone gates, not documentation or unchanged rendering. No new workflow policy or preview-generation code has been implemented by this documentation update.
 
 
-## Final automated coverage and ownership reconciliation (pending CI)
+## Final automated coverage and ownership reconciliation (executed; CI green)
 
 Added `CompositionInvariantTests` to close the remaining targeted gaps without requesting more manual PNGs:
 
@@ -145,10 +145,77 @@ Added `CompositionInvariantTests` to close the remaining targeted gaps without r
 - Friend-only `RenderShadowMask` draws the existing shadow pass onto transparent pixels, not a duplicate approximation. Tests check every canvas-border pixel and sample contact plus directional cast extent for pairs/trios, seeds 0/42/1337 and variation 0/1.
 - A normal-render repeatability test surrounds diagnostic passes, guarding against leaked diagnostic state.
 
-Only `Formloom.Tests` receives internal access through the renderer project's SDK friend-assembly item. Hooks stay out of the public API and UI. Public calls retain the existing pass ordering, transforms, material settings and enabled details. The `skipBody` switch lets tests obtain single-fruit shadows without accidentally changing their scaling to group-shadow rules. No assets, additional review images, packages or CI jobs are introduced. No local SDK installation/build/test execution is claimed; fresh Release CI is required.
+Only `Formloom.Tests` receives internal access through the renderer project's SDK friend-assembly item. Hooks stay out of the public API and UI. Public calls retain the existing pass ordering, transforms, material settings and enabled details. The `skipBody` switch lets tests obtain single-fruit shadows without accidentally changing their scaling to group-shadow rules. No assets, additional review images, packages or CI jobs are introduced.
+
+**Execution result:** the follow-up is merged in PR #24 at `0594577` (merge commit `9bc9ef1`). [PR run 41671828179](https://github.com/Vraxo/Formloom/actions/runs/41671828179) and [post-merge run 41672188974](https://github.com/Vraxo/Formloom/actions/runs/41672188974) both finished with `Build` and `Test` steps `success` on the whole solution, so the new tests ran and passed alongside the existing regression suite. No local SDK installation or local test execution is claimed: the sandbox has no .NET SDK, and job logs/artifacts are hosted on redirected storage the sandbox cannot read, so the evidence is the workflow step conclusions rather than a captured console log.
 
 ### Resource ownership audit
 
 Source review confirms one scoped raster surface per render, scoped snapshot/PNG encoding, and scoped paints, shaders, mask filters, paths and builders. The surface owns its canvas; all body/attachment and contact-shadow save/restore pairs balance, including diagnostic early returns. The shadow-only return occurs before body transforms are pushed. The renderer retains no static bitmap/native cache and processes a validated maximum of three immutable instances; temporary native objects are released per call/pass rather than accumulated across instances. Existing CPU timings and prior successful repeated renders support the scoped workload. This is not a measured peak-memory or native leak-stress guarantee.
 
-The checklist now distinguishes already established implementation evidence from the unexecuted follow-up tests. Full Phase 3 closure still requires fresh CI and post-merge confirmation for this follow-up; earlier CI does not validate these edits. No more manual image transfer is requested for unchanged normal output.
+The checklist now distinguishes already established implementation evidence from the executed follow-up tests. Both the PR gate and the post-merge gate are green at `9bc9ef1`; Phase 3 is closed at its acceptance checkpoint (see the completion report below). No more manual image transfer is requested for unchanged normal output.
+
+
+## Phase 3 completion report
+
+Recorded at merge commit `9bc9ef1` (Phase 3 acceptance checkpoint). This reconciliation itself changes documentation only.
+
+### Commits
+
+| Point | Commit | Note |
+| --- | --- | --- |
+| Phase 3 start | `36eaf70` | Latest `main` when the checklist was added; clean tree; no local SDK |
+| Implementation | `f49b2be` | PR #22, post-merge run 41622641615 green |
+| Review/evidence notes | `42ddcab` | PR #23, post-merge run 41669770765 green |
+| Invariant follow-up | `0594577` | PR #24 head; PR run 41671828179 green |
+| **Ending commit** | **`9bc9ef1`** | PR #24 merge; post-merge run 41672188974 green |
+
+Working tree was clean at the start and at the end. No branch switching beyond the assigned session branches, no dependency, package-version, project, workflow or asset changes.
+
+### Changed files (`36eaf70..9bc9ef1`, 19 files, +1065/−161)
+
+| Area | Files |
+| --- | --- |
+| Core scene model | `FruitInstance.cs` (new), `FruitBounds.cs` (new), `FruitComposition.cs` (new), `SceneValidator.cs` (new), `StillLifeScene.cs` |
+| Core grammar/generation | `PromptParser.cs`, `SceneGenerator.cs` |
+| Renderer | `StillLifeRenderer.cs`, `Formloom.Rendering.Skia.csproj` (friend assembly only) |
+| Desktop | `App.razor` (help text only), `PngSaveService.cs` (`fruit-group` whitelist) |
+| Tests | `CompositionTests.cs` (new), `CompositionRenderingTests.cs` (new), `CompositionInvariantTests.cs` (new), `GenerationServiceTests.cs`, `AppComponentTests.cs` |
+| Docs | `README.md`, `docs/composition-handoff.md`, `.agents/todo-3.md` |
+
+No new project, package, network dependency, asset, font or image model was introduced.
+
+### Key design decisions
+
+- **Typed instances, not a scene graph.** `FruitInstance` carries the existing typed subject plus a normalized local transform, seed and depth. `StillLifeScene.Instances` is an optional immutable collection; `Fruits` adapts the legacy single-fruit body, so the original constructor, `Apple`, `Body`, `Subject`, `ParseFruit` and apple-only `Parse` keep working. Explicit empty collections are invalid, distinct from the `null` compatibility collection.
+- **Separate layout pass.** `FruitComposition` places one, two or three fruits into the existing coordinate system using deterministic slots, aspect/attachment-aware bounds and conservative canvas margins (3% for groups, legacy top margin preserved for singles). Singles keep the original centered placement with no jitter.
+- **Two seeds, two purposes.** One `scene.composition` stream permutes slots and applies restrained variation-scaled offsets; local shape/material/detail streams stay seeded per descriptor, with `instance.{kind}.{color}.{occurrence}` for repeats. Adding or reordering a *different* descriptor does not perturb existing local randomness; layout transforms necessarily change.
+- **Draw setting once, then two ordered passes.** Group shadows are drawn before any body so a later ground shadow can never paint over an earlier fruit; bodies/attachments then draw back-to-front by depth. Complete-silhouette mode reuses the same ordered instances without setting or shadows.
+- **Snap/prompt-order split.** Prompt order is preserved in the instance collection; a separate depth-sorted view drives drawing, so a later layout change cannot silently reorder the requested subjects.
+- **Validation before raster allocation.** `SceneValidator` returns an actionable error string for instance count, appearance, non-finite/out-of-range transforms and margin violations; rendering rejects bad direct scenes instead of producing malformed PNGs.
+- **Test hooks are internal.** `RenderShadowMask`, `RenderWithoutInstanceDetail` and `skipBody` are friend-only to `Formloom.Tests`; nothing was added to the public API, UI or CLI surface.
+
+### Test and CI evidence
+
+- **Core/composition** (`CompositionTests`): every legacy single prompt, valid pairs/triples incl. Oxford comma and repeats, rejected list sizes/separators/colors/adjectives, instance count and prompt order, 100 seeds × variation 0/0.35/1 bounded attachment-aware placement, spacing/overlap limits, ground heights, determinism, seed-dependent slot permutations, repeat-seed identity, and stability of existing details when a different fruit is added or reordered.
+- **Renderer** (`CompositionRenderingTests`): valid PNGs at 256/1024/1280 and 640×480, identical pixels for identical input, controlled seed differences, full instance/attachment-mask inclusion, edge transparency, foreground body visibility, detail-clipping invariants and per-fruit contact darkness.
+- **Targeted invariants** (`CompositionInvariantTests`): deliberate orange/apple overlap with one-depth detail suppression compared against the Core-derived body mask and the independently rendered foreground (positive overlap/changed-pixel counts); the real isolated shadow pass checked for contact alpha, directional cast extent and zero-alpha canvas borders across seeds 0/42/1337 and variation 0/1; normal rendering re-verified byte-identical after both diagnostic passes.
+- **Desktop** (`GenerationServiceTests`, `AppComponentTests`): pair/trio prompts through the real session → service → Skia renderer path, failed-prompt preview/metadata retention, seed/variation snapshots, `formloom-fruit-group-seed-N.png` save naming and rendered-component submission. Headless only; no Photino window or native dialog is exercised.
+- **CI gate:** Linux / Release single job (`restore` → `dotnet build --warnaserror` → `dotnet test`) with artifacts. Runs 41671828179 (PR) and 41672188974 (post-merge, `9bc9ef1`) both show `Build` and `Test` `success`. Evidence is workflow step conclusions, not a captured console log: the sandbox cannot read redirected artifact/log storage, and no .NET SDK is available locally, so no local run is claimed.
+
+### Sample images and timing
+
+Eleven generated 1024px group cases (three pairs, two trios, seed-1337 alternatives, variation 0/1 extremes) plus matching transparent complete-subject silhouettes and advisory timing sidecars are produced as the `procedural-preview` CI artifact. The user supplied copies: all eleven normal group PNGs and the single-fruit pear/orange/apple baselines were visually reviewed, with attachment, overlap and grounding crops inspected. Generated images remain uncommitted, following the repository convention.
+
+Timing from the supplied reports (render + PNG encode, 1024×1024, four-logical-processor Ubuntu runner): trios 175.39–291.43 ms, pairs 187.61–503.62 ms; current singles 193.81–331.08 ms. Advisory only — uncontrolled shared runner, no repeated-trial distribution, no peak-memory measurement.
+
+### Known limitations
+
+- The arrangement is a deliberately conservative slot-based still life (pairs side by side, trios with a smaller rear fruit), not a general composition optimizer; the prompt cannot express left/right/behind, and there are no manual placement controls.
+- Determinism is same-runtime and same-build only; no cross-driver or cross-platform pixel-identity guarantee, and no historical baseline byte comparison.
+- Overlap clipping and shadow coherence are proven by targeted invariants at 256px plus full-size visual review, not by exhaustive pixel comparison of every seed/variation combination.
+- No native GUI, native save-dialog, window-lifecycle, resize, accessibility or assistive-technology behaviour is tested; the component tests are headless.
+- Timing is an advisory CPU observation, not a desktop latency guarantee or scaled-hardware benchmark.
+- The vocabulary stays at six descriptors, one to three instances, `on a wooden table` only. Plurals, quantities, extra adjectives, positional prepositions, `or`, and more than three fruits are rejected by design.
+
+**Status: Phase 3 is complete at its acceptance checkpoint.** Stopping here; no new props, subjects, grammar or UI scope is started.

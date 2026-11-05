@@ -63,7 +63,9 @@ Use the existing explicit fruit/color vocabulary. Repeated fruit descriptions ma
 
 Started at `36eaf70` with a clean working tree. Implementation is merged in PR #22 at `f49b2be`. [Post-merge Linux Release run 41622641615](https://github.com/Vraxo/Formloom/actions/runs/41622641615) passed restore, warnings-as-errors build, tests and artifact uploads. PR run 41622276993 also passed after fixing JSON argument formatting and restoring unsupported-prompt error wording. No local SDK was installed.
 
-CI has generated the PNG/timing artifacts. The user supplied 20 group PNGs, which were visually reviewed (including white-composited silhouettes and attachment/shadow crops); **all required normal group cases and single-fruit baselines have now been supplied and visually reviewed; eight supplied group timing reports have been assessed**. The sandbox cannot retrieve GitHub's redirected artifact-storage hosts; user-supplied `procedural-preview` PNGs and timing JSON are needed. Source/test results do not replace visual review. Current evidence-documentation edits are uncommitted.
+CI has generated the PNG/timing artifacts. The user supplied 20 group PNGs, which were visually reviewed (including white-composited silhouettes and attachment/shadow crops); **all required normal group cases and single-fruit baselines have now been supplied and visually reviewed; eight supplied group timing reports have been assessed**. The sandbox cannot retrieve GitHub's redirected artifact-storage hosts; user-supplied `procedural-preview` PNGs and timing JSON are needed. Source/test results do not replace visual review.
+
+The post-review invariant follow-up (`CompositionInvariantTests`, friend-only renderer hooks, friend-assembly item) is merged in PR #24 at `0594577`, merge commit `9bc9ef1`. Its PR run [41671828179](https://github.com/Vraxo/Formloom/actions/runs/41671828179) and post-merge Linux Release run [41672188974](https://github.com/Vraxo/Formloom/actions/runs/41672188974) both report `Build` and `Test` steps `success` on the complete solution, so the new overlap-clipping, shadow-mask and diagnostic-repeatability tests did execute and pass. The working tree is clean and no evidence edits remain uncommitted; the final reconciliation below is recorded at `9bc9ef1`.
 
 ## Sequential implementation checklist
 
@@ -160,9 +162,9 @@ CI has generated the PNG/timing artifacts. The user supplied 20 group PNGs, whic
 - [x] Test identical multi-fruit inputs produce identical decoded pixels.
 - [x] Test different seeds produce controlled pixel differences without losing or changing the requested subject set.
 - [x] Test that the renderer draws all requested bodies and their corresponding attachments.
-- [ ] Test that contact/cast shadows are present and do not appear detached from their fruit. Contact darkness and actual crop review passed. New isolated shadow-mask contact/cast samples and transparent-border tests are authored; execution is pending fresh CI.
-- [ ] Test that surface details remain clipped to the correct fruit body when objects overlap. Existing outside-complete-mask invariant and visual overlap review passed. New deliberate-overlap per-instance detail and foreground-pixel tests are authored; execution is pending fresh CI.
-- [ ] Test that no fruit, attachment, or required shadow is accidentally clipped by the canvas. Complete-subject border tests and visual review passed. New transparent-border tests of the isolated shared shadow pass are authored; execution is pending fresh CI.
+- [x] Test that contact/cast shadows are present and do not appear detached from their fruit. Contact darkness and actual crop review passed. `CastAndContactShadowMasksAreGroundedAndClearOfCanvasEdges` renders the real shadow pass through the friend-only `RenderShadowMask` hook and asserts contact alpha at each fruit's body bottom plus directional cast extent to the lighting side for pairs/trios across seeds 0/42/1337 and variation 0/1; it passed in PR run 41671828179 and post-merge run 41672188974.
+- [x] Test that surface details remain clipped to the correct fruit body when objects overlap. `InstanceDetailCannotLeakOutsideItsOwnContourOrThroughForeground` deliberately overlaps orange/apple bodies, suppresses detail for exactly one depth, and requires unchanged pixels outside that instance's Core-derived body mask plus foreground-identical opaque overlap pixels; positive overlap/changed-pixel counts prevent vacuous success. Passed in the same runs. Existing outside-complete-mask invariant and visual overlap review also passed.
+- [x] Test that no fruit, attachment, or required shadow is accidentally clipped by the canvas. Complete-subject border tests and visual review passed; the shadow-mask test additionally asserts zero alpha on every canvas-border pixel of the isolated real shadow pass for pairs/trios across seeds 0/42/1337 and variation 0/1. Passed in the same runs.
 - [x] Test that existing apple opacity, fruit silhouettes, pear/orange materials, wood grain, and single-fruit regression coverage still pass.
 - [x] Extend desktop generation/session/component tests to prove multi-fruit prompts use the existing real generation pipeline.
 - [x] Test that failed multi-fruit prompts retain the previous successful preview and its metadata.
@@ -196,8 +198,8 @@ CI has generated the PNG/timing artifacts. The user supplied 20 group PNGs, whic
 - [x] Ensure all projects build with warnings as errors and every test project passes.
 - [x] Keep the established Linux Release CI as the routine automated gate; do not add a new permanent job/runner for this milestone.
 - [x] Confirm the latest post-merge Release CI run passes before declaring completion.
-- [ ] Report the starting/ending commits, changed files, key design decisions, tests and CI evidence, sample PNGs, and known limitations.
-- [ ] Stop at the acceptance checkpoint below; do not begin additional object families or props.
+- [x] Report the starting/ending commits, changed files, key design decisions, tests and CI evidence, sample PNGs, and known limitations. Recorded in [the Phase 3 completion report](../docs/composition-handoff.md#phase-3-completion-report): start `36eaf70`, implementation `f49b2be`, invariant follow-up `0594577`, ending `9bc9ef1`; 19 changed files listed; design decisions, test/CI evidence, reviewed sample images and limitations included.
+- [x] Stop at the acceptance checkpoint below; do not begin additional object families or props. No new subject, prop, grammar or UI scope was started after this checkpoint.
 
 ## Acceptance checklist
 
@@ -208,21 +210,21 @@ CI has generated the PNG/timing artifacts. The user supplied 20 group PNGs, whic
 - [x] Composition is deterministic for a given prompt, seed, and variation; different seeds can produce controlled alternative layouts.
 - [x] Instance geometry/detail streams are independent enough that adding another fruit does not arbitrarily alter existing fruit details.
 - [x] Every fruit remains inside the canvas, recognizably visible, correctly layered, and grounded on the table.
-- [ ] Contact/cast shadows, attachments, lighting, and surface-detail clipping remain coherent in multi-fruit scenes.
+- [x] Contact/cast shadows, attachments, lighting, and surface-detail clipping remain coherent in multi-fruit scenes. Established by the reviewed normal pair/trio images and crops plus the merged invariant tests (contact/directional cast extent, transparent shadow borders, one-depth detail suppression against the Core body mask, opaque-overlap foreground equality).
 - [x] Strict parsing rejects unsupported or malformed requests rather than silently omitting subjects.
-- [ ] Automated Core, renderer, desktop integration, and existing regression tests pass. The merged implementation passed; the newly authored invariant tests require a fresh CI run.
+- [x] Automated Core, renderer, desktop integration, and existing regression tests pass. The merged implementation passed in PR #22/post-merge run 41622641615, and the invariant follow-up passed in PR run 41671828179 and post-merge run 41672188974 (`Test` step `success` for the whole solution, so existing Phase 2/3 regression coverage remained green).
 - [x] Actual single-, two-, and three-fruit sample images have been visually reviewed and supplied as artifacts or report attachments. Final batch supplied the remaining normal pear/orange pair and current single baselines; findings recorded in the handoff.
 - [x] README and handoff accurately record the implemented prompt grammar, composition behavior, evidence, and limitations.
-- [ ] The completed change passes the repository's Release CI gate. PR #22/#23 gates passed; this uncommitted invariant-test follow-up has not run in CI.
-- [ ] The agent stops and reports at this milestone; no new props or subject family is started.
+- [x] The completed change passes the repository's Release CI gate. PR #22/#23 gates passed, and the invariant follow-up passed both its PR run 41671828179 and the post-merge run 41672188974 at `9bc9ef1`. This documentation-only reconciliation is the only change after that green commit; it alters no source, test or renderer code.
+- [x] The agent stops and reports at this milestone; no new props or subject family is started.
 
 ## Working instruction
 
 Implement this milestone directly in the existing repository, in small coherent steps, with tests as the system grows. Make reasonable engineering decisions without asking the user to design internal architecture. Complete the scoped implementation rather than stopping after a plan. If inspection reveals that a requirement would force a disproportionate redesign, document the evidence and choose the smallest alternative that still meets the acceptance criteria. Do not expand the grammar or object vocabulary beyond this scope. Keep this checklist updated in the repository as work progresses, and stop at the acceptance checkpoint.
 
 
-## Final coverage reconciliation follow-up (authored; not executed)
+## Final coverage reconciliation follow-up (executed; CI green)
 
 Existing passing Core/service/component/renderer tests, the PR #22 implementation note, the supplied image reviews and eight timing reports establish the previously unchecked implementation tasks. The native-resource audit found local `using` ownership for surface/snapshot/encoding, paints, shaders, mask filters, paths and builders, with at most three immutable instances and no retained renderer cache. This is source evidence plus successful prior renders, not a leak-stress/peak-RSS benchmark.
 
-New `CompositionInvariantTests` deliberately overlap two fruit bodies, toggle detail for one depth at a time, compare actual overlapping foreground pixels to the independently rendered foreground, and inspect the isolated real contact/cast-shadow pass across seeds/variation extremes for contact, directional extent and transparent borders. Internal friend-only renderer hooks reuse the exact draw code; no public render option, UI control, package or new review exports are added. Normal rendering is intended to remain unchanged; regression confirmation and all new-test checkboxes await CI. No extra manual PNG uploads are required for this test-focused change.
+New `CompositionInvariantTests` deliberately overlap two fruit bodies, toggle detail for one depth at a time, compare actual overlapping foreground pixels to the independently rendered foreground, and inspect the isolated real contact/cast-shadow pass across seeds/variation extremes for contact, directional extent and transparent borders. Internal friend-only renderer hooks reuse the exact draw code; no public render option, UI control, package or new review exports are added. Normal rendering is unchanged: `DiagnosticPassesDoNotChangeSubsequentNormalRendering` re-renders after both diagnostic passes and requires byte-identical PNG output, and it passed together with the rest of the suite. The follow-up is merged in PR #24 at `0594577`; PR run 41671828179 and post-merge run 41672188974 both completed the `Build` and `Test` steps successfully, so all new-test boxes above are executed rather than authored-only. No extra manual PNG uploads were required for this test-focused change.
