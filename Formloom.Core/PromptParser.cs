@@ -1,7 +1,14 @@
+using System.Collections.Immutable;
+using System.Text.RegularExpressions;
+
 namespace Formloom.Core;
 
 public static class PromptParser
 {
+    private const string FruitDescriptor = @"(?:a (?:red|green|yellow) apple|a (?:green|yellow) pear|an orange)";
+
+    private const string CeramicDescriptor = @"a (?:blue|cream) ceramic (?:bowl|cup|vase)";
+
     public static AppleColor? Parse(string? prompt)
     {
         var parsed = ParseFruit(prompt);
@@ -24,7 +31,29 @@ public static class PromptParser
         return fruits.Value[0];
     }
 
-    public static System.Collections.Immutable.ImmutableArray<FruitPrompt>? ParseScene(string? prompt)
+    public static ImmutableArray<FruitPrompt>? ParseScene(string? prompt)
+    {
+        var objects = ParseObjects(prompt);
+        if (objects is null)
+        {
+            return null;
+        }
+
+        var fruits = ImmutableArray.CreateBuilder<FruitPrompt>(objects.Value.Length);
+        foreach (var item in objects.Value)
+        {
+            if (item.Fruit is null)
+            {
+                return null;
+            }
+
+            fruits.Add(item.Fruit);
+        }
+
+        return fruits.ToImmutable();
+    }
+
+    public static ImmutableArray<ObjectPrompt>? ParseObjects(string? prompt)
     {
         if (string.IsNullOrWhiteSpace(prompt))
         {
@@ -39,30 +68,37 @@ public static class PromptParser
             return null;
         }
 
-        var list = System.Text.RegularExpressions.Regex.Replace(normalized[..^setting.Length], @"\s*,\s*", ", ");
-        const string descriptor = @"(?:a (?:red|green|yellow) apple|a (?:green|yellow) pear|an orange)";
-        var match = System.Text.RegularExpressions.Regex.Match(
+        var list = Regex.Replace(normalized[..^setting.Length], @"\s*,\s*", ", ");
+        const string descriptor = "(?:" + FruitDescriptor + "|" + CeramicDescriptor + ")";
+        var match = Regex.Match(
             list,
-            @"\A(?<fruit>" + descriptor + @")(?: and (?<fruit>" + descriptor + @")(?: and (?<fruit>" + descriptor + @"))?|, (?<fruit>" + descriptor + @"),? and (?<fruit>" + descriptor + @"))?\z");
+            @"\A(?<item>" + descriptor + @")(?: and (?<item>" + descriptor + @")(?: and (?<item>" + descriptor + @"))?|, (?<item>" + descriptor + @"),? and (?<item>" + descriptor + @"))?\z");
         if (!match.Success)
         {
             return null;
         }
 
-        var result = System.Collections.Immutable.ImmutableArray.CreateBuilder<FruitPrompt>();
-        foreach (System.Text.RegularExpressions.Capture capture in match.Groups["fruit"].Captures)
+        var result = ImmutableArray.CreateBuilder<ObjectPrompt>();
+        foreach (Capture capture in match.Groups["item"].Captures)
         {
-            result.Add(capture.Value switch
-            {
-                "a red apple" => new(FruitKind.Apple, FruitColor.Red),
-                "a green apple" => new(FruitKind.Apple, FruitColor.Green),
-                "a yellow apple" => new(FruitKind.Apple, FruitColor.Yellow),
-                "a green pear" => new(FruitKind.Pear, FruitColor.Green),
-                "a yellow pear" => new(FruitKind.Pear, FruitColor.Yellow),
-                _ => new(FruitKind.Orange, FruitColor.Orange),
-            });
+            result.Add(ParseDescriptor(capture.Value));
         }
 
         return result.ToImmutable();
     }
+
+    private static ObjectPrompt ParseDescriptor(string value) => value switch
+    {
+        "a red apple" => ObjectPrompt.FromFruit(new(FruitKind.Apple, FruitColor.Red)),
+        "a green apple" => ObjectPrompt.FromFruit(new(FruitKind.Apple, FruitColor.Green)),
+        "a yellow apple" => ObjectPrompt.FromFruit(new(FruitKind.Apple, FruitColor.Yellow)),
+        "a green pear" => ObjectPrompt.FromFruit(new(FruitKind.Pear, FruitColor.Green)),
+        "a yellow pear" => ObjectPrompt.FromFruit(new(FruitKind.Pear, FruitColor.Yellow)),
+        "an orange" => ObjectPrompt.FromFruit(new(FruitKind.Orange, FruitColor.Orange)),
+        _ => ObjectPrompt.FromCeramic(new(
+            value.EndsWith("bowl", StringComparison.Ordinal) ? CeramicKind.Bowl
+                : value.EndsWith("cup", StringComparison.Ordinal) ? CeramicKind.Cup
+                : CeramicKind.Vase,
+            value.StartsWith("a blue", StringComparison.Ordinal) ? CeramicGlaze.Blue : CeramicGlaze.Cream)),
+    };
 }

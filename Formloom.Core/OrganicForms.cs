@@ -35,22 +35,7 @@ public static class OrganicForms
             points[index] = new Vector2(x, y);
         }
 
-        return Interpolate(points);
-    }
-
-    private static OrganicContour Interpolate(Vector2[] points)
-    {
-        var segments = ImmutableArray.CreateBuilder<CubicSegment>(points.Length);
-        for (var index = 0; index < points.Length; index++)
-        {
-            var previous = points[(index + points.Length - 1) % points.Length];
-            var start = points[index];
-            var end = points[(index + 1) % points.Length];
-            var next = points[(index + 2) % points.Length];
-            segments.Add(new(start, start + ((end - previous) / 6), end - ((next - start) / 6), end));
-        }
-
-        return new(segments.MoveToImmutable(), points[0]);
+        return new(CurveBuilder.ClosedCubic(points), points[0]);
     }
 
     private static OrganicContour CreateApple(float asymmetry)
