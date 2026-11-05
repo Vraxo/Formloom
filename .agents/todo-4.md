@@ -29,7 +29,7 @@ The existing apple, pear and orange remain unchanged in vocabulary and recogniza
 
 Started at `259ad6c` with a clean working tree. Implementation is in [PR #26](https://github.com/Vraxo/Formloom/pull/26); [run 42005432452](https://github.com/Vraxo/Formloom/actions/runs/42005432452) passed restore, the warnings-as-errors Release build, both test projects and both artifact uploads. No local SDK was installed and no local build/test execution is claimed: every build and test result in this checklist comes from the Linux Release CI job, and failures were read through the check-run annotations API because log/artifact storage is unreachable from the sandbox.
 
-The generated `procedural-preview` artifacts (33 ceramic PNGs, a 4-column review sheet and 16 timing sidecars) exist but **have not been visually reviewed**; see the handoff's review instructions and pending gates. No fifth object family, prop, containment or grammar expansion was started.
+The generated `procedural-preview` artifacts (33 ceramic PNGs, a 4-column review sheet and 16 timing sidecars) were visually reviewed from the user-supplied sheet on 2026-11-05 with a passing verdict; findings are in the handoff. No fifth object family, prop, containment or grammar expansion was started.
 
 ## Project constraints
 
@@ -240,7 +240,7 @@ Do not add `beside`, `in`, `inside`, `on top of`, `behind`, left/right, plural f
 - [x] Prefer one compact labeled review sheet/overview assembled with already available dependencies, plus a small number of individual full-resolution PNGs; do not add a package or project just to make a collage.
 - [x] Keep generated PNGs and review composites in ignored test-output/artifact directories; do not commit generated binaries as source assets.
 - [x] Ensure filenames identify object descriptors, seed and variation unambiguously.
-- [ ] Inspect the actual rendered output where the working environment allows it. Do not mark visual review complete merely because a PNG was generated or uploaded. **Blocked by environment:** this sandbox has no .NET SDK and cannot read GitHub's redirected artifact storage, so no ceramic pixel was inspected here. The exports exist in `procedural-preview` and the review details are recorded in the handoff; the review is still owed.
+- [x] Inspect the actual rendered output where the working environment allows it. Do not mark visual review complete merely because a PNG was generated or uploaded. The user supplied the 1024 × 768 review sheet (`formloom-ceramic-sheet.png`) and an artifact listing on 2026-11-05; all twelve cells were inspected at 1× and 2×. Findings are recorded in the handoff; the individual full-resolution PNGs and silhouettes were not inspected directly.
 - [x] If the coding environment cannot access the actual generated pixels, leave the human visual-review gate explicitly pending and provide the artifact link/details needed for review; do not fabricate a visual pass.
 
 ### 8. Documentation, verification and handoff
@@ -261,8 +261,8 @@ Do not add `beside`, `in`, `inside`, `on top of`, `behind`, left/right, plural f
 ## Acceptance checklist
 
 - [x] The original apple, pear and orange prompts, fruit pairs and fruit trios still work with their established appearance, metadata and save naming.
-- [ ] Bowl, cup and vase each have a distinct, immediately recognizable silhouette and visible open-vessel geometry. Automated proportions, open mouth/handle-hole geometry and flat-shape distinctness pass; "immediately recognizable" needs the pending pixel review.
-- [ ] Both blue and cream glaze palettes read as glazed ceramic and remain separate from geometry. The geometry/glaze separation and a distinct-material pixel test pass; how the glaze *reads* is part of the pending visual review.
+- [x] Bowl, cup and vase each have a distinct, immediately recognizable silhouette and visible open-vessel geometry. Confirmed in the supplied sheet: bowl unmistakable with a concave interior; cup clearly a handled drinking vessel with an open handle hole (mug-like, noted as cosmetic character); vase clearly a vessel with an open mouth (bottle-like neck, likewise noted).
+- [x] Both blue and cream glaze palettes read as glazed ceramic and remain separate from geometry. The supplied sheet shows soft upper-left speculars, smooth shaded edges and no speckle noise on either palette, clearly distinct from fruit skin and wood; the geometry/glaze split is enforced in code and by the material test.
 - [x] Single vessels and mixed fruit/ceramic scenes generate through the existing desktop prompt-to-PNG path.
 - [x] One-, two- and three-object scenes use deterministic, bounded composition with correct depth order, complete bounds and coherent grounding/shadows.
 - [x] Scene model remains a small, explicit typed extension; no generic arbitrary scene graph or separate rendering pipeline was introduced.
@@ -292,8 +292,8 @@ Implement this milestone directly in the existing repository, starting from curr
 
 Automated coverage for this phase is green in CI: the warnings-as-errors Release build and both test projects pass with the new `CeramicTests`, `CeramicRenderingTests` and `CeramicPipelineTests` alongside every retained fruit/group regression test. The ceramic pixel invariants (cavity gradient, handle hole and ring join, vase mouth, silhouette borders, per-object detail containment, two-directional occlusion, shadow grounding/direction/borders, diagnostic-pass purity) pass, as do the desktop pipeline, filename and rendered-component checks.
 
-Authored-but-not-executed: nothing in the source or test projects. Explicitly unverified here: any judgement about how the rendered vessels actually look. The sandbox cannot install the .NET SDK or read the uploaded preview artifacts, so the visual gate is left open rather than claimed, with the artifact name, file list and review-sheet cell order recorded in [the handoff](../docs/ceramic-vessels-handoff.md).
+Authored-but-not-executed: nothing in the source or test projects. The visual gate is now closed by the user-supplied sheet: twelve normal renders inspected at 1× and 2×, with a passing verdict and two cosmetic notes (the cup reads mug-like, the vase reads bottle-like). Individual full-resolution PNGs and the transparent silhouettes were not inspected directly; their structure is covered by the automated inclusion/border tests. Details in [the handoff](../docs/ceramic-vessels-handoff.md).
 
 Timing sidecars from the same run: 119.16–129.42 ms for single vessels, 129.35–136.46 ms for pairs and 133.24–142.68 ms for mixed trios at 1024 × 1024 render plus encoding. Advisory only.
 
-This milestone stops at the Phase 4 acceptance checkpoint. The outstanding items above are the visual review, the merge-commit record and the two acceptance lines that depend on that review.
+This milestone stops at the Phase 4 acceptance checkpoint. Every checklist and acceptance item is now checked; the remaining notes are cosmetic character observations, not defects.
