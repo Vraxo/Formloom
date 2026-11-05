@@ -23,7 +23,7 @@ public sealed class ContainmentDiagnostics
 
         foreach (var prompt in BowlContainmentTests.Rejected)
         {
-            checks.Add(($"reject[{prompt}]", () => core.UnsupportedContainmentPhrasingsAreRejected(prompt)));
+            checks.Add(($"reject[{prompt}]", new Action(() => core.UnsupportedContainmentPhrasingsAreRejected(prompt))));
         }
 
         foreach (var fruit in FruitDescriptors)
@@ -31,20 +31,20 @@ public sealed class ContainmentDiagnostics
             foreach (var glaze in Glazes)
             {
                 var prompt = $"{fruit} in a {glaze} ceramic bowl on a wooden table";
-                checks.Add(($"combo[{prompt}]", () => core.EveryFruitAndGlazeCombinationParsesAndGenerates(prompt, glaze)));
-                checks.Add(($"notList[{prompt}]", () => core.ContainmentPromptsAreNotObjectLists(prompt, glaze)));
-                checks.Add(($"render[{prompt}]", () => render.EveryCombinationRendersDeterministicallyAtFullSize(prompt, glaze)));
+                checks.Add(($"combo[{prompt}]", new Action(() => core.EveryFruitAndGlazeCombinationParsesAndGenerates(prompt, glaze))));
+                checks.Add(($"notList[{prompt}]", new Action(() => core.ContainmentPromptsAreNotObjectLists(prompt, glaze))));
+                checks.Add(($"render[{prompt}]", new Action(() => render.EveryCombinationRendersDeterministicallyAtFullSize(prompt, glaze))));
             }
         }
 
         foreach (var (seed, variation) in new[] { (20261105UL, 0.0), (20261105UL, 1.0), (7UL, 0.35) })
         {
-            checks.Add(($"seated[{seed}/{variation}]", () => core.ContentIsSeatedInsideTheBowl(seed, variation)));
+            checks.Add(($"seated[{seed}/{variation}]", new Action(() => core.ContentIsSeatedInsideTheBowl(seed, variation))));
         }
 
         foreach (var (width, height) in new[] { (256, 256), (640, 480), (2048, 1024) })
         {
-            checks.Add(($"dims[{width}x{height}]", () => render.ContainmentRendersAtOtherSupportedDimensions(width, height)));
+            checks.Add(($"dims[{width}x{height}]", new Action(() => render.ContainmentRendersAtOtherSupportedDimensions(width, height))));
         }
 
         foreach (var (prompt, name, seed, variation) in new[]
@@ -54,7 +54,7 @@ public sealed class ContainmentDiagnostics
             ("an orange in a cream ceramic bowl on a wooden table", "orange-cream", 42, 1),
         })
         {
-            checks.Add(($"export[{name}]", () => render.ExportContainmentScenesTimingsAndSilhouettes(prompt, name, seed, variation)));
+            checks.Add(($"export[{name}]", new Action(() => render.ExportContainmentScenesTimingsAndSilhouettes(prompt, name, seed, variation))));
         }
 
         checks.Add(("nulls", core.ContainmentIsNullForPromptsThatDoNotContain));

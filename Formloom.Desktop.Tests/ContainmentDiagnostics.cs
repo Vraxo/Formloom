@@ -23,10 +23,10 @@ public sealed class ContainmentDiagnostics
             ("an orange in a cream ceramic bowl on a wooden table", "orange-in-cream-bowl"),
         })
         {
-            checks.Add(($"pipeline[{prompt}]", () => pipeline.ContainedPromptsUseTheRealPipelineAndKeepThePreviewOnRejection(prompt, subject).GetAwaiter().GetResult()));
+            checks.Add(($"pipeline[{prompt}]", new Action(() => pipeline.ContainedPromptsUseTheRealPipelineAndKeepThePreviewOnRejection(prompt, subject).GetAwaiter().GetResult())));
         }
 
-        checks.Add(("whitelist", () => pipeline.SaveNamesWhitelistContainmentTokens().GetAwaiter().GetResult()));
+        checks.Add(("whitelist", new Action(() => pipeline.SaveNamesWhitelistContainmentTokens().GetAwaiter().GetResult())));
         foreach (var prompt in new[]
         {
             "a red apple in a blue ceramic bowl on a wooden table",
@@ -34,10 +34,10 @@ public sealed class ContainmentDiagnostics
             "an orange in a blue ceramic bowl on a wooden table",
         })
         {
-            checks.Add(($"component[{prompt}]", () => app.InputEventsAndSubmitUseEditedValuesAndRenderPreview(prompt).GetAwaiter().GetResult()));
+            checks.Add(($"component[{prompt}]", new Action(() => app.InputEventsAndSubmitUseEditedValuesAndRenderPreview(prompt).GetAwaiter().GetResult())));
         }
 
-        checks.Add(("initial", () => app.InitialMarkupHasBoundDefaultsLabelsAndDisabledSave().GetAwaiter().GetResult()));
+        checks.Add(("initial", new Action(() => app.InitialMarkupHasBoundDefaultsLabelsAndDisabledSave().GetAwaiter().GetResult())));
 
         var passed = 0;
         var failures = new List<string>();

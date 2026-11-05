@@ -106,7 +106,7 @@ public sealed class BowlContainmentTests
         "a red apple in a ceramic bowl on a wooden table",
         "a red apple on a wooden table",
         "a blue ceramic bowl on a wooden table",
-        "",
+        string.Empty,
     ];
 
     public static TheoryData<string> RejectedCases()
