@@ -193,11 +193,13 @@ public sealed class BowlContainmentRenderingTests
     public void ContainedFruitCastsNoTabletopShadow()
     {
         var scene = Scene("an orange in a cream ceramic bowl on a wooden table");
-        var contained = Decode(StillLifeRenderer.RenderShadowMask(scene).PngBytes);
-        var bowlOnly = Decode(StillLifeRenderer.RenderShadowMask(BowlOnly(scene)).PngBytes);
+        var containedImage = StillLifeRenderer.RenderShadowMask(scene);
+        var bowlImage = StillLifeRenderer.RenderShadowMask(BowlOnly(scene));
+        using var contained = Decode(containedImage.PngBytes);
+        using var bowlOnly = Decode(bowlImage.PngBytes);
 
         // The bowl still grounds itself on the table, and the contained fruit adds nothing.
-        Assert.Equal(bowlOnly.PngBytes, contained.PngBytes);
+        Assert.Equal(bowlImage.PngBytes, containedImage.PngBytes);
         var grounded = 0;
         for (var y = 0; y < Canvas; y += 4)
         {
@@ -418,9 +420,9 @@ public sealed class BowlContainmentRenderingTests
         for (var index = 0; index < Exports.Length; index++)
         {
             var (prompt, name, seed, variation) = Exports[index];
-            var scene = Scene(prompt, (ulong)seed, variation);
+            var scene = SceneGenerator.Generate(new(prompt, (ulong)seed, variation, Width: Cell, Height: Cell)).Scene!;
             var timer = Stopwatch.StartNew();
-            var rendered = StillLifeRenderer.Render(new(prompt, (ulong)seed, variation, Width: Cell, Height: Cell));
+            var rendered = StillLifeRenderer.Render(scene);
             timer.Stop();
             var left = (index % Columns) * Cell;
             var top = (index / Columns) * Cell;

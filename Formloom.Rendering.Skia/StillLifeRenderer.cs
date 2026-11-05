@@ -381,7 +381,7 @@ public static class StillLifeRenderer
         }
 
         canvas.Save();
-        using (var near = CreateNearWallPath(containment))
+        using (var near = CreateCanvasPath(containment, BowlGeometry.FrontWall(containment.Profile)))
         {
             canvas.ClipPath(near, SKClipOperation.Difference, antialias: true);
         }
@@ -394,16 +394,16 @@ public static class StillLifeRenderer
         canvas.Restore();
     }
 
-    // The near wall and lip in canvas space: the opening's lower arc plus the bowl's front
-    // chain. Everything inside this band is in front of the contained fruit.
-    private static SKPath CreateNearWallPath(BowlContainment containment)
+    // Maps normalized bowl-local segments onto the canvas. The near-wall band (the
+    // opening's lower arc plus the bowl's front chain) is everything in front of the
+    // contained fruit; the opening itself clips the cavity contact shadow.
+    private static SKPath CreateCanvasPath(BowlContainment containment, ImmutableArray<CubicSegment> segments)
     {
         var body = containment.Bowl.Body;
         var width = body.Size.X * 1024;
         var height = body.Size.Y * 1024;
         var left = (body.Center.X * 1024) - (width / 2);
         var top = (body.Center.Y - (body.Size.Y / 2)) * 1024;
-        var segments = BowlGeometry.FrontWall(containment.Profile);
         using var builder = new SKPathBuilder();
         var start = segments[0].Start;
         builder.MoveTo(left + (start.X * width), top + (start.Y * height));
@@ -432,14 +432,12 @@ public static class StillLifeRenderer
         var top = (body.Center.Y - (body.Size.Y / 2)) * 1024;
         var centerX = left + (profile.MouthCenter.X * width);
         var centerY = top + (profile.MouthCenter.Y * height);
-        var radiusX = profile.MouthRadius.X * width;
         var radiusY = profile.MouthRadius.Y * height;
         var frontRim = centerY + radiusY;
         var contentWidth = containment.Content.Body.Size.X * 1024;
         canvas.Save();
-        using (var opening = new SKPath())
+        using (var opening = CreateCanvasPath(containment, BowlGeometry.Opening(profile)))
         {
-            opening.AddOval(new SKRect(centerX - radiusX, centerY - radiusY, centerX + radiusX, centerY + radiusY));
             canvas.ClipPath(opening);
         }
 

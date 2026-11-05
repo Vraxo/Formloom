@@ -63,8 +63,10 @@ public sealed class BowlContainmentTests
 
     [Theory]
     [MemberData(nameof(Combinations))]
-    public void ContainmentPromptsAreNotObjectLists(string prompt, string _)
+    public void ContainmentPromptsAreNotObjectLists(string prompt, string glaze)
     {
+        Assert.False(string.IsNullOrEmpty(glaze));
+
         // The containment grammar is a separate typed path; the list grammar must not
         // silently read a contained fruit as a neighbour, and the fruit-only helpers stay
         // fruit-only.
@@ -249,7 +251,7 @@ public sealed class BowlContainmentTests
         Assert.Equal(blue.Content.Seed, cream.Content.Seed);
         Assert.Equal(blue.Content.Body, cream.Content.Body);
         Assert.Equal(blue.Bowl.Body, cream.Bowl.Body);
-        Assert.Equal(blue.SubjectToken != cream.SubjectToken, true);
+        Assert.NotEqual(blue.SubjectToken, cream.SubjectToken);
     }
 
     [Fact]
