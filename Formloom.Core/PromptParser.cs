@@ -50,7 +50,7 @@ public static class PromptParser
             fruits.Add(item.Fruit);
         }
 
-        return fruits.MoveToImmutable();
+        return fruits.ToImmutable();
     }
 
     public static ImmutableArray<ObjectPrompt>? ParseObjects(string? prompt)
@@ -84,7 +84,7 @@ public static class PromptParser
             result.Add(ParseDescriptor(capture.Value));
         }
 
-        return result.MoveToImmutable();
+        return result.ToImmutable();
     }
 
     private static ObjectPrompt ParseDescriptor(string value) => value switch
