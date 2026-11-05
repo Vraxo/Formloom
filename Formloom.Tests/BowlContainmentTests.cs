@@ -289,6 +289,7 @@ public sealed class BowlContainmentTests
         Assert.True(wall.Length > front);
         AssertClose(BowlGeometry.LeftRim(profile), wall[0].Start);
         AssertClose(BowlGeometry.LeftRim(profile), wall[^1].End);
+
         // Segment 0 is the opening's left half of the lower arc, so it ends at the arc's bottom.
         AssertClose(new Vector2(profile.MouthCenter.X, profile.MouthCenter.Y + profile.MouthRadius.Y), wall[0].End);
         AssertClose(BowlGeometry.RightRim(profile), wall[1].End);
