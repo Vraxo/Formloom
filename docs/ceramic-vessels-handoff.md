@@ -6,7 +6,7 @@ Starting `main` commit: `259ad6c` ("todo 4"), working tree clean, no local .NET 
 
 Phase 3 was complete at `b9771a8` (PR #25): fruit-only composition with one to three instances, a strict parser, deterministic layout and targeted overlap/shadow invariants. Its handoff is [composition-handoff.md](composition-handoff.md).
 
-**This document records the implementation and automated evidence. The human visual review of the generated ceramic images is explicitly still open** — see [Pending gates](#pending-gates-and-limits).
+**This document records the implementation, the automated evidence and the visual review of the generated ceramic images**, supplied as the 1024 × 768 review sheet on 2026-11-05.
 
 ## Smallest extension that fit the existing architecture
 
@@ -74,7 +74,29 @@ The existing `procedural-preview` artifact now also contains **33 ceramic PNGs**
 
 Sheet cell order (left to right, top to bottom): blue bowl, cream bowl, blue cup, cream cup / blue vase, cream vase, apple+blue bowl, green pear+cream cup / orange+blue vase, apple+cream bowl+orange trio, cream cup+pear+blue vase trio, blue vase+blue bowl.
 
-**Visual review status: pending.** These files have not been inspected as pixels. Automated invariants cover cavity/handle/mouth structure, containment, occlusion and shadow geometry, but they are not a substitute for looking at the sheet.
+
+
+## Visual review — supplied review sheet, 2026-11-05
+
+The user supplied the rendered sheet (`formloom-ceramic-sheet.png`, 1024 × 768, twelve 256 px cells in the order listed above) plus a listing of the artifact contents. Each row was inspected at 1× and again at 2× magnification; the notes below are what the pixels show, not an inference from the tests.
+
+**Bowl (blue, cream)** — the strongest of the three. The interior reads as genuinely concave: a dark cavity with a lighter far-wall sheen and a brighter front lip along the near rim, over a wide shallow body with a visible foot. Both glazes show a soft upper-left specular and a smooth falloff, and the contact shadow sits directly under the base. Unmistakably a bowl.
+
+**Cup (blue, cream)** — a tapered handled vessel with a dark mouth ellipse at the top, a thin light rim and a D-shaped ring handle on the right whose centre is genuinely open (the background shows through). The ring joins the body cleanly at both attachment points. Honest caveat: it reads closer to a **mug/tankard** than a teacup, and the interior is a shallow dark ellipse with only a faint inner wall — least legible of the three openings, particularly in blue.
+
+**Vase (blue, cream)** — base, body, shoulder, long neck and a small mouth with a light rim. Reads as a slim **bud vase / bottle**: the neck is long and the mouth flare is subtle, so the "bottle" reading is the second-strongest cue, but the vessel identity is clear and the mouth is visibly open.
+
+**Pairs** — apple + blue bowl: plausible scale (the bowl is a little wider than the apple), clear separation, both grounded with attached contact shadows and consistent upper-left lighting. Pear + cream cup: coherent, though the cup reads small (espresso-sized) beside the pear. Orange + blue vase: natural height contrast, both grounded.
+
+**Trios** — apple + cream bowl + orange: the bowl anchors the foreground left, the apple sits smaller and higher as the rear object, the orange closes the right; all three stay readable and nothing is hidden. Cup + pear + blue vase: the rear cup is correctly smaller, the pear and vase define the foreground, and the cup's handle stays visible.
+
+**Ceramic pair** — blue vase + blue bowl: clear silhouette separation and consistent grounding.
+
+**Cross-cutting** — no detached contact shadows, no canvas clipping, no missing stems/leaves/calyces or handle joins; no speckle or pore-like noise on glaze; blue and cream both read as glazed ceramic and are clearly distinct from fruit skin and from the wood. Depth order in the trios is legible.
+
+**Scope of this review** — the twelve supplied normal renders were inspected. The individual 1024 px PNGs and the transparent complete-subject silhouettes in the artifact were **not** inspected directly; their structure is covered by the automated border/inclusion tests. This is a visual judgement of the supplied sheet, not a golden-image or historical comparison.
+
+**Verdict: pass**, with the cup's mug-like proportion and the vase's bottle-like neck recorded as cosmetic character, not defects. No renderer fix is indicated by this sheet.
 
 ## Timing observations
 
@@ -90,7 +112,7 @@ Single samples from one CI run, not a latency distribution or a desktop guarante
 
 ## Pending gates and limits
 
-- **Visual review of the generated ceramic images is open.** Download the `procedural-preview` artifact from the PR or post-merge run and inspect `formloom-ceramic-sheet.png` plus the individual `formloom-ceramic-*.png` files.
+- The supplied review sheet passed inspection (see above). The individual full-resolution PNGs and silhouettes in the artifact remain available for a closer look if a later change touches ceramic rendering.
 - The arrangement remains a conservative slot layout. Prompts cannot express left/right/behind, and no manual placement, containment, stacking, liquid or flowers exist.
 - Same-runtime determinism only; no cross-driver or historical pixel-identity guarantee. The fruit-only pixel behaviour is preserved by leaving `FruitComposition` and the fruit draw path untouched, and the existing regression tests still pass.
 - No native Photino/WebView2 dialog, window-lifecycle, resize or accessibility behaviour is tested; desktop coverage is headless.
