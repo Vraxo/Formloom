@@ -57,23 +57,19 @@ jobs:
       - name: Test
         run: dotnet test --solution Formloom.slnx --configuration Release --no-build --no-restore --report-trx --results-directory TestResults
 
-      - name: Report failing tests as annotations (temporary diagnostic)
-        if: failure()
+      - name: Report ceramic timing sidecars (temporary diagnostic)
+        if: always()
         run: |
           python3 - <<'PY'
           import glob
-          import xml.etree.ElementTree as ET
-          ns = {'t': 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}
-          for path in glob.glob('TestResults/**/*.trx', recursive=True):
-              root = ET.parse(path).getroot()
-              for result in root.iter('{http://microsoft.com/schemas/VisualStudio/TeamTest/2010}UnitTestResult'):
-                  if result.get('outcome') != 'Failed':
-                      continue
-                  message = result.find('.//t:Message', ns)
-                  text = ' '.join((message.text or '').split())[:700] if message is not None else 'no message'
-                  stack = result.find('.//t:StackTrace', ns)
-                  where = ' '.join((stack.text or '').split())[:300] if stack is not None else ''
-                  print(f"::error title={result.get('testName')}::{text} || {where}")
+          import json
+          for path in sorted(glob.glob('artifacts/bin/Formloom.Tests/**/formloom-ceramic-*.timing.json', recursive=True)):
+              with open(path, encoding='utf-8') as handle:
+                  report = json.load(handle)
+              name = path.rsplit('/', 1)[-1].replace('.timing.json', '')
+              print(f"::notice title={name}::{report['RenderAndEncodeMilliseconds']:.2f} ms for {report['Count']} objects at {report['rendered']['Width']}x{report['rendered']['Height']}")
+          for path in sorted(glob.glob('artifacts/bin/Formloom.Tests/**/formloom-ceramic-*.png', recursive=True)):
+              print(f"::notice title=artifact::{path.rsplit('/', 1)[-1]}")
           PY
 
       - name: Upload test results
