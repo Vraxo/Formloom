@@ -152,6 +152,44 @@ public sealed class VaseFlowerRenderingTests
     }
 
     [Theory]
+    [MemberData(nameof(ExportCases))]
+    public void TheStemEntersTheOpeningContinuouslyAndReachesTheNearLip(string prompt, string name, string color, string glaze, int seed, double variation)
+    {
+        var scene = Scene(prompt, (ulong)seed, variation);
+        var flower = scene.VaseFlower!;
+        using var planted = Decode(StillLifeRenderer.Render(scene).PngBytes);
+        using var empty = Decode(StillLifeRenderer.Render(EmptyVase(scene)).PngBytes);
+        var x = (int)MathF.Round(flower.Plant.StemBase.X * Canvas);
+        var rim = (int)MathF.Round((float)flower.MouthTop * Canvas);
+        var bottom = (flower.OpeningCenter.Y + flower.OpeningRadius.Y) * Canvas;
+        var lipInner = (int)MathF.Round(bottom) - RimBand;
+
+        // No light band across the stem where it crosses the mouth: the far rim is painted
+        // behind it, so the brightness carries on instead of stepping to the rim's colour.
+        var above = Brightest(planted, x, rim - 6);
+        for (var y = rim - 4; y <= rim + 4; y++)
+        {
+            var here = Brightest(planted, x, y);
+            Assert.True(
+                Math.Abs(here - above) < 45,
+                $"{name} shows a seam at the rim on row {y}: {above} beside {here}");
+        }
+
+        // The stem does not stop in the opening: every row from just under the tangent down to
+        // the near lip still differs from the same empty vase.
+        for (var y = rim + 2; y <= lipInner; y++)
+        {
+            var covered = false;
+            for (var column = x - 2; column <= x + 2; column++)
+            {
+                covered |= Delta(planted.GetPixel(column, y), empty.GetPixel(column, y)) > 0;
+            }
+
+            Assert.True(covered, $"{name} lost the stem inside the opening on row {y}");
+        }
+    }
+
+    [Theory]
     [MemberData(nameof(Dimensions))]
     public void FlowersRenderAtOtherSupportedDimensions(int width, int height)
     {
@@ -538,6 +576,20 @@ public sealed class VaseFlowerRenderingTests
 
     // Whether a canvas pixel lies inside the vase's opening, with the radii grown by a pixel or
     // two so the antialiased edge of the stem's recessed continuation is not read as a leak.
+    // The brightest of the three pixels around a column: the stem is a thin antialiased
+    // stroke, so a single sample can land on its edge.
+    private static int Brightest(SKBitmap image, int x, int y)
+    {
+        var best = 0;
+        for (var column = x - 1; column <= x + 1; column++)
+        {
+            var pixel = image.GetPixel(column, y);
+            best = Math.Max(best, (pixel.Red + pixel.Green + pixel.Blue) / 3);
+        }
+
+        return best;
+    }
+
     private static bool InsideOpening(VaseFlower flower, int x, int y, float grow)
     {
         var radiusX = (flower.OpeningRadius.X * Canvas) + grow;
