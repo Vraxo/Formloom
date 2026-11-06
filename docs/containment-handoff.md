@@ -93,6 +93,11 @@ Unsupported containment prompts are rejected as a whole: `Generate` returns an e
 
 The existing `procedural-preview` artifact was extended (no new artifact or workflow):
 
+> **Since the export-artifact trim**, the per-case files listed below are written only when
+> `FORMFLOOM_EXPORT_ALL=1`; a routine run keeps the review sheet, its manifest and one canonical
+> image per family. See the [Phase 7 handoff](vase-flower-handoff.md#artifacts) for the current
+> artifact contents.
+
 - `formloom-containment-{name}-seed-{seed}-variation-{v}.png` — full-resolution 1024 × 1024 renders, six default combinations plus an alternate seed for apple and pear and the variation 0 / 1 ends.
 - `…-silhouette.png` for every exported case.
 - `….timing.json` sidecars with prompt, subject token, containment fit numbers, seed, variation, framework/OS and render-plus-encode time.

@@ -11,6 +11,8 @@ public sealed class BowlContainmentRenderingTests
 {
     private const int Canvas = 1024;
 
+    private const string CanonicalStem = "formloom-containment-apple-blue-seed-42-variation-0.35";
+
     private static readonly string[] Fruits =
     [
         "a red apple",
@@ -383,8 +385,13 @@ public sealed class BowlContainmentRenderingTests
         timer.Stop();
         var stem = FormattableString.Invariant($"formloom-containment-{name}-seed-{seed}-variation-{variation:0.00}");
         var directory = AppContext.BaseDirectory;
-        File.WriteAllBytes(Path.Combine(directory, stem + ".png"), rendered.PngBytes);
-        File.WriteAllBytes(Path.Combine(directory, stem + "-silhouette.png"), StillLifeRenderer.RenderSilhouette(scene).PngBytes);
+        var keep = ExportArtifacts.Keeps(stem, CanonicalStem);
+        if (keep)
+        {
+            File.WriteAllBytes(Path.Combine(directory, stem + ".png"), rendered.PngBytes);
+            File.WriteAllBytes(Path.Combine(directory, stem + "-silhouette.png"), StillLifeRenderer.RenderSilhouette(scene).PngBytes);
+        }
+
         var containment = scene.Containment!;
         var report = System.Text.Json.JsonSerializer.Serialize(
             new
@@ -412,8 +419,11 @@ public sealed class BowlContainmentRenderingTests
                 Objects = scene.Objects,
             },
             new System.Text.Json.JsonSerializerOptions { IncludeFields = true });
-        File.WriteAllText(Path.Combine(directory, stem + ".timing.json"), report);
-        Assert.True(File.Exists(Path.Combine(directory, stem + ".png")));
+        if (keep)
+        {
+            File.WriteAllText(Path.Combine(directory, stem + ".timing.json"), report);
+            Assert.True(File.Exists(Path.Combine(directory, stem + ".png")));
+        }
     }
 
     [Fact]

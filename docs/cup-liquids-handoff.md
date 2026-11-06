@@ -123,6 +123,11 @@ All four are whitelisted in `PngSaveService.KnownSubjects`; anything else still 
 
 The existing `procedural-preview` upload gains, beside the per-case files:
 
+> **Since the export-artifact trim**, those per-case files are written only when
+> `FORMFLOOM_EXPORT_ALL=1`; a routine run keeps the review sheet, its manifest and one canonical
+> image per family. See the [Phase 7 handoff](vase-flower-handoff.md#artifacts) for the current
+> artifact contents.
+
 - `formloom-cupliquid-<name>-seed-<seed>-variation-<v:0.00>.png` — eight cases: the four defaults, an alternate seed per beverage (1337, 20261105) and the two variation extremes (0 and 1);
 - `…-silhouette.png` for each case, asserted equal to the same empty cup's silhouette;
 - `….timing.json` — prompt, subject, cup contents and surface geometry, dimensions, framework, seed, variation, and `RenderAndEncodeMilliseconds` **plus the equivalent empty-cup timing** and the difference;

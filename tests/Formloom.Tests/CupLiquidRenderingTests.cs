@@ -10,6 +10,8 @@ public sealed class CupLiquidRenderingTests
 {
     private const int Canvas = 1024;
 
+    private const string CanonicalStem = "formloom-cupliquid-coffee-blue-seed-42-variation-0.35";
+
     // Default set plus an alternate seed per beverage and the low/high variation ends.
     private static readonly (string Prompt, string Name, int Seed, double Variation)[] Exports =
     [
@@ -405,12 +407,16 @@ public sealed class CupLiquidRenderingTests
 
         var stem = FormattableString.Invariant($"formloom-cupliquid-{name}-seed-{seed}-variation-{variation:0.00}");
         var directory = AppContext.BaseDirectory;
-        File.WriteAllBytes(Path.Combine(directory, stem + ".png"), rendered.PngBytes);
+        var keep = ExportArtifacts.Keeps(stem, CanonicalStem);
         var silhouette = StillLifeRenderer.RenderSilhouette(scene);
-        File.WriteAllBytes(Path.Combine(directory, stem + "-silhouette.png"), silhouette.PngBytes);
 
         // The filled cup silhouettes exactly as the same empty cup.
-        Assert.Equal(File.ReadAllBytes(Path.Combine(directory, stem + "-silhouette.png")), StillLifeRenderer.RenderSilhouette(empty).PngBytes);
+        Assert.Equal(silhouette.PngBytes, StillLifeRenderer.RenderSilhouette(empty).PngBytes);
+        if (keep)
+        {
+            File.WriteAllBytes(Path.Combine(directory, stem + ".png"), rendered.PngBytes);
+            File.WriteAllBytes(Path.Combine(directory, stem + "-silhouette.png"), silhouette.PngBytes);
+        }
 
         var contents = scene.CupContents!;
         var report = System.Text.Json.JsonSerializer.Serialize(
@@ -445,8 +451,11 @@ public sealed class CupLiquidRenderingTests
                 EmptyCupBytes = emptyRendered.PngBytes.Length,
             },
             new System.Text.Json.JsonSerializerOptions { IncludeFields = true });
-        File.WriteAllText(Path.Combine(directory, stem + ".timing.json"), report);
-        Assert.True(File.Exists(Path.Combine(directory, stem + ".png")));
+        if (keep)
+        {
+            File.WriteAllText(Path.Combine(directory, stem + ".timing.json"), report);
+            Assert.True(File.Exists(Path.Combine(directory, stem + ".png")));
+        }
     }
 
     [Fact]

@@ -8,6 +8,8 @@ namespace Formloom.Tests;
 
 public sealed class CompositionRenderingTests
 {
+    private const string CanonicalStem = "formloom-group-apple-pear-seed-42-variation-0.35";
+
     [Theory]
     [InlineData("a red apple and a green pear on a wooden table")]
     [InlineData("a green pear and an orange on a wooden table")]
@@ -138,7 +140,12 @@ public sealed class CompositionRenderingTests
         var rendered = StillLifeRenderer.Render(scene);
         timer.Stop();
         var stem = FormattableString.Invariant($"formloom-group-{name}-seed-{seed}-variation-{variation:0.00}");
-        File.WriteAllBytes(Path.Combine(AppContext.BaseDirectory, stem + ".png"), rendered.PngBytes);
+        var keep = ExportArtifacts.Keeps(stem, CanonicalStem);
+        if (keep)
+        {
+            File.WriteAllBytes(Path.Combine(AppContext.BaseDirectory, stem + ".png"), rendered.PngBytes);
+        }
+
         var report = System.Text.Json.JsonSerializer.Serialize(
             new
             {
@@ -155,8 +162,11 @@ public sealed class CompositionRenderingTests
                 Placements = scene.Fruits,
             },
             new System.Text.Json.JsonSerializerOptions { IncludeFields = true });
-        File.WriteAllText(Path.Combine(AppContext.BaseDirectory, stem + ".timing.json"), report);
-        File.WriteAllBytes(Path.Combine(AppContext.BaseDirectory, stem + "-silhouette.png"), StillLifeRenderer.RenderSilhouette(scene).PngBytes);
+        if (keep)
+        {
+            File.WriteAllText(Path.Combine(AppContext.BaseDirectory, stem + ".timing.json"), report);
+            File.WriteAllBytes(Path.Combine(AppContext.BaseDirectory, stem + "-silhouette.png"), StillLifeRenderer.RenderSilhouette(scene).PngBytes);
+        }
     }
 
     private static StillLifeScene ForFruit(StillLifeScene scene, FruitInstance fruit) => scene with
