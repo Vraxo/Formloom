@@ -98,12 +98,15 @@ public static class StillLifeRenderer
         var beverage = scene.CupContents is { } contents && contents.Cup == ceramic
             ? contents.Beverage
             : (BeverageKind?)null;
-        if (scene.VaseFlower is { } flower && flower.Vase == ceramic && !shadowsOnly && !skipBody)
+        var flower = scene.VaseFlower is { } planted && planted.Vase == ceramic && !shadowsOnly && !skipBody
+            ? planted
+            : null;
+        if (flower is not null)
         {
             DrawVaseFlower(canvas, scene, flower, silhouette, entry.Depth == omittedDetailDepth);
         }
 
-        DrawCeramic(canvas, scene, ceramic, silhouette, skipShadows, shadowsOnly, skipBody, entry.Depth == omittedDetailDepth, beverage);
+        DrawCeramic(canvas, scene, ceramic, silhouette, skipShadows, shadowsOnly, skipBody, entry.Depth == omittedDetailDepth, beverage, flower);
     }
 
     private static StillLifeScene ForInstance(StillLifeScene scene, FruitInstance fruit, int? omittedDetailDepth = null) => scene with
@@ -263,7 +266,8 @@ public static class StillLifeRenderer
         bool shadowsOnly,
         bool skipBody,
         bool omitDetail,
-        BeverageKind? beverage = null)
+        BeverageKind? beverage = null,
+        VaseFlower? flower = null)
     {
         var profile = CeramicForms.For(ceramic.Kind);
         var body = ceramic.Body;
@@ -339,7 +343,7 @@ public static class StillLifeRenderer
         canvas.ClipPath(outline);
         DrawGlazeMottle(canvas, ceramic, material);
         var accents = !omitDetail && scene.SurfaceDetail > 0;
-        DrawMouth(canvas, scene, profile, material, paint, beverage, accents);
+        DrawMouth(canvas, scene, profile, material, paint, beverage, accents, flower, new(centerX, top), new(width, height));
 
         // The cup's finish sheen normally washes over the mouth as well. It is held off the
         // drink so the glaze can never recolour the beverage: the lip and body keep it, the
@@ -563,10 +567,9 @@ public static class StillLifeRenderer
     }
 
     // A tulip in a vase. The flower is drawn before the vase and clipped to the half-plane
-    // above the mouth's top edge, so the stem disappears behind the rim exactly where the
-    // vessel takes over and nothing can reach the exterior wall or the table. Because the
-    // vase is painted afterwards, every vase pixel below the rim is identical to the empty
-    // vase's, and the only intentional overlap is the rim band the stem passes behind.
+    // above the mouth's top edge, so nothing can reach the exterior wall or the table. The
+    // mouth's paint then picks the stem up inside the opening (see DrawStemInsideOpening),
+    // which is the only place the planted vase differs from the empty one below the rim.
     private static void DrawVaseFlower(
         SKCanvas canvas,
         StillLifeScene scene,
@@ -595,6 +598,36 @@ public static class StillLifeRenderer
             DrawTulipPetal(canvas, scene, petal, material, silhouette, omitDetail, paint);
         }
 
+        canvas.Restore();
+    }
+
+    // The stem's visible continuation inside the mouth. The flower pass stops at the mouth's
+    // top tangent, and this pass picks the stem up inside the opening: clipped to the opening
+    // ellipse, darkened so it reads as recessed, and painted under the rim strokes so the near
+    // lip covers where it ends.
+    private static void DrawStemInsideOpening(
+        SKCanvas canvas,
+        VaseFlower flower,
+        SKPaint paint,
+        System.Numerics.Vector2 origin,
+        System.Numerics.Vector2 size)
+    {
+        canvas.Save();
+        var toCanvasSpace = SKMatrix.CreateScaleTranslation(
+            size.X / 1024f,
+            size.Y / 1024f,
+            origin.X / 1024f,
+            origin.Y / 1024f);
+        canvas.Concat(ref toCanvasSpace);
+        using (var opening = CreateEllipsePath(flower.OpeningCenter, flower.OpeningRadius))
+        {
+            canvas.ClipPath(opening, antialias: true);
+        }
+
+        float[] recess = [0.74f, 0, 0, 0, 0, 0, 0.74f, 0, 0, 0, 0, 0, 0.74f, 0, 0, 0, 0, 0, 1, 0];
+        paint.ColorFilter = SKColorFilter.CreateColorMatrix(recess);
+        DrawTulipStem(canvas, flower.Plant, TulipMaterial.For(flower.Color), silhouette: false, paint: paint);
+        paint.ColorFilter = null;
         canvas.Restore();
     }
 
@@ -769,7 +802,10 @@ public static class StillLifeRenderer
         CeramicMaterial material,
         SKPaint paint,
         BeverageKind? beverage,
-        bool accents)
+        bool accents,
+        VaseFlower? flower,
+        System.Numerics.Vector2 origin,
+        System.Numerics.Vector2 size)
     {
         var center = profile.MouthCenter;
         var radius = profile.MouthRadius;
@@ -785,6 +821,15 @@ public static class StillLifeRenderer
         canvas.DrawOval(center.X, center.Y - (radius.Y * 0.28f), radius.X * 0.7f, radius.Y * 0.48f, paint);
         paint.Color = material.CavityColor.WithAlpha(215);
         canvas.DrawOval(center.X, center.Y + (profile.CavityDepth * 0.5f), radius.X * 0.54f, radius.Y * 0.5f, paint);
+
+        // A planted stem continues into the opening here, after the cavity base and before the
+        // rim strokes, so the near lip cuts it and it reads as descending into the vase instead
+        // of stopping behind the far lip. It is clipped to the opening itself, so it still
+        // cannot reach the exterior wall.
+        if (flower is not null)
+        {
+            DrawStemInsideOpening(canvas, flower, paint, origin, size);
+        }
 
         // The drink goes after the cavity base and before the final rim and lip strokes, so
         // the ceramic edge always reads as being in front of the liquid.

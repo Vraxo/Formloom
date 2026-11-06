@@ -68,6 +68,7 @@ public sealed class VaseFlowerRenderingTests
         var rim = (int)MathF.Ceiling(flower.MouthTop * Canvas);
         var changed = 0;
         var belowTheRim = 0;
+        var insideTheOpening = 0;
         for (var y = 0; y < Canvas; y++)
         {
             for (var x = 0; x < Canvas; x++)
@@ -78,17 +79,26 @@ public sealed class VaseFlowerRenderingTests
                 }
 
                 changed++;
-                if (y > rim + RimBand)
+                if (y > rim)
                 {
-                    belowTheRim++;
+                    if (InsideOpening(flower, x, y, 2f))
+                    {
+                        insideTheOpening++;
+                    }
+                    else
+                    {
+                        belowTheRim++;
+                    }
                 }
             }
         }
 
-        // The flower is drawn, and the vase, the table and the background below the rim band
-        // are byte-identical to the same vase without a flower.
+        // The flower is drawn, the stem is visibly carried into the opening, and the vase, the
+        // table and the background below the rim are byte-identical to the same vase without a
+        // flower everywhere except the mouth's own opening.
         Assert.True(changed > 400, $"{name} drew almost nothing: {changed} changed pixels");
         Assert.Equal(0, belowTheRim);
+        Assert.True(insideTheOpening > 60, $"{name} never entered the opening: {insideTheOpening} pixels");
 
         // Everything the flower changed above the rim band lies inside its own measured
         // bounds: it cannot leak into the tabletop or the far background.
@@ -524,6 +534,17 @@ public sealed class VaseFlowerRenderingTests
     {
         var basePoint = flower.Plant.StemBase;
         return new(basePoint.X - 0.018f, flower.MouthTop - 0.034f, basePoint.X + 0.018f, flower.MouthTop - 0.014f);
+    }
+
+    // Whether a canvas pixel lies inside the vase's opening, with the radii grown by a pixel or
+    // two so the antialiased edge of the stem's recessed continuation is not read as a leak.
+    private static bool InsideOpening(VaseFlower flower, int x, int y, float grow)
+    {
+        var radiusX = (flower.OpeningRadius.X * Canvas) + grow;
+        var radiusY = (flower.OpeningRadius.Y * Canvas) + grow;
+        var dx = (x + 0.5f) - (flower.OpeningCenter.X * Canvas);
+        var dy = (y + 0.5f) - (flower.OpeningCenter.Y * Canvas);
+        return ((dx * dx) / (radiusX * radiusX)) + ((dy * dy) / (radiusY * radiusY)) <= 1f;
     }
 
     private static Window BoundsWindow(TulipPlant plant, int grow)
