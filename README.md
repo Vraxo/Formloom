@@ -18,11 +18,13 @@ The initial apple-only slice passed Linux Release CI through PR #10 and was conf
 
 ## Layout
 
-- `Formloom.Core`: immutable scene types, validation, prompt parsing, PCG32, stable UTF-8 FNV-1a named random streams and scene construction. Scenes hold one to three typed items — `FruitInstance` (apple/pear/orange) and `CeramicInstance` (bowl/cup/vase with a blue or cream glaze) — exposed together through the closed `SceneEntry` projection, plus normalized vessel profiles, attachment-aware bounds and deterministic layout (`FruitComposition` for fruit-only scenes, `MixedComposition` when a vessel is present) plus the single explicit containment value `BowlContainment` (bowl + content). No rendering or UI dependency.
-- `Formloom.Rendering.Skia`: disposable CPU raster resources, procedural setting/table, fruit bodies with stems/leaves/calyx, ceramic bodies with rims, cavities and cup handles, shared shading, shadows and PNG encoding. Contained scenes draw the bowl in full, then the content clipped against the bowl's near-wall band, so the vessel stays pixel-identical to a standalone bowl. Returns dimensions, PNG bytes and a whitelisted subject token.
-- `Formloom.Desktop`: PhotinoX.Blazor executable, UI, generation orchestration and native PNG save service.
-- `Formloom.Desktop.Tests`: headless interaction/session, generation-service and PNG writer tests; references Desktop without starting the native window.
-- `Formloom.Tests`: Core and renderer tests, including PCG reference values, independent streams, PNG decoding/sizes, rendered-pixel repeatability and seed differences. Does not reference or launch Desktop.
+Source projects live under `src/`, test projects under `tests/`; the repository root keeps only the solution and shared configuration.
+
+- `src/Formloom.Core`: immutable scene types, validation, prompt parsing, PCG32, stable UTF-8 FNV-1a named random streams and scene construction. Scenes hold one to three typed items — `FruitInstance` (apple/pear/orange) and `CeramicInstance` (bowl/cup/vase with a blue or cream glaze) — exposed together through the closed `SceneEntry` projection, plus normalized vessel profiles, attachment-aware bounds and deterministic layout (`FruitComposition` for fruit-only scenes, `MixedComposition` when a vessel is present) plus the single explicit containment value `BowlContainment` (bowl + content). No rendering or UI dependency.
+- `src/Formloom.Rendering.Skia`: disposable CPU raster resources, procedural setting/table, fruit bodies with stems/leaves/calyx, ceramic bodies with rims, cavities and cup handles, shared shading, shadows and PNG encoding. Contained scenes draw the bowl in full, then the content clipped against the bowl's near-wall band, so the vessel stays pixel-identical to a standalone bowl. Returns dimensions, PNG bytes and a whitelisted subject token.
+- `src/Formloom.Desktop`: PhotinoX.Blazor executable, UI, generation orchestration and native PNG save service.
+- `tests/Formloom.Desktop.Tests`: headless interaction/session, generation-service and PNG writer tests; references Desktop without starting the native window.
+- `tests/Formloom.Tests`: Core and renderer tests, including PCG reference values, independent streams, PNG decoding/sizes, rendered-pixel repeatability and seed differences. Does not reference or launch Desktop.
 - `Formloom.slnx`, `Directory.Build.props`, `Directory.Packages.props`, `.editorconfig`, `global.json`: solution and shared configuration.
 - [`.agents/todo.md`](.agents/todo.md): implementation plan and outstanding acceptance criteria.
 
@@ -37,7 +39,7 @@ dotnet restore Formloom.slnx
 dotnet build Formloom.slnx --configuration Debug --no-restore
 dotnet build Formloom.slnx --configuration Release --no-restore
 dotnet test --solution Formloom.slnx --configuration Release --no-build --report-trx --results-directory TestResults
-dotnet run --project Formloom.Desktop/Formloom.Desktop.csproj --configuration Release
+dotnet run --project src/Formloom.Desktop/Formloom.Desktop.csproj --configuration Release
 ```
 
 The native window is titled **Formloom** and starts at 1400 × 900. Startup uses the upstream PhotinoX.Blazor 5.3.5 API with an STA entry point and explicit application disposal. The package exposes the `Photino.Blazor` namespace but is **PhotinoX.Blazor**, not the original package. Static content is copied for build/publish and resolved from the executable directory.

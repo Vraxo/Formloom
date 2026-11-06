@@ -6,7 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <ProjectReference Include="../Formloom.Desktop/Formloom.Desktop.csproj" />
+    <ProjectReference Include="../../src/Formloom.Desktop/Formloom.Desktop.csproj" />
     <PackageReference Include="bunit" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
