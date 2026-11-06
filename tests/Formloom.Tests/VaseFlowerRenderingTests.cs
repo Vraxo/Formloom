@@ -152,6 +152,37 @@ public sealed class VaseFlowerRenderingTests
     }
 
     [Theory]
+    [MemberData(nameof(ExportCases))]
+    public void TheStemEntersTheOpeningContinuouslyAndReachesTheNearLip(string prompt, string name, string color, string glaze, int seed, double variation)
+    {
+        var scene = Scene(prompt, (ulong)seed, variation);
+        var flower = scene.VaseFlower!;
+        var image = StillLifeRenderer.Render(scene);
+        Assert.Equal($"{color}-tulip-in-{glaze}-vase", image.Subject);
+        using var planted = Decode(image.PngBytes);
+        using var empty = Decode(StillLifeRenderer.Render(EmptyVase(scene)).PngBytes);
+        var rim = (int)MathF.Round((float)flower.MouthTop * Canvas);
+        var bottom = (flower.OpeningCenter.Y + flower.OpeningRadius.Y) * Canvas;
+        var lipInner = (int)MathF.Round(bottom) - RimBand;
+
+        // The stem covers the rim band and the opening on every row from just above the tangent
+        // down to the near lip, so the planted render differs from the same empty vase at the
+        // stem's own column all the way. A rim stroke painted over the stem leaves a row that
+        // matches the empty vase, and so does a stroke that stops inside the opening.
+        for (var y = rim - 8; y <= lipInner; y++)
+        {
+            var centre = StemColumn(flower.Plant, y);
+            var covered = false;
+            for (var column = centre - 2; column <= centre + 2; column++)
+            {
+                covered |= Delta(planted.GetPixel(column, y), empty.GetPixel(column, y)) > 0;
+            }
+
+            Assert.True(covered, $"{name} lost the stem at the mouth on row {y}");
+        }
+    }
+
+    [Theory]
     [MemberData(nameof(Dimensions))]
     public void FlowersRenderAtOtherSupportedDimensions(int width, int height)
     {
@@ -538,6 +569,37 @@ public sealed class VaseFlowerRenderingTests
 
     // Whether a canvas pixel lies inside the vase's opening, with the radii grown by a pixel or
     // two so the antialiased edge of the stem's recessed continuation is not read as a leak.
+    // Where the stem's centre line sits on a row, in pixels. The stem is a cubic and leans
+    // with the seed and the variation, so the point is taken from the path itself.
+    private static int StemColumn(TulipPlant plant, int y)
+    {
+        var target = (y + 0.5f) / Canvas;
+        var best = float.MaxValue;
+        var bestX = plant.StemBase.X;
+        foreach (var segment in plant.Stem)
+        {
+            for (var step = 0; step <= 64; step++)
+            {
+                var t = step / 64f;
+                var u = 1 - t;
+                var a = u * u * u;
+                var b = 3 * u * u * t;
+                var c = 3 * u * t * t;
+                var d = t * t * t;
+                var x = (a * segment.Start.X) + (b * segment.Control1.X) + (c * segment.Control2.X) + (d * segment.End.X);
+                var pointY = (a * segment.Start.Y) + (b * segment.Control1.Y) + (c * segment.Control2.Y) + (d * segment.End.Y);
+                var distance = MathF.Abs(pointY - target);
+                if (distance < best)
+                {
+                    best = distance;
+                    bestX = x;
+                }
+            }
+        }
+
+        return (int)MathF.Round(bestX * Canvas);
+    }
+
     private static bool InsideOpening(VaseFlower flower, int x, int y, float grow)
     {
         var radiusX = (flower.OpeningRadius.X * Canvas) + grow;
