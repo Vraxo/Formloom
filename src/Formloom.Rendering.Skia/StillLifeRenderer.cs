@@ -343,7 +343,7 @@ public static class StillLifeRenderer
         canvas.ClipPath(outline);
         DrawGlazeMottle(canvas, ceramic, material);
         var accents = !omitDetail && scene.SurfaceDetail > 0;
-        DrawMouth(canvas, scene, profile, material, paint, beverage, accents, flower, new(centerX, top), new(width, height));
+        DrawMouth(canvas, scene, profile, material, paint, beverage, accents, flower);
 
         // The cup's finish sheen normally washes over the mouth as well. It is held off the
         // drink so the glaze can never recolour the beverage: the lip and body keep it, the
@@ -605,23 +605,15 @@ public static class StillLifeRenderer
     // top tangent, and this pass picks the stem up inside the opening: clipped to the opening
     // ellipse, darkened so it reads as recessed, and painted under the rim strokes so the near
     // lip covers where it ends.
-    private static void DrawStemInsideOpening(
-        SKCanvas canvas,
-        VaseFlower flower,
-        SKPaint paint,
-        System.Numerics.Vector2 origin,
-        System.Numerics.Vector2 size)
+    private static void DrawStemInsideOpening(SKCanvas canvas, VaseFlower flower, SKPaint paint)
     {
         canvas.Save();
 
-        // The vase draws in its own 0..1 space while the flower path is in canvas 0..1 space,
-        // so this maps canvas-normalized points onto the vase's axes.
-        var toCanvasSpace = SKMatrix.CreateScaleTranslation(
-            1024f / size.X,
-            1024f / size.Y,
-            -origin.X / size.X,
-            -origin.Y / size.Y);
-        canvas.Concat(in toCanvasSpace);
+        // Step out of the vase's own 0..1 space and redraw in the canvas 0..1 space the flower
+        // pass uses, so the stem's width and direction carry over unchanged. The clip the vase
+        // already set is kept: clips live in device space, not in the matrix.
+        canvas.ResetMatrix();
+        canvas.Scale(1024, 1024);
         using (var opening = CreateEllipsePath(flower.OpeningCenter, flower.OpeningRadius))
         {
             canvas.ClipPath(opening, antialias: true);
@@ -806,9 +798,7 @@ public static class StillLifeRenderer
         SKPaint paint,
         BeverageKind? beverage,
         bool accents,
-        VaseFlower? flower,
-        System.Numerics.Vector2 origin,
-        System.Numerics.Vector2 size)
+        VaseFlower? flower)
     {
         var center = profile.MouthCenter;
         var radius = profile.MouthRadius;
@@ -831,7 +821,7 @@ public static class StillLifeRenderer
         // cannot reach the exterior wall.
         if (flower is not null)
         {
-            DrawStemInsideOpening(canvas, flower, paint, origin, size);
+            DrawStemInsideOpening(canvas, flower, paint);
         }
 
         // The drink goes after the cavity base and before the final rim and lip strokes, so
