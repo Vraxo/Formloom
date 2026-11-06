@@ -128,20 +128,23 @@ public sealed class VaseFlowerRenderingTests
         // pixels that actually carry the petal colour inside the bloom box.
         var warm = color == "red"
             ? Coloured(planted, BloomWindow(plant, 0), pixel => pixel.Red > pixel.Green + 45)
-            : Coloured(planted, BloomWindow(plant, 0), pixel => pixel.Red > 150 && pixel.Green > 110 && pixel.Blue < 90);
+            : Coloured(planted, BloomWindow(plant, 0), pixel => pixel.Red > 150 && pixel.Green > 110 && pixel.Blue < 90 && pixel.Red > pixel.Green);
         Assert.True(warm > 700, $"{name} does not read as {color}: {warm} petal pixels");
 
         // The bloom is never cut by the vase: no petal-coloured pixel sits below the mouth top.
-        // The scan stops at the table horizon, whose warm wood also passes a colour test.
+        // Both colour tests key on red dominance, because the stem and leaves below the rim are
+        // green: a bare "warm pixel" test also matches the stem's own light edge where it enters
+        // the mouth. The scan stops at the table horizon, whose wood is warm as well.
         var horizon = (int)MathF.Floor((float)scene.TableHorizon * Canvas);
         var belowMouth = 0;
         for (var y = rim; y < horizon; y++)
         {
             for (var x = 0; x < Canvas; x++)
             {
+                var pixel = planted.GetPixel(x, y);
                 if (color == "red"
-                        ? planted.GetPixel(x, y).Red > planted.GetPixel(x, y).Green + 45
-                        : planted.GetPixel(x, y).Red > 150 && planted.GetPixel(x, y).Green > 110 && planted.GetPixel(x, y).Blue < 90)
+                        ? pixel.Red > pixel.Green + 45
+                        : pixel.Red > 150 && pixel.Green > 110 && pixel.Blue < 90 && pixel.Red > pixel.Green)
                 {
                     belowMouth++;
                 }
