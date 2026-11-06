@@ -33,15 +33,25 @@ public static class SceneGenerator
             return GenerateContainment(containment, request);
         }
 
+        if (PromptParser.ParseCupContents(request.Prompt) is { } cupContents)
+        {
+            return GenerateCupContents(cupContents, request);
+        }
+
         var parsed = PromptParser.ParseObjects(request.Prompt);
         if (parsed is null)
         {
-            return new(null, "That prompt is not supported. Use one to three objects on a wooden table: a red/green/yellow apple, a green/yellow pear, an orange, or a blue/cream ceramic bowl, cup or vase. Join objects with 'and'; three-object lists may use commas. One fruit may also be placed inside a bowl: '<fruit> in a blue ceramic bowl on a wooden table'.");
+            return new(null, "That prompt is not supported. Use one to three objects on a wooden table: a red/green/yellow apple, a green/yellow pear, an orange, or a blue/cream ceramic bowl, cup or vase. Join objects with 'and'; three-object lists may use commas. One fruit may also be placed inside a bowl: '<fruit> in a blue ceramic bowl on a wooden table'. One cup may be filled with coffee or tea: 'a blue ceramic cup filled with coffee on a wooden table'.");
         }
 
-        var entries = ImmutableArray.CreateBuilder<SceneEntry>(parsed.Value.Length);
+        return GenerateObjects(parsed.Value, request);
+    }
+
+    private static GenerationResult GenerateObjects(ImmutableArray<ObjectPrompt> parsed, GenerationRequest request)
+    {
+        var entries = ImmutableArray.CreateBuilder<SceneEntry>(parsed.Length);
         var occurrences = new Dictionary<string, int>();
-        foreach (var description in parsed.Value)
+        foreach (var description in parsed)
         {
             occurrences.TryGetValue(description.Key, out var occurrence);
             occurrences[description.Key] = occurrence + 1;
@@ -132,6 +142,22 @@ public static class SceneGenerator
         };
         var error = SceneValidator.Validate(scene);
         return error is null ? new(scene, null) : new(null, error);
+    }
+
+    // A filled cup is built by the ordinary single-object path and then carries the drink as
+    // typed contents of that exact cup. The cup therefore keeps its body, glaze, seed, depth
+    // and handle, and the filled render can differ from the empty one only inside the mouth.
+    private static GenerationResult GenerateCupContents(CupContentsPrompt prompt, GenerationRequest request)
+    {
+        var empty = GenerateObjects([ObjectPrompt.FromCeramic(prompt.Cup)], request);
+        if (empty.Scene is not { } scene)
+        {
+            return empty;
+        }
+
+        var filled = scene with { CupContents = new CupContents(scene.Ceramics[0], prompt.Beverage) };
+        var error = SceneValidator.Validate(filled);
+        return error is null ? new(filled, null) : new(null, error);
     }
 
     private static ImmutableArray<SceneEntry> Arrange(ImmutableArray<SceneEntry> entries, GenerationRequest request)

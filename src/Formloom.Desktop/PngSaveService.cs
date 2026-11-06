@@ -15,6 +15,7 @@ internal sealed class PngSaveService(PngFileWriter writer, ILogger<PngSaveServic
         "apple-in-blue-bowl", "apple-in-cream-bowl",
         "pear-in-blue-bowl", "pear-in-cream-bowl",
         "orange-in-blue-bowl", "orange-in-cream-bowl",
+        "coffee-in-blue-cup", "coffee-in-cream-cup", "tea-in-blue-cup", "tea-in-cream-cup",
     ];
 
     private PhotinoWindow? window;

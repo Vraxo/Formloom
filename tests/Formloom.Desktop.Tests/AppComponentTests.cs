@@ -36,6 +36,7 @@ public sealed class AppComponentTests
         var help = component.Find("#prompt-help").TextContent;
         Assert.Contains("inside a bowl", help, StringComparison.Ordinal);
         Assert.Contains("in a blue ceramic bowl on a wooden table", help, StringComparison.Ordinal);
+        Assert.Contains("filled with coffee", help, StringComparison.Ordinal);
     }
 
     [Theory]
@@ -50,6 +51,8 @@ public sealed class AppComponentTests
     [InlineData("a red apple in a blue ceramic bowl on a wooden table")]
     [InlineData("a green pear in a cream ceramic bowl on a wooden table")]
     [InlineData("an orange in a blue ceramic bowl on a wooden table")]
+    [InlineData("a blue ceramic cup filled with coffee on a wooden table")]
+    [InlineData("a cream ceramic cup filled with tea on a wooden table")]
     public async Task InputEventsAndSubmitUseEditedValuesAndRenderPreview(string prompt)
     {
         await using var context = new BunitContext();

@@ -63,7 +63,67 @@ public static class SceneValidator
             }
         }
 
+        if (containment is not null && scene.CupContents is not null)
+        {
+            return "A scene cannot be both a filled cup and a fruit inside a bowl.";
+        }
+
+        if (scene.CupContents is { } contents)
+        {
+            return ValidateCupContents(objects, contents);
+        }
+
         return containment is null ? null : ValidateContainment(objects, containment);
+    }
+
+    // The drink is contents of the scene's one cup, so the cup must be exactly the ceramic
+    // instance the scene already holds and nothing else may sit in the scene.
+    private static string? ValidateCupContents(ImmutableArray<SceneEntry> objects, CupContents contents)
+    {
+        if (contents.Cup.Kind != CeramicKind.Cup)
+        {
+            return "Only a cup can hold a beverage.";
+        }
+
+        if (!Enum.IsDefined(contents.Beverage))
+        {
+            return "A cup can only hold coffee or tea.";
+        }
+
+        if (objects.Length != 1 || objects[0].Ceramic != contents.Cup)
+        {
+            return "A filled cup scene must contain exactly that cup and no other object.";
+        }
+
+        var profile = contents.Profile;
+        var surface = contents.Surface;
+        var mouth = profile.MouthCenter;
+        var radius = profile.MouthRadius;
+        if (!float.IsFinite(surface.Center.X) || !float.IsFinite(surface.Center.Y) ||
+            !float.IsFinite(surface.Radius.X) || !float.IsFinite(surface.Radius.Y) ||
+            !float.IsFinite(surface.ClipRadius.X) || !float.IsFinite(surface.ClipRadius.Y) ||
+            surface.Radius.X <= 0 || surface.Radius.Y <= 0 || surface.ClipRadius.X <= 0 || surface.ClipRadius.Y <= 0)
+        {
+            return "A liquid surface must have finite, positive bounds.";
+        }
+
+        var margin = profile.RimThickness;
+        if (surface.ClipRadius.X >= radius.X - (margin * 0.5f) || surface.ClipRadius.Y >= radius.Y - (margin * 0.5f))
+        {
+            return "A liquid surface must stay inside the inner mouth, clear of the rim.";
+        }
+
+        if (surface.Top <= (mouth.Y - radius.Y) + (margin * 0.5f))
+        {
+            return "A liquid surface must sit below the lip, leaving the far wall visible.";
+        }
+
+        if (surface.Bottom >= mouth.Y + radius.Y)
+        {
+            return "A liquid surface must stay inside the cup opening.";
+        }
+
+        return null;
     }
 
     private static string? ValidateContainment(ImmutableArray<SceneEntry> objects, BowlContainment containment)
