@@ -633,16 +633,18 @@ public static class StillLifeRenderer
         PaintContinuation();
         canvas.Restore();
 
-        // The opening narrows to a point exactly where the stem crosses the tangent, so the same
-        // stroke is painted again across the junction and the stem keeps its width there.
+        // The far rim is stroked before this pass, so the stem is repainted over its own column
+        // where the mouth narrows to a point. Otherwise the rim would leave a light band across
+        // the stem exactly where it enters. The column stops two pixels below the tangent, so
+        // nothing changes outside the opening's own ellipse beyond its antialiased edge.
         float reach = plant.StemThickness * 2.5f;
         canvas.Save();
         using (var junction = new SKPathBuilder())
         {
-            junction.MoveTo(plant.StemBase.X - reach, top - reach);
-            junction.LineTo(plant.StemBase.X + reach, top - reach);
-            junction.LineTo(plant.StemBase.X + reach, top + reach);
-            junction.LineTo(plant.StemBase.X - reach, top + reach);
+            junction.MoveTo(plant.StemBase.X - reach, top - 0.025f);
+            junction.LineTo(plant.StemBase.X + reach, top - 0.025f);
+            junction.LineTo(plant.StemBase.X + reach, top + 0.002f);
+            junction.LineTo(plant.StemBase.X - reach, top + 0.002f);
             junction.Close();
             using var junctionPath = junction.Detach();
             canvas.ClipPath(junctionPath, antialias: true);
