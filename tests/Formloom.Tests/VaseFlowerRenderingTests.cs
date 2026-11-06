@@ -161,28 +161,29 @@ public sealed class VaseFlowerRenderingTests
         Assert.Equal($"{color}-tulip-in-{glaze}-vase", image.Subject);
         using var planted = Decode(image.PngBytes);
         using var empty = Decode(StillLifeRenderer.Render(EmptyVase(scene)).PngBytes);
-        var x = (int)MathF.Round(flower.Plant.StemBase.X * Canvas);
         var rim = (int)MathF.Round((float)flower.MouthTop * Canvas);
         var bottom = (flower.OpeningCenter.Y + flower.OpeningRadius.Y) * Canvas;
         var lipInner = (int)MathF.Round(bottom) - RimBand;
 
         // No light band across the stem where it crosses the mouth: the far rim is painted
         // behind it, so the brightness carries on instead of stepping to the rim's colour.
-        var above = Brightest(planted, x, rim - 6);
+        var above = Brightest(planted, StemColumn(flower.Plant, rim - 6), rim - 6);
         for (var y = rim - 4; y <= rim + 4; y++)
         {
-            var here = Brightest(planted, x, y);
+            var here = Brightest(planted, StemColumn(flower.Plant, y), y);
             Assert.True(
                 Math.Abs(here - above) < 45,
                 $"{name} shows a seam at the rim on row {y}: {above} beside {here}");
         }
 
         // The stem does not stop in the opening: every row from just under the tangent down to
-        // the near lip still differs from the same empty vase.
+        // the near lip still differs from the same empty vase. The stem leans with the seed and
+        // the variation, so the column is taken from its own centre line on each row.
         for (var y = rim + 2; y <= lipInner; y++)
         {
+            var centre = StemColumn(flower.Plant, y);
             var covered = false;
-            for (var column = x - 2; column <= x + 2; column++)
+            for (var column = centre - 3; column <= centre + 3; column++)
             {
                 covered |= Delta(planted.GetPixel(column, y), empty.GetPixel(column, y)) > 0;
             }
@@ -578,6 +579,17 @@ public sealed class VaseFlowerRenderingTests
 
     // Whether a canvas pixel lies inside the vase's opening, with the radii grown by a pixel or
     // two so the antialiased edge of the stem's recessed continuation is not read as a leak.
+    // Where the stem's centre line sits on a row, in pixels: the stroke runs between its typed
+    // top and base, and leaning with the seed moves it by a few pixels across the opening.
+    private static int StemColumn(TulipPlant plant, int y)
+    {
+        var from = plant.StemTop;
+        var to = plant.StemBase;
+        var normalized = (y + 0.5f) / Canvas;
+        var along = (normalized - from.Y) / (to.Y - from.Y);
+        return (int)MathF.Round((from.X + (along * (to.X - from.X))) * Canvas);
+    }
+
     // The brightest of the three pixels around a column: the stem is a thin antialiased
     // stroke, so a single sample can land on its edge.
     private static int Brightest(SKBitmap image, int x, int y)

@@ -696,10 +696,12 @@ public static class StillLifeRenderer
     }
 
     // The only hard edge the flower has is the mouth's own top tangent, taken from the vase
-    // profile: a profile-aware half-plane, not a screen-space rectangle around the bloom.
+    // profile: a profile-aware half-plane, not a screen-space rectangle around the bloom. It
+    // reaches two pixels into the opening so that it overlaps the vase's own stem pass instead
+    // of meeting it edge to edge, which would leave a one-row seam across the stem.
     private static SKPath CreateFlowerClip(VaseFlower flower)
     {
-        var top = flower.MouthTop;
+        var top = flower.MouthTop + 0.002f;
         using var builder = new SKPathBuilder();
         builder.MoveTo(0, top);
         builder.LineTo(1, top);
