@@ -9,8 +9,9 @@ PNG/save path.
   [`cup-liquids-handoff.md`](cup-liquids-handoff.md) and [`.agents/todo-6.md`](../.agents/todo-6.md).
 - **Checklist:** [`.agents/todo-7.md`](../.agents/todo-7.md).
 - **Status:** implementation, tests and documentation complete and merged (`8aa2d9e`, PR #37,
-  post-merge run `42182664887` green); **the human visual-review gate is still open** — see
-  [Visual review](#visual-review).
+  post-merge run `42182664887` green); **visual review recorded as passed** — see
+  [Visual review](#visual-review). One clerical item stays open: the 1024 × 1024 filled-versus-empty
+  timing comparison, whose numbers live only in the artifact's sidecars.
 
 ## What ships
 
@@ -228,20 +229,53 @@ per render, with no extra surface, blur or full-canvas pass.
 
 ## Visual review
 
-**Pending.** No pixel of the planted flower has been inspected by eye in this environment;
-producing the artifact is not a review. The sheet and the individual 1024 × 1024 PNGs are in
-`procedural-preview`; the gate is the review items in `.agents/todo-7.md` §7, namely:
-the bloom reads as a tulip (cupped, petal-shaped, not a daisy, star, blob, rose or fruit);
-the stem enters the vase naturally and is hidden in the right places; exactly two leaves are
-visible, attached and balanced; both tulip colours are legible on both glazes; alternate
-seeds and the variation extremes show no broken petals, malformed leaves, excessive bend,
-clipping or edge collisions; the vase's rim, mouth, body, glaze, foot and grounding show no
-regression; and the flower's materials are restrained and coherent with the still-life
-lighting rather than neon, plastic or cartoon-like.
+**Recorded as passed.** The review was done by eye on the artifact of run
+[42182285484](https://github.com/Vraxo/Formloom/actions/runs/42182285484) —
+`formloom-vaseflower-sheet.png` (1280 × 640, eight 320 px cells, row-major) read against
+`formloom-vaseflower-sheet.timing.json`, first as the whole sheet and then as 5× crops of five
+cells covering all four combinations plus both extremes: cell 0 (red/blue, seed 42), cell 1
+(red/cream, seed 42), cell 3 (yellow/cream, seed 42), cell 4 (red/blue, seed 1337) and cell 7
+(yellow/blue, variation 1.0).
 
-To close it: review `formloom-vaseflower-sheet.png` (8 cells, 1280 × 640, row-major; use
-`formloom-vaseflower-sheet.timing.json` to map a cell) plus, where a cell looks uncertain,
-the matching 1024 × 1024 PNG.
+The ten §7 review items:
+
+1. **Reads as a tulip.** Five cupped, overlapping lobes with vertical seams and a pointed tip.
+   No daisy rays, star points, rose spiral, bell ornament or fruit silhouette in any cell.
+2. **Cupped and petal-shaped.** The lobes curve inward around a recessed centre, the outer two
+   flanking the inner three; no heavy outlines and no cartoon stripes.
+3. **The stem enters the vase naturally.** In all four combinations the stem rises out of the
+   mouth and stops at the mouth's near edge, where the dark cavity covers it, and no stem pixel
+   appears against the outer ceramic wall.
+4. **Exactly two leaves**, one either side of the stem at different heights, both attached, both
+   clear of the bloom and of the rim.
+5. **Both colours on both glazes.** One consistent red and one consistent yellow, identical
+   greens across all four prompts, and the cream and blue glazes leave every flower pixel alone;
+   the mouth cavity still takes the glaze's own colour, as it did before this milestone.
+6. **Alternate seed and variation extremes.** Seed 1337 gives a narrower, slightly longer bud
+   with a different lean; variation 0 is the settled default; variation 1.0 leans the flower
+   left of the mouth's centre with the bud intact. No broken petals, no malformed leaves, no
+   excessive bend, no clipping, nothing at a canvas edge.
+7. **No vase regression.** Rim, mouth, body, glaze, foot, tabletop and the contact shadow are
+   the empty vase unchanged.
+8. **Restrained materials.** Matte petals with a darker inner tone, greens consistent with the
+   rest of the still life; nothing neon, plastic, metallic or glowing.
+
+Observed and deliberately kept, not defects:
+
+- The flower is compact by construction — 86 % of the roughly 15 % of canvas height that the
+  rim leaves free — so the bloom is about a tenth of the canvas height. At 320 px sheet cells
+  the leaves are only a few pixels and read as green flecks until zoomed; at 1024 they are
+  unmistakably leaves.
+- The bloom is a closed bud. It never opens into an open cup, which is what "cupped and
+  petal-shaped" asked for, but a later milestone that wants an open flower cannot get one by
+  turning the variation up.
+- The stem's clip at the mouth's top tangent means nothing is drawn *inside* the cavity: the
+  entry reads as natural, but a reviewer looking for a stub down the hole will not find one.
+
+Still open, and clerical rather than visual: the 1024 × 1024 render-plus-encode time against the
+equivalent empty vase. The sheet manifest carries only the 320 px cell timings (30.9–32.7 ms
+across the eight cells); the full-size figures are in the eight `formloom-vaseflower-*.timing.json`
+sidecars, whose artifact bytes are not reachable from this environment.
 
 ## Known limitations
 
