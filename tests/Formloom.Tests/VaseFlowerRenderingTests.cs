@@ -157,7 +157,9 @@ public sealed class VaseFlowerRenderingTests
     {
         var scene = Scene(prompt, (ulong)seed, variation);
         var flower = scene.VaseFlower!;
-        using var planted = Decode(StillLifeRenderer.Render(scene).PngBytes);
+        var image = StillLifeRenderer.Render(scene);
+        Assert.Equal($"{color}-tulip-in-{glaze}-vase", image.Subject);
+        using var planted = Decode(image.PngBytes);
         using var empty = Decode(StillLifeRenderer.Render(EmptyVase(scene)).PngBytes);
         var x = (int)MathF.Round(flower.Plant.StemBase.X * Canvas);
         var rim = (int)MathF.Round((float)flower.MouthTop * Canvas);
