@@ -194,7 +194,7 @@ mentions the tulip.
 
 ## Artifacts
 
-`procedural-preview` (run [42181427645](https://github.com/Vraxo/Formloom/actions/runs/42181427645),
+`procedural-preview` (run [42182285484](https://github.com/Vraxo/Formloom/actions/runs/42182285484),
 16.3 MB) gains, beside the per-case files:
 
 - `formloom-vaseflower-<name>-seed-<seed>-variation-<v:0.00>.png` — eight cases: the four
@@ -273,9 +273,14 @@ the matching 1024 × 1024 PNG.
 - PR: [#37](https://github.com/Vraxo/Formloom/pull/37).
 - First CI run on `9f81262`: [42181288364](https://github.com/Vraxo/Formloom/actions/runs/42181288364)
   — failed the warnings-as-errors build on three analyzer findings (SA1203 for a constant
-  field's position and SA1407 for undeclared arithmetic precedence), no test was reached.
+  field's position and SA1407 for undeclared arithmetic precedence); no test was reached.
 - Second run on `f10fced`: [42181427645](https://github.com/Vraxo/Formloom/actions/runs/42181427645)
   — success: restore, Release build with warnings as errors, both test projects,
-  `test-results-Release` and `procedural-preview` (16.3 MB, up 2.1 MB from Phase 6, i.e. the
-  eight new renders, their silhouettes and the sheet).
-- Merge commit and post-merge run: recorded below once the milestone is merged.
+  `test-results-Release` and `procedural-preview`.
+- Third run on `af206d0`: [42182087830](https://github.com/Vraxo/Formloom/actions/runs/42182087830)
+  — the test step failed on one of this milestone's own pixel scans, which counted the warm
+  tabletop as a yellow petal; the scan now stops at the table horizon.
+- Fourth run on `6281b7a`: [42182285484](https://github.com/Vraxo/Formloom/actions/runs/42182285484)
+  — success, all steps green, `procedural-preview` 16.3 MB (up 2.1 MB from Phase 6, i.e. the
+  eight new renders, their silhouettes and the sheet) and `test-results-Release` 108 KB.
+- Merge commit and post-merge run: recorded once the milestone is merged.
