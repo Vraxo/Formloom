@@ -81,8 +81,7 @@ public sealed class TemporaryStemDiagnostics
 
         if (failures.Length != 0)
         {
-            Console.WriteLine($"::error::diag{failures}");
-            Assert.Fail("temporary diagnostics");
+            Assert.Fail($"::error::diag{failures}");
             return;
         }
 
@@ -104,8 +103,7 @@ public sealed class TemporaryStemDiagnostics
             green += $" {y}:{best}";
         }
 
-        Console.WriteLine($"::error::diag ok rim{rim2}{green}");
-        Assert.Fail("temporary diagnostics");
+        Assert.Fail($"::error::diag ok rim{rim2}{green}");
     }
 
     private static bool Same(SKColor left, SKColor right) =>
