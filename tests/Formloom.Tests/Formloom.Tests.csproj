@@ -5,8 +5,8 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../Formloom.Core/Formloom.Core.csproj" />
-    <ProjectReference Include="../Formloom.Rendering.Skia/Formloom.Rendering.Skia.csproj" />
+    <ProjectReference Include="../../src/Formloom.Core/Formloom.Core.csproj" />
+    <ProjectReference Include="../../src/Formloom.Rendering.Skia/Formloom.Rendering.Skia.csproj" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
   </ItemGroup>

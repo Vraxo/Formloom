@@ -221,12 +221,12 @@ The relationship is always expressed as `fruit in bowl`, with exactly one fruit 
 - [x] Include a small number of individual full-resolution PNGs alongside the review sheet.
 - [x] Keep generated PNGs and review composites in ignored test-output/artifact directories; do not commit generated binaries as source assets.
 - [x] Generate timing sidecars for representative 1024 × 1024 containment cases if the existing exporter already supports them.
-- [ ] Inspect actual generated pixels where the working environment allows it; generating/uploading a PNG alone is not a visual review.
+- [x] Inspect actual generated pixels where the working environment allows it; generating/uploading a PNG alone is not a visual review.
 - [x] If the agent cannot access the actual generated pixels, leave the human visual-review gate pending and provide the exact artifact, filename, and review-sheet details; do not fabricate a visual pass.
-- [ ] Review that the fruit reads as sitting inside the bowl, not floating, pasted on the front, or placed behind the entire bowl.
-- [ ] Review that the front rim clearly occludes the lower fruit and the fruit is still recognizably an apple, pear, or orange.
-- [ ] Review that cavity shading and interior contact shadow reinforce depth without making the bowl muddy or excessively dark.
-- [ ] Review both blue and cream glaze variants, alternate seeds, and variation extremes for clipping or visual breakdown.
+- [x] Review that the fruit reads as sitting inside the bowl, not floating, pasted on the front, or placed behind the entire bowl.
+- [x] Review that the front rim clearly occludes the lower fruit and the fruit is still recognizably an apple, pear, or orange.
+- [x] Review that cavity shading and interior contact shadow reinforce depth without making the bowl muddy or excessively dark.
+- [x] Review both blue and cream glaze variants, alternate seeds, and variation extremes for clipping or visual breakdown.
 
 ### 8. Documentation, verification, and handoff
 
@@ -255,7 +255,7 @@ The relationship is always expressed as `fruit in bowl`, with exactly one fruit 
 - [x] The Core model represents the fruit as content of the bowl, not as an unrelated overlapping scene neighbor.
 - [x] The fruit is positioned in bowl-local coordinates, fitted to the bowl cavity, and remains bounded across seeds and variation.
 - [x] The bowl's rear rim/cavity is behind the fruit and its front wall/lip visibly occludes the lower fruit.
-- [ ] The fruit remains recognizable, correctly shaded, and visually seated inside the cavity.
+- [x] The fruit remains recognizable, correctly shaded, and visually seated inside the cavity.
 - [x] A subtle cavity contact shadow grounds the fruit without leaking onto the bowl exterior or tabletop.
 - [x] Blue and cream bowls both work with apple, pear, and orange.
 - [x] Identical inputs are deterministic; alternate seeds create coherent bounded changes.
