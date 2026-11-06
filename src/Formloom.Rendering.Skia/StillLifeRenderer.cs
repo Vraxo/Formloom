@@ -343,7 +343,7 @@ public static class StillLifeRenderer
         canvas.ClipPath(outline);
         DrawGlazeMottle(canvas, ceramic, material);
         var accents = !omitDetail && scene.SurfaceDetail > 0;
-        DrawMouth(canvas, scene, profile, material, paint, beverage, accents, flower);
+        DrawMouth(canvas, scene, profile, material, paint, beverage, accents);
 
         // The cup's finish sheen normally washes over the mouth as well. It is held off the
         // drink so the glaze can never recolour the beverage: the lip and body keep it, the
@@ -371,6 +371,14 @@ public static class StillLifeRenderer
         canvas.DrawPath(outline, paint);
         paint.Style = SKPaintStyle.Fill;
         canvas.Restore();
+
+        // The stem goes in last, after even the vase's own contour: that contour runs along the
+        // far rim exactly where the stem enters, so anything painted under it is sliced in half
+        // by a line the stem is really in front of.
+        if (flower is not null)
+        {
+            DrawStemInsideOpening(canvas, flower, profile, material, paint);
+        }
     }
 
     // A contained scene draws the bowl whole and then clips the fruit away wherever the
@@ -601,19 +609,29 @@ public static class StillLifeRenderer
         canvas.Restore();
     }
 
-    // The stem's visible continuation inside the mouth. The flower pass stops at the mouth's
-    // top tangent and this pass picks the stem up there, so the two meet without a seam: the
-    // stroke is the same width, angle and shader, it keeps going past its typed end to the
-    // near lip, and it is darkened by a gradient that starts fully transparent at the tangent
-    // and deepens towards the bottom of the opening.
-    private static void DrawStemInsideOpening(SKCanvas canvas, VaseFlower flower, CeramicMaterial ceramic, SKPaint paint)
+    // The stem's visible continuation inside the mouth, painted once, after the whole vase. The
+    // vase's own contour stroke runs along the far rim exactly where the stem enters, so a stem
+    // painted under it was sliced in half by a line it is really in front of. One clip does both
+    // jobs: the opening, inset by the near lip so the stem still disappears under it, plus a
+    // narrow column that carries the stem across the rim band. One paint means no seam.
+    private static void DrawStemInsideOpening(
+        SKCanvas canvas,
+        VaseFlower flower,
+        CeramicProfile profile,
+        CeramicMaterial ceramic,
+        SKPaint paint)
     {
         var plant = flower.Plant;
-        var material = TulipMaterial.For(flower.Color);
+        var stemMaterial = TulipMaterial.For(flower.Color);
         var center = flower.OpeningCenter;
         var radius = flower.OpeningRadius;
         var top = flower.MouthTop;
         var bottom = center.Y + radius.Y;
+        var lipHalf = profile.RimThickness * 1.1f;
+        var inset = new System.Numerics.Vector2(
+            MathF.Max(radius.X - lipHalf, radius.X * 0.6f),
+            MathF.Max(radius.Y - lipHalf, radius.Y * 0.6f));
+        var reach = plant.StemThickness * 2.5f;
 
         canvas.Save();
 
@@ -622,56 +640,38 @@ public static class StillLifeRenderer
         // already set is kept: clips live in device space, not in the matrix.
         canvas.ResetMatrix();
         canvas.Scale(1024, 1024);
+
+        // Two clockwise subpaths in one path: the winding rule unions them, so the column and
+        // the opening form a single mask with no seam between them.
+        using (var mask = new SKPathBuilder())
+        {
+            AppendEllipsePath(mask, center, inset);
+            mask.MoveTo(plant.StemBase.X - reach, top - 0.03f);
+            mask.LineTo(plant.StemBase.X + reach, top - 0.03f);
+            mask.LineTo(plant.StemBase.X + reach, center.Y);
+            mask.LineTo(plant.StemBase.X - reach, center.Y);
+            mask.Close();
+            using var clip = mask.Detach();
+            canvas.ClipPath(clip, antialias: true);
+        }
+
         using var stem = CreateExtendedStemPath(plant, new(plant.StemBase.X, bottom + (plant.StemThickness * 3)));
-
-        canvas.Save();
-        using (var opening = CreateEllipsePath(center, radius))
-        {
-            canvas.ClipPath(opening, antialias: true);
-        }
-
-        PaintContinuation();
+        StrokeStem(canvas, stem, plant, stemMaterial, silhouette: false, paint);
+        using var depth = SKShader.CreateLinearGradient(
+            new SKPoint(center.X, top),
+            new SKPoint(center.X, bottom),
+            [ceramic.CavityColor.WithAlpha(0), ceramic.CavityColor.WithAlpha(210)],
+            null, SKShaderTileMode.Clamp);
+        paint.Style = SKPaintStyle.Stroke;
+        paint.StrokeWidth = plant.StemThickness;
+        paint.StrokeCap = SKStrokeCap.Round;
+        paint.Color = SKColors.White;
+        paint.Shader = depth;
+        canvas.DrawPath(stem, paint);
+        paint.Shader = null;
+        paint.Style = SKPaintStyle.Fill;
+        paint.StrokeCap = SKStrokeCap.Butt;
         canvas.Restore();
-
-        // The far rim is stroked before this pass, so the stem is repainted over its own column
-        // where the mouth narrows to a point. Otherwise the rim would leave a light band across
-        // the stem exactly where it enters. The column stops two pixels below the tangent, so
-        // nothing changes outside the opening's own ellipse beyond its antialiased edge.
-        float reach = plant.StemThickness * 2.5f;
-        canvas.Save();
-        using (var junction = new SKPathBuilder())
-        {
-            junction.MoveTo(plant.StemBase.X - reach, top - 0.025f);
-            junction.LineTo(plant.StemBase.X + reach, top - 0.025f);
-            junction.LineTo(plant.StemBase.X + reach, top + 0.002f);
-            junction.LineTo(plant.StemBase.X - reach, top + 0.002f);
-            junction.Close();
-            using var junctionPath = junction.Detach();
-            canvas.ClipPath(junctionPath, antialias: true);
-        }
-
-        PaintContinuation();
-        canvas.Restore();
-        canvas.Restore();
-
-        void PaintContinuation()
-        {
-            StrokeStem(canvas, stem, plant, material, silhouette: false, paint);
-            using var depth = SKShader.CreateLinearGradient(
-                new SKPoint(center.X, top),
-                new SKPoint(center.X, bottom),
-                [ceramic.CavityColor.WithAlpha(0), ceramic.CavityColor.WithAlpha(210)],
-                null, SKShaderTileMode.Clamp);
-            paint.Style = SKPaintStyle.Stroke;
-            paint.StrokeWidth = plant.StemThickness;
-            paint.StrokeCap = SKStrokeCap.Round;
-            paint.Color = SKColors.White;
-            paint.Shader = depth;
-            canvas.DrawPath(stem, paint);
-            paint.Shader = null;
-            paint.Style = SKPaintStyle.Fill;
-            paint.StrokeCap = SKStrokeCap.Butt;
-        }
     }
 
     // The stem path with a straight continuation below its typed end, so the stroke runs under
@@ -831,15 +831,20 @@ public static class StillLifeRenderer
 
     private static SKPath CreateEllipsePath(System.Numerics.Vector2 center, System.Numerics.Vector2 radius)
     {
-        const float Handle = 0.55228475f;
         using var builder = new SKPathBuilder();
+        AppendEllipsePath(builder, center, radius);
+        return builder.Detach();
+    }
+
+    private static void AppendEllipsePath(SKPathBuilder builder, System.Numerics.Vector2 center, System.Numerics.Vector2 radius)
+    {
+        const float Handle = 0.55228475f;
         builder.MoveTo(center.X - radius.X, center.Y);
         builder.CubicTo(center.X - radius.X, center.Y - (Handle * radius.Y), center.X - (Handle * radius.X), center.Y - radius.Y, center.X, center.Y - radius.Y);
         builder.CubicTo(center.X + (Handle * radius.X), center.Y - radius.Y, center.X + radius.X, center.Y - (Handle * radius.Y), center.X + radius.X, center.Y);
         builder.CubicTo(center.X + radius.X, center.Y + (Handle * radius.Y), center.X + (Handle * radius.X), center.Y + radius.Y, center.X, center.Y + radius.Y);
         builder.CubicTo(center.X - (Handle * radius.X), center.Y + radius.Y, center.X - radius.X, center.Y + (Handle * radius.Y), center.X - radius.X, center.Y);
         builder.Close();
-        return builder.Detach();
     }
 
     private static void DrawGlazeMottle(SKCanvas canvas, CeramicInstance ceramic, CeramicMaterial material)
@@ -873,8 +878,7 @@ public static class StillLifeRenderer
         CeramicMaterial material,
         SKPaint paint,
         BeverageKind? beverage,
-        bool accents,
-        VaseFlower? flower)
+        bool accents)
     {
         var center = profile.MouthCenter;
         var radius = profile.MouthRadius;
@@ -898,19 +902,15 @@ public static class StillLifeRenderer
             DrawCupLiquid(canvas, profile, drink, accents, paint);
         }
 
-        // The far rim is drawn before the stem and the near lip after it: a stem stands in
-        // front of the wall it enters over, and behind the lip it disappears under.
+        // The thin far rim, then the thick near lip: the stem crosses the first one on the way
+        // in and goes under the second, which is why the stem is painted after this pass (see
+        // DrawCeramic) rather than between the two strokes.
         paint.Style = SKPaintStyle.Stroke;
         paint.StrokeWidth = profile.RimThickness;
         paint.Color = material.LipColor.WithAlpha(225);
         canvas.DrawOval(center.X, center.Y, radius.X, radius.Y, paint);
 
-        if (flower is not null)
-        {
-            DrawStemInsideOpening(canvas, flower, material, paint);
-        }
-
-        // The stem leaves the paint in fill mode; the near lip is a stroke.
+        // The near lip is a stroke, not a fill.
         paint.Style = SKPaintStyle.Stroke;
         var mouth = new SKRect(center.X - radius.X, center.Y - radius.Y, center.X + radius.X, center.Y + radius.Y);
         paint.StrokeWidth = profile.RimThickness * 2.2f;

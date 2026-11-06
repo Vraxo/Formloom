@@ -141,18 +141,20 @@ Draw order inside `DrawVaseFlower`, then the vase:
    (dark), then the centre vein as a thin stroke.
 4. **Petals**, back to front: a radial gradient offset along the scene light direction, with
    the tone lifting the base colour, plus a very light edge stroke for separation.
-5. **The vase**, drawn as an empty vase is drawn, with the mouth split around the stem: the
-   cavity base and the thin **far rim** are stroked first, then `DrawStemInsideOpening` repaints
-   the stem's own column across the rim band and carries the same stroke on into the opening,
-   and last the thick **near lip** arc goes on top. The continuation uses the same width,
-   angle and shader, is extended below its typed end to the bottom of the opening, and is
-   darkened by a vertical gradient that starts fully transparent at the tangent and deepens to
-   the cavity colour at the bottom.
+5. **The vase**, drawn as an empty vase is drawn: the cavity base, the thin **far rim**
+   stroke, then the thick **near lip** arc.
+6. **The stem's continuation**, painted last, after even the vase's own contour stroke. It uses
+   the same width, angle and shader as the stem above the rim, is extended below its typed end
+   past the bottom of the opening, and is darkened by a vertical gradient that starts fully
+   transparent at the tangent and deepens to the cavity colour at the bottom. One mask carries
+   it: the opening ellipse inset by the near lip, unioned with a narrow column that crosses the
+   rim band.
 
-The far rim is behind the stem and the near lip in front of it, which is the order a stem
-entering a vessel actually has. The two halves of the stroke meet at the mouth's top tangent
-with no tone step, so the stem is one continuous line: outside the vessel, visibly inside the
-opening, then gone under the front lip.
+The far rim, the contour stroke and the lip are all behind the stem, which is the order a stem
+entering a vessel actually has: nothing the vase draws crosses it. The stem is painted exactly
+once inside the mouth — one clip, one stroke, no meeting point between two passes — so there is
+no tone step where it enters. It reads as one continuous line: outside the vessel, visibly
+inside the opening, then gone under the front lip, whose inner edge is the bottom of the mask.
 
 Consequences, all asserted:
 
@@ -163,7 +165,7 @@ Consequences, all asserted:
   mouth's top edge.
 - Below the rim, the only pixels that differ from the same empty vase are inside the opening
   ellipse, plus a two-pixel margin for the antialiased edge of that continuation. The rim band
-  the stem passes behind is still an intentional overlap (about 14 px at 1024 × 1024).
+  the stem passes in front of is still an intentional overlap (about 14 px at 1024 × 1024).
 - **Shadow mask:** the flower contributes nothing, so a planted vase's shadow mask is
   byte-identical to the empty vase's. The flower has no tabletop shadow of its own.
 - **Silhouette:** the flower *is* included, because the bloom is a visible part of the
