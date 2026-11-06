@@ -579,15 +579,35 @@ public sealed class VaseFlowerRenderingTests
 
     // Whether a canvas pixel lies inside the vase's opening, with the radii grown by a pixel or
     // two so the antialiased edge of the stem's recessed continuation is not read as a leak.
-    // Where the stem's centre line sits on a row, in pixels: the stroke runs between its typed
-    // top and base, and leaning with the seed moves it by a few pixels across the opening.
+    // Where the stem's centre line sits on a row, in pixels. The stem is a cubic and leans
+    // with the seed and the variation, so the point is taken from the path itself.
     private static int StemColumn(TulipPlant plant, int y)
     {
-        var from = plant.StemTop;
-        var to = plant.StemBase;
-        var normalized = (y + 0.5f) / Canvas;
-        var along = (normalized - from.Y) / (to.Y - from.Y);
-        return (int)MathF.Round((from.X + (along * (to.X - from.X))) * Canvas);
+        var target = (y + 0.5f) / Canvas;
+        var best = float.MaxValue;
+        var bestX = plant.StemBase.X;
+        foreach (var segment in plant.Stem)
+        {
+            for (var step = 0; step <= 64; step++)
+            {
+                var t = step / 64f;
+                var u = 1 - t;
+                var a = u * u * u;
+                var b = 3 * u * u * t;
+                var c = 3 * u * t * t;
+                var d = t * t * t;
+                var x = (a * segment.Start.X) + (b * segment.Control1.X) + (c * segment.Control2.X) + (d * segment.End.X);
+                var pointY = (a * segment.Start.Y) + (b * segment.Control1.Y) + (c * segment.Control2.Y) + (d * segment.End.Y);
+                var distance = MathF.Abs(pointY - target);
+                if (distance < best)
+                {
+                    best = distance;
+                    bestX = x;
+                }
+            }
+        }
+
+        return (int)MathF.Round(bestX * Canvas);
     }
 
     // The brightest of the three pixels around a column: the stem is a thin antialiased
