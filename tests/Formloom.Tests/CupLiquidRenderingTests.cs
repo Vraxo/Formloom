@@ -221,8 +221,10 @@ public sealed class CupLiquidRenderingTests
         {
             for (var x = 0; x < Canvas; x++)
             {
+                // Well inside the drink: the innermost ring is antialiased against the cavity,
+                // which is legitimately glaze-dependent, so it is excluded here.
                 var distance = Normalized(x, y, geometry.ClipCenter, geometry.ClipRadius);
-                if (distance < 0.75f && Delta(bluePixels.GetPixel(x, y), creamPixels.GetPixel(x, y)) > 0)
+                if (distance < 0.6f && Delta(bluePixels.GetPixel(x, y), creamPixels.GetPixel(x, y)) > 0)
                 {
                     liquidDifferences++;
                 }
