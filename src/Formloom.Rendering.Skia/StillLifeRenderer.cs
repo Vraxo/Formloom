@@ -618,7 +618,7 @@ public static class StillLifeRenderer
             size.Y / 1024f,
             origin.X / 1024f,
             origin.Y / 1024f);
-        canvas.Concat(ref toCanvasSpace);
+        canvas.Concat(in toCanvasSpace);
         using (var opening = CreateEllipsePath(flower.OpeningCenter, flower.OpeningRadius))
         {
             canvas.ClipPath(opening, antialias: true);
