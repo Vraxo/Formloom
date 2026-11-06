@@ -41,7 +41,7 @@ public sealed class VaseFlowerRenderingTests
     public static TheoryData<int, int> Dimensions()
     {
         var data = new TheoryData<int, int>();
-        foreach (var (width, height) in new[] { (256, 256), (640, 480), (2048, 1024) })
+        foreach (var (width, height) in new[] { (64, 64), (256, 256), (640, 480), (2048, 1024), (4096, 1024) })
         {
             data.Add(width, height);
         }
@@ -89,6 +89,20 @@ public sealed class VaseFlowerRenderingTests
         Assert.True(changed > 400, $"{name} drew almost nothing: {changed} changed pixels");
         Assert.Equal(0, belowTheRim);
 
+        // Everything the flower changed above the rim band lies inside its own measured
+        // bounds: it cannot leak into the tabletop or the far background.
+        var bounds = BoundsWindow(plant, 3);
+        for (var y = 0; y <= rim - RimBand; y++)
+        {
+            for (var x = 0; x < Canvas; x++)
+            {
+                if (Delta(planted.GetPixel(x, y), empty.GetPixel(x, y)) != 0 && !Inside(bounds, x, y))
+                {
+                    Assert.Fail($"{name} changed a pixel outside the flower at {x},{y}");
+                }
+            }
+        }
+
         // The bloom fills its box, the leaves flank the stem and the stem reaches the opening.
         Assert.True(Count(planted, empty, BloomWindow(plant, 0)) > 1500, $"{name} lost its bloom");
         foreach (var leaf in plant.Leaves)
@@ -105,6 +119,23 @@ public sealed class VaseFlowerRenderingTests
             ? Coloured(planted, BloomWindow(plant, 0), pixel => pixel.Red > pixel.Green + 45)
             : Coloured(planted, BloomWindow(plant, 0), pixel => pixel.Red > 150 && pixel.Green > 110 && pixel.Blue < 90);
         Assert.True(warm > 700, $"{name} does not read as {color}: {warm} petal pixels");
+
+        // The bloom is never cut by the vase: no petal-coloured pixel sits below the mouth top.
+        var belowMouth = 0;
+        for (var y = rim; y < Canvas; y++)
+        {
+            for (var x = 0; x < Canvas; x++)
+            {
+                if (color == "red"
+                        ? planted.GetPixel(x, y).Red > planted.GetPixel(x, y).Green + 45
+                        : planted.GetPixel(x, y).Red > 150 && planted.GetPixel(x, y).Green > 110 && planted.GetPixel(x, y).Blue < 90)
+                {
+                    belowMouth++;
+                }
+            }
+        }
+
+        Assert.Equal(0, belowMouth);
     }
 
     [Theory]
@@ -133,6 +164,42 @@ public sealed class VaseFlowerRenderingTests
 
         // The flower is drawn at every supported size: it is not a 1024-only pixel offset.
         Assert.True(changed > 10, $"expected flower pixels at {width}x{height}, saw {changed}");
+    }
+
+    [Fact]
+    public void EmptyVasesGainNoFlowerPixels()
+    {
+        foreach (var prompt in new[] { "a blue ceramic vase on a wooden table", "a cream ceramic vase on a wooden table" })
+        {
+            var scene = Scene(prompt);
+            Assert.Null(scene.VaseFlower);
+            var image = StillLifeRenderer.Render(scene);
+            Assert.Equal(image.PngBytes, StillLifeRenderer.Render(scene).PngBytes);
+            using var pixels = Decode(image.PngBytes);
+            var aboveTheTable = (int)MathF.Floor((float)scene.TableHorizon * Canvas);
+            var petals = Coloured(pixels, new Window(0, 0, 1, aboveTheTable / (float)Canvas), pixel =>
+                (pixel.Red > pixel.Green + 45) || (pixel.Red > 150 && pixel.Green > 110 && pixel.Blue < 90));
+            Assert.Equal(0, petals);
+        }
+    }
+
+    [Fact]
+    public void AlternateSeedsReshapeTheFlowerWithoutChangingTheSubject()
+    {
+        var first = Scene("a red tulip in a blue ceramic vase on a wooden table", 42, 0.35);
+        var second = Scene("a red tulip in a blue ceramic vase on a wooden table", 1337, 0.35);
+        Assert.Equal(first.SubjectToken, second.SubjectToken);
+        Assert.Equal(first.VaseFlower!.Color, second.VaseFlower!.Color);
+        Assert.Equal(first.VaseFlower.Flower, second.VaseFlower.Flower);
+        Assert.NotEqual(first.VaseFlower.Plant.Bounds, second.VaseFlower.Plant.Bounds);
+        Assert.Equal(2, second.VaseFlower.Plant.Leaves.Length);
+
+        using var one = Decode(StillLifeRenderer.Render(first).PngBytes);
+        using var two = Decode(StillLifeRenderer.Render(second).PngBytes);
+        var box = BloomWindow(first.VaseFlower.Plant, 24);
+        Assert.True(
+            CountWithin(one, two, box) > 200,
+            $"expected a reshaped bloom, saw {CountWithin(one, two, box)} pixels");
     }
 
     [Fact]
@@ -478,6 +545,27 @@ public sealed class VaseFlowerRenderingTests
             for (var x = left; x <= right; x++)
             {
                 if (Delta(first.GetPixel(x, y), second.GetPixel(x, y)) > 8)
+                {
+                    count++;
+                }
+            }
+        }
+
+        return count;
+    }
+
+    private static int CountWithin(SKBitmap first, SKBitmap second, Window window)
+    {
+        var left = Math.Max(0, (int)MathF.Floor(window.Left * Canvas));
+        var right = Math.Min(Canvas - 1, (int)MathF.Ceiling(window.Right * Canvas));
+        var top = Math.Max(0, (int)MathF.Floor(window.Top * Canvas));
+        var bottom = Math.Min(Canvas - 1, (int)MathF.Ceiling(window.Bottom * Canvas));
+        var count = 0;
+        for (var y = top; y <= bottom; y++)
+        {
+            for (var x = left; x <= right; x++)
+            {
+                if (Delta(first.GetPixel(x, y), second.GetPixel(x, y)) != 0)
                 {
                     count++;
                 }

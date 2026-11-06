@@ -86,7 +86,11 @@ public static class TulipGeometry
         var mouth = origin + (profile.MouthCenter * size);
         var mouthRadius = profile.MouthRadius * size;
         var rimTop = mouth.Y - mouthRadius.Y;
-        var headroom = MathF.Max(rimTop - TopMargin, 0.02f);
+
+        // The usable headroom starts above the rim's own thickness, so the plant clears the
+        // lip rather than growing out of the middle of it.
+        var rimCrest = rimTop - (profile.RimThickness * size.Y);
+        var headroom = MathF.Max(rimCrest - TopMargin, 0.02f);
         var amount = (float)variation;
         var stemRandom = Pcg32.ForStream(seed, "tulip.stem");
         var leafRandom = Pcg32.ForStream(seed, "tulip.leaves");

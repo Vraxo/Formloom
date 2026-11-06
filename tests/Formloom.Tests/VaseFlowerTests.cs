@@ -298,6 +298,10 @@ public sealed class VaseFlowerTests
         Assert.Equal(
             "A flower scene must contain exactly that vase and no other object.",
             SceneValidator.Validate(group with { VaseFlower = VaseFlower.Create(group.Ceramics[0], TulipColor.Red, 42, 0.35) }));
+        var twoVases = Scene("a blue ceramic vase and a cream ceramic vase on a wooden table");
+        Assert.Equal(
+            "A flower scene must contain exactly that vase and no other object.",
+            SceneValidator.Validate(twoVases with { VaseFlower = VaseFlower.Create(twoVases.Ceramics[0], TulipColor.Red, 42, 0.35) }));
         var other = Scene("a cream ceramic vase on a wooden table").Ceramics[0];
         Assert.Equal(
             "A flower scene must contain exactly that vase and no other object.",
