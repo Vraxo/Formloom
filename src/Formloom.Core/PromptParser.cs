@@ -9,6 +9,10 @@ public static class PromptParser
 
     private const string CeramicDescriptor = @"a (?:blue|cream) ceramic (?:bowl|cup|vase)";
 
+    private const string CupDescriptor = @"a (?:blue|cream) ceramic cup";
+
+    private const string BeverageDescriptor = @"(?:coffee|tea)";
+
     private const string Setting = " on a wooden table";
 
     public static AppleColor? Parse(string? prompt)
@@ -81,6 +85,35 @@ public static class PromptParser
         }
 
         return new(ParseDescriptor(match.Groups["fruit"].Value).Fruit!, bowl);
+    }
+
+    // A single existing cup filled with a single still beverage. The exact grammar is
+    // "<cup> filled with <beverage> on a wooden table"; anything else is rejected whole
+    // rather than being read as an ordinary empty cup.
+    public static CupContentsPrompt? ParseCupContents(string? prompt)
+    {
+        var normalized = Normalize(prompt);
+        if (normalized is null)
+        {
+            return null;
+        }
+
+        var match = Regex.Match(
+            normalized[..^Setting.Length],
+            @"\A(?<cup>" + CupDescriptor + @") filled with (?<beverage>" + BeverageDescriptor + @")\z");
+        if (!match.Success)
+        {
+            return null;
+        }
+
+        var cup = ParseDescriptor(match.Groups["cup"].Value).Ceramic;
+        if (cup is null || cup.Kind != CeramicKind.Cup)
+        {
+            return null;
+        }
+
+        var beverage = match.Groups["beverage"].Value == "coffee" ? BeverageKind.Coffee : BeverageKind.Tea;
+        return new(cup, beverage);
     }
 
     public static ImmutableArray<ObjectPrompt>? ParseObjects(string? prompt)

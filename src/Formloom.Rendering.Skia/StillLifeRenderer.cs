@@ -94,7 +94,11 @@ public static class StillLifeRenderer
             return;
         }
 
-        DrawCeramic(canvas, scene, entry.Ceramic!, silhouette, skipShadows, shadowsOnly, skipBody, entry.Depth == omittedDetailDepth);
+        var ceramic = entry.Ceramic!;
+        var beverage = scene.CupContents is { } contents && contents.Cup == ceramic
+            ? contents.Beverage
+            : (BeverageKind?)null;
+        DrawCeramic(canvas, scene, ceramic, silhouette, skipShadows, shadowsOnly, skipBody, entry.Depth == omittedDetailDepth, beverage);
     }
 
     private static StillLifeScene ForInstance(StillLifeScene scene, FruitInstance fruit, int? omittedDetailDepth = null) => scene with
@@ -253,7 +257,8 @@ public static class StillLifeRenderer
         bool skipShadows,
         bool shadowsOnly,
         bool skipBody,
-        bool omitDetail)
+        bool omitDetail,
+        BeverageKind? beverage = null)
     {
         var profile = CeramicForms.For(ceramic.Kind);
         var body = ceramic.Body;
@@ -328,7 +333,20 @@ public static class StillLifeRenderer
         canvas.Save();
         canvas.ClipPath(outline);
         DrawGlazeMottle(canvas, ceramic, material);
-        DrawMouth(canvas, scene, profile, material, paint);
+        var accents = !omitDetail && scene.SurfaceDetail > 0;
+        DrawMouth(canvas, scene, profile, material, paint, beverage, accents);
+
+        // The cup's finish sheen normally washes over the mouth as well. It is held off the
+        // drink so the glaze can never recolour the beverage: the lip and body keep it, the
+        // liquid surface does not.
+        canvas.Save();
+        if (beverage is not null)
+        {
+            var surface = CupLiquidSurface.For(profile);
+            using var drink = CreateEllipsePath(surface.ClipCenter, surface.ClipRadius);
+            canvas.ClipPath(drink, SKClipOperation.Difference, antialias: true);
+        }
+
         using var highlight = SKShader.CreateRadialGradient(
             new SKPoint(0.5f + (scene.LightDirection.X * 0.30f), 0.5f + (scene.LightDirection.Y * 0.36f)), material.HighlightRadius,
             [new SKColor(255, 250, 235, material.HighlightAlpha), new SKColor(255, 250, 235, 0)], null, SKShaderTileMode.Clamp);
@@ -336,6 +354,7 @@ public static class StillLifeRenderer
         paint.Shader = highlight;
         canvas.DrawRect(0, 0, 1, 1, paint);
         paint.Shader = null;
+        canvas.Restore();
         canvas.Restore();
         paint.Style = SKPaintStyle.Stroke;
         paint.StrokeWidth = 0.006f;
@@ -462,6 +481,95 @@ public static class StillLifeRenderer
         canvas.Restore();
     }
 
+    // A still surface inside the cup mouth: a shaded body, a soft meniscus at its own edge
+    // and, when accents are enabled, two broad reflections. Everything is clipped to the
+    // inner opening, so the lip and rim strokes stay in front of it and nothing can reach the
+    // exterior, the handle or the table.
+    private static void DrawCupLiquid(SKCanvas canvas, CeramicProfile profile, BeverageKind beverage, bool accents, SKPaint paint)
+    {
+        var surface = CupLiquidSurface.For(profile);
+        var material = BeverageMaterial.For(beverage);
+        canvas.Save();
+        using (var opening = CreateEllipsePath(surface.ClipCenter, surface.ClipRadius))
+        {
+            canvas.ClipPath(opening, antialias: true);
+        }
+
+        using (var body = SKShader.CreateRadialGradient(
+            new SKPoint(
+                surface.Center.X - (surface.Radius.X * 0.22f),
+                surface.Center.Y - (surface.Radius.Y * 0.34f)),
+            surface.Radius.X * 0.92f,
+            [material.Light, material.Base, material.Edge],
+            [0f, 0.52f, 1f],
+            SKShaderTileMode.Clamp))
+        {
+            paint.Color = SKColors.White;
+            paint.Shader = body;
+            canvas.DrawOval(surface.Center.X, surface.Center.Y, surface.Radius.X, surface.Radius.Y, paint);
+            paint.Shader = null;
+        }
+
+        // Meniscus: a thin darkening that hugs the drink's own boundary. The clip removes the
+        // part that would fall on the ceramic, so only the visible edge is affected.
+        paint.Style = SKPaintStyle.Stroke;
+        paint.StrokeWidth = profile.RimThickness * 0.7f;
+        paint.Color = material.Edge.WithAlpha(150);
+        canvas.DrawOval(surface.Center.X, surface.Center.Y, surface.Radius.X, surface.Radius.Y, paint);
+        paint.Style = SKPaintStyle.Fill;
+        paint.Color = SKColors.White;
+
+        if (accents)
+        {
+            DrawLiquidSheen(canvas, surface, material, 0.30f, 0.30f, 0.42f, material.SheenAlpha, paint);
+            DrawLiquidSheen(canvas, surface, material, 0.58f, 0.62f, 0.22f, material.GlintAlpha, paint);
+        }
+
+        canvas.Restore();
+    }
+
+    // Broad, soft reflection: a scaled radial falloff inside the surface, never a hard shape.
+    private static void DrawLiquidSheen(
+        SKCanvas canvas,
+        CupLiquidSurface surface,
+        BeverageMaterial material,
+        float offsetX,
+        float offsetY,
+        float radius,
+        byte alpha,
+        SKPaint paint)
+    {
+        var radiusX = surface.Radius.X * radius;
+        var radiusY = surface.Radius.Y * radius * 0.9f;
+        canvas.Save();
+        canvas.Translate(surface.Center.X - (surface.Radius.X * offsetX), surface.Center.Y - (surface.Radius.Y * offsetY));
+        canvas.Scale(radiusX, radiusY);
+        using var shader = SKShader.CreateRadialGradient(
+            SKPoint.Empty,
+            1,
+            [material.Sheen.WithAlpha(alpha), material.Sheen.WithAlpha((byte)(alpha * 0.45f)), material.Sheen.WithAlpha(0)],
+            [0f, 0.55f, 1f],
+            SKShaderTileMode.Clamp);
+        paint.Color = SKColors.White;
+        paint.Shader = shader;
+        canvas.DrawOval(0, 0, 1, 1, paint);
+        paint.Shader = null;
+        canvas.Restore();
+    }
+
+    private static SKPath CreateEllipsePath(System.Numerics.Vector2 center, System.Numerics.Vector2 radius)
+    {
+        const float Handle = 0.55228475f;
+        using var builder = new SKPathBuilder();
+        builder.MoveTo(center.X - radius.X, center.Y);
+        builder.CubicTo(center.X - radius.X, center.Y - (Handle * radius.Y), center.X - (Handle * radius.X), center.Y - radius.Y, center.X, center.Y - radius.Y);
+        builder.CubicTo(center.X + (Handle * radius.X), center.Y - radius.Y, center.X + radius.X, center.Y - (Handle * radius.Y), center.X + radius.X, center.Y);
+        builder.CubicTo(center.X + radius.X, center.Y + (Handle * radius.Y), center.X + (Handle * radius.X), center.Y + radius.Y, center.X, center.Y + radius.Y);
+        builder.CubicTo(center.X - (Handle * radius.X), center.Y + radius.Y, center.X - radius.X, center.Y + (Handle * radius.Y), center.X - radius.X, center.Y);
+        builder.Close();
+        return builder.Detach();
+    }
+
     private static void DrawGlazeMottle(SKCanvas canvas, CeramicInstance ceramic, CeramicMaterial material)
     {
         if (material.MottleAlpha == 0)
@@ -486,7 +594,14 @@ public static class StillLifeRenderer
         paint.Shader = null;
     }
 
-    private static void DrawMouth(SKCanvas canvas, StillLifeScene scene, CeramicProfile profile, CeramicMaterial material, SKPaint paint)
+    private static void DrawMouth(
+        SKCanvas canvas,
+        StillLifeScene scene,
+        CeramicProfile profile,
+        CeramicMaterial material,
+        SKPaint paint,
+        BeverageKind? beverage,
+        bool accents)
     {
         var center = profile.MouthCenter;
         var radius = profile.MouthRadius;
@@ -502,6 +617,14 @@ public static class StillLifeRenderer
         canvas.DrawOval(center.X, center.Y - (radius.Y * 0.28f), radius.X * 0.7f, radius.Y * 0.48f, paint);
         paint.Color = material.CavityColor.WithAlpha(215);
         canvas.DrawOval(center.X, center.Y + (profile.CavityDepth * 0.5f), radius.X * 0.54f, radius.Y * 0.5f, paint);
+
+        // The drink goes after the cavity base and before the final rim and lip strokes, so
+        // the ceramic edge always reads as being in front of the liquid.
+        if (beverage is { } drink && profile.Kind == CeramicKind.Cup)
+        {
+            DrawCupLiquid(canvas, profile, drink, accents, paint);
+        }
+
         paint.Style = SKPaintStyle.Stroke;
         paint.StrokeWidth = profile.RimThickness;
         paint.Color = material.LipColor.WithAlpha(225);

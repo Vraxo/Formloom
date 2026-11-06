@@ -24,6 +24,10 @@ public sealed record StillLifeScene(
     // drawn first and the content is clipped against the near wall in front of it.
     public BowlContainment? Containment { get; init; }
 
+    // The one cup-content relationship the grammar supports. Mutually exclusive with
+    // Containment: a scene is either a filled cup or a fruit in a bowl, never both.
+    public CupContents? CupContents { get; init; }
+
     public ImmutableArray<SceneEntry> Objects
     {
         get
@@ -56,6 +60,11 @@ public sealed record StillLifeScene(
     {
         get
         {
+            if (CupContents is { } contents)
+            {
+                return contents.SubjectToken;
+            }
+
             if (Containment is { } containment)
             {
                 return containment.SubjectToken;
