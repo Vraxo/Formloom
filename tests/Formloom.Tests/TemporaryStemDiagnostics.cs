@@ -230,6 +230,35 @@ public sealed class TemporaryStemDiagnostics
         return report;
     }
 
+    private static int Column(TulipPlant plant, int y)
+    {
+        var target = (y + 0.5f) / Canvas;
+        var best = float.MaxValue;
+        var bestX = plant.StemBase.X;
+        foreach (var segment in plant.Stem)
+        {
+            for (var step = 0; step <= 64; step++)
+            {
+                var t = step / 64f;
+                var u = 1 - t;
+                var a = u * u * u;
+                var b = 3 * u * u * t;
+                var c = 3 * u * t * t;
+                var d = t * t * t;
+                var x = (a * segment.Start.X) + (b * segment.Control1.X) + (c * segment.Control2.X) + (d * segment.End.X);
+                var pointY = (a * segment.Start.Y) + (b * segment.Control1.Y) + (c * segment.Control2.Y) + (d * segment.End.Y);
+                var distance = MathF.Abs(pointY - target);
+                if (distance < best)
+                {
+                    best = distance;
+                    bestX = x;
+                }
+            }
+        }
+
+        return (int)MathF.Round(bestX * Canvas);
+    }
+
     private static StillLifeScene Scene(string prompt, ulong seed = 20261105, double variation = 0.35) =>
         SceneGenerator.Generate(new(prompt, seed, variation)).Scene!;
 
