@@ -130,11 +130,31 @@ The existing `procedural-preview` upload gains, beside the per-case files:
 
 ## Timing observations
 
-The review sheet's manifest does carry timings, but its cells render at **320 × 320**: 23.0–24.6 ms per cell for render plus PNG encode across the eight cases on the CI runner. The per-case `.timing.json` sidecars hold the 1024 × 1024 numbers, filled and empty side by side, and those were never read back, so **no full-size filled-cup timing is quoted here**; read `RenderAndEncodeMilliseconds`, `EmptyCupRenderAndEncodeMilliseconds` and `AdditionalMillisecondsOverEmptyCup` there. Phase 4's baseline was 119–143 ms per 1024 × 1024 render plus encode for vessels and groups; a filled cup draws one cup plus one clipped gradient surface, so it is expected to sit within a few milliseconds of the empty cup.
+`Stopwatch` wraps only the renderer and the PNG encode; scene construction, artifact writes and desktop dispatch are outside the measurement. Eight cases at **1024 × 1024**, one filled render and one empty-cup render per case, taken back to back inside the full suite on the CI runner (`.NET 10.0.14`, Ubuntu 24.04.5 LTS, 4 logical processors), from the sidecars of run [42173960380](https://github.com/Vraxo/Formloom/actions/runs/42173960380):
+
+| cell | case | filled (ms) | empty cup (ms) | Δ (ms) |
+| --- | --- | --- | --- | --- |
+| 0 | coffee / blue, 42, 0.35 | 297.8 | 197.6 | +100.2 |
+| 1 | coffee / cream, 42, 0.35 | 176.7 | 178.2 | −1.5 |
+| 2 | tea / blue, 42, 0.35 | 359.9 | 266.3 | +93.6 |
+| 3 | tea / cream, 42, 0.35 | 324.4 | 300.0 | +24.4 |
+| 4 | coffee / cream, 1337, 0.35 | 190.9 | 263.5 | −72.6 |
+| 5 | tea / blue, 20261105, 0.35 | 189.4 | 198.3 | −8.9 |
+| 6 | coffee / blue, 42, 0 | 224.3 | 281.7 | −57.4 |
+| 7 | tea / cream, 42, 1 | 266.8 | 185.7 | +81.0 |
+
+Filled **176.7–359.9 ms** (mean 253.8), empty **178.2–300.0 ms** (mean 233.9), Δ **−72.6 to +100.2 ms** (mean +19.9, median +11.5) — four cases above the empty cup, four below.
+
+These are observations from one runner, not a performance claim:
+
+- **The drink is not a measurable cost.** The eight differences straddle zero, and their spread (≈ 173 ms peak to trough) dwarfs the mean (+19.9 ms). At 1024 × 1024 one extra clipped gradient surface plus its sheen disappears inside the run-to-run noise; this measurement cannot resolve anything smaller than that noise, and nothing here suggests a systematic penalty.
+- **The elevation is not the new surface.** The *empty* renders here already cost 178–300 ms, against Phase 4's 119–143 ms baseline for the same 1024 × 1024 render plus encode, so this run is slow on both sides of every pair. With four shared vCPUs, other test collections running concurrently, no warm-up pass and a single sample per side, that is the likely cause — and it is in the shared path, not in `DrawCupLiquid`.
+- **The measurement design bounds the conclusion.** One sample per side, filled always rendered first and empty second, no repeats, so neither cold start (cell 0's +100.2 ms sits on the first case of the theory) nor scheduling drift can be separated from the effect being measured. Repeated, interleaved, warm-up-discarded samples would be needed for a real claim, and that would change the exporter, which this phase deliberately does not do.
+- For the record, the review sheet's 320 px cells are 23.0–24.6 ms each; they measure a thumbnail, not the preview.
 
 ## Visual review
 
-Reviewed the uploaded `formloom-cupliquid-sheet.png` — 1280 × 640, four columns by two rows of 320 px cells, from run 42173659035 — cell by cell, with 5× nearest-neighbour crops of the cup mouth for a coffee and both teas.
+Reviewed the uploaded `formloom-cupliquid-sheet.png` — 1280 × 640, four columns by two rows of 320 px cells, from run [42173960380](https://github.com/Vraxo/Formloom/actions/runs/42173960380) (its manifest stamps `2026-11-06T06:22:58Z`, inside that run; the rendering code is identical to `0b7bcba`, since `0b7bcba..0c85e9f` changes only this document and the checklist) — cell by cell, with 5× nearest-neighbour crops of the cup mouth for a coffee and both teas.
 
 Cell identity from the manifest: **0** coffee-blue 42/0.35 · **1** coffee-cream 42/0.35 · **2** tea-blue 42/0.35 · **3** tea-cream 42/0.35 · **4** coffee-cream 1337/0.35 · **5** tea-blue 20261105/0.35 · **6** coffee-blue 42/0 · **7** tea-cream 42/1.
 
@@ -173,6 +193,7 @@ Cell identity from the manifest: **0** coffee-blue 42/0.35 · **1** coffee-cream
 - PR: [#33](https://github.com/Vraxo/Formloom/pull/33) — merged as `0b7bcba`.
 - CI run on the final PR head `2a14a4f` (temporary diagnostics removed): [42173473422](https://github.com/Vraxo/Formloom/actions/runs/42173473422) — restore, warnings-as-errors Release build, both test projects, test-results upload and `procedural-preview` (14.2 MB, up 1.9 MB from Phase 5, i.e. the eight new renders, their silhouettes and the sheet) all green.
 - Post-merge run on `0b7bcba`: [42173659035](https://github.com/Vraxo/Formloom/actions/runs/42173659035) — success, `procedural-preview` 14.2 MB, `test-results-Release` 92 KB.
+- Documentation and artifact run on `0c85e9f`: [42173960380](https://github.com/Vraxo/Formloom/actions/runs/42173960380) — success; the review sheet and the timing sidecars quoted above were downloaded from this run's `procedural-preview`.
 - The run that actually located the failures was [42173293373](https://github.com/Vraxo/Formloom/actions/runs/42173293373) at `42172b1`, which carried a temporary annotation harness because test names and logs are unreachable from this sandbox.
 
 The CI gate was reached through three incremental fixes rather than one lucky push: an unused theory parameter (xUnit1026), redundant parentheses in a throwaway diagnostics harness (SA1119), and one genuine expectation bug — the "glaze must not recolour the beverage" test sampled the liquid's outermost antialiased ring, where the drink legitimately blends into the glaze-dependent cavity (42 pixels). The sample region now stops at 80 % of the clip ellipse.
@@ -182,7 +203,7 @@ The workflow is unchanged: one Ubuntu **Linux / Release** job — restore, warni
 ## Authored but not executed
 
 - **The 1024 × 1024 renders were not inspected directly.** They exist in the artifact; the review above was done on the sheet's 320 px cells and 5× crops of them, not on the full-size PNGs.
-- **Filled-cup timings.** Each sidecar records the filled and empty numbers side by side, but they were never read back, so no timing figure is quoted and the measurement item stays open.
+- **Filled-cup timings are single samples.** The eight sidecars were read back and are quoted above, with their delta, but each pair is one measurement taken back to back on a shared four-vCPU runner, so the figures support "no measurable cost difference" and nothing more precise.
 - **The prompt-help sentence and the four tokens** are covered by tests (`PromptHelpMentionsContainment`, `SaveNamesWhitelistCupLiquidTokens`), so those are executed; they are listed nowhere as gaps.
 
 Everything else in the spec is exercised by the CI run above, in both test projects.

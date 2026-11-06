@@ -247,7 +247,7 @@ Continue tolerating the existing case normalization, repeated-whitespace normali
 - [x] Include individual full-resolution 1024 × 1024 PNGs alongside the review sheet.
 - [x] Keep generated PNGs and review composites in ignored test-output/artifact directories; do not commit generated binaries as source assets.
 - [x] Generate timing sidecars for the four default cases and representative alternate/variation cases using the existing exporter conventions.
-- [ ] Measure render-plus-PNG-encode time at 1024 × 1024 for filled cups, and compare it with equivalent empty cups under the same runner/runtime; report observations, not a universal performance claim.
+- [x] Measure render-plus-PNG-encode time at 1024 × 1024 for filled cups, and compare it with equivalent empty cups under the same runner/runtime; report observations, not a universal performance claim.
 - [x] Inspect actual generated pixels where the working environment permits; producing or uploading a PNG alone is not visual review.
 - [x] Review that the beverage is immediately identifiable as coffee or tea without a label.
 - [x] Review that the surface reads as liquid recessed inside the cup, not a flat sticker, opaque lid, painted ceramic patch, or overflowing disk.
