@@ -19,6 +19,7 @@ public sealed class TemporaryStemDiagnostics
         Try(lines, "L3", Glaze);
         Try(lines, "L4", Detail);
         Try(lines, "L5", Sizes);
+        Try(lines, "M1", PetalsBelowTheRim);
         Assert.Fail($"temporary\n::error::diag {string.Join("\n::error::diag ", lines)}\n::error::diag end");
     }
 
@@ -190,6 +191,45 @@ public sealed class TemporaryStemDiagnostics
             }
 
             report += $" {width}x{height}:{changed}";
+        }
+
+        return report;
+    }
+
+    private static string PetalsBelowTheRim()
+    {
+        var report = string.Empty;
+        foreach (var (prompt, name, seed, variation) in new[]
+        {
+            ("a yellow tulip in a cream ceramic vase on a wooden table", "yc", 42, 0.35),
+            ("a yellow tulip in a blue ceramic vase on a wooden table", "yb", 42, 0.35),
+            ("a yellow tulip in a blue ceramic vase on a wooden table", "ybh", 42, 1),
+        })
+        {
+            var scene = Scene(prompt, (ulong)seed, variation);
+            var flower = scene.VaseFlower!;
+            using var pixels = Decode(StillLifeRenderer.Render(scene));
+            var rim = (int)MathF.Ceiling(flower.MouthTop * Canvas);
+            var horizon = (int)MathF.Floor((float)scene.TableHorizon * Canvas);
+            var count = 0;
+            var first = string.Empty;
+            for (var y = rim; y < horizon; y++)
+            {
+                for (var x = 0; x < Canvas; x++)
+                {
+                    var pixel = pixels.GetPixel(x, y);
+                    if (pixel.Red > 150 && pixel.Green > 110 && pixel.Blue < 90)
+                    {
+                        count++;
+                        if (first.Length == 0)
+                        {
+                            first = $"{x},{y}:{pixel.Red}.{pixel.Green}.{pixel.Blue}/c{Column(flower.Plant, y)}";
+                        }
+                    }
+                }
+            }
+
+            report += $" {name}{count} {first}";
         }
 
         return report;
