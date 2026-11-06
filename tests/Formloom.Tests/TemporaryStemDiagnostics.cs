@@ -14,11 +14,6 @@ public sealed class TemporaryStemDiagnostics
     public void ReportTheOtherInvariants()
     {
         var lines = new List<string>();
-        Try(lines, "L1", Silhouette);
-        Try(lines, "L2", RedYellow);
-        Try(lines, "L3", Glaze);
-        Try(lines, "L4", Detail);
-        Try(lines, "L5", Sizes);
         Try(lines, "M1", PetalsBelowTheRim);
         Assert.Fail($"temporary\n::error::diag {string.Join("\n::error::diag ", lines)}\n::error::diag end");
     }
