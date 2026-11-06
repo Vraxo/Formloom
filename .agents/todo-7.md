@@ -267,10 +267,10 @@ Continue tolerating the existing case normalization, repeated-whitespace normali
 - [x] Leave blocked, unexecuted, or human-review tasks unchecked and explain the blocker/evidence beside them.
 - [x] Run the established solution restore, Release warnings-as-errors build, and full solution test workflow through the existing CI gate.
 - [x] Confirm all existing and new test projects pass on the latest PR CI run.
-- [ ] Confirm the post-merge Linux Release CI run passes before closing the milestone. — recorded after the merge
+- [x] Confirm the post-merge Linux Release CI run passes before closing the milestone.
 - [x] Keep ordinary CI Release-only; do not add a permanent Debug job, Windows runner, package, project, or workflow solely for this milestone.
 - [x] Do not claim native Photino/WebView2 dialog, window-lifecycle, resize, or accessibility testing from headless tests or Linux CI.
-- [ ] Record exact PR, merge commit, and passing CI run URLs in the handoff. — merge commit pending
+- [x] Record exact PR, merge commit, and passing CI run URLs in the handoff.
 - [x] Reconcile this checklist with the handoff and actual changed files; identify anything authored but not executed.
 - [x] Stop at the acceptance checkpoint below and report implementation decisions, test/CI evidence, visual-review status, artifact location, timing observations, and known limitations.
 
@@ -288,7 +288,7 @@ Continue tolerating the existing case normalization, repeated-whitespace normali
 - [x] Automated Core/parser, renderer invariant, desktop integration, and existing regression tests pass.
 - [x] Generated full-resolution samples and a correctly mapped review sheet are available; visual review is honestly recorded as passed or pending.
 - [x] README and handoff accurately document supported prompts, architecture, evidence, exclusions, and limitations.
-- [ ] The completed change passes the repository's Linux Release CI gate and the post-merge run. — PR gate green, post-merge run pending
+- [x] The completed change passes the repository's Linux Release CI gate and the post-merge run.
 - [x] The agent stops and reports implementation decisions, actual test/CI evidence, sample artifacts, visual observations, and known limitations.
 - [x] Do not continue to another flower species, plant family, container type, or relationship milestone without review.
 

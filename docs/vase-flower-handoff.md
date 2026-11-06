@@ -8,8 +8,9 @@ PNG/save path.
 - **Previous milestone:** Phase 6, still coffee or tea in ceramic cups — see
   [`cup-liquids-handoff.md`](cup-liquids-handoff.md) and [`.agents/todo-6.md`](../.agents/todo-6.md).
 - **Checklist:** [`.agents/todo-7.md`](../.agents/todo-7.md).
-- **Status:** implementation, tests and documentation complete; Linux Release CI green on the
-  PR; **the human visual-review gate is still open** — see [Visual review](#visual-review).
+- **Status:** implementation, tests and documentation complete and merged (`8aa2d9e`, PR #37,
+  post-merge run `42182664887` green); **the human visual-review gate is still open** — see
+  [Visual review](#visual-review).
 
 ## What ships
 
@@ -283,4 +284,6 @@ the matching 1024 × 1024 PNG.
 - Fourth run on `6281b7a`: [42182285484](https://github.com/Vraxo/Formloom/actions/runs/42182285484)
   — success, all steps green, `procedural-preview` 16.3 MB (up 2.1 MB from Phase 6, i.e. the
   eight new renders, their silhouettes and the sheet) and `test-results-Release` 108 KB.
-- Merge commit and post-merge run: recorded once the milestone is merged.
+- Merged as [`8aa2d9e`](https://github.com/Vraxo/Formloom/commit/8aa2d9ee0b343f3afe5264131bc027d2a6175322) (PR #37); post-merge run on that commit:
+  [42182664887](https://github.com/Vraxo/Formloom/actions/runs/42182664887) — success,
+  `procedural-preview` 16.3 MB, `test-results-Release` 108 KB.
