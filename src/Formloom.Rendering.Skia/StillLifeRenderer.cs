@@ -613,11 +613,13 @@ public static class StillLifeRenderer
         System.Numerics.Vector2 size)
     {
         canvas.Save();
+        // The mouth is drawn in vase-local 0..1 space; the flower path is in canvas 0..1 space,
+        // so this maps canvas-normalized points onto the vase's own axes.
         var toCanvasSpace = SKMatrix.CreateScaleTranslation(
-            size.X / 1024f,
-            size.Y / 1024f,
-            origin.X / 1024f,
-            origin.Y / 1024f);
+            1024f / size.X,
+            1024f / size.Y,
+            -origin.X / size.X,
+            -origin.Y / size.Y);
         canvas.Concat(in toCanvasSpace);
         using (var opening = CreateEllipsePath(flower.OpeningCenter, flower.OpeningRadius))
         {
