@@ -41,7 +41,7 @@ On Windows, install the latest .NET 10 SDK servicing release and WebView2 Runtim
 dotnet restore Formloom.slnx
 dotnet build Formloom.slnx --configuration Release --no-restore
 dotnet test --solution Formloom.slnx --configuration Release --no-build --report-trx --results-directory TestResults
-dotnet run --project Formloom.Desktop/Formloom.Desktop.csproj --configuration Release
+dotnet run --project src/Formloom.Desktop/Formloom.Desktop.csproj --configuration Release
 ```
 
 Use `a red apple on a wooden table`, seed `42`, variation `35%`. Save PNG opens a native dialog; the selected path is the output location. The suggested filename uses the successful image's seed, even after ungenerated control edits. Output is 1024 × 1024.

@@ -34,18 +34,18 @@ Case, whitespace and terminal punctuation are normalized as before. The token is
 
 ### 1. One small typed value, not a relationship engine
 
-`Formloom.Core/BowlContainment.cs` is a two-field record: `BowlContainment(CeramicInstance Bowl, FruitInstance Content)`. The content is a child of the container rather than a scene sibling, so every existing fruit and vessel code path keeps operating on one object at a time.
+`src/Formloom.Core/BowlContainment.cs` is a two-field record: `BowlContainment(CeramicInstance Bowl, FruitInstance Content)`. The content is a child of the container rather than a scene sibling, so every existing fruit and vessel code path keeps operating on one object at a time.
 
 - No generic scene graph, no `object` fields, no reflection, no type registry, no id strings.
 - `FruitInstance`, `CeramicInstance`, `SceneEntry`, `CeramicProfile`, `MixedComposition` and `FruitComposition` are unchanged.
 - `StillLifeScene` gains a single nullable `Containment` property; `Objects` still projects the bowl and the content as two entries so bounds, margins and diagnostics work unchanged, and `SubjectToken` short-circuits to the containment token.
 - The roles are part of the type, so the validator and renderer can tell "one fruit inside one bowl" apart from "two unrelated overlapping objects".
 
-Supporting geometry lives in `Formloom.Core/BowlGeometry.cs`: it exposes the opening ellipse, the left/right rim points and the **near-wall band** — the opening's lower arc joined to the bowl outline's front chain (the twelve outline segments from the left rim around the outside to the right rim). This is the only piece of bowl geometry the layering depends on.
+Supporting geometry lives in `src/Formloom.Core/BowlGeometry.cs`: it exposes the opening ellipse, the left/right rim points and the **near-wall band** — the opening's lower arc joined to the bowl outline's front chain (the twelve outline segments from the left rim around the outside to the right rim). This is the only piece of bowl geometry the layering depends on.
 
 ### 2. Bowl-local placement, no solver
 
-`Formloom.Core/BowlContainmentPlacement.cs` derives the content transform entirely from the bowl's own transform, in normalized bowl-local coordinates:
+`src/Formloom.Core/BowlContainmentPlacement.cs` derives the content transform entirely from the bowl's own transform, in normalized bowl-local coordinates:
 
 | Fruit | Height share of bowl | Seat fraction behind the near rim |
 | --- | --- | --- |
@@ -101,7 +101,7 @@ The existing `procedural-preview` artifact was extended (no new artifact or work
 
 ## Test coverage
 
-`Formloom.Tests/BowlContainmentTests.cs` (Core and parser):
+`tests/Formloom.Tests/BowlContainmentTests.cs` (Core and parser):
 
 - all twelve combinations parse, generate, expose one bowl plus one content, depth `bowl + 1`, and produce the expected subject token;
 - the containment prompt is not an object list, and `Parse`/`ParseFruit`/`ParseScene`/`ParseObjects` remain fruit/list-only;
@@ -111,7 +111,7 @@ The existing `procedural-preview` artifact was extended (no new artifact or work
 - `BowlGeometry` closure and rim split (near-wall band reaches the base, opening closes on the rim);
 - validation rejects content outside the inner width, floating content, a cup container, and an extra independent entry.
 
-`Formloom.Tests/BowlContainmentRenderingTests.cs` (pixels):
+`tests/Formloom.Tests/BowlContainmentRenderingTests.cs` (pixels):
 
 - twelve combinations render deterministically at 1024 × 1024 with the containment token;
 - the near wall occludes the seated part: non-vacuous visible pixel count, nothing below the near rim, the base stays hidden, and all visible content stays inside the opening's horizontal span;
@@ -122,7 +122,7 @@ The existing `procedural-preview` artifact was extended (no new artifact or work
 - detail omission touches only the content, and diagnostic passes do not disturb a later normal render;
 - export cases plus the row-major sheet and its manifest.
 
-`Formloom.Desktop.Tests/ContainmentPipelineTests.cs` and `AppComponentTests.cs` (pipeline and component):
+`tests/Formloom.Desktop.Tests/ContainmentPipelineTests.cs` and `AppComponentTests.cs` (pipeline and component):
 
 - six containment prompts through the real generation service and session, with the expected token and save filename;
 - four rejected containment phrasings in the same session keep the previous preview and the last successful seed/variation;

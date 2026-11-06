@@ -4,7 +4,7 @@ Run this after desktop interaction/save changes. Linux tests do not launch Photi
 
 ```powershell
 dotnet build Formloom.slnx --configuration Release
-dotnet run --project Formloom.Desktop/Formloom.Desktop.csproj --configuration Release --no-build
+dotnet run --project src/Formloom.Desktop/Formloom.Desktop.csproj --configuration Release --no-build
 ```
 
 - [ ] Generate default prompt / seed 42 / variation 35%; preview appears and controls re-enable.
