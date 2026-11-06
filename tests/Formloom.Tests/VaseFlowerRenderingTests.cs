@@ -121,8 +121,10 @@ public sealed class VaseFlowerRenderingTests
         Assert.True(warm > 700, $"{name} does not read as {color}: {warm} petal pixels");
 
         // The bloom is never cut by the vase: no petal-coloured pixel sits below the mouth top.
+        // The scan stops at the table horizon, whose warm wood also passes a colour test.
+        var horizon = (int)MathF.Floor((float)scene.TableHorizon * Canvas);
         var belowMouth = 0;
-        for (var y = rim; y < Canvas; y++)
+        for (var y = rim; y < horizon; y++)
         {
             for (var x = 0; x < Canvas; x++)
             {
