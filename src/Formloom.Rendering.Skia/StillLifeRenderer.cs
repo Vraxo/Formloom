@@ -622,37 +622,54 @@ public static class StillLifeRenderer
         // already set is kept: clips live in device space, not in the matrix.
         canvas.ResetMatrix();
         canvas.Scale(1024, 1024);
+        using var stem = CreateExtendedStemPath(plant, new(plant.StemBase.X, bottom + (plant.StemThickness * 3)));
+
+        canvas.Save();
         using (var opening = CreateEllipsePath(center, radius))
         {
             canvas.ClipPath(opening, antialias: true);
         }
 
-        // The opening narrows to a point exactly where the stem crosses the tangent, so the
-        // junction is widened to the stem's own width and the two passes join at full width.
+        PaintContinuation();
+        canvas.Restore();
+
+        // The opening narrows to a point exactly where the stem crosses the tangent, so the same
+        // stroke is painted again across the junction and the stem keeps its width there.
         float reach = plant.StemThickness * 2.5f;
-        using (var junction = new SKPath())
+        canvas.Save();
+        using (var junction = new SKPathBuilder())
         {
-            junction.AddRect(new SKRect(plant.StemBase.X - reach, top - reach, plant.StemBase.X + reach, top + reach));
-            canvas.ClipPath(junction, SKClipOperation.Union, antialias: true);
+            junction.MoveTo(plant.StemBase.X - reach, top - reach);
+            junction.LineTo(plant.StemBase.X + reach, top - reach);
+            junction.LineTo(plant.StemBase.X + reach, top + reach);
+            junction.LineTo(plant.StemBase.X - reach, top + reach);
+            junction.Close();
+            using var junctionPath = junction.Detach();
+            canvas.ClipPath(junctionPath, antialias: true);
         }
 
-        using var stem = CreateExtendedStemPath(plant, new(plant.StemBase.X, bottom + (plant.StemThickness * 3)));
-        StrokeStem(canvas, stem, plant, material, silhouette: false, paint);
-        using var depth = SKShader.CreateLinearGradient(
-            new SKPoint(center.X, top),
-            new SKPoint(center.X, bottom),
-            [ceramic.CavityColor.WithAlpha(0), ceramic.CavityColor.WithAlpha(210)],
-            null, SKShaderTileMode.Clamp);
-        paint.Style = SKPaintStyle.Stroke;
-        paint.StrokeWidth = plant.StemThickness;
-        paint.StrokeCap = SKStrokeCap.Round;
-        paint.Color = SKColors.White;
-        paint.Shader = depth;
-        canvas.DrawPath(stem, paint);
-        paint.Shader = null;
-        paint.Style = SKPaintStyle.Fill;
-        paint.StrokeCap = SKStrokeCap.Butt;
+        PaintContinuation();
         canvas.Restore();
+        canvas.Restore();
+
+        void PaintContinuation()
+        {
+            StrokeStem(canvas, stem, plant, material, silhouette: false, paint);
+            using var depth = SKShader.CreateLinearGradient(
+                new SKPoint(center.X, top),
+                new SKPoint(center.X, bottom),
+                [ceramic.CavityColor.WithAlpha(0), ceramic.CavityColor.WithAlpha(210)],
+                null, SKShaderTileMode.Clamp);
+            paint.Style = SKPaintStyle.Stroke;
+            paint.StrokeWidth = plant.StemThickness;
+            paint.StrokeCap = SKStrokeCap.Round;
+            paint.Color = SKColors.White;
+            paint.Shader = depth;
+            canvas.DrawPath(stem, paint);
+            paint.Shader = null;
+            paint.Style = SKPaintStyle.Fill;
+            paint.StrokeCap = SKStrokeCap.Butt;
+        }
     }
 
     // The stem path with a straight continuation below its typed end, so the stroke runs under
