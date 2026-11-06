@@ -141,8 +141,9 @@ public static class SceneValidator
 
         var opening = flower.OpeningCenter;
         var radius = flower.OpeningRadius;
-        var reach = ((plant.StemBase.X - opening.X) / radius.X) * ((plant.StemBase.X - opening.X) / radius.X) +
-            ((plant.StemBase.Y - opening.Y) / radius.Y) * ((plant.StemBase.Y - opening.Y) / radius.Y);
+        var offsetX = (plant.StemBase.X - opening.X) / radius.X;
+        var offsetY = (plant.StemBase.Y - opening.Y) / radius.Y;
+        var reach = (offsetX * offsetX) + (offsetY * offsetY);
         if (reach > 0.95f || plant.StemBase.Y <= flower.MouthTop)
         {
             return "A stem must enter through the vase opening rather than the exterior wall.";

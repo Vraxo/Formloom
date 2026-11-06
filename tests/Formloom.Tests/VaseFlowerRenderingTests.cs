@@ -8,6 +8,9 @@ namespace Formloom.Tests;
 
 public sealed class VaseFlowerRenderingTests
 {
+    // Everything in the rim band the stem passes behind, in pixels at the 1024 reference size.
+    private const int RimBand = 14;
+
     private const int Canvas = 1024;
 
     // Default set plus an alternate seed per colour and the low/high variation ends.
@@ -22,9 +25,6 @@ public sealed class VaseFlowerRenderingTests
         ("a red tulip in a cream ceramic vase on a wooden table", "red-cream-lowvariation", 42, 0),
         ("a yellow tulip in a blue ceramic vase on a wooden table", "yellow-blue-highvariation", 42, 1),
     ];
-
-    // Everything in the rim band the stem passes behind, in pixels at the 1024 reference size.
-    private const int RimBand = 14;
 
     public static TheoryData<string, string, string, string, int, double> ExportCases()
     {
