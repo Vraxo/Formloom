@@ -25,7 +25,6 @@ public sealed class TemporaryStemDiagnostics
             ("a yellow tulip in a blue ceramic vase on a wooden table", "yellow-blue-high", 42, 1),
         ];
 
-        var parts = new List<string>();
         foreach (var (prompt, name, seed, variation) in cases)
         {
             var scene = SceneGenerator.Generate(new(prompt, seed, variation)).Scene!;
@@ -74,10 +73,8 @@ public sealed class TemporaryStemDiagnostics
                 }
             }
 
-            parts.Add($"{name}:seam{seam}@{seamRow}(w{worst})/gap{uncovered}@{uncoveredRow}(rim{rim},lip{lipInner})");
+            Console.WriteLine($"::error::diag {name} seam{seam}@{seamRow}(w{worst}) gap{uncovered}@{uncoveredRow} rim{rim} lip{lipInner} above{above}");
         }
-
-        Console.WriteLine("::error::diag " + string.Join(" ", parts));
     }
 
     private static int Column(TulipPlant plant, int y)
