@@ -151,7 +151,7 @@ The same harness measured the layering: 25 000–39 000 changed content pixels p
 
 ## Timing observations
 
-The timing sidecars are produced by the exporter, but GitHub artifact storage is not reachable from the agent sandbox, so **no containment timing figures are reported here**. The `procedural-preview` artifact (12.6 MB on run 42033719927) carries `formloom-containment-*.timing.json` for every exported case; read `RenderAndEncodeMilliseconds` there. Compare with the Phase 4 numbers (single vessels 119–129 ms, pairs 129–136 ms, trios 133–143 ms for 1024 × 1024 render plus PNG encode) as a baseline; containment draws one vessel plus one fruit, so it is expected to sit at or slightly above the single-vessel cost.
+The review sheet's manifest does carry timings, but its cells render at **320 × 320**, so they measure a thumbnail rather than a full preview: **26.4–36.8 ms** per cell for render plus PNG encode across the ten cases (run 42034266225). The per-case `.timing.json` sidecars are the 1024 × 1024 figures and those were never read back, so **no full-size containment timing is quoted here**. For a baseline, Phase 4 measured single vessels 119–129 ms, pairs 129–136 ms and trios 133–143 ms at 1024 × 1024 render plus encode; containment draws one vessel plus one fruit, so it is expected to sit at or slightly above the single-vessel cost.
 
 ## Visual review status
 
@@ -186,6 +186,24 @@ Docs: `README.md`, `.agents/todo-5.md`, this file.
 
 Everything added in Phase 5 is exercised by the CI run above with three exceptions, stated plainly:
 
-- **The review sheet's visual content.** `formloom-containment-sheet.png` and the individual renders are produced and uploaded, but no one has looked at them yet: the sandbox cannot reach GitHub artifact storage and cannot run .NET, so the pixel-level acceptance items stay unchecked. The sheet is a plain row-major grid; use `formloom-containment-sheet.timing.json` to map a cell to its prompt.
-- **Timing numbers.** The exporter writes them; they were never read back, so no containment timings are quoted.
-- **The prompt-help sentence in `App.razor`.** It is now asserted by `AppComponentTests.PromptHelpMentionsContainment`, so this one is executed after all — it is listed here only because it is UI text, not behaviour.
+- **Nothing visual any more.** `formloom-containment-sheet.png` from run 42034266225 was uploaded and reviewed cell by cell — see [Visual review](#visual-review) below.
+- **Full-size timing numbers.** The 1024 × 1024 exporter sidecars were never read back; only the 320 px sheet cells were measured (26.4–36.8 ms).
+- **The prompt-help sentence in `App.razor`** is UI text, covered by `AppComponentTests.PromptHelpMentionsContainment`.
+
+## Visual review
+
+Reviewed the uploaded `formloom-containment-sheet.png` — the artifact from post-merge run 42034266225, 1600 × 640, five columns by two rows of 320 px cells — cell by cell, with 4× nearest-neighbour crops of the fruit/rim junction for the cream and blue bowls.
+
+Cell identity comes from `formloom-containment-sheet.timing.json`: 0 apple-blue · 1 apple-cream · 2 pear-blue · 3 pear-cream · 4 orange-blue · 5 orange-cream · 6 yellow apple / blue / seed 1337 · 7 yellow pear / cream / seed 20261105 · 8 apple-blue at variation 0 · 9 orange-cream at variation 1.
+
+**Seating.** Every cell reads as a fruit *in* a bowl. The near lip crosses in front of the lower fruit, a sliver of lit cavity floor stays visible between the fruit and the lip, and the fruit's base disappears behind the front wall. No cell reads as floating, pasted onto the front, or hidden behind the entire bowl.
+
+**Occlusion and identity.** The near rim cuts each fruit at roughly its lower third, and the cut follows the rim's curve instead of reading as a straight bar. Apple, pear and orange all stay recognisable in both glazes, at both seeds and at both variation extremes; stems, leaves and the orange's calyx survive containment intact.
+
+**Depth and shadow.** In the cream bowls the cavity contact shadow is clearly legible — a soft pool hugging the fruit's base on both sides and fading into the basin. In the blue bowls the interior is already dark, so the shadow reads as interior shading rather than a distinct pool; that is a contrast limit of the dark glaze, not a leak. Neither glaze looks muddy or excessively dark, no darkening touches the exterior wall, and the tabletop carries only the bowl's own cast shadow — the contained fruit casts nothing onto the table.
+
+**Extremes.** Cells 6–9 (alternate seeds, variation 0, variation 1) show no clipping, no fruit escaping the opening, no artefact on the near wall, and no double stroke where the layering splits the bowl into rear and front stages. Cells 0 and 8 differ only subtly, and cells 0/1 and 5/9 show the fruit in the same place across glaze changes, which matches the seed-independence invariant.
+
+**Minor observations, none blocking.** The far inner wall of the blue bowls desaturates to a pale grey band that reads slightly cooler and flatter than the cream interiors. And at the upper end of the fit range (coverage around 0.55) the larger fruits look deliberately snug — the bounded fit is doing exactly what it promises, though a viewer could read it as "stuffed" rather than "nestled".
+
+**Verdict: pass.** All five visual-review items and the visual-seating acceptance item are satisfied. No pixel defect surfaced that the automated invariants had missed.
