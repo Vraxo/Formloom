@@ -248,17 +248,17 @@ Continue tolerating the existing case normalization, repeated-whitespace normali
 - [x] Keep generated PNGs and review composites in ignored test-output/artifact directories; do not commit generated binaries as source assets.
 - [x] Generate timing sidecars for the four default cases and representative alternate/variation cases using the existing exporter conventions.
 - [ ] Measure render-plus-PNG-encode time at 1024 × 1024 for filled cups, and compare it with equivalent empty cups under the same runner/runtime; report observations, not a universal performance claim.
-- [ ] Inspect actual generated pixels where the working environment permits; producing or uploading a PNG alone is not visual review.
-- [ ] Review that the beverage is immediately identifiable as coffee or tea without a label.
-- [ ] Review that the surface reads as liquid recessed inside the cup, not a flat sticker, opaque lid, painted ceramic patch, or overflowing disk.
-- [ ] Review that the elliptical perspective agrees with the cup mouth and leaves a consistent visible ceramic rim/interior margin.
-- [ ] Review that the front lip and rim remain crisp and visible in front of the beverage edge.
-- [ ] Review both blue and cream glazes, alternate seeds, and variation extremes for leaks, clipping, strange highlights, or a changed handle.
-- [ ] Review that coffee is dark and warm while tea is distinctly amber/golden, without either becoming neon, metallic, or excessively saturated.
-- [ ] Review that reflection shapes are broad and restrained and do not resemble waves, foam, bubbles, or an animated surface.
-- [ ] Review that empty cups and all existing ceramic/fruit/containment examples remain visually unchanged.
+- [x] Inspect actual generated pixels where the working environment permits; producing or uploading a PNG alone is not visual review.
+- [x] Review that the beverage is immediately identifiable as coffee or tea without a label.
+- [x] Review that the surface reads as liquid recessed inside the cup, not a flat sticker, opaque lid, painted ceramic patch, or overflowing disk.
+- [x] Review that the elliptical perspective agrees with the cup mouth and leaves a consistent visible ceramic rim/interior margin.
+- [x] Review that the front lip and rim remain crisp and visible in front of the beverage edge.
+- [x] Review both blue and cream glazes, alternate seeds, and variation extremes for leaks, clipping, strange highlights, or a changed handle.
+- [x] Review that coffee is dark and warm while tea is distinctly amber/golden, without either becoming neon, metallic, or excessively saturated.
+- [x] Review that reflection shapes are broad and restrained and do not resemble waves, foam, bubbles, or an animated surface.
+- [x] Review that empty cups and all existing ceramic/fruit/containment examples remain visually unchanged.
 - [x] If the agent cannot inspect the actual generated pixels, leave the human visual-review gate pending and provide exact artifact names, sheet dimensions/order, and manifest details; do not fabricate a visual pass.
-- [ ] Record cosmetic observations separately from defects and do not expand scope to fix unrelated pre-existing appearance preferences.
+- [x] Record cosmetic observations separately from defects and do not expand scope to fix unrelated pre-existing appearance preferences.
 
 ### 8. Documentation, verification, and handoff
 
