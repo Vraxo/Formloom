@@ -132,7 +132,7 @@ green set for stem and leaf. Petal colour is the only thing red and yellow do no
 a colour change can never move a pixel outside the bloom — and because the green set is
 shared, a petal-colour change leaves the stem and leaves byte-identical.
 
-Draw order inside `DrawVaseFlower`, then the vase, unchanged:
+Draw order inside `DrawVaseFlower`, then the vase:
 
 1. **Clip.** A half-plane whose top edge is the mouth's own top tangent, derived from the
    vase profile — profile-aware, not a screen-space rectangle around the bloom.
@@ -141,18 +141,25 @@ Draw order inside `DrawVaseFlower`, then the vase, unchanged:
    (dark), then the centre vein as a thin stroke.
 4. **Petals**, back to front: a radial gradient offset along the scene light direction, with
    the tone lifting the base colour, plus a very light edge stroke for separation.
-5. **The vase**, drawn exactly as an empty vase is drawn — so the stem disappears behind the
-   rim and every vase pixel below the rim band is byte-identical to the empty-vase render.
+5. **The vase**, drawn as an empty vase is drawn, with one addition: after the cavity base
+   and before the rim strokes, `DrawStemInsideOpening` carries the same stem path on into the
+   opening. It is clipped to the opening ellipse taken from the vase profile, darkened to
+   74 % so it reads as recessed, and then cut by the near lip, which is stroked afterwards.
+
+The two passes meet exactly at the mouth's top tangent, so the stem is one continuous line:
+outside the vessel above the rim, then visibly inside the opening, then gone under the front
+lip. Nothing is drawn *in front of* the lip.
 
 Consequences, all asserted:
 
-- No flower pixel can reach the vase's exterior wall, the table or the background: the clip
-  forbids it and the vase paints over anything inside its own silhouette.
+- No flower pixel can reach the vase's exterior wall, the table or the background: the flower
+  pass is clipped to the half-plane, and the in-opening continuation is clipped to the opening
+  ellipse.
 - The bloom and both leaves stay above the rim; no petal-coloured pixel exists below the
   mouth's top edge.
-- The only intentional overlap is the rim band the stem passes behind (about 14 px at
-  1024 × 1024: the lip and rim strokes are drawn after the flower, so a fraction of the stem
-  shows through their translucency exactly where it should).
+- Below the rim, the only pixels that differ from the same empty vase are inside the opening
+  ellipse, plus a two-pixel margin for the antialiased edge of that continuation. The rim band
+  the stem passes behind is still an intentional overlap (about 14 px at 1024 × 1024).
 - **Shadow mask:** the flower contributes nothing, so a planted vase's shadow mask is
   byte-identical to the empty vase's. The flower has no tabletop shadow of its own.
 - **Silhouette:** the flower *is* included, because the bloom is a visible part of the
@@ -180,8 +187,10 @@ ordinary-prompt preservation.
 
 `tests/Formloom.Tests/VaseFlowerRenderingTests.cs` (pixels) — per combination: PNG bytes
 determinism, subject token, changed-pixel floor against the empty vase, *nothing* changed
-below the rim band, nothing changed outside the flower's bounds above it, bloom/leaf/stem
-presence counts, petal-colour identity, and no petal pixel below the mouth top; five output
+below the rim outside the opening ellipse (and a floor on the changed pixels inside it, so the
+stem's continuation cannot silently disappear), nothing changed outside the flower's bounds
+above it, bloom/leaf/stem presence counts, petal-colour identity, and no petal pixel below the
+mouth top; five output
 sizes from 64 × 64 to 4096 × 1024; red-versus-yellow differences confined to the bloom;
 glaze-independence of every pixel above the rim; unchanged shadow mask and additive-only
 silhouette; detail omission confined to the flower; diagnostic-pass stability; alternate
@@ -292,13 +301,13 @@ Observed and deliberately kept, not defects:
 - The bloom is a closed bud. It never opens into an open cup, which is what "cupped and
   petal-shaped" asked for, but a later milestone that wants an open flower cannot get one by
   turning the variation up.
-- The stem's clip at the mouth's top tangent means nothing is drawn *inside* the cavity: the
-  entry reads as natural, but a reviewer looking for a stub down the hole will not find one.
+- The stem's continuation into the opening was added after the review above: the first render
+  stopped it at the mouth's top tangent, which read as the flower standing behind the vase.
+  The sheet in this review therefore predates it; the follow-up sheet is the one that shows
+  the stem inside the opening.
 
-Still open, and clerical rather than visual: the 1024 × 1024 render-plus-encode time against the
-equivalent empty vase. The sheet manifest carries only the 320 px cell timings (30.9–32.7 ms
-across the eight cells); the full-size figures are in the eight `formloom-vaseflower-*.timing.json`
-sidecars, whose artifact bytes are not reachable from this environment.
+The 1024 × 1024 timing read-back, which was open at review time, is recorded above in
+[Timing observations](#timing-observations).
 
 ## Known limitations
 
@@ -308,9 +317,9 @@ sidecars, whose artifact bytes are not reachable from this environment.
   physics, no wind, no growth, no drooping, no pollen or stamens, and no shadow of its own.
 - Shadow-mask output deliberately omits the flower; silhouette output deliberately includes
   it. Both are documented conventions, not defects.
-- The stem is clipped at the mouth's top tangent, so it is not drawn *inside* the opening.
-  It ends behind the rim, where the lip strokes cover it — the cheapest way to guarantee no
-  leak onto the ceramic while keeping every vase pixel below the rim band byte-identical.
+- The stem's continuation into the opening is a straight continuation of the same path: it
+  does not bend or foreshorten inside the cavity, and it is not darkened by depth beyond a
+  single 74 % tint. A physically lit version would have to shade the far wall it passes.
 - Flower height is capped by the vase's headroom, so the plant is proportioned to the vessel
   rather than to the canvas; a taller flower would need a shorter vase or a smaller margin.
 - The bloom's five petals, the two leaf angles and the headroom shares are authored
