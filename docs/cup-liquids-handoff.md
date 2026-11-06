@@ -3,7 +3,7 @@
 One existing cup, one still beverage. Four combinations: blue and cream glazes, each with coffee or tea. This is a static illustrated surface, not a fluid simulation, and it reuses the existing prompt → Core → deterministic generation → Skia CPU renderer → PNG/save pipeline unchanged.
 
 - **Starting commit:** `995d341` (merge of `.agents/todo-6.md` into `main`).
-- **Ending commit:** `MERGE_SHA` (PR #33).
+- **Ending commit:** `0b7bcba` (merge of PR #33).
 - **Spec:** [`.agents/todo-6.md`](../.agents/todo-6.md).
 - **Previous milestone:** [Phase 5 handoff](containment-handoff.md).
 
@@ -147,10 +147,19 @@ Per-case timings are written to the sidecars, but GitHub artifact storage is not
 
 ## Verification
 
-- PR: [#33](https://github.com/Vraxo/Formloom/pull/33) — merged as `MERGE_SHA`.
-- CI run on the PR head `PASSING_SHA`: [42173293373](https://github.com/Vraxo/Formloom/actions/runs/42173293373) — restore, warnings-as-errors Release build, both test projects, test-results upload and `procedural-preview` (14.2 MB, up 1.9 MB from Phase 5, i.e. the eight new renders, their silhouettes and the sheet) all green.
-- Post-merge run: [POST_MERGE_RUN](https://github.com/Vraxo/Formloom/actions/runs/POST_MERGE_RUN_ID)
+- PR: [#33](https://github.com/Vraxo/Formloom/pull/33) — merged as `0b7bcba`.
+- CI run on the final PR head `2a14a4f` (temporary diagnostics removed): [42173473422](https://github.com/Vraxo/Formloom/actions/runs/42173473422) — restore, warnings-as-errors Release build, both test projects, test-results upload and `procedural-preview` (14.2 MB, up 1.9 MB from Phase 5, i.e. the eight new renders, their silhouettes and the sheet) all green.
+- Post-merge run on `0b7bcba`: [42173659035](https://github.com/Vraxo/Formloom/actions/runs/42173659035) — success, `procedural-preview` 14.2 MB, `test-results-Release` 92 KB.
+- The run that actually located the failures was [42173293373](https://github.com/Vraxo/Formloom/actions/runs/42173293373) at `42172b1`, which carried a temporary annotation harness because test names and logs are unreachable from this sandbox.
 
 The CI gate was reached through three incremental fixes rather than one lucky push: an unused theory parameter (xUnit1026), redundant parentheses in a throwaway diagnostics harness (SA1119), and one genuine expectation bug — the "glaze must not recolour the beverage" test sampled the liquid's outermost antialiased ring, where the drink legitimately blends into the glaze-dependent cavity (42 pixels). The sample region now stops at 80 % of the clip ellipse.
 
 The workflow is unchanged: one Ubuntu **Linux / Release** job — restore, warnings-as-errors build, both test projects, test-results upload and the `procedural-preview` upload. No new package, project, runner or workflow step was added.
+
+## Authored but not executed
+
+- **Every pixel.** The eight 1024 × 1024 renders, their silhouettes and the review sheet are produced and uploaded, but nobody has looked at them: the sandbox cannot reach GitHub artifact storage and has no .NET runtime, so the ten visual-review items stay unchecked. The sheet is a plain 4 × 2 row-major grid; map a cell with `formloom-cupliquid-sheet.timing.json`.
+- **Filled-cup timings.** Each sidecar records the filled and empty numbers side by side, but they were never read back, so no timing figure is quoted and the measurement item stays open.
+- **The prompt-help sentence and the four tokens** are covered by tests (`PromptHelpMentionsContainment`, `SaveNamesWhitelistCupLiquidTokens`), so those are executed; they are listed nowhere as gaps.
+
+Everything else in the spec is exercised by the CI run above, in both test projects.
