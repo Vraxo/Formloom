@@ -16,7 +16,7 @@ public sealed class CupLiquidDiagnostics
         var checks = new List<(string Name, Action Body)>();
         foreach (var prompt in CupLiquidTests.Rejected)
         {
-            checks.Add((($"reject[{prompt}]"), new Action(() => core.UnsupportedCupContentsPhrasingsAreRejected(prompt))));
+            checks.Add(($"reject[{prompt}]", new Action(() => core.UnsupportedCupContentsPhrasingsAreRejected(prompt))));
         }
 
         foreach (var glaze in new[] { "blue", "cream" })
@@ -24,15 +24,15 @@ public sealed class CupLiquidDiagnostics
             foreach (var beverage in new[] { "coffee", "tea" })
             {
                 var prompt = $"a {glaze} ceramic cup filled with {beverage} on a wooden table";
-                checks.Add((($"core[{prompt}]"), new Action(() => core.EveryCupAndBeverageCombinationParsesAndGenerates(prompt, glaze, beverage))));
-                checks.Add((($"render[{prompt}]"), new Action(() => render.EveryCombinationRendersDeterministicallyAtFullSize(prompt, glaze, beverage))));
-                checks.Add((($"mouth[{prompt}]"), new Action(() => render.LiquidIsDrawnOnlyInsideTheCupMouth(prompt, glaze, beverage))));
+                checks.Add(($"core[{prompt}]", new Action(() => core.EveryCupAndBeverageCombinationParsesAndGenerates(prompt, glaze, beverage))));
+                checks.Add(($"render[{prompt}]", new Action(() => render.EveryCombinationRendersDeterministicallyAtFullSize(prompt, glaze, beverage))));
+                checks.Add(($"mouth[{prompt}]", new Action(() => render.LiquidIsDrawnOnlyInsideTheCupMouth(prompt, glaze, beverage))));
             }
         }
 
         foreach (var (width, height) in new[] { (256, 256), (640, 480), (2048, 1024) })
         {
-            checks.Add((($"dims[{width}x{height}]"), new Action(() => render.FilledCupsRenderAtOtherSupportedDimensions(width, height))));
+            checks.Add(($"dims[{width}x{height}]", new Action(() => render.FilledCupsRenderAtOtherSupportedDimensions(width, height))));
         }
 
         checks.Add(("normalization", new Action(core.ParsingToleratesCaseWhitespaceAndTerminalPunctuation)));

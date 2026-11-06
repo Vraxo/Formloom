@@ -19,7 +19,7 @@ public sealed class CupLiquidDesktopDiagnostics
             ("a cream ceramic cup filled with tea on a wooden table", "tea-in-cream-cup"),
         })
         {
-            checks.Add((($"pipeline[{prompt}]"), new Action(() => pipeline.FilledCupPromptsUseTheRealPipelineAndKeepThePreviewOnRejection(prompt, subject).GetAwaiter().GetResult())));
+            checks.Add(($"pipeline[{prompt}]", new Action(() => pipeline.FilledCupPromptsUseTheRealPipelineAndKeepThePreviewOnRejection(prompt, subject).GetAwaiter().GetResult())));
         }
 
         checks.Add(("metadata", new Action(() => pipeline.EmptyCupsAndFilledCupsKeepDistinctMetadata().GetAwaiter().GetResult())));
@@ -32,7 +32,7 @@ public sealed class CupLiquidDesktopDiagnostics
             "a cream ceramic cup filled with tea on a wooden table",
         })
         {
-            checks.Add((($"component[{prompt}]"), new Action(() => app.InputEventsAndSubmitUseEditedValuesAndRenderPreview(prompt).GetAwaiter().GetResult())));
+            checks.Add(($"component[{prompt}]", new Action(() => app.InputEventsAndSubmitUseEditedValuesAndRenderPreview(prompt).GetAwaiter().GetResult())));
         }
 
         var passed = 0;
