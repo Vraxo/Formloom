@@ -13,6 +13,10 @@ public static class PromptParser
 
     private const string BeverageDescriptor = @"(?:coffee|tea)";
 
+    private const string TulipDescriptor = @"a (?:red|yellow) tulip";
+
+    private const string VaseDescriptor = @"a (?:blue|cream) ceramic vase";
+
     private const string Setting = " on a wooden table";
 
     public static AppleColor? Parse(string? prompt)
@@ -114,6 +118,35 @@ public static class PromptParser
 
         var beverage = match.Groups["beverage"].Value == "coffee" ? BeverageKind.Coffee : BeverageKind.Tea;
         return new(cup, beverage);
+    }
+
+    // A single tulip growing out of a single existing vase. The exact grammar is
+    // "<tulip> in <vase> on a wooden table"; anything else is rejected whole rather than
+    // being read as an ordinary empty vase.
+    public static VaseFlowerPrompt? ParseVaseFlower(string? prompt)
+    {
+        var normalized = Normalize(prompt);
+        if (normalized is null)
+        {
+            return null;
+        }
+
+        var match = Regex.Match(
+            normalized[..^Setting.Length],
+            @"\A(?<flower>" + TulipDescriptor + @") in (?<vase>" + VaseDescriptor + @")\z");
+        if (!match.Success)
+        {
+            return null;
+        }
+
+        var vase = ParseDescriptor(match.Groups["vase"].Value).Ceramic;
+        if (vase is null || vase.Kind != CeramicKind.Vase)
+        {
+            return null;
+        }
+
+        var color = match.Groups["flower"].Value == "a red tulip" ? TulipColor.Red : TulipColor.Yellow;
+        return new(vase, FlowerKind.Tulip, color);
     }
 
     public static ImmutableArray<ObjectPrompt>? ParseObjects(string? prompt)

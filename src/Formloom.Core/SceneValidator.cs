@@ -68,12 +68,121 @@ public static class SceneValidator
             return "A scene cannot be both a filled cup and a fruit inside a bowl.";
         }
 
+        if (scene.VaseFlower is not null && (containment is not null || scene.CupContents is not null))
+        {
+            return "A scene cannot hold a flower and another contents relationship at the same time.";
+        }
+
         if (scene.CupContents is { } contents)
         {
             return ValidateCupContents(objects, contents);
         }
 
+        if (scene.VaseFlower is { } flower)
+        {
+            return ValidateVaseFlower(objects, flower);
+        }
+
         return containment is null ? null : ValidateContainment(objects, containment);
+    }
+
+    // The tulip is contents of the scene's one vase, so the vase must be exactly the ceramic
+    // instance the scene already holds, and the plant must hang from that vase's own mouth.
+    private static string? ValidateVaseFlower(ImmutableArray<SceneEntry> objects, VaseFlower flower)
+    {
+        if (flower.Vase.Kind != CeramicKind.Vase)
+        {
+            return "Only a vase can hold a flower.";
+        }
+
+        if (!Enum.IsDefined(flower.Vase.Glaze))
+        {
+            return "A vase must have a blue or cream glaze.";
+        }
+
+        if (!Enum.IsDefined(flower.Flower))
+        {
+            return "Only a tulip is supported.";
+        }
+
+        if (!Enum.IsDefined(flower.Color))
+        {
+            return "A tulip must be red or yellow.";
+        }
+
+        if (objects.Length != 1 || objects[0].Ceramic != flower.Vase)
+        {
+            return "A flower scene must contain exactly that vase and no other object.";
+        }
+
+        var plant = flower.Plant;
+        if (plant is null || plant.Leaves.IsDefault || plant.Bloom is null || plant.Bloom.Petals.IsDefault)
+        {
+            return "A vase flower must describe a stem, two leaves and a bloom.";
+        }
+
+        if (plant.Stem.IsDefaultOrEmpty || plant.Leaves.Length != 2 || plant.Bloom.Petals.Length is < 3 or > 5)
+        {
+            return "A vase flower must describe a stem, exactly two leaves and one bloom of three to five petals.";
+        }
+
+        if (!float.IsFinite(plant.StemThickness) || plant.StemThickness <= 0 ||
+            !float.IsFinite(plant.Bloom.Width) || plant.Bloom.Width <= 0 ||
+            !float.IsFinite(plant.Bloom.Height) || plant.Bloom.Height <= 0)
+        {
+            return "Flower geometry must be finite and positive.";
+        }
+
+        var bounds = plant.Bounds;
+        if (!float.IsFinite(bounds.Left) || !float.IsFinite(bounds.Top) || !float.IsFinite(bounds.Right) || !float.IsFinite(bounds.Bottom))
+        {
+            return "Flower geometry must be finite and positive.";
+        }
+
+        var opening = flower.OpeningCenter;
+        var radius = flower.OpeningRadius;
+        var reach = ((plant.StemBase.X - opening.X) / radius.X) * ((plant.StemBase.X - opening.X) / radius.X) +
+            ((plant.StemBase.Y - opening.Y) / radius.Y) * ((plant.StemBase.Y - opening.Y) / radius.Y);
+        if (reach > 0.95f || plant.StemBase.Y <= flower.MouthTop)
+        {
+            return "A stem must enter through the vase opening rather than the exterior wall.";
+        }
+
+        if (plant.StemTop.Y >= flower.MouthTop - 0.004f)
+        {
+            return "A stem must rise clear of the vase rim.";
+        }
+
+        if (plant.Bloom.Top >= flower.MouthTop - 0.01f || plant.Bloom.Base.Y >= flower.MouthTop - 0.004f)
+        {
+            return "A bloom must sit above the vase opening, clear of the rim.";
+        }
+
+        foreach (var leaf in plant.Leaves)
+        {
+            if (!float.IsFinite(leaf.Width) || leaf.Width <= 0 || leaf.Outline.IsDefault || leaf.Vein.IsDefault)
+            {
+                return "Every leaf must describe a finite blade and vein.";
+            }
+
+            if (leaf.Attachment.Y >= flower.MouthTop - 0.004f || leaf.Tip.Y >= flower.MouthTop - 0.004f)
+            {
+                return "Every leaf must stay above the vase opening.";
+            }
+        }
+
+        if (bounds.Top < TulipGeometry.TopMargin - 0.012f || bounds.Left < 0.02f || bounds.Right > 0.98f ||
+            bounds.Bottom > plant.StemBase.Y + (plant.StemThickness / 2) + 0.001f)
+        {
+            return "Flower bounds must remain inside the safe canvas margins.";
+        }
+
+        if (plant.Bloom.Width > radius.X * 2.5f || plant.Bloom.Height > 0.16f || plant.StemThickness > radius.X * 0.3f)
+        {
+            return "A bloom and stem must stay proportionate to the vase opening.";
+        }
+
+        return null;
     }
 
     // The drink is contents of the scene's one cup, so the cup must be exactly the ceramic

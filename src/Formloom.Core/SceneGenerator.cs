@@ -38,10 +38,15 @@ public static class SceneGenerator
             return GenerateCupContents(cupContents, request);
         }
 
+        if (PromptParser.ParseVaseFlower(request.Prompt) is { } vaseFlower)
+        {
+            return GenerateVaseFlower(vaseFlower, request);
+        }
+
         var parsed = PromptParser.ParseObjects(request.Prompt);
         if (parsed is null)
         {
-            return new(null, "That prompt is not supported. Use one to three objects on a wooden table: a red/green/yellow apple, a green/yellow pear, an orange, or a blue/cream ceramic bowl, cup or vase. Join objects with 'and'; three-object lists may use commas. One fruit may also be placed inside a bowl: '<fruit> in a blue ceramic bowl on a wooden table'. One cup may be filled with coffee or tea: 'a blue ceramic cup filled with coffee on a wooden table'.");
+            return new(null, "That prompt is not supported. Use one to three objects on a wooden table: a red/green/yellow apple, a green/yellow pear, an orange, or a blue/cream ceramic bowl, cup or vase. Join objects with 'and'; three-object lists may use commas. One fruit may also be placed inside a bowl: '<fruit> in a blue ceramic bowl on a wooden table'. One cup may be filled with coffee or tea: 'a blue ceramic cup filled with coffee on a wooden table'. One vase may hold a single tulip: 'a red tulip in a blue ceramic vase on a wooden table'.");
         }
 
         return GenerateObjects(parsed.Value, request);
@@ -158,6 +163,26 @@ public static class SceneGenerator
         var filled = scene with { CupContents = new CupContents(scene.Ceramics[0], prompt.Beverage) };
         var error = SceneValidator.Validate(filled);
         return error is null ? new(filled, null) : new(null, error);
+    }
+
+    // A tulip in a vase is built by the ordinary single-object path and then carries the
+    // flower as typed contents of that exact vase. The vase therefore keeps its body,
+    // glaze, seed and depth, and the planted render can differ from the empty one only
+    // above the mouth and where the stem passes behind the rim.
+    private static GenerationResult GenerateVaseFlower(VaseFlowerPrompt prompt, GenerationRequest request)
+    {
+        var empty = GenerateObjects([ObjectPrompt.FromCeramic(prompt.Vase with { Kind = CeramicKind.Vase })], request);
+        if (empty.Scene is not { } scene)
+        {
+            return empty;
+        }
+
+        var planted = scene with
+        {
+            VaseFlower = VaseFlower.Create(scene.Ceramics[0], prompt.Color, request.Seed, request.Variation),
+        };
+        var error = SceneValidator.Validate(planted);
+        return error is null ? new(planted, null) : new(null, error);
     }
 
     private static ImmutableArray<SceneEntry> Arrange(ImmutableArray<SceneEntry> entries, GenerationRequest request)
