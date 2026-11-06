@@ -908,6 +908,8 @@ public static class StillLifeRenderer
             DrawStemInsideOpening(canvas, flower, material, paint);
         }
 
+        // The stem leaves the paint in fill mode; the near lip is a stroke.
+        paint.Style = SKPaintStyle.Stroke;
         var mouth = new SKRect(center.X - radius.X, center.Y - radius.Y, center.X + radius.X, center.Y + radius.Y);
         paint.StrokeWidth = profile.RimThickness * 2.2f;
         paint.Color = material.LipColor.WithAlpha(235);
