@@ -197,7 +197,8 @@ mentions the tulip.
 ## Artifacts
 
 `procedural-preview` (run [42182285484](https://github.com/Vraxo/Formloom/actions/runs/42182285484),
-16.3 MB) gains, beside the per-case files:
+16.3 MB at the time of the milestone; the export-artifact trim below later reduced the artifact to
+about 25 files) gains, beside the per-case files:
 
 - `formloom-vaseflower-<name>-seed-<seed>-variation-<v:0.00>.png` — eight cases: the four
   defaults, an alternate seed per tulip colour (1337, 20261105) and the two variation
@@ -212,6 +213,12 @@ mentions the tulip.
   prompt, seed, variation, subject, flower, tulip colour, glaze, filename, cell/column/row,
   dimensions, timing). The CI image has no font stack, so the sheet carries no text and the
   manifest is the authoritative key.
+
+Since the export-artifact trim, the per-case PNG, silhouette and timing files above are written
+only when **`FORMFLOOM_EXPORT_ALL=1`**; a routine run keeps the sheet, its manifest and the
+canonical `red-blue` case (`formloom-vaseflower-red-blue-seed-42-variation-0.35.*`) so a full-size
+flower is still one download away. The renders and the assertions are unaffected — the gate only
+skips the writes.
 
 Cell identity, row-major: **0** red / blue 42 · 0.35 · **1** red / cream 42 · 0.35 ·
 **2** yellow / blue 42 · 0.35 · **3** yellow / cream 42 · 0.35 · **4** red / blue seed 1337 ·

@@ -7,6 +7,8 @@ namespace Formloom.Tests;
 
 public sealed class FruitRenderingTests
 {
+    private const string CanonicalSample = "formloom-apple-seed-42-variation-0.35.png";
+
     [Theory]
     [InlineData("a green pear on a wooden table")]
     [InlineData("a yellow pear on a wooden table")]
@@ -86,7 +88,10 @@ public sealed class FruitRenderingTests
             silhouettes.Add(mask.Bytes);
             using var image = SKImage.FromBitmap(mask);
             using var encoded = image.Encode(SKEncodedImageFormat.Png, 100);
-            File.WriteAllBytes(Path.Combine(AppContext.BaseDirectory, $"formloom-{scene.Subject.ToString().ToLowerInvariant()}-body-silhouette.png"), encoded.ToArray());
+            if (ExportArtifacts.All)
+            {
+                File.WriteAllBytes(Path.Combine(AppContext.BaseDirectory, $"formloom-{scene.Subject.ToString().ToLowerInvariant()}-body-silhouette.png"), encoded.ToArray());
+            }
         }
 
         Assert.False(silhouettes[0].SequenceEqual(silhouettes[1]));
@@ -157,8 +162,11 @@ public sealed class FruitRenderingTests
         canvas.DrawBitmap(complete, 0, 0, new SKSamplingOptions(SKFilterMode.Nearest));
         using var image = SKImage.FromBitmap(review);
         using var encoded = image.Encode(SKEncodedImageFormat.Png, 100);
-        var name = FormattableString.Invariant($"formloom-{scene.Subject.ToString().ToLowerInvariant()}-complete-silhouette-seed-{seed}-variation-{variation:0.00}.png");
-        File.WriteAllBytes(Path.Combine(AppContext.BaseDirectory, name), encoded.ToArray());
+        if (ExportArtifacts.All)
+        {
+            var name = FormattableString.Invariant($"formloom-{scene.Subject.ToString().ToLowerInvariant()}-complete-silhouette-seed-{seed}-variation-{variation:0.00}.png");
+            File.WriteAllBytes(Path.Combine(AppContext.BaseDirectory, name), encoded.ToArray());
+        }
     }
 
     [Theory]
@@ -179,7 +187,12 @@ public sealed class FruitRenderingTests
         var rendered = StillLifeRenderer.Render(scene);
         timer.Stop();
         var filename = FormattableString.Invariant($"formloom-{name}-seed-{seed}-variation-{variation:0.00}.png");
-        File.WriteAllBytes(Path.Combine(AppContext.BaseDirectory, filename), rendered.PngBytes);
+        var keep = ExportArtifacts.Keeps(filename, CanonicalSample);
+        if (keep)
+        {
+            File.WriteAllBytes(Path.Combine(AppContext.BaseDirectory, filename), rendered.PngBytes);
+        }
+
         var timing = System.Text.Json.JsonSerializer.Serialize(new
         {
             Subject = scene.Subject.ToString(),
@@ -194,7 +207,11 @@ public sealed class FruitRenderingTests
             Framework = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription,
             OperatingSystem = System.Runtime.InteropServices.RuntimeInformation.OSDescription,
         });
-        File.WriteAllText(Path.Combine(AppContext.BaseDirectory, Path.ChangeExtension(filename, ".timing.json")), timing);
+        if (keep)
+        {
+            File.WriteAllText(Path.Combine(AppContext.BaseDirectory, Path.ChangeExtension(filename, ".timing.json")), timing);
+        }
+
         Assert.Equal(1024, rendered.Width);
         Assert.Equal(1024, rendered.Height);
     }

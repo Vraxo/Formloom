@@ -9,6 +9,8 @@ namespace Formloom.Tests;
 
 public sealed class CeramicRenderingTests
 {
+    private const string CanonicalStem = "formloom-ceramic-vase-blue-seed-42-variation-0.35";
+
     private static readonly string[] ReviewPrompts =
     [
         "a blue ceramic bowl on a wooden table",
@@ -373,7 +375,12 @@ public sealed class CeramicRenderingTests
         var rendered = StillLifeRenderer.Render(scene);
         timer.Stop();
         var stem = FormattableString.Invariant($"formloom-ceramic-{name}-seed-{seed}-variation-{variation:0.00}");
-        File.WriteAllBytes(Path.Combine(AppContext.BaseDirectory, stem + ".png"), rendered.PngBytes);
+        var keep = ExportArtifacts.Keeps(stem, CanonicalStem);
+        if (keep)
+        {
+            File.WriteAllBytes(Path.Combine(AppContext.BaseDirectory, stem + ".png"), rendered.PngBytes);
+        }
+
         var report = System.Text.Json.JsonSerializer.Serialize(
             new
             {
@@ -390,8 +397,11 @@ public sealed class CeramicRenderingTests
                 Objects = scene.Objects,
             },
             new System.Text.Json.JsonSerializerOptions { IncludeFields = true });
-        File.WriteAllText(Path.Combine(AppContext.BaseDirectory, stem + ".timing.json"), report);
-        File.WriteAllBytes(Path.Combine(AppContext.BaseDirectory, stem + "-silhouette.png"), StillLifeRenderer.RenderSilhouette(scene).PngBytes);
+        if (keep)
+        {
+            File.WriteAllText(Path.Combine(AppContext.BaseDirectory, stem + ".timing.json"), report);
+            File.WriteAllBytes(Path.Combine(AppContext.BaseDirectory, stem + "-silhouette.png"), StillLifeRenderer.RenderSilhouette(scene).PngBytes);
+        }
     }
 
     [Fact]
