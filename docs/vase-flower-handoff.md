@@ -141,14 +141,18 @@ Draw order inside `DrawVaseFlower`, then the vase:
    (dark), then the centre vein as a thin stroke.
 4. **Petals**, back to front: a radial gradient offset along the scene light direction, with
    the tone lifting the base colour, plus a very light edge stroke for separation.
-5. **The vase**, drawn as an empty vase is drawn, with one addition: after the cavity base
-   and before the rim strokes, `DrawStemInsideOpening` carries the same stem path on into the
-   opening. It is clipped to the opening ellipse taken from the vase profile, darkened to
-   74 % so it reads as recessed, and then cut by the near lip, which is stroked afterwards.
+5. **The vase**, drawn as an empty vase is drawn, with the mouth split around the stem: the
+   cavity base and the thin **far rim** are stroked first, then `DrawStemInsideOpening` repaints
+   the stem's own column across the rim band and carries the same stroke on into the opening,
+   and last the thick **near lip** arc goes on top. The continuation uses the same width,
+   angle and shader, is extended below its typed end to the bottom of the opening, and is
+   darkened by a vertical gradient that starts fully transparent at the tangent and deepens to
+   the cavity colour at the bottom.
 
-The two passes meet exactly at the mouth's top tangent, so the stem is one continuous line:
-outside the vessel above the rim, then visibly inside the opening, then gone under the front
-lip. Nothing is drawn *in front of* the lip.
+The far rim is behind the stem and the near lip in front of it, which is the order a stem
+entering a vessel actually has. The two halves of the stroke meet at the mouth's top tangent
+with no tone step, so the stem is one continuous line: outside the vessel, visibly inside the
+opening, then gone under the front lip.
 
 Consequences, all asserted:
 
@@ -318,8 +322,8 @@ The 1024 × 1024 timing read-back, which was open at review time, is recorded ab
 - Shadow-mask output deliberately omits the flower; silhouette output deliberately includes
   it. Both are documented conventions, not defects.
 - The stem's continuation into the opening is a straight continuation of the same path: it
-  does not bend or foreshorten inside the cavity, and it is not darkened by depth beyond a
-  single 74 % tint. A physically lit version would have to shade the far wall it passes.
+  does not bend, taper or foreshorten inside the cavity. Its depth cue is a single vertical
+  gradient rather than light from the scene, so it never shades the far wall it passes.
 - Flower height is capped by the vase's headroom, so the plant is proportioned to the vessel
   rather than to the canvas; a taller flower would need a shorter vase or a smaller margin.
 - The bloom's five petals, the two leaf angles and the headroom shares are authored
