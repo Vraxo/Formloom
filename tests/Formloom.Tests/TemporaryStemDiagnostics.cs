@@ -5,125 +5,201 @@ using Xunit;
 
 namespace Formloom.Tests;
 
-// Temporary: reports, in one annotation, which export case breaks which invariant.
+// Temporary: replays the file's other invariants and reports them as annotations.
 public sealed class TemporaryStemDiagnostics
 {
-    private static readonly (string Prompt, string Name, int Seed, double Variation)[] Cases =
-    [
-        ("a red tulip in a blue ceramic vase on a wooden table", "red-blue", 42, 0.35),
-        ("a red tulip in a cream ceramic vase on a wooden table", "red-cream", 42, 0.35),
-        ("a yellow tulip in a blue ceramic vase on a wooden table", "yellow-blue", 42, 0.35),
-        ("a yellow tulip in a cream ceramic vase on a wooden table", "yellow-cream", 42, 0.35),
-        ("a red tulip in a blue ceramic vase on a wooden table", "red-blue-altseed", 1337, 0.35),
-        ("a yellow tulip in a cream ceramic vase on a wooden table", "yellow-cream-altseed", 20261105, 0.35),
-        ("a red tulip in a cream ceramic vase on a wooden table", "red-cream-lowvariation", 42, 0),
-        ("a yellow tulip in a blue ceramic vase on a wooden table", "yellow-blue-highvariation", 42, 1),
-    ];
+    private const int Canvas = 1024;
 
     [Fact]
-    public void ReportTheMouthBand()
+    public void ReportTheOtherInvariants()
     {
-        var report = string.Empty;
-        foreach (var (prompt, name, seed, variation) in Cases)
+        var lines = new List<string>();
+        Try(lines, "L1", Silhouette);
+        Try(lines, "L2", RedYellow);
+        Try(lines, "L3", Glaze);
+        Try(lines, "L4", Detail);
+        Try(lines, "L5", Sizes);
+        Assert.Fail($"temporary\n::error::diag {string.Join("\n::error::diag ", lines)}\n::error::diag end");
+    }
+
+    private static void Try(List<string> lines, string tag, Func<string> check)
+    {
+        try
         {
-            var scene = SceneGenerator.Generate(new(prompt, (ulong)seed, variation)).Scene!;
-            var flower = scene.VaseFlower!;
-            using var planted = SKBitmap.Decode(StillLifeRenderer.Render(scene).PngBytes);
-            using var empty = SKBitmap.Decode(StillLifeRenderer.Render(scene with { VaseFlower = null }).PngBytes);
-            var rim = (int)MathF.Ceiling(flower.MouthTop * 1024);
-            var lipInner = (int)MathF.Round((flower.OpeningCenter.Y + flower.OpeningRadius.Y) * 1024) - 14;
-            var below = 0;
-            var inside = 0;
-            var gaps = 0;
-            for (var y = 0; y < 1024; y++)
+            lines.Add($"{tag} {check()}");
+        }
+        catch (Exception error)
+        {
+            lines.Add($"{tag} err {error.GetType().Name}");
+        }
+    }
+
+    private static string Silhouette()
+    {
+        var scene = Scene("a yellow tulip in a blue ceramic vase on a wooden table");
+        var flower = scene.VaseFlower!;
+        var shadowSame = StillLifeRenderer.RenderShadowMask(scene).PngBytes.SequenceEqual(
+            StillLifeRenderer.RenderShadowMask(scene with { VaseFlower = null }).PngBytes);
+        using var empty = Decode(StillLifeRenderer.RenderSilhouette(scene with { VaseFlower = null }));
+        using var planted = Decode(StillLifeRenderer.RenderSilhouette(scene));
+        var rim = (int)MathF.Ceiling(flower.MouthTop * Canvas) + 14;
+        var added = 0;
+        var lost = 0;
+        var below = 0;
+        for (var y = 0; y < Canvas; y++)
+        {
+            for (var x = 0; x < Canvas; x++)
             {
-                var uncovered = y >= rim - 8 && y <= lipInner;
-                for (var x = 0; x < 1024; x++)
+                var before = empty.GetPixel(x, y).Alpha;
+                var after = planted.GetPixel(x, y).Alpha;
+                if (before > after + 4)
                 {
-                    if (Same(planted.GetPixel(x, y), empty.GetPixel(x, y)))
-                    {
-                        continue;
-                    }
+                    lost++;
+                }
 
-                    if (uncovered && Math.Abs(x - Column(flower.Plant, y)) <= 2)
-                    {
-                        uncovered = false;
-                    }
-
+                if (after > before + 4)
+                {
+                    added++;
                     if (y > rim)
                     {
-                        if (Inside(flower, x, y))
-                        {
-                            inside++;
-                        }
-                        else
-                        {
-                            below++;
-                        }
+                        below++;
                     }
                 }
+            }
+        }
 
-                if (uncovered)
+        return $"lost{lost} below{below} added{added} shadow{shadowSame}";
+    }
+
+    private static string RedYellow()
+    {
+        var red = Scene("a red tulip in a cream ceramic vase on a wooden table");
+        var yellow = Scene("a yellow tulip in a cream ceramic vase on a wooden table");
+        using var redPixels = Decode(StillLifeRenderer.Render(red));
+        using var yellowPixels = Decode(StillLifeRenderer.Render(yellow));
+        var bloom = red.VaseFlower!.Plant.Bloom;
+        var inside = 0;
+        var outside = 0;
+        for (var y = 0; y < Canvas; y++)
+        {
+            for (var x = 0; x < Canvas; x++)
+            {
+                if (Delta(redPixels.GetPixel(x, y), yellowPixels.GetPixel(x, y)) == 0)
                 {
-                    gaps++;
+                    continue;
                 }
-            }
 
-            if (below != 0 || inside < 61 || gaps != 0)
-            {
-                report += $" {name}:b{below}i{inside}g{gaps}";
-            }
-        }
-
-        if (report.Length == 0)
-        {
-            report = " ok";
-        }
-
-        Assert.Fail($"temporary\n::error::diag mouth\n::error::diag{report}\n::error::diag end");
-    }
-
-    private static bool Same(SKColor left, SKColor right) =>
-        left.Red == right.Red && left.Green == right.Green && left.Blue == right.Blue;
-
-    private static bool Inside(VaseFlower flower, int x, int y)
-    {
-        var center = flower.OpeningCenter;
-        var radius = flower.OpeningRadius;
-        var dx = ((x + 0.5f) / 1024f) - center.X;
-        var dy = ((y + 0.5f) / 1024f) - center.Y;
-        var grow = 2f / 1024f;
-        var rx = radius.X + grow;
-        var ry = radius.Y + grow;
-        return ((dx * dx) / (rx * rx)) + ((dy * dy) / (ry * ry)) <= 1f;
-    }
-
-    private static int Column(TulipPlant plant, int y)
-    {
-        var target = (y + 0.5f) / 1024f;
-        var best = float.MaxValue;
-        var bestX = plant.StemBase.X;
-        foreach (var segment in plant.Stem)
-        {
-            for (var step = 0; step <= 64; step++)
-            {
-                var t = step / 64f;
-                var u = 1 - t;
-                var a = u * u * u;
-                var b = 3 * u * u * t;
-                var c = 3 * u * t * t;
-                var d = t * t * t;
-                var x = (a * segment.Start.X) + (b * segment.Control1.X) + (c * segment.Control2.X) + (d * segment.End.X);
-                var pointY = (a * segment.Start.Y) + (b * segment.Control1.Y) + (c * segment.Control2.Y) + (d * segment.End.Y);
-                var distance = MathF.Abs(pointY - target);
-                if (distance < best)
+                var px = (x + 0.5f) / Canvas;
+                var py = (y + 0.5f) / Canvas;
+                var inBloom = px >= bloom.Left - (20f / Canvas) && px <= bloom.Right + (20f / Canvas)
+                    && py >= bloom.Top - (20f / Canvas) && py <= bloom.Base.Y + (20f / Canvas);
+                if (inBloom)
                 {
-                    best = distance;
-                    bestX = x;
+                    inside++;
+                }
+                else
+                {
+                    outside++;
                 }
             }
         }
 
-        return (int)MathF.Round(bestX * 1024);
+        return $"inside{inside} outside{outside}";
     }
+
+    private static string Glaze()
+    {
+        var blue = Scene("a red tulip in a blue ceramic vase on a wooden table", 42, 0.5);
+        var cream = Scene("a red tulip in a cream ceramic vase on a wooden table", 42, 0.5);
+        using var bluePixels = Decode(StillLifeRenderer.Render(blue));
+        using var creamPixels = Decode(StillLifeRenderer.Render(cream));
+        var rim = (int)MathF.Floor(blue.VaseFlower!.MouthTop * Canvas) - 4;
+        var differences = 0;
+        var firstRow = -1;
+        for (var y = 0; y < rim; y++)
+        {
+            for (var x = 0; x < Canvas; x++)
+            {
+                if (Delta(bluePixels.GetPixel(x, y), creamPixels.GetPixel(x, y)) != 0)
+                {
+                    differences++;
+                    if (firstRow < 0)
+                    {
+                        firstRow = y;
+                    }
+                }
+            }
+        }
+
+        return $"diffs{differences} first{firstRow}";
+    }
+
+    private static string Detail()
+    {
+        var scene = Scene("a red tulip in a blue ceramic vase on a wooden table", 1337, 0.6);
+        var flower = scene.VaseFlower!;
+        using var full = Decode(StillLifeRenderer.Render(scene));
+        using var plain = Decode(StillLifeRenderer.RenderWithoutInstanceDetail(scene, 0));
+        var rim = (int)MathF.Ceiling(flower.MouthTop * Canvas) - 14;
+        var bounds = flower.Plant.Bounds;
+        var changed = 0;
+        var outside = 0;
+        for (var y = 0; y < rim; y++)
+        {
+            for (var x = 0; x < Canvas; x++)
+            {
+                if (Delta(full.GetPixel(x, y), plain.GetPixel(x, y)) == 0)
+                {
+                    continue;
+                }
+
+                changed++;
+                var px = (x + 0.5f) / Canvas;
+                var py = (y + 0.5f) / Canvas;
+                var inside = px >= bounds.Left - (3f / Canvas) && px <= bounds.Right + (3f / Canvas)
+                    && py >= bounds.Top - (3f / Canvas) && py <= bounds.Bottom + (3f / Canvas);
+                if (!inside)
+                {
+                    outside++;
+                }
+            }
+        }
+
+        return $"changed{changed} outside{outside}";
+    }
+
+    private static string Sizes()
+    {
+        var report = string.Empty;
+        foreach (var (width, height) in new[] { (64, 64), (256, 256), (640, 480), (2048, 1024), (4096, 1024) })
+        {
+            var scene = SceneGenerator.Generate(
+                new("a yellow tulip in a cream ceramic vase on a wooden table", Width: width, Height: height)).Scene!;
+            using var planted = Decode(StillLifeRenderer.Render(scene));
+            using var empty = Decode(StillLifeRenderer.Render(scene with { VaseFlower = null }));
+            var changed = 0;
+            for (var y = 0; y < height; y++)
+            {
+                for (var x = 0; x < width; x++)
+                {
+                    if (Delta(planted.GetPixel(x, y), empty.GetPixel(x, y)) != 0)
+                    {
+                        changed++;
+                    }
+                }
+            }
+
+            report += $" {width}x{height}:{changed}";
+        }
+
+        return report;
+    }
+
+    private static StillLifeScene Scene(string prompt, ulong seed = 20261105, double variation = 0.35) =>
+        SceneGenerator.Generate(new(prompt, seed, variation)).Scene!;
+
+    private static SKBitmap Decode(RenderedImage image) => SKBitmap.Decode(image.PngBytes);
+
+    private static int Delta(SKColor left, SKColor right) =>
+        Math.Abs(left.Red - right.Red) + Math.Abs(left.Green - right.Green) + Math.Abs(left.Blue - right.Blue);
 }
