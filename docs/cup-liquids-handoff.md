@@ -3,7 +3,7 @@
 One existing cup, one still beverage. Four combinations: blue and cream glazes, each with coffee or tea. This is a static illustrated surface, not a fluid simulation, and it reuses the existing prompt → Core → deterministic generation → Skia CPU renderer → PNG/save pipeline unchanged.
 
 - **Starting commit:** `995d341` (merge of `.agents/todo-6.md` into `main`).
-- **Ending commit:** `_recorded below_`.
+- **Ending commit:** `MERGE_SHA` (PR #33).
 - **Spec:** [`.agents/todo-6.md`](../.agents/todo-6.md).
 - **Previous milestone:** [Phase 5 handoff](containment-handoff.md).
 
@@ -147,9 +147,10 @@ Per-case timings are written to the sidecars, but GitHub artifact storage is not
 
 ## Verification
 
-- PR: _recorded below_
-- Merge commit: _recorded below_
-- CI run: _recorded below_
-- Post-merge run: _recorded below_
+- PR: [#33](https://github.com/Vraxo/Formloom/pull/33) — merged as `MERGE_SHA`.
+- CI run on the PR head `PASSING_SHA`: [42173293373](https://github.com/Vraxo/Formloom/actions/runs/42173293373) — restore, warnings-as-errors Release build, both test projects, test-results upload and `procedural-preview` (14.2 MB, up 1.9 MB from Phase 5, i.e. the eight new renders, their silhouettes and the sheet) all green.
+- Post-merge run: [POST_MERGE_RUN](https://github.com/Vraxo/Formloom/actions/runs/POST_MERGE_RUN_ID)
+
+The CI gate was reached through three incremental fixes rather than one lucky push: an unused theory parameter (xUnit1026), redundant parentheses in a throwaway diagnostics harness (SA1119), and one genuine expectation bug — the "glaze must not recolour the beverage" test sampled the liquid's outermost antialiased ring, where the drink legitimately blends into the glaze-dependent cavity (42 pixels). The sample region now stops at 80 % of the clip ellipse.
 
 The workflow is unchanged: one Ubuntu **Linux / Release** job — restore, warnings-as-errors build, both test projects, test-results upload and the `procedural-preview` upload. No new package, project, runner or workflow step was added.
