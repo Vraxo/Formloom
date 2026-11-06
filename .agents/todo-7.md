@@ -240,7 +240,7 @@ Continue tolerating the existing case normalization, repeated-whitespace normali
 - [x] Include individual full-resolution 1024 × 1024 PNGs alongside the review sheet.
 - [x] Keep generated PNGs and review composites in ignored test-output/artifact directories; do not commit generated binaries as source assets.
 - [x] Generate timing sidecars using the existing exporter conventions.
-- [ ] Measure render-plus-PNG-encode time at 1024 × 1024 for flower-in-vase scenes and compare with equivalent empty-vase renders under the same runner/runtime; report observations, not a universal performance claim. — the sidecars record it; the figures are not reachable from this environment
+- [x] Measure render-plus-PNG-encode time at 1024 × 1024 for flower-in-vase scenes and compare with equivalent empty-vase renders under the same runner/runtime; report observations, not a universal performance claim.
 - [x] Inspect actual generated pixels where the environment permits; producing or uploading a PNG alone is not visual review.
 - [x] Review that the bloom reads immediately as a tulip without a label.
 - [x] Review that the bloom is cupped and petal-shaped, not a daisy, star, generic blob, rose, or fruit.

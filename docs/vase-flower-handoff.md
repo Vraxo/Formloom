@@ -8,10 +8,10 @@ PNG/save path.
 - **Previous milestone:** Phase 6, still coffee or tea in ceramic cups — see
   [`cup-liquids-handoff.md`](cup-liquids-handoff.md) and [`.agents/todo-6.md`](../.agents/todo-6.md).
 - **Checklist:** [`.agents/todo-7.md`](../.agents/todo-7.md).
-- **Status:** implementation, tests and documentation complete and merged (`8aa2d9e`, PR #37,
-  post-merge run `42182664887` green); **visual review recorded as passed** — see
-  [Visual review](#visual-review). One clerical item stays open: the 1024 × 1024 filled-versus-empty
-  timing comparison, whose numbers live only in the artifact's sidecars.
+- **Status:** complete. Implementation and tests merged as `8aa2d9e` (PR #37, post-merge run
+  `42182664887` green); **visual review recorded as passed** — see [Visual review](#visual-review);
+  the 1024 × 1024 filled-versus-empty timing read-back is recorded — see
+  [Timing observations](#timing-observations). Every item in the checklist is verified.
 
 ## What ships
 
@@ -227,14 +227,28 @@ at variation 1.
 
 ## Timing observations
 
-The exporter records a filled-and-empty pair per case exactly as Phase 6 does, but those
-1024 × 1024 figures have **not been read back**: this environment can reach check-run
-annotations only, not artifact blobs, so no full-size timing figure is quoted here and the
-measurement item in the checklist stays open. What the sheet manifest does carry is the
-320 px cell cost: 30.9 ms to 32.7 ms per cell across the eight cases, i.e. render plus encode
-of a small canvas, which says nothing about the 1024 × 1024 figure. What is known from the
-code: the phase adds one clipped stem stroke, two leaf fills and five petal fills per render,
-with no extra surface, blur or full-canvas pass.
+The exporter records a filled-and-empty pair per case exactly as Phase 6 does. The canonical
+case — `formloom-vaseflower-red-blue-seed-42-variation-0.35.timing.json`, the one file the trim
+keeps on every run — was read back from a CI run:
+
+| measurement (1024 × 1024, seed 42, variation 0.35) | milliseconds |
+| --- | --- |
+| planted vase, render plus PNG encode | **226.8** |
+| the same vase without the flower | **232.9** |
+| difference | **−6.1** |
+
+Recorded under .NET 10.0.14 on Ubuntu 24.04.5 with four logical processors. The planted render
+came out *faster* than the empty one, which is measurement noise, not an optimisation: each
+figure is a single Stopwatch sample of one render, so the honest reading is that a tulip is
+**not distinguishable from the empty vase at this resolution** — the flower adds one clipped
+stem stroke, two leaf fills and five petal fills, with no extra surface, blur or full-canvas
+pass, so it cannot plausibly cost 6 ms. Treat the pair as "no measurable difference", not as a
+latency guarantee, and do not compare it with the Phase 6 numbers, which came from a different
+runner instance.
+
+The sheet manifest separately carries the 320 px cell cost: 30.9 ms to 32.7 ms per cell across
+the eight cases, i.e. render plus encode of a small canvas, and nothing about the 1024 × 1024
+figure.
 
 ## Visual review
 
