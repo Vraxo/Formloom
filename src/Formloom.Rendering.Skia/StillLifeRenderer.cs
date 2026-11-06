@@ -98,6 +98,11 @@ public static class StillLifeRenderer
         var beverage = scene.CupContents is { } contents && contents.Cup == ceramic
             ? contents.Beverage
             : (BeverageKind?)null;
+        if (scene.VaseFlower is { } flower && flower.Vase == ceramic && !shadowsOnly && !skipBody)
+        {
+            DrawVaseFlower(canvas, scene, flower, silhouette, entry.Depth == omittedDetailDepth);
+        }
+
         DrawCeramic(canvas, scene, ceramic, silhouette, skipShadows, shadowsOnly, skipBody, entry.Depth == omittedDetailDepth, beverage);
     }
 
@@ -557,6 +562,169 @@ public static class StillLifeRenderer
         canvas.Restore();
     }
 
+    // A tulip in a vase. The flower is drawn before the vase and clipped to the half-plane
+    // above the mouth's top edge, so the stem disappears behind the rim exactly where the
+    // vessel takes over and nothing can reach the exterior wall or the table. Because the
+    // vase is painted afterwards, every vase pixel below the rim is identical to the empty
+    // vase's, and the only intentional overlap is the rim band the stem passes behind.
+    private static void DrawVaseFlower(
+        SKCanvas canvas,
+        StillLifeScene scene,
+        VaseFlower flower,
+        bool silhouette,
+        bool omitDetail)
+    {
+        var plant = flower.Plant;
+        var material = TulipMaterial.For(flower.Color);
+        canvas.Save();
+        canvas.Scale(1024, 1024);
+        using (var clip = CreateFlowerClip(flower))
+        {
+            canvas.ClipPath(clip, antialias: true);
+        }
+
+        using var paint = new SKPaint { IsAntialias = true, Color = SKColors.White };
+        DrawTulipStem(canvas, plant, material, silhouette, paint);
+        foreach (var leaf in plant.Leaves)
+        {
+            DrawTulipLeaf(canvas, leaf, material, silhouette, omitDetail, paint);
+        }
+
+        foreach (var petal in plant.Bloom.Petals)
+        {
+            DrawTulipPetal(canvas, scene, petal, material, silhouette, omitDetail, paint);
+        }
+
+        canvas.Restore();
+    }
+
+    // The only hard edge the flower has is the mouth's own top tangent, taken from the vase
+    // profile: a profile-aware half-plane, not a screen-space rectangle around the bloom.
+    private static SKPath CreateFlowerClip(VaseFlower flower)
+    {
+        var top = flower.MouthTop;
+        using var builder = new SKPathBuilder();
+        builder.MoveTo(0, top);
+        builder.LineTo(1, top);
+        builder.LineTo(1, -0.05f);
+        builder.LineTo(0, -0.05f);
+        builder.Close();
+        return builder.Detach();
+    }
+
+    private static void DrawTulipStem(SKCanvas canvas, TulipPlant plant, TulipMaterial material, bool silhouette, SKPaint paint)
+    {
+        using var stem = CreateOpenPath(plant.Stem);
+        paint.Style = SKPaintStyle.Stroke;
+        paint.StrokeWidth = plant.StemThickness;
+        paint.StrokeCap = SKStrokeCap.Round;
+        if (silhouette)
+        {
+            paint.Color = SKColors.Black;
+            canvas.DrawPath(stem, paint);
+        }
+        else
+        {
+            using var shader = SKShader.CreateLinearGradient(
+                new SKPoint(plant.StemBase.X - (plant.StemThickness * 1.2f), plant.StemTop.Y),
+                new SKPoint(plant.StemBase.X + (plant.StemThickness * 1.2f), plant.StemTop.Y),
+                [material.StemLight, material.StemBase, material.StemEdge],
+                null, SKShaderTileMode.Clamp);
+            paint.Color = SKColors.White;
+            paint.Shader = shader;
+            canvas.DrawPath(stem, paint);
+            paint.Shader = null;
+        }
+
+        paint.Style = SKPaintStyle.Fill;
+        paint.StrokeCap = SKStrokeCap.Butt;
+    }
+
+    private static void DrawTulipLeaf(
+        SKCanvas canvas,
+        TulipLeaf leaf,
+        TulipMaterial material,
+        bool silhouette,
+        bool omitDetail,
+        SKPaint paint)
+    {
+        using var blade = CreatePath(leaf.Outline);
+        if (silhouette)
+        {
+            paint.Color = SKColors.Black;
+            canvas.DrawPath(blade, paint);
+            return;
+        }
+
+        using var shade = SKShader.CreateLinearGradient(
+            new SKPoint(leaf.Attachment.X, leaf.Attachment.Y),
+            new SKPoint(leaf.Tip.X, leaf.Tip.Y),
+            [material.LeafLight, material.LeafBase, material.LeafEdge],
+            [0f, 0.55f, 1f], SKShaderTileMode.Clamp);
+        paint.Color = SKColors.White;
+        paint.Shader = shade;
+        canvas.DrawPath(blade, paint);
+        paint.Shader = null;
+        if (omitDetail)
+        {
+            return;
+        }
+
+        using var vein = CreateOpenPath(leaf.Vein);
+        paint.Style = SKPaintStyle.Stroke;
+        paint.StrokeWidth = leaf.Width * 0.08f;
+        paint.Color = material.LeafEdge.WithAlpha(140);
+        canvas.DrawPath(vein, paint);
+        paint.Style = SKPaintStyle.Fill;
+    }
+
+    private static void DrawTulipPetal(
+        SKCanvas canvas,
+        StillLifeScene scene,
+        TulipPetal petal,
+        TulipMaterial material,
+        bool silhouette,
+        bool omitDetail,
+        SKPaint paint)
+    {
+        using var shape = CreatePath(petal.Outline);
+        if (silhouette)
+        {
+            paint.Color = SKColors.Black;
+            canvas.DrawPath(shape, paint);
+            return;
+        }
+
+        // The tone hierarchy is what makes overlapping petals read as a cup: the back petal
+        // stays dark, the front one is lifted towards the light colour.
+        var baseColor = Blend(material.PetalBase, material.PetalLight, petal.Tone * 0.55f);
+        var light = Blend(baseColor, material.PetalLight, 0.45f);
+        var edge = Blend(baseColor, material.PetalEdge, 0.8f);
+        var bounds = shape.Bounds;
+        var reach = MathF.Max(bounds.Width, bounds.Height) * 0.85f;
+        using var shade = SKShader.CreateRadialGradient(
+            new SKPoint(
+                bounds.MidX + (scene.LightDirection.X * bounds.Width * 0.22f),
+                bounds.MidY + (scene.LightDirection.Y * bounds.Height * 0.26f)),
+            reach,
+            [light, baseColor, edge],
+            [0f, 0.55f, 1f], SKShaderTileMode.Clamp);
+        paint.Color = SKColors.White;
+        paint.Shader = shade;
+        canvas.DrawPath(shape, paint);
+        paint.Shader = null;
+        if (omitDetail)
+        {
+            return;
+        }
+
+        paint.Style = SKPaintStyle.Stroke;
+        paint.StrokeWidth = reach * 0.03f;
+        paint.Color = material.PetalEdge.WithAlpha(110);
+        canvas.DrawPath(shape, paint);
+        paint.Style = SKPaintStyle.Fill;
+    }
+
     private static SKPath CreateEllipsePath(System.Numerics.Vector2 center, System.Numerics.Vector2 radius)
     {
         const float Handle = 0.55228475f;
@@ -760,6 +928,19 @@ public static class StillLifeRenderer
         return builder.Detach();
     }
 
+    private static SKPath CreateOpenPath(ImmutableArray<CubicSegment> segments)
+    {
+        using var builder = new SKPathBuilder();
+        var start = segments[0].Start;
+        builder.MoveTo(start.X, start.Y);
+        foreach (var segment in segments)
+        {
+            builder.CubicTo(segment.Control1.X, segment.Control1.Y, segment.Control2.X, segment.Control2.Y, segment.End.X, segment.End.Y);
+        }
+
+        return builder.Detach();
+    }
+
     private static void DrawSurface(SKCanvas canvas, StillLifeScene scene, FruitMaterial material, SKPaint paint)
     {
         var stream = scene.Subject.ToString().ToLowerInvariant() + ".surface";
@@ -800,6 +981,12 @@ public static class StillLifeRenderer
                 attachment.X + (MathF.Cos(angle) * 0.03f), attachment.Y + 0.012f + (MathF.Sin(angle) * 0.008f), paint);
         }
     }
+
+    private static SKColor Blend(SKColor from, SKColor to, float amount) => new(
+        (byte)Math.Clamp(from.Red + ((to.Red - from.Red) * amount), 0f, 255f),
+        (byte)Math.Clamp(from.Green + ((to.Green - from.Green) * amount), 0f, 255f),
+        (byte)Math.Clamp(from.Blue + ((to.Blue - from.Blue) * amount), 0f, 255f),
+        from.Alpha);
 
     private static SKColor Lighten(SKColor color) => new(
         (byte)Math.Min(255, color.Red + 58),
