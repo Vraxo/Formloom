@@ -223,9 +223,11 @@ at variation 1.
 The exporter records a filled-and-empty pair per case exactly as Phase 6 does, but those
 1024 × 1024 figures have **not been read back**: this environment can reach check-run
 annotations only, not artifact blobs, so no full-size timing figure is quoted here and the
-measurement item in the checklist stays open. The sheet's 320 px cells are also unread.
-What is known: the phase adds one clipped stem stroke, two leaf fills and five petal fills
-per render, with no extra surface, blur or full-canvas pass.
+measurement item in the checklist stays open. What the sheet manifest does carry is the
+320 px cell cost: 30.9 ms to 32.7 ms per cell across the eight cases, i.e. render plus encode
+of a small canvas, which says nothing about the 1024 × 1024 figure. What is known from the
+code: the phase adds one clipped stem stroke, two leaf fills and five petal fills per render,
+with no extra surface, blur or full-canvas pass.
 
 ## Visual review
 
