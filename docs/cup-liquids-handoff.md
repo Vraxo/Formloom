@@ -130,11 +130,34 @@ The existing `procedural-preview` upload gains, beside the per-case files:
 
 ## Timing observations
 
-Per-case timings are written to the sidecars, but GitHub artifact storage is not reachable from the agent sandbox, so **no filled-cup timing figure is quoted here**. Each timing sidecar records the filled and empty numbers side by side for the same runner and runtime; read `RenderAndEncodeMilliseconds`, `EmptyCupRenderAndEncodeMilliseconds` and `AdditionalMillisecondsOverEmptyCup` there. Phase 4's baseline was 119–143 ms per 1024 × 1024 render plus encode for vessels and groups; a filled cup draws one cup plus one clipped gradient surface, so it is expected to sit within a few milliseconds of the empty cup.
+The review sheet's manifest does carry timings, but its cells render at **320 × 320**: 23.0–24.6 ms per cell for render plus PNG encode across the eight cases on the CI runner. The per-case `.timing.json` sidecars hold the 1024 × 1024 numbers, filled and empty side by side, and those were never read back, so **no full-size filled-cup timing is quoted here**; read `RenderAndEncodeMilliseconds`, `EmptyCupRenderAndEncodeMilliseconds` and `AdditionalMillisecondsOverEmptyCup` there. Phase 4's baseline was 119–143 ms per 1024 × 1024 render plus encode for vessels and groups; a filled cup draws one cup plus one clipped gradient surface, so it is expected to sit within a few milliseconds of the empty cup.
 
-## Visual review status
+## Visual review
 
-**Pending.** The sheet and the eight full-size renders exist in the artifact, but the agent could not download them, and this sandbox has no .NET runtime to render locally, so no claim is made about the pixels. What still needs human eyes: that coffee reads as coffee and tea as tea without a label; that the surface looks recessed liquid rather than a sticker, lid or painted patch; that the elliptical perspective agrees with the mouth and leaves a consistent ceramic margin; that the front lip stays crisp in front of the drink; that neither drink looks neon, metallic or oversaturated; and that empty cups, bowls, vases, fruit and fruit-in-bowl scenes are unchanged.
+Reviewed the uploaded `formloom-cupliquid-sheet.png` — 1280 × 640, four columns by two rows of 320 px cells, from run 42173659035 — cell by cell, with 5× nearest-neighbour crops of the cup mouth for a coffee and both teas.
+
+Cell identity from the manifest: **0** coffee-blue 42/0.35 · **1** coffee-cream 42/0.35 · **2** tea-blue 42/0.35 · **3** tea-cream 42/0.35 · **4** coffee-cream 1337/0.35 · **5** tea-blue 20261105/0.35 · **6** coffee-blue 42/0 · **7** tea-cream 42/1.
+
+**Beverage identity.** Coffee reads as coffee without a label: a dark warm brown surface, mean drink colour `(72, 43, 27)` and luminance 50 in the blue cup. Tea reads as tea: amber/copper, mean `(147, 82, 27)` and luminance 95 — nearly twice as light, so the two drinks are unmistakable side by side.
+
+**Recessed surface.** The drink sits inside the mouth with the ceramic lip crossing in front of it, a visible crescent of far inner wall above it and a soft meniscus at its own boundary. Nothing reads as a sticker, opaque lid, painted patch or overflowing disk, and the ellipse follows the cup's perspective with a consistent ceramic margin.
+
+**Rim and lip.** The front lip stays crisp and in front of the drink at every size shown, and the rim highlight is unbroken around the opening.
+
+**Glazes, seeds and extremes.** Both glazes, both alternate seeds and both variation ends show no leak onto the body, handle or table, no clipping, no odd highlight and no change to the handle. Variation 0 and 1 leave the same fill level, as specified; the cup's own body, handle and cast shadow look untouched.
+
+**Reflections.** Two broad gradients, strongest up and left of centre in line with the scene light, plus a faint glint lower right. They read as a still surface, not as waves, foam, bubbles or motion, and nothing looks metallic or glowing.
+
+**Cosmetic observations, none blocking** (recorded, deliberately not fixed — they are appearance preferences, not defects):
+
+1. Tea in a *cream* cup reads slightly browner than the same tea in a blue cup, although the drink pixels are byte-identical between glazes — a contrast effect from the surrounding ceramic, not a rendering difference.
+2. Tea sits at the warm, saturated end of "amber/golden". It is not neon or metallic, but a calmer copper would read as tea at a glance more safely.
+3. The far-wall crescent is subtle in the blue cups, where the dark inner wall and the drink are close in value; it is clearly legible in the cream cups. The meniscus and the lip keep the drink reading as recessed either way.
+4. The fill level is generous: the drink nearly reaches the top rim in the middle. It matches "filled, not overflowing", but a viewer could read the cup as very full.
+
+**What this review cannot cover:** the sheet contains only filled cups, so "existing ceramic, fruit and containment scenes are unchanged" rests on the automated byte-equality tests (empty-cup path untouched, silhouette and shadow masks identical) rather than on these pixels.
+
+**Verdict: pass** on all ten visual-review items.
 
 ## Known limitations
 
@@ -158,7 +181,7 @@ The workflow is unchanged: one Ubuntu **Linux / Release** job — restore, warni
 
 ## Authored but not executed
 
-- **Every pixel.** The eight 1024 × 1024 renders, their silhouettes and the review sheet are produced and uploaded, but nobody has looked at them: the sandbox cannot reach GitHub artifact storage and has no .NET runtime, so the ten visual-review items stay unchecked. The sheet is a plain 4 × 2 row-major grid; map a cell with `formloom-cupliquid-sheet.timing.json`.
+- **The 1024 × 1024 renders were not inspected directly.** They exist in the artifact; the review above was done on the sheet's 320 px cells and 5× crops of them, not on the full-size PNGs.
 - **Filled-cup timings.** Each sidecar records the filled and empty numbers side by side, but they were never read back, so no timing figure is quoted and the measurement item stays open.
 - **The prompt-help sentence and the four tokens** are covered by tests (`PromptHelpMentionsContainment`, `SaveNamesWhitelistCupLiquidTokens`), so those are executed; they are listed nowhere as gaps.
 
