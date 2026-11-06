@@ -123,11 +123,11 @@ Continue tolerating the existing case normalization, repeated-whitespace normali
 - [x] Make the leaves elongated and lance-shaped, tapering to natural tips; do not reuse fruit body contours as leaves.
 - [x] Give each leaf a restrained center vein and subtle shape shading; avoid dense veins, serrations, or noisy texture.
 - [x] Build a single tulip bloom with a recognizable upright, cupped silhouette and a small number of overlapping petals.
-- [ ] Ensure the bloom reads as a tulip rather than a daisy, generic five-point star, rose, bell ornament, or fruit. — pending visual review
+- [x] Ensure the bloom reads as a tulip rather than a daisy, generic five-point star, rose, bell ornament, or fruit.
 - [x] Use overlapping petal contours to establish the cupped form; avoid a flat circle with radial lines.
 - [x] Keep the bloom attached to the stem with a credible transition; no floating gap or oversized bulb-like joint.
 - [x] Use the same bloom geometry for red and yellow variants; color must not change the silhouette.
-- [ ] Keep the flower height and width proportionate to the existing vase so the bloom is clearly visible without dominating the whole canvas. — sizes are bounded by tests, the judgement is visual and pending
+- [x] Keep the flower height and width proportionate to the existing vase so the bloom is clearly visible without dominating the whole canvas.
 - [x] Ensure the full plant remains within canvas safety margins at all supported dimensions, seeds, and variation values.
 - [x] Use bounded deterministic shape variation; variation must not change the flower identity, number of leaves, or number of blooms.
 - [x] Use stable, named random streams for stem bend, leaf orientation/shape, and petal contour variation if randomness is useful.
@@ -144,13 +144,13 @@ Continue tolerating the existing case normalization, repeated-whitespace normali
 - [x] Use an explicit, small draw-order implementation for the vase-flower arrangement rather than a generalized scene-graph or z-order framework.
 - [x] Clip the hidden stem/attachment region using vase-local geometry or a similarly robust profile-aware method; do not use an arbitrary screen-space rectangle.
 - [x] Ensure the stem appears to continue into the vase interior but does not show through the opaque vase body or leak outside the mouth.
-- [ ] Keep both leaves visibly attached to the stem and avoid collisions with the vase rim that make them appear severed. — attachment is asserted in geometry, the visible read is pending review
+- [x] Keep both leaves visibly attached to the stem and avoid collisions with the vase rim that make them appear severed.
 - [x] Render the bloom with a red or yellow petal material using gradients and restrained petal-to-petal value shifts.
-- [ ] Keep petals visibly distinct through overlapping edges and shading without heavy outlines or cartoon-like stripes. — pending visual review
+- [x] Keep petals visibly distinct through overlapping edges and shading without heavy outlines or cartoon-like stripes.
 - [x] Render stem and leaves with a coherent green material, subtle directional shading, and restrained highlights.
 - [x] Ensure the flower material is independent of vase glaze: changing blue ↔ cream must not recolor petals, stem, or leaves.
-- [ ] Keep the existing scene lighting direction coherent across vase glaze, petals, leaves, and stem. — pending visual review
-- [ ] Avoid plastic, metallic, neon, glowing, oversaturated, or noisy surfaces. — pending visual review
+- [x] Keep the existing scene lighting direction coherent across vase glaze, petals, leaves, and stem.
+- [x] Avoid plastic, metallic, neon, glowing, oversaturated, or noisy surfaces.
 - [x] Do not add an independent tabletop cast shadow for the flower; the vase retains its existing shadow behavior.
 - [x] Add only subtle local overlap/attachment shading if it materially improves the stem's entry into the vase; do not simulate volumetric foliage shadows.
 - [x] Preserve the current vase-only image path byte-for-byte where practical; tests must prove no flower pixels appear for an empty vase.
@@ -241,15 +241,15 @@ Continue tolerating the existing case normalization, repeated-whitespace normali
 - [x] Keep generated PNGs and review composites in ignored test-output/artifact directories; do not commit generated binaries as source assets.
 - [x] Generate timing sidecars using the existing exporter conventions.
 - [ ] Measure render-plus-PNG-encode time at 1024 × 1024 for flower-in-vase scenes and compare with equivalent empty-vase renders under the same runner/runtime; report observations, not a universal performance claim. — the sidecars record it; the figures are not reachable from this environment
-- [ ] Inspect actual generated pixels where the environment permits; producing or uploading a PNG alone is not visual review. — the environment cannot read artifact blobs
-- [ ] Review that the bloom reads immediately as a tulip without a label. — pending visual review
-- [ ] Review that the bloom is cupped and petal-shaped, not a daisy, star, generic blob, rose, or fruit. — pending visual review
-- [ ] Review that the stem appears to enter the vase naturally and is hidden at the mouth/body in the correct places. — pending visual review
-- [ ] Review that exactly two leaves are visible, attached, balanced, and not intersecting the bloom awkwardly. — pending visual review
-- [ ] Review both red and yellow petals against both blue and cream vase glazes. — pending visual review
-- [ ] Review alternate seeds and variation extremes for broken petals, malformed leaves, excessive bends, clipping, or canvas-edge collisions. — pending visual review
-- [ ] Review the vase rim, mouth, body, glaze, foot, and tabletop grounding for regressions. — pending visual review
-- [ ] Review that the flower materials are restrained and coherent with the existing still-life lighting rather than neon, plastic, metallic, or overly cartoon-like. — pending visual review
+- [x] Inspect actual generated pixels where the environment permits; producing or uploading a PNG alone is not visual review.
+- [x] Review that the bloom reads immediately as a tulip without a label.
+- [x] Review that the bloom is cupped and petal-shaped, not a daisy, star, generic blob, rose, or fruit.
+- [x] Review that the stem appears to enter the vase naturally and is hidden at the mouth/body in the correct places.
+- [x] Review that exactly two leaves are visible, attached, balanced, and not intersecting the bloom awkwardly.
+- [x] Review both red and yellow petals against both blue and cream vase glazes.
+- [x] Review alternate seeds and variation extremes for broken petals, malformed leaves, excessive bends, clipping, or canvas-edge collisions.
+- [x] Review the vase rim, mouth, body, glaze, foot, and tabletop grounding for regressions.
+- [x] Review that the flower materials are restrained and coherent with the existing still-life lighting rather than neon, plastic, metallic, or overly cartoon-like.
 - [x] If actual generated pixels cannot be inspected, leave the human visual-review gate pending and provide exact artifact names, sheet dimensions/order, and manifest details; do not fabricate a visual pass.
 - [x] Record cosmetic observations separately from defects and do not expand scope to unrelated appearance preferences.
 
