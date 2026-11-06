@@ -158,7 +158,7 @@ public sealed class CupLiquidRenderingTests
         }
 
         // Non-vacuous: the drink really is painted, and it is confined to the mouth.
-        Assert.True(changed > 700, $"{prompt}: expected liquid pixels, saw {changed}");
+        Assert.True(changed > 700, $"{glaze} cup of {beverage}: expected liquid pixels, saw {changed}");
         Assert.Equal(0, outsideMouth);
         Assert.Equal(0, belowHorizon);
 
@@ -166,7 +166,9 @@ public sealed class CupLiquidRenderingTests
         Assert.Equal(0, outsideClip);
 
         // The surface is visible over a real area, not a couple of stray pixels.
-        Assert.True(changed > (geometry.ClipRadius.X * geometry.ClipRadius.Y * MathF.PI * 0.15f), "the drink must fill a substantial part of the opening");
+        Assert.True(
+            changed > (geometry.ClipRadius.X * geometry.ClipRadius.Y * MathF.PI * 0.15f),
+            $"{glaze} cup of {beverage}: the drink must fill a substantial part of the opening");
     }
 
     [Fact]
