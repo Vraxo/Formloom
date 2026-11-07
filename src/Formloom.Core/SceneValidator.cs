@@ -213,6 +213,11 @@ public static class SceneValidator
             return "A vase must have a blue or cream glaze.";
         }
 
+        if (daisy.Flower != FlowerKind.Daisy)
+        {
+            return "Only a daisy is supported.";
+        }
+
         if (!Enum.IsDefined(daisy.Appearance))
         {
             return "A daisy must have white petals and a golden centre.";

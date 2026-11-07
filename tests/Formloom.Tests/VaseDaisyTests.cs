@@ -321,6 +321,9 @@ public sealed class VaseDaisyTests
             "A vase must have a blue or cream glaze.",
             SceneValidator.Validate(scene with { VaseDaisy = daisy with { Vase = daisy.Vase with { Glaze = (CeramicGlaze)9 } } }));
         Assert.Equal(
+            "Only a daisy is supported.",
+            SceneValidator.Validate(scene with { VaseDaisy = daisy with { Flower = FlowerKind.Tulip } }));
+        Assert.Equal(
             "A daisy must have white petals and a golden centre.",
             SceneValidator.Validate(scene with { VaseDaisy = daisy with { Appearance = (DaisyAppearance)9 } }));
         Assert.Equal(

@@ -10,9 +10,12 @@ namespace Formloom.Core;
 // petal geometry and only the vase-derived attachment.
 public sealed record VaseDaisy(CeramicInstance Vase, DaisyAppearance Appearance, DaisyPlant Plant)
 {
-    public CeramicProfile Profile => VaseMouth.Profile(Vase);
+    // A stored value rather than a computed one: it is part of the arrangement's identity, the
+    // validator refuses anything but a daisy, and a computed constant would be a static member
+    // wearing an instance's clothes.
+    public FlowerKind Flower { get; init; } = FlowerKind.Daisy;
 
-    public FlowerKind Flower => FlowerKind.Daisy;
+    public CeramicProfile Profile => VaseMouth.Profile(Vase);
 
     // Scene-space opening, derived from the vase transform and profile rather than from
     // canvas pixels.
