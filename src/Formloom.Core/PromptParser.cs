@@ -15,6 +15,10 @@ public static class PromptParser
 
     private const string TulipDescriptor = @"a (?:red|yellow) tulip";
 
+    // The daisy's appearance is not a colour word the grammar varies: white petals and a
+    // golden centre are the only daisy the vocabulary names.
+    private const string DaisyDescriptor = @"a white daisy";
+
     private const string VaseDescriptor = @"a (?:blue|cream) ceramic vase";
 
     private const string Setting = " on a wooden table";
@@ -147,6 +151,34 @@ public static class PromptParser
 
         var color = match.Groups["flower"].Value == "a red tulip" ? TulipColor.Red : TulipColor.Yellow;
         return new(vase, FlowerKind.Tulip, color);
+    }
+
+    // A single white daisy growing out of a single existing vase. The exact grammar is
+    // "a white daisy in <vase> on a wooden table"; any other colour, species or quantity is
+    // rejected whole rather than being read as an ordinary empty vase.
+    public static VaseDaisyPrompt? ParseVaseDaisy(string? prompt)
+    {
+        var normalized = Normalize(prompt);
+        if (normalized is null)
+        {
+            return null;
+        }
+
+        var match = Regex.Match(
+            normalized[..^Setting.Length],
+            @"\A(?<flower>" + DaisyDescriptor + @") in (?<vase>" + VaseDescriptor + @")\z");
+        if (!match.Success)
+        {
+            return null;
+        }
+
+        var vase = ParseDescriptor(match.Groups["vase"].Value).Ceramic;
+        if (vase is null || vase.Kind != CeramicKind.Vase)
+        {
+            return null;
+        }
+
+        return new(vase, DaisyAppearance.WhiteWithGoldenDisk);
     }
 
     public static ImmutableArray<ObjectPrompt>? ParseObjects(string? prompt)
