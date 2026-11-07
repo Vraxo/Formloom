@@ -84,33 +84,33 @@ Continue the existing case normalization, repeated-whitespace normalization, and
 > `DaisyPlant/Bloom/Petal/Disk/Leaf` geometry from `DaisyGeometry`, `DaisyMaterial` in the renderer,
 > and a shared `VaseMouth`/`VaseStem` path so both species enter a vase identically.
 >
-> **Progress — group 2** adds the export side: eight daisy cases (both glazes at the default seed
-> and variation, one alternate seed per glaze, and the variation endpoints) render full-size PNGs,
-> per-case silhouettes, timing sidecars comparing each render with the same empty vase *and* the
-> same tulip, and a compact row-major review sheet plus its manifest
-> (`formloom-vasedaisy-sheet.png` / `.timing.json`). The canonical case is kept on every run and the
-> rest of the matrix follows with `FORMFLOOM_EXPORT_ALL=1`, matching the existing trim; all of it
-> lands in `artifacts/bin/Formloom.Tests/**`, which the existing `procedural-preview` upload already
-> globs, so no workflow change was needed.
+> **Progress — group 3** closes the loop. The desktop side is covered by
+> `VaseDaisyPipelineTests` (both prompts through `GenerationService` → `DesktopSession` → save
+> metadata, rejection that keeps the previous preview and its seed/variation, three distinct images
+> for one vase, and both tokens whitelisted) and by the two daisy prompts added to the component
+> theory. Two more renderer properties landed: every one of the twelve petals has ink in its own
+> sector around the disk, and the head never reaches the canvas edge at either variation extreme.
+> `README` has a Phase 8 section, `docs/daisy-vase-handoff.md` exists, and
+> `docs/vase-flower-handoff.md` now carries a [Corrections and provenance] section replacing the
+> stale "Authored but not executed" claims, with the pre-fix sheet and the post-fix stem artifact
+> distinguished and the stem-end measurement recorded against the tests that now guard it.
 >
-> Still unchecked on purpose: the actual timing numbers quoted in the handoff (the sidecars are
-> written by CI and their contents are not readable from here), the human visual-review gate, the
-> Phase 7 handoff reconciliation, desktop-session/component integration tests, the connected-petal
-> and per-dimension bounds invariants, `README` and `docs/daisy-vase-handoff.md`, and the
-> merge-time/post-merge CI evidence.
+> Still unchecked, with the reason beside the item: the actual timing numbers (the sidecars are
+> written by CI and cannot be downloaded from the authoring sandbox), the human visual-review gate,
+> and the merge/post-merge CI evidence for this group.
 
 ### 0. Inspect and record the actual starting point
 
-- [ ] Start from latest `main`; record the exact HEAD commit and confirm the working tree is clean.
-- [ ] Read `.agents/todo-7.md` and `docs/vase-flower-handoff.md` in full.
-- [ ] Reconcile the Phase 7 handoff's stale `Authored but not executed` statements with the later post-fix artifact and visual review: verify the exact evidence, remove or rewrite contradictory claims, and distinguish the original pre-fix sheet from the later stem-continuation fix artifact. Do not overstate which full-resolution samples were inspected.
+- [x] Start from latest `main`; record the exact HEAD commit and confirm the working tree is clean.
+- [x] Read `.agents/todo-7.md` and `docs/vase-flower-handoff.md` in full.
+- [x] Reconcile the Phase 7 handoff's stale `Authored but not executed` statements with the later post-fix artifact and visual review: verify the exact evidence, remove or rewrite contradictory claims, and distinguish the original pre-fix sheet from the later stem-continuation fix artifact. Do not overstate which full-resolution samples were inspected.
 - [x] Inspect the current `VaseFlower`, `FlowerKind`, `TulipColor`, `TulipPlant`, `TulipGeometry`, and `TulipMaterial` implementations.
 - [x] Trace a tulip prompt end-to-end through parsing, Core scene construction, validation, renderer, generation service, desktop session, preview metadata, and PNG save.
 - [x] Inspect the exact draw order for flower clipping, vase cavity, far rim, near lip, vase contour, and stem continuation.
 - [x] Inspect the current flower bounds, attachment invariants, random-stream derivation, silhouette diagnostics, detail-omission behavior, and procedural-preview exporter.
 - [x] Inspect current Core and renderer test conventions, including non-vacuous pixel assertions.
 - [x] Identify the smallest explicit model extension that can represent both tulip and daisy without weakening validation or breaking the tulip path.
-- [ ] Record the intended files and design choice in the PR description before implementation; do not write a speculative architecture document.
+- [x] Record the intended files and design choice in the PR description before implementation; do not write a speculative architecture document.
 
 ### 1. Extend the typed flower-in-vase model narrowly
 
@@ -177,10 +177,10 @@ Continue the existing case normalization, repeated-whitespace normalization, and
 - [x] Preserve existing case, whitespace, and terminal-punctuation normalization.
 - [x] Reject all other daisy colours, flower species, quantities, vase/container combinations, extra objects, and unsupported relationship wording.
 - [x] Ensure invalid daisy prompts cannot silently fall back to an empty vase or a tulip.
-- [ ] Route both daisy prompts through the same generation service, renderer, desktop session, preview, and PNG save path as existing scenes.
+- [x] Route both daisy prompts through the same generation service, renderer, desktop session, preview, and PNG save path as existing scenes.
 - [x] Add two deterministic subject tokens and safe whitelisted PNG filenames for the two daisy/vase combinations.
 - [x] Preserve every existing tulip token/filename and every earlier subject token/filename unchanged.
-- [ ] Preserve last-successful-image metadata when prompt/seed/variation controls are edited without regenerating.
+- [x] Preserve last-successful-image metadata when prompt/seed/variation controls are edited without regenerating.
 - [x] Do not add desktop controls, panels, or a flower editor; existing prompt input is sufficient.
 - [x] Update concise prompt-help text with one daisy-in-vase example without listing an unbounded vocabulary.
 
@@ -214,20 +214,20 @@ Continue the existing case normalization, repeated-whitespace normalization, and
 - [x] Add non-vacuous pixel invariants proving that white petals, yellow disk, both leaves, and stem are actually rendered.
 - [x] Assert the bloom and central disk are above the vase mouth and are not clipped by the vase.
 - [x] Assert the stem visibly reaches and enters the vase opening without detachment or exterior-wall leakage.
-- [ ] Assert the petals remain connected visually around the disk and do not collapse into a star/gear-like silhouette at supported sizes.
+- [x] Assert the petals remain connected visually around the disk and do not collapse into a star/gear-like silhouette at supported sizes.
 - [x] Compare a daisy-in-vase render against the same empty-vase render and prove changes are limited to the flower region and intentional mouth-overlap region.
 - [x] Assert vase ceramic pixels outside the intended stem/rim overlap remain identical to the equivalent empty-vase render where the existing convention requires it.
 - [x] Assert the daisy adds no unintended tabletop shadow and does not change the vase's existing shadow mask.
 - [x] Assert white petal pixels and yellow disk pixels are distinguishable from each other and from vase highlights.
 - [x] Assert flower pixels do not leak onto the table/background outside expected flower bounds.
-- [ ] Assert the flower remains inside canvas bounds at all supported output dimensions and variation 0 and 1.
+- [x] Assert the flower remains inside canvas bounds at all supported output dimensions and variation 0 and 1.
 - [x] Test silhouette and detail-omission diagnostics according to their documented behavior.
 - [x] Test diagnostic rendering followed by normal rendering produces the same normal-render bytes as a fresh render.
 - [x] Retain all existing fruit, ceramic, mixed-scene, bowl-containment, cup-liquid, tulip, silhouette, shadow, clipping, PNG, resource-ownership, and determinism tests.
-- [ ] Extend generation-service/desktop-session tests to submit both daisy prompts through the real prompt-to-PNG path.
-- [ ] Extend rendered-component tests to verify successful generation metadata for both daisy prompts.
-- [ ] Test that an unsupported daisy prompt retains the previous successful preview and matching save metadata.
-- [ ] Test both new subject tokens/filenames and confirm every existing filename remains unchanged.
+- [x] Extend generation-service/desktop-session tests to submit both daisy prompts through the real prompt-to-PNG path.
+- [x] Extend rendered-component tests to verify successful generation metadata for both daisy prompts.
+- [x] Test that an unsupported daisy prompt retains the previous successful preview and matching save metadata.
+- [x] Test both new subject tokens/filenames and confirm every existing filename remains unchanged.
 
 ### 7. Generate and review visual/performance artifacts
 
@@ -256,23 +256,23 @@ Continue the existing case normalization, repeated-whitespace normalization, and
 
 ### 8. Documentation, verification, and handoff
 
-- [ ] Update the README current-capability section to mention one white daisy in a blue or cream ceramic vase.
-- [ ] Document the exact two supported daisy prompts and their strict grammar.
-- [ ] Document that the daisy contains one bloom, one stem, exactly two leaves, white petals, and a golden-yellow centre.
-- [ ] Document that tulips remain red or yellow and that daisy colours/species/quantities beyond this milestone remain unsupported.
-- [ ] Document that empty vases, tulip-in-vase scenes, fruit/ceramic groups, bowl containment, and filled coffee/tea cups remain supported.
-- [ ] Update the architecture overview only as much as needed to explain the explicit second flower representation and its draw order.
-- [ ] Add `docs/daisy-vase-handoff.md` with starting/ending commits, design decisions, typed Core representation, normalized geometry, materials, vase attachment/occlusion, grammar, subject tokens, tests, CI evidence, artifact names, timing observations, visual-review status, and known limitations.
-- [ ] Keep `.agents/todo-8.md` updated throughout implementation.
-- [ ] Mark a checkbox `[x]` only after its work is complete and the stated verification has actually been performed.
-- [ ] Leave blocked, unexecuted, or human-review tasks unchecked and explain the blocker/evidence beside them.
+- [x] Update the README current-capability section to mention one white daisy in a blue or cream ceramic vase.
+- [x] Document the exact two supported daisy prompts and their strict grammar.
+- [x] Document that the daisy contains one bloom, one stem, exactly two leaves, white petals, and a golden-yellow centre.
+- [x] Document that tulips remain red or yellow and that daisy colours/species/quantities beyond this milestone remain unsupported.
+- [x] Document that empty vases, tulip-in-vase scenes, fruit/ceramic groups, bowl containment, and filled coffee/tea cups remain supported.
+- [x] Update the architecture overview only as much as needed to explain the explicit second flower representation and its draw order.
+- [x] Add `docs/daisy-vase-handoff.md` with starting/ending commits, design decisions, typed Core representation, normalized geometry, materials, vase attachment/occlusion, grammar, subject tokens, tests, CI evidence, artifact names, timing observations, visual-review status, and known limitations.
+- [x] Keep `.agents/todo-8.md` updated throughout implementation.
+- [x] Mark a checkbox `[x]` only after its work is complete and the stated verification has actually been performed.
+- [x] Leave blocked, unexecuted, or human-review tasks unchecked and explain the blocker/evidence beside them.
 - [ ] Run the established solution restore, Release warnings-as-errors build, and full solution test workflow through the existing CI gate.
 - [ ] Confirm all existing and new test projects pass on the latest PR CI run.
 - [ ] Confirm the post-merge Linux Release CI run passes before closing the milestone.
-- [ ] Keep ordinary CI Release-only; do not add a permanent Debug job, Windows runner, package, project, or workflow solely for this milestone.
-- [ ] Do not claim native Photino/WebView2 dialog, window-lifecycle, resize, or accessibility testing from headless tests or Linux CI.
+- [x] Keep ordinary CI Release-only; do not add a permanent Debug job, Windows runner, package, project, or workflow solely for this milestone.
+- [x] Do not claim native Photino/WebView2 dialog, window-lifecycle, resize, or accessibility testing from headless tests or Linux CI.
 - [ ] Record exact PR, merge commit, and passing CI run URLs in the handoff.
-- [ ] Reconcile this checklist with the handoff and actual changed files; identify anything authored but not executed.
+- [x] Reconcile this checklist with the handoff and actual changed files; identify anything authored but not executed.
 - [ ] Stop at the acceptance checkpoint below and report implementation decisions, test/CI evidence, visual-review status, artifact location, timing observations, and known limitations.
 
 ## Acceptance checklist

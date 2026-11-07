@@ -254,6 +254,125 @@ public sealed class VaseDaisyRenderingTests
 
         // The daisy is drawn at every supported size: it is not a 1024-only pixel offset.
         Assert.True(changed > 10, $"expected daisy pixels at {width}x{height}, saw {changed}");
+
+        // And it is drawn only inside its own measured bounds, in that canvas's own units.
+        var daisy = scene.VaseDaisy!;
+        var bounds = daisy.Plant.Bounds;
+        var left = (bounds.Left * width) - 3;
+        var right = (bounds.Right * width) + 3;
+        var top = (bounds.Top * height) - 3;
+        var bottom = (bounds.Bottom * height) + 3;
+        var outside = 0;
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                if (Delta(planted.GetPixel(x, y), empty.GetPixel(x, y)) == 0)
+                {
+                    continue;
+                }
+
+                if (x < left || x > right || y < top || y > bottom)
+                {
+                    // The mouth's own continuation is the one documented exception below the rim.
+                    if (!(y > daisy.MouthTop * height && Math.Abs(((x + 0.5f) / width) - daisy.OpeningCenter.X) < daisy.OpeningRadius.X))
+                    {
+                        outside++;
+                    }
+                }
+            }
+        }
+
+        Assert.True(outside == 0, $"expected no daisy ink outside its bounds at {width}x{height}, saw {outside}");
+    }
+
+    // Every petal reaches its own sector of the head: twelve rays sampled between the disk and the
+    // outer edge each land on petal ink, so the bloom cannot lose a petal, split into a star, or
+    // leave a gap that makes a petal look detached from the golden centre.
+    [Fact]
+    public void EveryPetalCoversItsOwnSectorAroundTheDisk()
+    {
+        foreach (var (prompt, name, seed, variation) in Cases)
+        {
+            var scene = Scene(prompt, (ulong)seed, variation);
+            var daisy = scene.VaseDaisy!;
+            var bloom = daisy.Plant.Bloom;
+            using var planted = Decode(StillLifeRenderer.Render(scene).PngBytes);
+            using var empty = Decode(StillLifeRenderer.Render(EmptyVase(scene)).PngBytes);
+
+            var hit = 0;
+            foreach (var petal in bloom.Petals.OrderBy(petal => petal.Angle))
+            {
+                var direction = new System.Numerics.Vector2(MathF.Cos(petal.Angle), MathF.Sin(petal.Angle));
+                var found = false;
+                for (var step = 0; step <= 10 && !found; step++)
+                {
+                    var reach = 0.55f + (step * 0.05f);
+                    var x = (int)MathF.Round((bloom.Center.X + (direction.X * bloom.RadiusX * reach)) * Canvas);
+                    var y = (int)MathF.Round((bloom.Center.Y + (direction.Y * bloom.RadiusY * reach)) * Canvas);
+                    if (x <= 0 || y <= 0 || x >= Canvas - 1 || y >= Canvas - 1)
+                    {
+                        continue;
+                    }
+
+                    found = Delta(planted.GetPixel(x, y), empty.GetPixel(x, y)) > 8;
+                }
+
+                if (found)
+                {
+                    hit++;
+                }
+            }
+
+            Assert.True(hit == DaisyGeometry.PetalCount, $"{name} only found ink in {hit} of {DaisyGeometry.PetalCount} petal sectors");
+        }
+    }
+
+    // The head never touches the canvas edge, at either variation extreme and at the smallest
+    // supported size, so a reshaped bloom cannot be cropped however the seed leans it.
+    [Theory]
+    [InlineData(64, 64)]
+    [InlineData(1024, 1024)]
+    [InlineData(4096, 1024)]
+    public void TheHeadStaysInsideTheCanvasAtTheVariationExtremes(int width, int height)
+    {
+        foreach (var variation in new[] { 0.0, 1.0 })
+        {
+            var scene = SceneGenerator.Generate(new(
+                "a white daisy in a cream ceramic vase on a wooden table",
+                Seed: 1337,
+                Variation: variation,
+                Width: width,
+                Height: height)).Scene!;
+            var daisy = scene.VaseDaisy!;
+            using var planted = Decode(StillLifeRenderer.Render(scene).PngBytes);
+            using var empty = Decode(StillLifeRenderer.Render(EmptyVase(scene)).PngBytes);
+
+            // A two-pixel frame around the canvas: nothing of the daisy may reach it.
+            var border = 0;
+            for (var y = 0; y < height; y++)
+            {
+                for (var x = 0; x < width; x++)
+                {
+                    if (x >= 2 && y >= 2 && x < width - 2 && y < height - 2)
+                    {
+                        continue;
+                    }
+
+                    if (Delta(planted.GetPixel(x, y), empty.GetPixel(x, y)) != 0)
+                    {
+                        border++;
+                    }
+                }
+            }
+
+            Assert.True(border == 0, $"{width}x{height} at variation {variation} touched the canvas edge: {border} pixels");
+
+            // And the measured bounds themselves sit inside the canvas, in normalized units, so
+            // the frame check above is a consequence rather than a coincidence.
+            var bounds = daisy.Plant.Bounds;
+            Assert.True(bounds.Top > 0 && bounds.Left > 0 && bounds.Right < 1 && bounds.Bottom < 1);
+        }
     }
 
     [Fact]

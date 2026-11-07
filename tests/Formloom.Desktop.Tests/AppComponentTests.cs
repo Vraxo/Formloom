@@ -57,6 +57,8 @@ public sealed class AppComponentTests
     [InlineData("a cream ceramic cup filled with tea on a wooden table")]
     [InlineData("a red tulip in a blue ceramic vase on a wooden table")]
     [InlineData("a yellow tulip in a cream ceramic vase on a wooden table")]
+    [InlineData("a white daisy in a blue ceramic vase on a wooden table")]
+    [InlineData("a white daisy in a cream ceramic vase on a wooden table")]
     public async Task InputEventsAndSubmitUseEditedValuesAndRenderPreview(string prompt)
     {
         await using var context = new BunitContext();

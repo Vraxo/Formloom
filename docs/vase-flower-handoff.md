@@ -9,9 +9,12 @@ PNG/save path.
   [`cup-liquids-handoff.md`](cup-liquids-handoff.md) and [`.agents/todo-6.md`](../.agents/todo-6.md).
 - **Checklist:** [`.agents/todo-7.md`](../.agents/todo-7.md).
 - **Status:** complete. Implementation and tests merged as `8aa2d9e` (PR #37, post-merge run
-  `42182664887` green); **visual review recorded as passed** — see [Visual review](#visual-review);
+  `42182664887` green), with the stem continuation fixed later in PRs #42–#44 (merged `21f535c`,
+  `625a538`, `dcb207f`); **visual review recorded as passed** — see [Visual review](#visual-review);
   the 1024 × 1024 filled-versus-empty timing read-back is recorded — see
-  [Timing observations](#timing-observations). Every item in the checklist is verified.
+  [Timing observations](#timing-observations). Which artifact shows what is recorded under
+  [Corrections and provenance](#corrections-and-provenance), which supersedes this document's
+  earlier "Authored but not executed" section.
 
 ## What ships
 
@@ -338,15 +341,51 @@ The 1024 × 1024 timing read-back, which was open at review time, is recorded ab
 - The bloom's five petals, the two leaf angles and the headroom shares are authored
   constants. They are tuned blind (see above) and may need one cosmetic pass after review.
 
-## Authored but not executed
+## Corrections and provenance
 
-- **The 1024 × 1024 renders and the sheet were not inspected.** They exist in the artifact;
-  the visual-review items stay unchecked until a human looks at them.
-- **The timing sidecars were not read back**, so the 1024 × 1024 filled-versus-empty-vase
-  comparison is recorded in the artifact but not in this document.
+An earlier revision of this document ended with an **"Authored but not executed"** section whose
+first two claims — that the 1024 × 1024 renders and the review sheet "were not inspected", and that
+the timing sidecars "were not read back" — were written before the follow-up work and became wrong
+when it happened. Both statements are withdrawn: the inspection is recorded under
+[Visual review](#visual-review) and the read-back under
+[Timing observations](#timing-observations). What follows is the accurate provenance, including
+what was *not* covered.
+
+- **The sheet this review describes is the pre-fix artifact** of run
+  [42182285484](https://github.com/Vraxo/Formloom/actions/runs/42182285484), i.e. Phase 7's own PR
+  run. At that point the stem stopped at the mouth's top tangent and read as standing behind the
+  vase.
+- **The stem's continuation into the opening landed afterwards**, in three follow-ups rather than
+  in the milestone itself: PR [#42](https://github.com/Vraxo/Formloom/pull/42) (merged `21f535c`)
+  carried the stroke into the opening, PR [#43](https://github.com/Vraxo/Formloom/pull/43) (merged
+  `625a538`) put the far rim behind the stem and the near lip in front of it, and PR
+  [#44](https://github.com/Vraxo/Formloom/pull/44) (merged `dcb207f`) painted the continuation once,
+  after the vase's own contour stroke, so no pass could band it.
+- **The artifact that shows the stem inside the opening** is the `procedural-preview` of those
+  later runs — artifact `13573143092` on PR run
+  [42369943634](https://github.com/Vraxo/Formloom/actions/runs/42369943634) and `13572983848` on the
+  post-merge run [42370032019](https://github.com/Vraxo/Formloom/actions/runs/42370032019), both
+  2.69 MB. The follow-up visual check covered exactly what the fix changed: the mouth and the stem
+  entering it. The other review items above — silhouette, leaves, colours, variation extremes, vase
+  and tabletop — were established on the pre-fix sheet and were **not** re-derived pixel by pixel
+  from the new artifact, because the change was local to the mouth.
+- **The "is the stem one pixel too long?" question was settled by measurement, not by eye.** In the
+  canonical case (1024 × 1024, seed 42, variation 0.35) the opening's bottom row is 255, the last row
+  carrying stem ink is 245, and the near lip's inner edge is row 246: the stroke ends above the lip
+  that is meant to hide it, with no overshoot. The measurement now lives in the suite rather than in
+  a comment —
+  [the row-by-row continuity test](../tests/Formloom.Tests/VaseFlowerRenderingTests.cs) locates the
+  lip's inner edge from the empty vase's own brightest step and asserts coverage down to it and
+  absence a few rows into it, so a future change cannot silently reintroduce the gap or the
+  overshoot.
+
+Still genuinely unexecuted, in this milestone and every earlier one:
+
 - **Native desktop behaviour** — the PhotinoX save dialog, window lifecycle, resize and
-  accessibility — is not exercised by headless tests or Linux CI, exactly as in earlier
-  phases.
+  accessibility — is not exercised by headless tests or Linux CI. The desktop tests drive the
+  session and the rendered component, not the window.
+- **The timing figures are single Stopwatch samples** on one runner instance, as described in
+  [Timing observations](#timing-observations); they are observations, not benchmarks.
 
 ## Verification
 
