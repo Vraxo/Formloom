@@ -141,18 +141,21 @@ Draw order inside `DrawVaseFlower`, then the vase:
    (dark), then the centre vein as a thin stroke.
 4. **Petals**, back to front: a radial gradient offset along the scene light direction, with
    the tone lifting the base colour, plus a very light edge stroke for separation.
-5. **The vase**, drawn as an empty vase is drawn, with the mouth split around the stem: the
-   cavity base and the thin **far rim** are stroked first, then `DrawStemInsideOpening` repaints
-   the stem's own column across the rim band and carries the same stroke on into the opening,
-   and last the thick **near lip** arc goes on top. The continuation uses the same width,
-   angle and shader, is extended below its typed end to the bottom of the opening, and is
-   darkened by a vertical gradient that starts fully transparent at the tangent and deepens to
-   the cavity colour at the bottom.
+5. **The vase**, drawn as an empty vase is drawn: the cavity base, the thin **far rim**
+   stroke, then the thick **near lip** arc.
+6. **The stem's continuation**, painted last, after even the vase's own contour stroke. It uses
+   the same width, angle and shader as the stem above the rim, is extended below its typed end
+   past the bottom of the opening, and is darkened by a vertical gradient that starts fully
+   transparent at the tangent and deepens to the cavity colour at the bottom. One mask carries
+   it: the opening ellipse inset by the near lip — its half width scaled out of the profile's
+   vessel-local rim thickness, so the stem ends exactly on the lip's inner edge — unioned with a
+   narrow column that crosses the rim band.
 
-The far rim is behind the stem and the near lip in front of it, which is the order a stem
-entering a vessel actually has. The two halves of the stroke meet at the mouth's top tangent
-with no tone step, so the stem is one continuous line: outside the vessel, visibly inside the
-opening, then gone under the front lip.
+The far rim, the contour stroke and the lip are all behind the stem, which is the order a stem
+entering a vessel actually has: nothing the vase draws crosses it. The stem is painted exactly
+once inside the mouth — one clip, one stroke, no meeting point between two passes — so there is
+no tone step where it enters. It reads as one continuous line: outside the vessel, visibly
+inside the opening, then gone under the front lip, whose inner edge is the bottom of the mask.
 
 Consequences, all asserted:
 
@@ -163,7 +166,7 @@ Consequences, all asserted:
   mouth's top edge.
 - Below the rim, the only pixels that differ from the same empty vase are inside the opening
   ellipse, plus a two-pixel margin for the antialiased edge of that continuation. The rim band
-  the stem passes behind is still an intentional overlap (about 14 px at 1024 × 1024).
+  the stem passes in front of is still an intentional overlap (about 14 px at 1024 × 1024).
 - **Shadow mask:** the flower contributes nothing, so a planted vase's shadow mask is
   byte-identical to the empty vase's. The flower has no tabletop shadow of its own.
 - **Silhouette:** the flower *is* included, because the bloom is a visible part of the
@@ -193,10 +196,14 @@ ordinary-prompt preservation.
 determinism, subject token, changed-pixel floor against the empty vase, *nothing* changed
 below the rim outside the opening ellipse (and a floor on the changed pixels inside it, so the
 stem's continuation cannot silently disappear), nothing changed outside the flower's bounds
-above it, a row-by-row check that the stem covers the rim band and the opening down to the near
-lip (which catches both a rim stroke painted over the stem and a stroke that stops short),
-bloom/leaf/stem presence counts, petal-colour identity, and no petal pixel below the mouth top;
-five output
+above it, a row-by-row check that the stem covers the rim band and the opening all the way to the near
+lip's inner edge, which is read off the empty vase's own brightest step rather than from a pixel
+count, plus the converse (a few rows into the lip the stem is gone, so the stroke cannot poke
+through the rim that hides it) — together they catch a rim or contour stroke painted over the
+stem, a stroke that stops short, and a stroke that overshoots,
+bloom/leaf/stem presence counts, petal-colour identity (both colour tests key on red dominance,
+because the stem and the leaves are green and a bare "warm pixel" test also matches the stem's
+own light edge where it enters the mouth), and no petal pixel below the mouth top; five output
 sizes from 64 × 64 to 4096 × 1024; red-versus-yellow differences confined to the bloom;
 glaze-independence of every pixel above the rim; unchanged shadow mask and additive-only
 silhouette; detail omission confined to the flower; diagnostic-pass stability; alternate
