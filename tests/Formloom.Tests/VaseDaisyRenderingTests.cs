@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Formloom.Core;
 using Formloom.Rendering.Skia;
 using SkiaSharp;
@@ -12,14 +13,19 @@ public sealed class VaseDaisyRenderingTests
 
     private const int Canvas = 1024;
 
+    // The canonical case is kept on every run; the rest follow with FORMFLOOM_EXPORT_ALL=1.
+    private const string CanonicalDaisy = "formloom-vasedaisy-white-blue-seed-42-variation-0.35";
+
     private static readonly (string Prompt, string Name, int Seed, double Variation)[] Cases =
     [
-        ("a white daisy in a blue ceramic vase on a wooden table", "blue", 42, 0.35),
-        ("a white daisy in a cream ceramic vase on a wooden table", "cream", 42, 0.35),
-        ("a white daisy in a blue ceramic vase on a wooden table", "blue-altseed", 1337, 0.35),
-        ("a white daisy in a cream ceramic vase on a wooden table", "cream-altseed", 20261105, 0.35),
-        ("a white daisy in a blue ceramic vase on a wooden table", "blue-lowvariation", 42, 0),
-        ("a white daisy in a cream ceramic vase on a wooden table", "cream-highvariation", 42, 1),
+        ("a white daisy in a blue ceramic vase on a wooden table", "white-blue", 42, 0.35),
+        ("a white daisy in a cream ceramic vase on a wooden table", "white-cream", 42, 0.35),
+        ("a white daisy in a blue ceramic vase on a wooden table", "white-blue-altseed", 1337, 0.35),
+        ("a white daisy in a cream ceramic vase on a wooden table", "white-cream-altseed", 20261105, 0.35),
+        ("a white daisy in a blue ceramic vase on a wooden table", "white-blue-lowvariation", 42, 0),
+        ("a white daisy in a cream ceramic vase on a wooden table", "white-cream-highvariation", 42, 1),
+        ("a white daisy in a blue ceramic vase on a wooden table", "white-blue-highvariation", 1337, 1),
+        ("a white daisy in a cream ceramic vase on a wooden table", "white-cream-lowvariation", 20261105, 0),
     ];
 
     public static TheoryData<string, string, string, int, double> ExportCases()
@@ -27,7 +33,7 @@ public sealed class VaseDaisyRenderingTests
         var data = new TheoryData<string, string, string, int, double>();
         foreach (var (prompt, name, seed, variation) in Cases)
         {
-            data.Add(prompt, name, name.Split('-')[0], seed, variation);
+            data.Add(prompt, name, name.Split('-')[1], seed, variation);
         }
 
         return data;
@@ -378,6 +384,169 @@ public sealed class VaseDaisyRenderingTests
         Assert.True(
             CountWithin(one, two, box) > 200,
             $"expected a reshaped head, saw {CountWithin(one, two, box)} pixels");
+    }
+
+    // Full-resolution samples, silhouettes and timing sidecars. The canonical case is written on
+    // every run so the artifact always carries one complete daisy image; the rest of the matrix
+    // follows when FORMFLOOM_EXPORT_ALL=1, the same trim the other families use.
+    [Theory]
+    [MemberData(nameof(ExportCases))]
+    public void ExportVaseDaisiesTimingsAndSilhouettes(string prompt, string name, string glaze, int seed, double variation)
+    {
+        var scene = Scene(prompt, (ulong)seed, variation);
+        Assert.Equal($"white-daisy-in-{glaze}-vase", scene.SubjectToken);
+        var empty = EmptyVase(scene);
+        var tulip = Scene($"a red tulip in a {glaze} ceramic vase on a wooden table", (ulong)seed, variation);
+
+        var timer = Stopwatch.StartNew();
+        var rendered = StillLifeRenderer.Render(scene);
+        timer.Stop();
+        var emptyTimer = Stopwatch.StartNew();
+        var emptyRendered = StillLifeRenderer.Render(empty);
+        emptyTimer.Stop();
+        var tulipTimer = Stopwatch.StartNew();
+        var tulipRendered = StillLifeRenderer.Render(tulip);
+        tulipTimer.Stop();
+
+        var stem = FormattableString.Invariant($"formloom-vasedaisy-{name}-seed-{seed}-variation-{variation:0.00}");
+        var directory = AppContext.BaseDirectory;
+        var keep = ExportArtifacts.Keeps(stem, CanonicalDaisy);
+        var silhouette = StillLifeRenderer.RenderSilhouette(scene);
+        Assert.NotEqual(silhouette.PngBytes, StillLifeRenderer.RenderSilhouette(empty).PngBytes);
+        if (keep)
+        {
+            File.WriteAllBytes(Path.Combine(directory, stem + ".png"), rendered.PngBytes);
+            File.WriteAllBytes(Path.Combine(directory, stem + "-silhouette.png"), silhouette.PngBytes);
+        }
+
+        var live = scene.VaseDaisy!;
+        var report = System.Text.Json.JsonSerializer.Serialize(
+            new
+            {
+                Prompt = prompt,
+                Subject = scene.SubjectToken,
+                VaseDaisy = new
+                {
+                    Flower = live.Flower,
+                    Appearance = live.Appearance,
+                    live.Vase.Kind,
+                    live.Vase.Glaze,
+                    Opening = new { live.OpeningCenter, live.OpeningRadius },
+                    MouthTop = live.MouthTop,
+                    live.Plant.StemBase,
+                    live.Plant.StemTop,
+                    live.Plant.StemThickness,
+                    Bloom = new
+                    {
+                        live.Plant.Bloom.Center,
+                        live.Plant.Bloom.RadiusX,
+                        live.Plant.Bloom.RadiusY,
+                        live.Plant.Bloom.Top,
+                        live.Plant.Bloom.Bottom,
+                        Disk = new { live.Plant.Bloom.Disk.RadiusX, live.Plant.Bloom.Disk.RadiusY },
+                    },
+                    Leaves = live.Plant.Leaves.Length,
+                    Petals = live.Plant.Bloom.Petals.Length,
+                    Bounds = live.Plant.Bounds,
+                },
+                rendered.Width,
+                rendered.Height,
+                Framework = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription,
+                OperatingSystem = System.Runtime.InteropServices.RuntimeInformation.OSDescription,
+                scene.Seed,
+                scene.Variation,
+                RenderAndEncodeMilliseconds = timer.Elapsed.TotalMilliseconds,
+                EmptyVaseRenderAndEncodeMilliseconds = emptyTimer.Elapsed.TotalMilliseconds,
+                TulipRenderAndEncodeMilliseconds = tulipTimer.Elapsed.TotalMilliseconds,
+                AdditionalMillisecondsOverEmptyVase = timer.Elapsed.TotalMilliseconds - emptyTimer.Elapsed.TotalMilliseconds,
+                AdditionalMillisecondsOverTulip = timer.Elapsed.TotalMilliseconds - tulipTimer.Elapsed.TotalMilliseconds,
+                ProcessorCount = Environment.ProcessorCount,
+                Objects = scene.Objects,
+                EmptyVaseBytes = emptyRendered.PngBytes.Length,
+                TulipBytes = tulipRendered.PngBytes.Length,
+            },
+            new System.Text.Json.JsonSerializerOptions { IncludeFields = true });
+        if (keep)
+        {
+            File.WriteAllText(Path.Combine(directory, stem + ".timing.json"), report);
+            Assert.True(File.Exists(Path.Combine(directory, stem + ".png")));
+        }
+    }
+
+    // One review sheet for the whole daisy matrix plus the manifest that is the authoritative key
+    // for every cell. No text is drawn into the cells: the CI image has no font stack.
+    [Fact]
+    public void ExportVaseDaisyReviewSheetAndManifest()
+    {
+        const int Cell = 320;
+        const int Columns = 4;
+        var rows = (int)Math.Ceiling(Cases.Length / (double)Columns);
+        using var sheet = new SKBitmap(Cell * Columns, Cell * rows);
+        using var canvas = new SKCanvas(sheet);
+        canvas.Clear(new SKColor(20, 22, 24));
+
+        var manifest = new List<object>();
+        for (var index = 0; index < Cases.Length; index++)
+        {
+            var (prompt, name, seed, variation) = Cases[index];
+            var scene = SceneGenerator.Generate(new(prompt, (ulong)seed, variation, Width: Cell, Height: Cell)).Scene!;
+            var timer = Stopwatch.StartNew();
+            var rendered = StillLifeRenderer.Render(scene);
+            timer.Stop();
+            var left = (index % Columns) * Cell;
+            var top = (index / Columns) * Cell;
+            using (var cell = Decode(rendered.PngBytes))
+            {
+                canvas.DrawBitmap(
+                    cell,
+                    new SKRect(left, top, left + Cell, top + Cell),
+                    new SKSamplingOptions(SKFilterMode.Linear));
+            }
+
+            var daisy = scene.VaseDaisy!;
+            manifest.Add(new
+            {
+                name,
+                prompt,
+                seed,
+                variation,
+                subject = scene.SubjectToken,
+                flower = daisy.Flower.ToString(),
+                appearance = daisy.Appearance.ToString(),
+                glaze = daisy.Vase.Glaze.ToString(),
+                petals = daisy.Plant.Bloom.Petals.Length,
+                leaves = daisy.Plant.Leaves.Length,
+                fileName = FormattableString.Invariant($"formloom-vasedaisy-{name}-seed-{seed}-variation-{variation:0.00}.png"),
+                silhouetteFileName = FormattableString.Invariant($"formloom-vasedaisy-{name}-seed-{seed}-variation-{variation:0.00}-silhouette.png"),
+                cell = index,
+                column = index % Columns,
+                row = index / Columns,
+                width = rendered.Width,
+                height = rendered.Height,
+                renderAndEncodeMilliseconds = timer.Elapsed.TotalMilliseconds,
+            });
+        }
+
+        var directory = AppContext.BaseDirectory;
+        using var image = SKImage.FromBitmap(sheet);
+        using var encoded = image.Encode(SKEncodedImageFormat.Png, 100);
+        File.WriteAllBytes(Path.Combine(directory, "formloom-vasedaisy-sheet.png"), encoded.ToArray());
+        File.WriteAllText(
+            Path.Combine(directory, "formloom-vasedaisy-sheet.timing.json"),
+            System.Text.Json.JsonSerializer.Serialize(
+                new
+                {
+                    Sheet = "formloom-vasedaisy-sheet.png",
+                    Cell,
+                    Columns,
+                    Rows = rows,
+                    Generated = DateTimeOffset.UtcNow,
+                    Layout = "row-major, left to right, top to bottom",
+                    Cases = manifest,
+                },
+                new System.Text.Json.JsonSerializerOptions { IncludeFields = true }));
+        Assert.True(File.Exists(Path.Combine(directory, "formloom-vasedaisy-sheet.png")));
+        Assert.Equal(Cases.Length, manifest.Count);
     }
 
     private static StillLifeScene Scene(string prompt, ulong seed = 20261105, double variation = 0.35) =>
