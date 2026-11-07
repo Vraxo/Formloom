@@ -38,6 +38,7 @@ public sealed class AppComponentTests
         Assert.Contains("in a blue ceramic bowl on a wooden table", help, StringComparison.Ordinal);
         Assert.Contains("filled with coffee", help, StringComparison.Ordinal);
         Assert.Contains("a red tulip in a blue ceramic vase on a wooden table", help, StringComparison.Ordinal);
+        Assert.Contains("a white daisy in a cream ceramic vase on a wooden table", help, StringComparison.Ordinal);
     }
 
     [Theory]

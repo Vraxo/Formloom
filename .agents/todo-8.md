@@ -77,131 +77,143 @@ Continue the existing case normalization, repeated-whitespace normalization, and
 
 ## Sequential implementation checklist
 
+> **Progress — group 1** (typed daisy model, normalized geometry, grammar, generation, validation,
+> Skia draw path, first Core + renderer test pass): implemented and exercised by the new
+> `VaseDaisyTests` / `VaseDaisyRenderingTests`. The daisy is a second typed vase content
+> (`VaseDaisy`), not a widened tulip: `FlowerKind.Daisy` plus `DaisyAppearance.WhiteWithGoldenDisk`,
+> `DaisyPlant/Bloom/Petal/Disk/Leaf` geometry from `DaisyGeometry`, `DaisyMaterial` in the renderer,
+> and a shared `VaseMouth`/`VaseStem` path so both species enter a vase identically.
+>
+> Still unchecked on purpose: the Phase 7 handoff reconciliation, desktop-session/component
+> integration tests, the connected-petal and per-dimension bounds invariants, artifact + timing +
+> review-sheet export, the human visual-review gate, `README` and `docs/daisy-vase-handoff.md`,
+> and the merge-time/post-merge CI evidence.
+
 ### 0. Inspect and record the actual starting point
 
 - [ ] Start from latest `main`; record the exact HEAD commit and confirm the working tree is clean.
 - [ ] Read `.agents/todo-7.md` and `docs/vase-flower-handoff.md` in full.
 - [ ] Reconcile the Phase 7 handoff's stale `Authored but not executed` statements with the later post-fix artifact and visual review: verify the exact evidence, remove or rewrite contradictory claims, and distinguish the original pre-fix sheet from the later stem-continuation fix artifact. Do not overstate which full-resolution samples were inspected.
-- [ ] Inspect the current `VaseFlower`, `FlowerKind`, `TulipColor`, `TulipPlant`, `TulipGeometry`, and `TulipMaterial` implementations.
-- [ ] Trace a tulip prompt end-to-end through parsing, Core scene construction, validation, renderer, generation service, desktop session, preview metadata, and PNG save.
-- [ ] Inspect the exact draw order for flower clipping, vase cavity, far rim, near lip, vase contour, and stem continuation.
-- [ ] Inspect the current flower bounds, attachment invariants, random-stream derivation, silhouette diagnostics, detail-omission behavior, and procedural-preview exporter.
-- [ ] Inspect current Core and renderer test conventions, including non-vacuous pixel assertions.
-- [ ] Identify the smallest explicit model extension that can represent both tulip and daisy without weakening validation or breaking the tulip path.
+- [x] Inspect the current `VaseFlower`, `FlowerKind`, `TulipColor`, `TulipPlant`, `TulipGeometry`, and `TulipMaterial` implementations.
+- [x] Trace a tulip prompt end-to-end through parsing, Core scene construction, validation, renderer, generation service, desktop session, preview metadata, and PNG save.
+- [x] Inspect the exact draw order for flower clipping, vase cavity, far rim, near lip, vase contour, and stem continuation.
+- [x] Inspect the current flower bounds, attachment invariants, random-stream derivation, silhouette diagnostics, detail-omission behavior, and procedural-preview exporter.
+- [x] Inspect current Core and renderer test conventions, including non-vacuous pixel assertions.
+- [x] Identify the smallest explicit model extension that can represent both tulip and daisy without weakening validation or breaking the tulip path.
 - [ ] Record the intended files and design choice in the PR description before implementation; do not write a speculative architecture document.
 
 ### 1. Extend the typed flower-in-vase model narrowly
 
-- [ ] Add daisy as an explicit supported flower kind/value, or use an equally narrow representation that fits the actual current model.
-- [ ] Represent the daisy's fixed white-petal/golden-centre appearance explicitly; do not reuse `TulipColor` to imply daisy colour.
-- [ ] Represent daisy geometry with a dedicated typed model (for example, a daisy plant/bloom/petal/disk representation) rather than pretending it is a `TulipPlant`.
-- [ ] Keep the vase instance referenced by the arrangement identical to the vase entry already held by the scene; do not duplicate transform, seed, glaze, profile, or depth.
-- [ ] Keep the flower out of `SceneEntry`; it remains typed vase content, not an independently positioned neighboring object.
-- [ ] Preserve the existing tulip representation and validation semantics wherever possible.
-- [ ] If the current `VaseFlower` shape must change, use an explicit closed representation with exhaustive validation; avoid an untyped object payload or string-based dispatch.
-- [ ] Keep flower species and appearance values independent of Skia paints, shaders, colours, paths, and native rendering resources.
-- [ ] Keep vase-flower contents mutually exclusive with `BowlContainment` and `CupContents`.
-- [ ] Validate exactly one supported vase and exactly one valid flower arrangement.
-- [ ] Reject undefined enum values, missing geometry, invalid petal/disk counts, non-finite coordinates, non-positive dimensions, and contradictory contents.
-- [ ] Keep ordinary empty vase scenes and all existing tulip scenes unchanged.
+- [x] Add daisy as an explicit supported flower kind/value, or use an equally narrow representation that fits the actual current model.
+- [x] Represent the daisy's fixed white-petal/golden-centre appearance explicitly; do not reuse `TulipColor` to imply daisy colour.
+- [x] Represent daisy geometry with a dedicated typed model (for example, a daisy plant/bloom/petal/disk representation) rather than pretending it is a `TulipPlant`.
+- [x] Keep the vase instance referenced by the arrangement identical to the vase entry already held by the scene; do not duplicate transform, seed, glaze, profile, or depth.
+- [x] Keep the flower out of `SceneEntry`; it remains typed vase content, not an independently positioned neighboring object.
+- [x] Preserve the existing tulip representation and validation semantics wherever possible.
+- [x] If the current `VaseFlower` shape must change, use an explicit closed representation with exhaustive validation; avoid an untyped object payload or string-based dispatch.
+- [x] Keep flower species and appearance values independent of Skia paints, shaders, colours, paths, and native rendering resources.
+- [x] Keep vase-flower contents mutually exclusive with `BowlContainment` and `CupContents`.
+- [x] Validate exactly one supported vase and exactly one valid flower arrangement.
+- [x] Reject undefined enum values, missing geometry, invalid petal/disk counts, non-finite coordinates, non-positive dimensions, and contradictory contents.
+- [x] Keep ordinary empty vase scenes and all existing tulip scenes unchanged.
 
 ### 2. Construct a recognizable daisy in vase-local normalized coordinates
 
-- [ ] Derive the stem base/attachment from the existing vase profile's mouth centre, usable opening, and rim thickness.
-- [ ] Ensure the stem enters safely through the usable vase opening and does not emerge from the exterior wall or float beside the rim.
-- [ ] Define all daisy geometry in normalized scene/vase-local coordinates; do not hard-code 1024 × 1024 pixel positions.
-- [ ] Build one slender, gently curved green stem with restrained natural bend.
-- [ ] Build exactly two green leaves attached at different points on the stem.
-- [ ] Make leaves elongated and lance-shaped, with tapered tips and restrained centre veins; reuse only genuinely shared leaf helpers if they fit both species cleanly.
-- [ ] Build one open daisy bloom with a clearly radial, approximately symmetric arrangement around a distinct central disk.
-- [ ] Use a fixed, modest petal count (choose and document a count appropriate to the desired silhouette); keep the count constant across seeds and variation.
-- [ ] Give each petal a tapered attachment near the disk and a rounded or softly notched outer end; avoid generic identical oval spokes.
-- [ ] Arrange petals with slight, bounded overlap and small authored differences in length, width, angle, and curvature so the bloom feels organic rather than like a flat gear.
-- [ ] Ensure the petals visibly radiate from behind/around the central disk, with no gaps that make them look detached.
-- [ ] Build a distinct golden-yellow central disk with a gently domed or softly textured appearance; do not use a flat yellow circle with no volume cues.
-- [ ] Keep the disk visually centred over the petal roots and attached to the bloom; no floating gap or oversized button-like centre.
+- [x] Derive the stem base/attachment from the existing vase profile's mouth centre, usable opening, and rim thickness.
+- [x] Ensure the stem enters safely through the usable vase opening and does not emerge from the exterior wall or float beside the rim.
+- [x] Define all daisy geometry in normalized scene/vase-local coordinates; do not hard-code 1024 × 1024 pixel positions.
+- [x] Build one slender, gently curved green stem with restrained natural bend.
+- [x] Build exactly two green leaves attached at different points on the stem.
+- [x] Make leaves elongated and lance-shaped, with tapered tips and restrained centre veins; reuse only genuinely shared leaf helpers if they fit both species cleanly.
+- [x] Build one open daisy bloom with a clearly radial, approximately symmetric arrangement around a distinct central disk.
+- [x] Use a fixed, modest petal count (choose and document a count appropriate to the desired silhouette); keep the count constant across seeds and variation.
+- [x] Give each petal a tapered attachment near the disk and a rounded or softly notched outer end; avoid generic identical oval spokes.
+- [x] Arrange petals with slight, bounded overlap and small authored differences in length, width, angle, and curvature so the bloom feels organic rather than like a flat gear.
+- [x] Ensure the petals visibly radiate from behind/around the central disk, with no gaps that make them look detached.
+- [x] Build a distinct golden-yellow central disk with a gently domed or softly textured appearance; do not use a flat yellow circle with no volume cues.
+- [x] Keep the disk visually centred over the petal roots and attached to the bloom; no floating gap or oversized button-like centre.
 - [ ] Make the flower read immediately as a daisy at normal viewing size, not a sunflower, generic star, gear, pinwheel, or tulip.
-- [ ] Keep the bloom orientation and stem transition botanically plausible for a simple illustrated still life.
-- [ ] Keep the daisy proportionate to the existing vase; it must be clearly visible without overwhelming the vessel or canvas.
-- [ ] Keep the entire flower inside safe canvas margins across supported sizes, seeds, and variation values.
-- [ ] Use bounded deterministic variation for petal contour, rotation, stem bend, and leaf shape; variation must never change species identity, petal count, leaf count, or colour.
-- [ ] Use stable named random streams for daisy stem, leaves, petals, and central disk if randomness is useful.
-- [ ] Keep daisy streams independent of tulip geometry, vase geometry/glaze, and all fruit/cup/bowl streams.
-- [ ] Prefer an authored daisy profile with restrained seeded offsets over unconstrained radial noise or a general flower grammar.
-- [ ] Test normalized bounds, radial arrangement, disk centring, petal count, and vase attachment before rendering.
+- [x] Keep the bloom orientation and stem transition botanically plausible for a simple illustrated still life.
+- [x] Keep the daisy proportionate to the existing vase; it must be clearly visible without overwhelming the vessel or canvas.
+- [x] Keep the entire flower inside safe canvas margins across supported sizes, seeds, and variation values.
+- [x] Use bounded deterministic variation for petal contour, rotation, stem bend, and leaf shape; variation must never change species identity, petal count, leaf count, or colour.
+- [x] Use stable named random streams for daisy stem, leaves, petals, and central disk if randomness is useful.
+- [x] Keep daisy streams independent of tulip geometry, vase geometry/glaze, and all fruit/cup/bowl streams.
+- [x] Prefer an authored daisy profile with restrained seeded offsets over unconstrained radial noise or a general flower grammar.
+- [x] Test normalized bounds, radial arrangement, disk centring, petal count, and vase attachment before rendering.
 
 ### 3. Render the daisy with correct materials and vase occlusion
 
-- [ ] Extend the existing CPU Skia renderer and retain the current renderer entry point and PNG encoder.
-- [ ] Draw the daisy behind the vase's foreground mouth/rim and body so the stem is naturally hidden where it enters the vase.
-- [ ] Keep the bloom and visible leaves above the vase opening; do not let the vase body cover the bloom.
-- [ ] Preserve the existing vase body, cavity, far rim, near lip, contour, foot, glaze, highlights, and shadows.
-- [ ] Render white petals with subtle warm/cool shading and restrained edge separation; avoid pure flat white shapes that merge into highlights.
-- [ ] Render the central disk in golden yellow with enough tonal variation to read as a distinct, gently domed centre.
-- [ ] Keep stem and leaves green, with consistent lighting and restrained gradients.
-- [ ] Clip all flower pixels to the expected flower region and vase-mouth overlap; prevent leakage onto the vase exterior, table, or background.
-- [ ] Preserve the existing stem-continuation mask and ensure the daisy stem enters the vase with the same continuous visual treatment as the tulip.
-- [ ] Keep the daisy's petal/disk rendering separate from the tulip petal material and bloom drawing; share only low-level helpers that are demonstrably shape-agnostic.
-- [ ] Ensure the flower does not add a tabletop cast shadow or alter the vase's existing shadow mask unless the handoff explicitly justifies a scoped change.
-- [ ] Preserve silhouette and detail-omission diagnostic semantics, extending them only as needed for daisy-specific geometry.
-- [ ] Ensure diagnostic rendering cannot contaminate a subsequent normal render.
+- [x] Extend the existing CPU Skia renderer and retain the current renderer entry point and PNG encoder.
+- [x] Draw the daisy behind the vase's foreground mouth/rim and body so the stem is naturally hidden where it enters the vase.
+- [x] Keep the bloom and visible leaves above the vase opening; do not let the vase body cover the bloom.
+- [x] Preserve the existing vase body, cavity, far rim, near lip, contour, foot, glaze, highlights, and shadows.
+- [x] Render white petals with subtle warm/cool shading and restrained edge separation; avoid pure flat white shapes that merge into highlights.
+- [x] Render the central disk in golden yellow with enough tonal variation to read as a distinct, gently domed centre.
+- [x] Keep stem and leaves green, with consistent lighting and restrained gradients.
+- [x] Clip all flower pixels to the expected flower region and vase-mouth overlap; prevent leakage onto the vase exterior, table, or background.
+- [x] Preserve the existing stem-continuation mask and ensure the daisy stem enters the vase with the same continuous visual treatment as the tulip.
+- [x] Keep the daisy's petal/disk rendering separate from the tulip petal material and bloom drawing; share only low-level helpers that are demonstrably shape-agnostic.
+- [x] Ensure the flower does not add a tabletop cast shadow or alter the vase's existing shadow mask unless the handoff explicitly justifies a scoped change.
+- [x] Preserve silhouette and detail-omission diagnostic semantics, extending them only as needed for daisy-specific geometry.
+- [x] Ensure diagnostic rendering cannot contaminate a subsequent normal render.
 - [ ] Keep rendering CPU-friendly at 1024 × 1024 and representative supported sizes.
-- [ ] Preserve deterministic pixel output for identical inputs on the same supported runtime.
+- [x] Preserve deterministic pixel output for identical inputs on the same supported runtime.
 
 ### 4. Extend the strict prompt, generation, and save path
 
-- [ ] Add exactly `a white daisy in a blue ceramic vase on a wooden table`.
-- [ ] Add exactly `a white daisy in a cream ceramic vase on a wooden table`.
-- [ ] Preserve existing case, whitespace, and terminal-punctuation normalization.
-- [ ] Reject all other daisy colours, flower species, quantities, vase/container combinations, extra objects, and unsupported relationship wording.
-- [ ] Ensure invalid daisy prompts cannot silently fall back to an empty vase or a tulip.
+- [x] Add exactly `a white daisy in a blue ceramic vase on a wooden table`.
+- [x] Add exactly `a white daisy in a cream ceramic vase on a wooden table`.
+- [x] Preserve existing case, whitespace, and terminal-punctuation normalization.
+- [x] Reject all other daisy colours, flower species, quantities, vase/container combinations, extra objects, and unsupported relationship wording.
+- [x] Ensure invalid daisy prompts cannot silently fall back to an empty vase or a tulip.
 - [ ] Route both daisy prompts through the same generation service, renderer, desktop session, preview, and PNG save path as existing scenes.
-- [ ] Add two deterministic subject tokens and safe whitelisted PNG filenames for the two daisy/vase combinations.
-- [ ] Preserve every existing tulip token/filename and every earlier subject token/filename unchanged.
+- [x] Add two deterministic subject tokens and safe whitelisted PNG filenames for the two daisy/vase combinations.
+- [x] Preserve every existing tulip token/filename and every earlier subject token/filename unchanged.
 - [ ] Preserve last-successful-image metadata when prompt/seed/variation controls are edited without regenerating.
-- [ ] Do not add desktop controls, panels, or a flower editor; existing prompt input is sufficient.
-- [ ] Update concise prompt-help text with one daisy-in-vase example without listing an unbounded vocabulary.
+- [x] Do not add desktop controls, panels, or a flower editor; existing prompt input is sufficient.
+- [x] Update concise prompt-help text with one daisy-in-vase example without listing an unbounded vocabulary.
 
 ### 5. Add Core, parser, and validation tests
 
-- [ ] Test both supported daisy/vase-glaze prompt combinations.
-- [ ] Test case normalization, repeated whitespace, terminal punctuation, and exact-grammar behavior.
-- [ ] Test that parsed daisy kind, fixed appearance, and vase kind/glaze match the prompt.
-- [ ] Test that the daisy is represented as typed vase content, not an independent `SceneEntry` or generic object.
-- [ ] Test that daisy contents are mutually exclusive with bowl containment and cup contents.
-- [ ] Test validation for exactly one supported vase and exactly one valid daisy arrangement.
-- [ ] Test rejection of missing vase, non-vase container, duplicate vase, extra independent entries, undefined kind/value, and contradictory relationships.
-- [ ] Test rejection of unsupported flower colours/species, reversed wording, alternative relationship phrases, plural/quantity forms, extra adjectives, malformed separators, and missing table phrase.
-- [ ] Test that invalid daisy prompts are rejected as a whole and cannot fall back to an empty vase or tulip.
-- [ ] Test stem attachment against the vase mouth's usable opening bounds.
-- [ ] Test that all stem/leaf/petal/disk geometry is finite, positive where applicable, normalized, and within canvas safety margins.
-- [ ] Test that exactly two leaves, one bloom, and the documented fixed petal count are represented across seeds and variations.
-- [ ] Test radial petal placement and central-disk centring with geometric assertions, not only enum comparisons.
-- [ ] Test deterministic geometry for identical inputs and bounded variation across seeds and variation extremes.
-- [ ] Test that changing the seed can produce controlled shape differences without changing flower identity or petal/leaf counts.
-- [ ] Test daisy stream independence from tulip, vase glaze, and existing fruit/cup/bowl streams.
-- [ ] Test that changing vase glaze does not change daisy geometry.
-- [ ] Retain all existing Core/parser/scene-validation/organic-form/containment/cup-liquid/tulip tests.
+- [x] Test both supported daisy/vase-glaze prompt combinations.
+- [x] Test case normalization, repeated whitespace, terminal punctuation, and exact-grammar behavior.
+- [x] Test that parsed daisy kind, fixed appearance, and vase kind/glaze match the prompt.
+- [x] Test that the daisy is represented as typed vase content, not an independent `SceneEntry` or generic object.
+- [x] Test that daisy contents are mutually exclusive with bowl containment and cup contents.
+- [x] Test validation for exactly one supported vase and exactly one valid daisy arrangement.
+- [x] Test rejection of missing vase, non-vase container, duplicate vase, extra independent entries, undefined kind/value, and contradictory relationships.
+- [x] Test rejection of unsupported flower colours/species, reversed wording, alternative relationship phrases, plural/quantity forms, extra adjectives, malformed separators, and missing table phrase.
+- [x] Test that invalid daisy prompts are rejected as a whole and cannot fall back to an empty vase or tulip.
+- [x] Test stem attachment against the vase mouth's usable opening bounds.
+- [x] Test that all stem/leaf/petal/disk geometry is finite, positive where applicable, normalized, and within canvas safety margins.
+- [x] Test that exactly two leaves, one bloom, and the documented fixed petal count are represented across seeds and variations.
+- [x] Test radial petal placement and central-disk centring with geometric assertions, not only enum comparisons.
+- [x] Test deterministic geometry for identical inputs and bounded variation across seeds and variation extremes.
+- [x] Test that changing the seed can produce controlled shape differences without changing flower identity or petal/leaf counts.
+- [x] Test daisy stream independence from tulip, vase glaze, and existing fruit/cup/bowl streams.
+- [x] Test that changing vase glaze does not change daisy geometry.
+- [x] Retain all existing Core/parser/scene-validation/organic-form/containment/cup-liquid/tulip tests.
 
 ### 6. Add renderer pixel/invariant and desktop integration tests
 
-- [ ] Test valid PNG output for both daisy/vase combinations at 1024 × 1024.
-- [ ] Test representative smaller, larger, square, and rectangular output dimensions already supported by the renderer.
-- [ ] Test identical daisy inputs produce identical PNG bytes/pixels on the same supported runtime.
-- [ ] Test alternate seeds produce controlled differences while preserving daisy identity and vase glaze.
-- [ ] Add non-vacuous pixel invariants proving that white petals, yellow disk, both leaves, and stem are actually rendered.
-- [ ] Assert the bloom and central disk are above the vase mouth and are not clipped by the vase.
-- [ ] Assert the stem visibly reaches and enters the vase opening without detachment or exterior-wall leakage.
+- [x] Test valid PNG output for both daisy/vase combinations at 1024 × 1024.
+- [x] Test representative smaller, larger, square, and rectangular output dimensions already supported by the renderer.
+- [x] Test identical daisy inputs produce identical PNG bytes/pixels on the same supported runtime.
+- [x] Test alternate seeds produce controlled differences while preserving daisy identity and vase glaze.
+- [x] Add non-vacuous pixel invariants proving that white petals, yellow disk, both leaves, and stem are actually rendered.
+- [x] Assert the bloom and central disk are above the vase mouth and are not clipped by the vase.
+- [x] Assert the stem visibly reaches and enters the vase opening without detachment or exterior-wall leakage.
 - [ ] Assert the petals remain connected visually around the disk and do not collapse into a star/gear-like silhouette at supported sizes.
-- [ ] Compare a daisy-in-vase render against the same empty-vase render and prove changes are limited to the flower region and intentional mouth-overlap region.
-- [ ] Assert vase ceramic pixels outside the intended stem/rim overlap remain identical to the equivalent empty-vase render where the existing convention requires it.
-- [ ] Assert the daisy adds no unintended tabletop shadow and does not change the vase's existing shadow mask.
-- [ ] Assert white petal pixels and yellow disk pixels are distinguishable from each other and from vase highlights.
-- [ ] Assert flower pixels do not leak onto the table/background outside expected flower bounds.
+- [x] Compare a daisy-in-vase render against the same empty-vase render and prove changes are limited to the flower region and intentional mouth-overlap region.
+- [x] Assert vase ceramic pixels outside the intended stem/rim overlap remain identical to the equivalent empty-vase render where the existing convention requires it.
+- [x] Assert the daisy adds no unintended tabletop shadow and does not change the vase's existing shadow mask.
+- [x] Assert white petal pixels and yellow disk pixels are distinguishable from each other and from vase highlights.
+- [x] Assert flower pixels do not leak onto the table/background outside expected flower bounds.
 - [ ] Assert the flower remains inside canvas bounds at all supported output dimensions and variation 0 and 1.
-- [ ] Test silhouette and detail-omission diagnostics according to their documented behavior.
-- [ ] Test diagnostic rendering followed by normal rendering produces the same normal-render bytes as a fresh render.
-- [ ] Retain all existing fruit, ceramic, mixed-scene, bowl-containment, cup-liquid, tulip, silhouette, shadow, clipping, PNG, resource-ownership, and determinism tests.
+- [x] Test silhouette and detail-omission diagnostics according to their documented behavior.
+- [x] Test diagnostic rendering followed by normal rendering produces the same normal-render bytes as a fresh render.
+- [x] Retain all existing fruit, ceramic, mixed-scene, bowl-containment, cup-liquid, tulip, silhouette, shadow, clipping, PNG, resource-ownership, and determinism tests.
 - [ ] Extend generation-service/desktop-session tests to submit both daisy prompts through the real prompt-to-PNG path.
 - [ ] Extend rendered-component tests to verify successful generation metadata for both daisy prompts.
 - [ ] Test that an unsupported daisy prompt retains the previous successful preview and matching save metadata.

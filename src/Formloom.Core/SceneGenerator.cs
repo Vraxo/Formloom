@@ -43,6 +43,11 @@ public static class SceneGenerator
             return GenerateVaseFlower(vaseFlower, request);
         }
 
+        if (PromptParser.ParseVaseDaisy(request.Prompt) is { } vaseDaisy)
+        {
+            return GenerateVaseDaisy(vaseDaisy, request);
+        }
+
         var parsed = PromptParser.ParseObjects(request.Prompt);
         if (parsed is null)
         {
@@ -180,6 +185,24 @@ public static class SceneGenerator
         var planted = scene with
         {
             VaseFlower = VaseFlower.Create(scene.Ceramics[0], prompt.Color, request.Seed, request.Variation),
+        };
+        var error = SceneValidator.Validate(planted);
+        return error is null ? new(planted, null) : new(null, error);
+    }
+
+    // The daisy is placed the same way the tulip is: the ordinary single-vase path builds the
+    // vessel first, and the flower is attached to that exact instance as typed contents.
+    private static GenerationResult GenerateVaseDaisy(VaseDaisyPrompt prompt, GenerationRequest request)
+    {
+        var empty = GenerateObjects([ObjectPrompt.FromCeramic(prompt.Vase with { Kind = CeramicKind.Vase })], request);
+        if (empty.Scene is not { } scene)
+        {
+            return empty;
+        }
+
+        var planted = scene with
+        {
+            VaseDaisy = VaseDaisy.Create(scene.Ceramics[0], prompt.Appearance, request.Seed, request.Variation),
         };
         var error = SceneValidator.Validate(planted);
         return error is null ? new(planted, null) : new(null, error);

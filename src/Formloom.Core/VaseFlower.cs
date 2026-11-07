@@ -8,17 +8,13 @@ namespace Formloom.Core;
 // depth, and the flower never becomes a second independently positioned scene object.
 public sealed record VaseFlower(CeramicInstance Vase, FlowerKind Flower, TulipColor Color, TulipPlant Plant)
 {
-    public CeramicProfile Profile => CeramicForms.For(Vase.Kind);
+    public CeramicProfile Profile => VaseMouth.Profile(Vase);
 
     // Scene-space opening, derived from the vase transform and profile rather than from
     // canvas pixels.
-    public Vector2 OpeningCenter => new(
-        Vase.Body.Center.X - (Vase.Body.Size.X / 2) + (Profile.MouthCenter.X * Vase.Body.Size.X),
-        Vase.Body.Center.Y - (Vase.Body.Size.Y / 2) + (Profile.MouthCenter.Y * Vase.Body.Size.Y));
+    public Vector2 OpeningCenter => VaseMouth.Center(Vase, Profile);
 
-    public Vector2 OpeningRadius => new(
-        Profile.MouthRadius.X * Vase.Body.Size.X,
-        Profile.MouthRadius.Y * Vase.Body.Size.Y);
+    public Vector2 OpeningRadius => VaseMouth.Radius(Vase, Profile);
 
     // Topmost point of the opening. The flower stays above it, and it is the line the stem
     // disappears behind.

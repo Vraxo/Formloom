@@ -68,9 +68,15 @@ public static class SceneValidator
             return "A scene cannot be both a filled cup and a fruit inside a bowl.";
         }
 
-        if (scene.VaseFlower is not null && (containment is not null || scene.CupContents is not null))
+        var flower = scene.VaseFlower is not null || scene.VaseDaisy is not null;
+        if (flower && (containment is not null || scene.CupContents is not null))
         {
             return "A scene cannot hold a flower and another contents relationship at the same time.";
+        }
+
+        if (scene.VaseFlower is not null && scene.VaseDaisy is not null)
+        {
+            return "A scene cannot hold two flower arrangements at the same time.";
         }
 
         if (scene.CupContents is { } contents)
@@ -78,9 +84,14 @@ public static class SceneValidator
             return ValidateCupContents(objects, contents);
         }
 
-        if (scene.VaseFlower is { } flower)
+        if (scene.VaseFlower is { } tulip)
         {
-            return ValidateVaseFlower(objects, flower);
+            return ValidateVaseFlower(objects, tulip);
+        }
+
+        if (scene.VaseDaisy is { } daisy)
+        {
+            return ValidateVaseDaisy(objects, daisy);
         }
 
         return containment is null ? null : ValidateContainment(objects, containment);
@@ -179,6 +190,112 @@ public static class SceneValidator
         }
 
         if (plant.Bloom.Width > radius.X * 2.5f || plant.Bloom.Height > 0.16f || plant.StemThickness > radius.X * 0.3f)
+        {
+            return "A bloom and stem must stay proportionate to the vase opening.";
+        }
+
+        return null;
+    }
+
+    // The daisy is contents of the scene's one vase, so the vase must be exactly the ceramic
+    // instance the scene already holds, and the plant must hang from that vase's own opening.
+    // The petal count is fixed by the authored profile: variation may reshape a petal but may
+    // never change how many there are.
+    private static string? ValidateVaseDaisy(ImmutableArray<SceneEntry> objects, VaseDaisy daisy)
+    {
+        if (daisy.Vase.Kind != CeramicKind.Vase)
+        {
+            return "Only a vase can hold a flower.";
+        }
+
+        if (!Enum.IsDefined(daisy.Vase.Glaze))
+        {
+            return "A vase must have a blue or cream glaze.";
+        }
+
+        if (daisy.Flower != FlowerKind.Daisy)
+        {
+            return "Only a daisy is supported.";
+        }
+
+        if (!Enum.IsDefined(daisy.Appearance))
+        {
+            return "A daisy must have white petals and a golden centre.";
+        }
+
+        if (objects.Length != 1 || objects[0].Ceramic != daisy.Vase)
+        {
+            return "A flower scene must contain exactly that vase and no other object.";
+        }
+
+        var plant = daisy.Plant;
+        if (plant is null || plant.Leaves.IsDefault || plant.Bloom is null || plant.Bloom.Petals.IsDefault)
+        {
+            return "A vase daisy must describe a stem, two leaves and a bloom.";
+        }
+
+        if (plant.Stem.IsDefaultOrEmpty || plant.Leaves.Length != 2 || plant.Bloom.Petals.Length != DaisyGeometry.PetalCount)
+        {
+            return "A vase daisy must describe a stem, exactly two leaves and one bloom of twelve petals.";
+        }
+
+        if (!float.IsFinite(plant.StemThickness) || plant.StemThickness <= 0 ||
+            !float.IsFinite(plant.Bloom.RadiusX) || plant.Bloom.RadiusX <= 0 ||
+            !float.IsFinite(plant.Bloom.RadiusY) || plant.Bloom.RadiusY <= 0 ||
+            !float.IsFinite(plant.Bloom.Disk.RadiusX) || plant.Bloom.Disk.RadiusX <= 0 ||
+            !float.IsFinite(plant.Bloom.Disk.RadiusY) || plant.Bloom.Disk.RadiusY <= 0)
+        {
+            return "Daisy geometry must be finite and positive.";
+        }
+
+        var bounds = plant.Bounds;
+        if (!float.IsFinite(bounds.Left) || !float.IsFinite(bounds.Top) ||
+            !float.IsFinite(bounds.Right) || !float.IsFinite(bounds.Bottom))
+        {
+            return "Daisy geometry must be finite and positive.";
+        }
+
+        var opening = daisy.OpeningCenter;
+        var radius = daisy.OpeningRadius;
+        var offsetX = (plant.StemBase.X - opening.X) / radius.X;
+        var offsetY = (plant.StemBase.Y - opening.Y) / radius.Y;
+        var reach = (offsetX * offsetX) + (offsetY * offsetY);
+        if (reach > 0.95f || plant.StemBase.Y <= daisy.MouthTop)
+        {
+            return "A stem must enter through the vase opening rather than the exterior wall.";
+        }
+
+        if (plant.StemTop.Y >= daisy.MouthTop - 0.004f)
+        {
+            return "A stem must rise clear of the vase rim.";
+        }
+
+        if (plant.Bloom.Top >= daisy.MouthTop - 0.01f || plant.Bloom.Bottom >= daisy.MouthTop - 0.004f)
+        {
+            return "A bloom must sit above the vase opening, clear of the rim.";
+        }
+
+        foreach (var leaf in plant.Leaves)
+        {
+            if (!float.IsFinite(leaf.Width) || leaf.Width <= 0 || leaf.Outline.IsDefault || leaf.Vein.IsDefault)
+            {
+                return "Every leaf must describe a finite blade and vein.";
+            }
+
+            if (leaf.Attachment.Y >= daisy.MouthTop - 0.004f || leaf.Tip.Y >= daisy.MouthTop - 0.004f)
+            {
+                return "Every leaf must stay above the vase opening.";
+            }
+        }
+
+        if (bounds.Top < DaisyGeometry.TopMargin - 0.012f || bounds.Left < 0.02f || bounds.Right > 0.98f ||
+            bounds.Bottom > plant.StemBase.Y + (plant.StemThickness / 2) + 0.001f)
+        {
+            return "Flower bounds must remain inside the safe canvas margins.";
+        }
+
+        if (plant.Bloom.RadiusX * 2 > radius.X * 3.6f || plant.Bloom.RadiusY > 0.16f ||
+            plant.StemThickness > radius.X * 0.3f)
         {
             return "A bloom and stem must stay proportionate to the vase opening.";
         }

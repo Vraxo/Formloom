@@ -28,10 +28,15 @@ public sealed record StillLifeScene(
     // Containment: a scene is either a filled cup or a fruit in a bowl, never both.
     public CupContents? CupContents { get; init; }
 
-    // The one vase-content relationship the grammar supports: a single tulip growing out of
-    // the vase instance already in Entries. Mutually exclusive with the two relationships
-    // above, and never an entry of its own.
+    // The first vase-content relationship the grammar supports: a single tulip growing out of
+    // the vase instance already in Entries. Mutually exclusive with the other relationships,
+    // and never an entry of its own.
     public VaseFlower? VaseFlower { get; init; }
+
+    // The second vase-content relationship: a single white daisy growing out of the vase
+    // instance already in Entries. Mutually exclusive with every other contents relationship,
+    // and never an entry of its own.
+    public VaseDaisy? VaseDaisy { get; init; }
 
     public ImmutableArray<SceneEntry> Objects
     {
@@ -68,6 +73,11 @@ public sealed record StillLifeScene(
             if (VaseFlower is { } flower)
             {
                 return flower.SubjectToken;
+            }
+
+            if (VaseDaisy is { } daisy)
+            {
+                return daisy.SubjectToken;
             }
 
             if (CupContents is { } contents)

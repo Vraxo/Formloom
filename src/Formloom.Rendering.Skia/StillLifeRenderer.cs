@@ -98,15 +98,32 @@ public static class StillLifeRenderer
         var beverage = scene.CupContents is { } contents && contents.Cup == ceramic
             ? contents.Beverage
             : (BeverageKind?)null;
-        var flower = scene.VaseFlower is { } planted && planted.Vase == ceramic && !shadowsOnly && !skipBody
+        var tulip = scene.VaseFlower is { } planted && planted.Vase == ceramic && !shadowsOnly && !skipBody
             ? planted
             : null;
-        if (flower is not null)
+        var daisy = scene.VaseDaisy is { } sown && sown.Vase == ceramic && !shadowsOnly && !skipBody
+            ? sown
+            : null;
+        if (tulip is not null)
         {
-            DrawVaseFlower(canvas, scene, flower, silhouette, entry.Depth == omittedDetailDepth);
+            DrawVaseFlower(canvas, scene, tulip, silhouette, entry.Depth == omittedDetailDepth);
+        }
+        else if (daisy is not null)
+        {
+            DrawVaseDaisy(canvas, scene, daisy, silhouette, entry.Depth == omittedDetailDepth);
         }
 
-        DrawCeramic(canvas, scene, ceramic, silhouette, skipShadows, shadowsOnly, skipBody, entry.Depth == omittedDetailDepth, beverage, flower);
+        VaseStem? stem = null;
+        if (tulip is not null)
+        {
+            stem = VaseStem.For(tulip);
+        }
+        else if (daisy is not null)
+        {
+            stem = VaseStem.For(daisy);
+        }
+
+        DrawCeramic(canvas, scene, ceramic, silhouette, skipShadows, shadowsOnly, skipBody, entry.Depth == omittedDetailDepth, beverage, stem);
     }
 
     private static StillLifeScene ForInstance(StillLifeScene scene, FruitInstance fruit, int? omittedDetailDepth = null) => scene with
@@ -267,7 +284,7 @@ public static class StillLifeRenderer
         bool skipBody,
         bool omitDetail,
         BeverageKind? beverage = null,
-        VaseFlower? flower = null)
+        VaseStem? stem = null)
     {
         var profile = CeramicForms.For(ceramic.Kind);
         var body = ceramic.Body;
@@ -375,7 +392,7 @@ public static class StillLifeRenderer
         // The stem goes in last, after even the vase's own contour: that contour runs along the
         // far rim exactly where the stem enters, so anything painted under it is sliced in half
         // by a line the stem is really in front of.
-        if (flower is not null)
+        if (stem is { } planted)
         {
             // The near lip's half width, in canvas units: the profile's rim thickness is in the
             // vessel's own space, so it has to be scaled by the body before it can inset the
@@ -383,7 +400,7 @@ public static class StillLifeRenderer
             var lip = new System.Numerics.Vector2(
                 profile.RimThickness * 1.1f * body.Size.X,
                 profile.RimThickness * 1.1f * body.Size.Y);
-            DrawStemInsideOpening(canvas, flower, lip, material, paint);
+            DrawStemInsideOpening(canvas, planted, lip, material, paint);
         }
     }
 
@@ -595,7 +612,7 @@ public static class StillLifeRenderer
         var material = TulipMaterial.For(flower.Color);
         canvas.Save();
         canvas.Scale(1024, 1024);
-        using (var clip = CreateFlowerClip(flower))
+        using (var clip = CreateFlowerClip(flower.MouthTop))
         {
             canvas.ClipPath(clip, antialias: true);
         }
@@ -619,24 +636,24 @@ public static class StillLifeRenderer
     // vase's own contour stroke runs along the far rim exactly where the stem enters, so a stem
     // painted under it was sliced in half by a line it is really in front of. One clip does both
     // jobs: the opening, inset by the near lip so the stem still disappears under it, plus a
-    // narrow column that carries the stem across the rim band. One paint means no seam.
+    // narrow column that carries the stem across the rim band. One paint means no seam. Both
+    // species enter a vase through this one path, so a daisy can never drift from the tulip's
+    // occlusion.
     private static void DrawStemInsideOpening(
         SKCanvas canvas,
-        VaseFlower flower,
+        VaseStem stem,
         System.Numerics.Vector2 lipHalf,
         CeramicMaterial ceramic,
         SKPaint paint)
     {
-        var plant = flower.Plant;
-        var stemMaterial = TulipMaterial.For(flower.Color);
-        var center = flower.OpeningCenter;
-        var radius = flower.OpeningRadius;
-        var top = flower.MouthTop;
+        var center = stem.Center;
+        var radius = stem.Radius;
+        var top = stem.MouthTop;
         var bottom = center.Y + radius.Y;
         var inset = new System.Numerics.Vector2(
             MathF.Max(radius.X - lipHalf.X, radius.X * 0.6f),
             MathF.Max(radius.Y - lipHalf.Y, radius.Y * 0.6f));
-        var reach = plant.StemThickness * 2.5f;
+        var reach = stem.Thickness * 2.5f;
 
         canvas.Save();
 
@@ -651,28 +668,38 @@ public static class StillLifeRenderer
         using (var mask = new SKPathBuilder())
         {
             AppendEllipsePath(mask, center, inset);
-            mask.MoveTo(plant.StemBase.X - reach, top - 0.03f);
-            mask.LineTo(plant.StemBase.X + reach, top - 0.03f);
-            mask.LineTo(plant.StemBase.X + reach, center.Y);
-            mask.LineTo(plant.StemBase.X - reach, center.Y);
+            mask.MoveTo(stem.StemBase.X - reach, top - 0.03f);
+            mask.LineTo(stem.StemBase.X + reach, top - 0.03f);
+            mask.LineTo(stem.StemBase.X + reach, center.Y);
+            mask.LineTo(stem.StemBase.X - reach, center.Y);
             mask.Close();
             using var clip = mask.Detach();
             canvas.ClipPath(clip, antialias: true);
         }
 
-        using var stem = CreateExtendedStemPath(plant, new(plant.StemBase.X, bottom + (plant.StemThickness * 3)));
-        StrokeStem(canvas, stem, plant, stemMaterial, silhouette: false, paint);
+        using var path = CreateExtendedStemPath(stem.Path, new(stem.StemBase.X, bottom + (stem.Thickness * 3)));
+        StrokeStem(
+            canvas,
+            path,
+            stem.Thickness,
+            stem.StemBase.X,
+            stem.StemTop.Y,
+            stem.StemLight,
+            stem.StemColor,
+            stem.StemEdge,
+            silhouette: false,
+            paint);
         using var depth = SKShader.CreateLinearGradient(
             new SKPoint(center.X, top),
             new SKPoint(center.X, bottom),
             [ceramic.CavityColor.WithAlpha(0), ceramic.CavityColor.WithAlpha(210)],
             null, SKShaderTileMode.Clamp);
         paint.Style = SKPaintStyle.Stroke;
-        paint.StrokeWidth = plant.StemThickness;
+        paint.StrokeWidth = stem.Thickness;
         paint.StrokeCap = SKStrokeCap.Round;
         paint.Color = SKColors.White;
         paint.Shader = depth;
-        canvas.DrawPath(stem, paint);
+        canvas.DrawPath(path, paint);
         paint.Shader = null;
         paint.Style = SKPaintStyle.Fill;
         paint.StrokeCap = SKStrokeCap.Butt;
@@ -681,11 +708,11 @@ public static class StillLifeRenderer
 
     // The stem path with a straight continuation below its typed end, so the stroke runs under
     // the near lip instead of stopping in the middle of the opening.
-    private static SKPath CreateExtendedStemPath(TulipPlant plant, System.Numerics.Vector2 end)
+    private static SKPath CreateExtendedStemPath(ImmutableArray<CubicSegment> path, System.Numerics.Vector2 end)
     {
         using var builder = new SKPathBuilder();
-        builder.MoveTo(plant.Stem[0].Start.X, plant.Stem[0].Start.Y);
-        foreach (var segment in plant.Stem)
+        builder.MoveTo(path[0].Start.X, path[0].Start.Y);
+        foreach (var segment in path)
         {
             builder.CubicTo(
                 segment.Control1.X,
@@ -704,9 +731,9 @@ public static class StillLifeRenderer
     // profile: a profile-aware half-plane, not a screen-space rectangle around the bloom. It
     // reaches two pixels into the opening so that it overlaps the vase's own stem pass instead
     // of meeting it edge to edge, which would leave a one-row seam across the stem.
-    private static SKPath CreateFlowerClip(VaseFlower flower)
+    private static SKPath CreateFlowerClip(float mouthTop)
     {
-        var top = flower.MouthTop + 0.002f;
+        var top = mouthTop + 0.002f;
         using var builder = new SKPathBuilder();
         builder.MoveTo(0, top);
         builder.LineTo(1, top);
@@ -719,13 +746,35 @@ public static class StillLifeRenderer
     private static void DrawTulipStem(SKCanvas canvas, TulipPlant plant, TulipMaterial material, bool silhouette, SKPaint paint)
     {
         using var stem = CreateOpenPath(plant.Stem);
-        StrokeStem(canvas, stem, plant, material, silhouette, paint);
+        StrokeStem(
+            canvas,
+            stem,
+            plant.StemThickness,
+            plant.StemBase.X,
+            plant.StemTop.Y,
+            material.StemLight,
+            material.StemBase,
+            material.StemEdge,
+            silhouette,
+            paint);
     }
 
-    private static void StrokeStem(SKCanvas canvas, SKPath stem, TulipPlant plant, TulipMaterial material, bool silhouette, SKPaint paint)
+    // One round-capped stroke with a horizontal light-to-dark gradient, shared by both species:
+    // the stem colour is the only thing that differs.
+    private static void StrokeStem(
+        SKCanvas canvas,
+        SKPath stem,
+        float thickness,
+        float anchorX,
+        float topY,
+        SKColor light,
+        SKColor baseColor,
+        SKColor edge,
+        bool silhouette,
+        SKPaint paint)
     {
         paint.Style = SKPaintStyle.Stroke;
-        paint.StrokeWidth = plant.StemThickness;
+        paint.StrokeWidth = thickness;
         paint.StrokeCap = SKStrokeCap.Round;
         if (silhouette)
         {
@@ -735,9 +784,9 @@ public static class StillLifeRenderer
         else
         {
             using var shader = SKShader.CreateLinearGradient(
-                new SKPoint(plant.StemBase.X - (plant.StemThickness * 1.2f), plant.StemTop.Y),
-                new SKPoint(plant.StemBase.X + (plant.StemThickness * 1.2f), plant.StemTop.Y),
-                [material.StemLight, material.StemBase, material.StemEdge],
+                new SKPoint(anchorX - (thickness * 1.2f), topY),
+                new SKPoint(anchorX + (thickness * 1.2f), topY),
+                [light, baseColor, edge],
                 null, SKShaderTileMode.Clamp);
             paint.Color = SKColors.White;
             paint.Shader = shader;
@@ -747,6 +796,185 @@ public static class StillLifeRenderer
 
         paint.Style = SKPaintStyle.Fill;
         paint.StrokeCap = SKStrokeCap.Butt;
+    }
+
+    // A daisy in a vase. Same envelope as the tulip: the flower is drawn before the vase and
+    // clipped to the half-plane above the mouth's top edge, and its stem is picked up inside the
+    // opening by the mouth's own pass. The head is drawn back to front — upper petals, lower
+    // petals, then the golden disk over their roots — so the bloom reads as one radial flower
+    // rather than as spokes around a button.
+    private static void DrawVaseDaisy(
+        SKCanvas canvas,
+        StillLifeScene scene,
+        VaseDaisy flower,
+        bool silhouette,
+        bool omitDetail)
+    {
+        var plant = flower.Plant;
+        var material = DaisyMaterial.For(flower.Appearance);
+        canvas.Save();
+        canvas.Scale(1024, 1024);
+        using (var clip = CreateFlowerClip(flower.MouthTop))
+        {
+            canvas.ClipPath(clip, antialias: true);
+        }
+
+        using var paint = new SKPaint { IsAntialias = true, Color = SKColors.White };
+        using (var stem = CreateOpenPath(plant.Stem))
+        {
+            StrokeStem(
+                canvas,
+                stem,
+                plant.StemThickness,
+                plant.StemBase.X,
+                plant.StemTop.Y,
+                material.StemLight,
+                material.StemBase,
+                material.StemEdge,
+                silhouette,
+                paint);
+        }
+
+        foreach (var leaf in plant.Leaves)
+        {
+            DrawDaisyLeaf(canvas, leaf, material, silhouette, omitDetail, paint);
+        }
+
+        foreach (var petal in plant.Bloom.Petals)
+        {
+            DrawDaisyPetal(canvas, scene, petal, material, silhouette, omitDetail, paint);
+        }
+
+        DrawDaisyDisk(canvas, plant.Bloom.Disk, material, silhouette, omitDetail, paint);
+        canvas.Restore();
+    }
+
+    private static void DrawDaisyLeaf(
+        SKCanvas canvas,
+        DaisyLeaf leaf,
+        DaisyMaterial material,
+        bool silhouette,
+        bool omitDetail,
+        SKPaint paint)
+    {
+        using var blade = CreatePath(leaf.Outline);
+        if (silhouette)
+        {
+            paint.Color = SKColors.Black;
+            canvas.DrawPath(blade, paint);
+            return;
+        }
+
+        using var shade = SKShader.CreateLinearGradient(
+            new SKPoint(leaf.Attachment.X, leaf.Attachment.Y),
+            new SKPoint(leaf.Tip.X, leaf.Tip.Y),
+            [material.LeafLight, material.LeafBase, material.LeafEdge],
+            [0f, 0.55f, 1f], SKShaderTileMode.Clamp);
+        paint.Color = SKColors.White;
+        paint.Shader = shade;
+        canvas.DrawPath(blade, paint);
+        paint.Shader = null;
+        if (omitDetail)
+        {
+            return;
+        }
+
+        using var vein = CreateOpenPath(leaf.Vein);
+        paint.Style = SKPaintStyle.Stroke;
+        paint.StrokeWidth = leaf.Width * 0.08f;
+        paint.Color = material.LeafEdge.WithAlpha(140);
+        canvas.DrawPath(vein, paint);
+        paint.Style = SKPaintStyle.Fill;
+    }
+
+    // A white petal is never flat white: it darkens into the disk, brightens along the scene
+    // light and keeps a cool edge, and the tone separates the far half of the head from the near
+    // half.
+    private static void DrawDaisyPetal(
+        SKCanvas canvas,
+        StillLifeScene scene,
+        DaisyPetal petal,
+        DaisyMaterial material,
+        bool silhouette,
+        bool omitDetail,
+        SKPaint paint)
+    {
+        using var shape = CreatePath(petal.Outline);
+        if (silhouette)
+        {
+            paint.Color = SKColors.Black;
+            canvas.DrawPath(shape, paint);
+            return;
+        }
+
+        var light = scene.LightDirection;
+        var root = Blend(material.PetalRoot, material.PetalBase, petal.Tone);
+        var tip = Blend(material.PetalBase, material.PetalLight, (petal.Tone + 1) / 2);
+        using (var shade = SKShader.CreateLinearGradient(
+            new SKPoint(petal.Root.X, petal.Root.Y),
+            new SKPoint(petal.Tip.X + (light.X * 0.004f), petal.Tip.Y + (light.Y * 0.004f)),
+            [root, tip, material.PetalLight],
+            [0f, 0.72f, 1f],
+            SKShaderTileMode.Clamp))
+        {
+            paint.Color = SKColors.White;
+            paint.Shader = shade;
+            canvas.DrawPath(shape, paint);
+            paint.Shader = null;
+        }
+
+        if (omitDetail)
+        {
+            return;
+        }
+
+        paint.Style = SKPaintStyle.Stroke;
+        paint.StrokeWidth = 0.0016f;
+        paint.Color = material.PetalEdge.WithAlpha((byte)(70 + (petal.Tone * 60)));
+        canvas.DrawPath(shape, paint);
+        paint.Style = SKPaintStyle.Fill;
+    }
+
+    // The golden centre: a lit dome that covers the petal roots, plus a soft inner ring so the
+    // disk has volume instead of reading as a flat yellow button.
+    private static void DrawDaisyDisk(
+        SKCanvas canvas,
+        DaisyDisk disk,
+        DaisyMaterial material,
+        bool silhouette,
+        bool omitDetail,
+        SKPaint paint)
+    {
+        if (silhouette)
+        {
+            paint.Color = SKColors.Black;
+            canvas.DrawOval(disk.Center.X, disk.Center.Y, disk.RadiusX, disk.RadiusY, paint);
+            return;
+        }
+
+        using (var dome = SKShader.CreateRadialGradient(
+            new SKPoint(disk.Center.X, disk.Center.Y - (disk.RadiusY * 0.35f)),
+            disk.RadiusX * 1.15f,
+            [material.DiskLight, material.DiskBase, material.DiskEdge],
+            [0f, 0.62f, 1f],
+            SKShaderTileMode.Clamp))
+        {
+            paint.Color = SKColors.White;
+            paint.Shader = dome;
+            canvas.DrawOval(disk.Center.X, disk.Center.Y, disk.RadiusX, disk.RadiusY, paint);
+            paint.Shader = null;
+        }
+
+        if (omitDetail)
+        {
+            return;
+        }
+
+        paint.Style = SKPaintStyle.Stroke;
+        paint.StrokeWidth = 0.0012f;
+        paint.Color = material.DiskRing.WithAlpha(110);
+        canvas.DrawOval(disk.Center.X, disk.Center.Y, disk.RadiusX * 0.72f, disk.RadiusY * 0.72f, paint);
+        paint.Style = SKPaintStyle.Fill;
     }
 
     private static void DrawTulipLeaf(
@@ -1117,4 +1345,51 @@ public static class StillLifeRenderer
         (byte)(color.Red * 0.42),
         (byte)(color.Green * 0.42),
         (byte)(color.Blue * 0.44));
+
+    // Everything the mouth's pass needs from a flower's stem. Both species build it, so the
+    // tulip and the daisy enter the vase through exactly the same occlusion and continuation.
+    private readonly record struct VaseStem(
+        System.Numerics.Vector2 Center,
+        System.Numerics.Vector2 Radius,
+        float MouthTop,
+        System.Numerics.Vector2 StemBase,
+        System.Numerics.Vector2 StemTop,
+        float Thickness,
+        ImmutableArray<CubicSegment> Path,
+        SKColor StemLight,
+        SKColor StemColor,
+        SKColor StemEdge)
+    {
+        public static VaseStem For(VaseFlower flower)
+        {
+            var material = TulipMaterial.For(flower.Color);
+            return new(
+                flower.OpeningCenter,
+                flower.OpeningRadius,
+                flower.MouthTop,
+                flower.Plant.StemBase,
+                flower.Plant.StemTop,
+                flower.Plant.StemThickness,
+                flower.Plant.Stem,
+                material.StemLight,
+                material.StemBase,
+                material.StemEdge);
+        }
+
+        public static VaseStem For(VaseDaisy daisy)
+        {
+            var material = DaisyMaterial.For(daisy.Appearance);
+            return new(
+                daisy.OpeningCenter,
+                daisy.OpeningRadius,
+                daisy.MouthTop,
+                daisy.Plant.StemBase,
+                daisy.Plant.StemTop,
+                daisy.Plant.StemThickness,
+                daisy.Plant.Stem,
+                material.StemLight,
+                material.StemBase,
+                material.StemEdge);
+        }
+    }
 }
