@@ -140,15 +140,38 @@ public sealed class VaseDaisyRenderingTests
             var gold = Coloured(planted, empty, disk, IsDiskGold);
             Assert.True(gold > 260, $"{prompt} lost its golden centre: {gold} disk pixels");
 
-            // Nothing of the head is cut by the vase: the warm tabletop and the glaze highlights
+            // Nothing of the head is cut by the vase. The warm tabletop and the glaze highlights
             // are neither white petals nor a golden disk once the comparison is made against the
-            // same empty vase, so any such pixel below the mouth is a leak. The shared flower
-            // clip deliberately overshoots the tangent by 0.002 so the bloom is never sliced at
-            // the rim, so the scan starts below that antialiased slack.
-            var firstRow = (MathF.Ceiling(daisy.MouthTop * Canvas) + 2) / Canvas;
-            var belowTheMouth = new Window(0f, firstRow, 1f, (float)scene.TableHorizon);
-            var leaked = Coloured(planted, empty, belowTheMouth, pixel => IsPetalWhite(pixel) || IsDiskGold(pixel));
-            Assert.Equal(0, leaked);
+            // same empty vase, and the only spot below the mouth where the daisy may legitimately
+            // change pixels is the opening, where its stem is carried under the near lip. So the
+            // scan runs below the mouth, outside the opening, and starts below the shared clip's
+            // own 0.002 overshoot at the tangent.
+            var firstRow = (int)MathF.Ceiling(daisy.MouthTop * Canvas) + 2;
+            var horizon = (int)MathF.Floor((float)scene.TableHorizon * Canvas);
+            var leaked = 0;
+            var firstOffender = string.Empty;
+            for (var y = firstRow; y < horizon; y++)
+            {
+                for (var x = 0; x < Canvas; x++)
+                {
+                    var pixel = planted.GetPixel(x, y);
+                    if (Delta(pixel, empty.GetPixel(x, y)) == 0 || InsideOpening(daisy, x, y, 2f))
+                    {
+                        continue;
+                    }
+
+                    if (IsPetalWhite(pixel) || IsDiskGold(pixel))
+                    {
+                        leaked++;
+                        if (firstOffender.Length == 0)
+                        {
+                            firstOffender = $" first at {x},{y} = {pixel}";
+                        }
+                    }
+                }
+            }
+
+            Assert.True(leaked == 0, $"{prompt} leaked {leaked} head pixels below the mouth{firstOffender}");
         }
     }
 
