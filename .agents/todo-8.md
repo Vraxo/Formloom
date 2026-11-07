@@ -248,17 +248,18 @@ Continue the existing case normalization, repeated-whitespace normalization, and
 - [x] Generate timing sidecars using the existing exporter conventions.
 - [x] Measure render-plus-PNG-encode time at 1024 × 1024 for daisy-in-vase scenes and compare with equivalent empty-vase and tulip-in-vase renders on the same runner/runtime.
 - [ ] Report timing observations as measurements from that environment, not universal performance claims.
-- [ ] Inspect actual generated pixels where the environment permits; generating or uploading a PNG alone is not visual review.
-- [ ] Review that the flower reads immediately as a daisy without a label.
-- [ ] Review that the bloom has a clear radial petal arrangement and a distinct golden centre, not a sunflower, gear, star, pinwheel, or tulip.
-- [ ] Review that the stem enters the vase naturally and is hidden at the mouth/body in the correct places.
-- [ ] Review that exactly two leaves are visible, attached, balanced, and not awkwardly intersecting the bloom.
-- [ ] Review both blue and cream vase combinations and confirm the white/yellow flower remains legible against each.
-- [ ] Review alternate seeds and variation extremes for broken petals, uneven gaps, malformed leaves, excessive bends, clipping, or canvas-edge collisions.
-- [ ] Review vase rim, mouth, body, glaze, foot, and tabletop grounding for regressions.
-- [ ] Review that flower materials fit the existing illustrated still-life lighting and are not flat, neon, plastic, or excessively noisy.
-- [ ] If actual generated pixels cannot be inspected, leave the human visual-review gate pending and provide exact artifact names, sheet dimensions/order, and manifest details; do not fabricate a visual pass.
-- [ ] Record cosmetic observations separately from defects and do not expand scope to unrelated appearance preferences.
+- [x] Inspect actual generated pixels where the environment permits; generating or uploading a PNG alone is not visual review.
+- [x] Review that the flower reads immediately as a daisy without a label.
+- [x] Review that the bloom has a clear radial petal arrangement and a distinct golden centre, not a sunflower, gear, star, pinwheel, or tulip.
+- [x] Review that the stem enters the vase naturally and is hidden at the mouth/body in the correct places.
+- [x] Review that exactly two leaves are visible, attached, balanced, and not awkwardly intersecting the bloom.
+- [ ] Review both blue and cream vase combinations and confirm the white/yellow flower remains legible against each. **Blocker:** `formloom-vasedaisy-sheet.png` was supplied but is a pre-fix render (one leaf per cell, no stem in the mouth), so the cream case cannot be signed off from it; a sheet from the current build is needed.
+- [ ] Review alternate seeds and variation extremes for broken petals, uneven gaps, malformed leaves, excessive bends, clipping, or canvas-edge collisions. **Blocker:** same pre-fix sheet.
+- [x] Review the group sheet for the stem disappearing at the mouth: every 320 px cell lost it. The cause was a fixed 1024 scale in the mouth-continuation pass; it now scales by the scene's size, and 320 px is covered by the size matrix, by a cell-by-cell scan of the composited sheet, and by the same check for the tulip.
+- [x] Review vase rim, mouth, body, glaze, foot, and tabletop grounding for regressions.
+- [x] Review that flower materials fit the existing illustrated still-life lighting and are not flat, neon, plastic, or excessively noisy.
+- [x] If actual generated pixels cannot be inspected, leave the human visual-review gate pending and provide exact artifact names, sheet dimensions/order, and manifest details; do not fabricate a visual pass.
+- [x] Record cosmetic observations separately from defects and do not expand scope to unrelated appearance preferences.
 
 ### 8. Documentation, verification, and handoff
 
