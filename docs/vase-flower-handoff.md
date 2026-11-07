@@ -147,8 +147,9 @@ Draw order inside `DrawVaseFlower`, then the vase:
    the same width, angle and shader as the stem above the rim, is extended below its typed end
    past the bottom of the opening, and is darkened by a vertical gradient that starts fully
    transparent at the tangent and deepens to the cavity colour at the bottom. One mask carries
-   it: the opening ellipse inset by the near lip, unioned with a narrow column that crosses the
-   rim band.
+   it: the opening ellipse inset by the near lip — its half width scaled out of the profile's
+   vessel-local rim thickness, so the stem ends exactly on the lip's inner edge — unioned with a
+   narrow column that crosses the rim band.
 
 The far rim, the contour stroke and the lip are all behind the stem, which is the order a stem
 entering a vessel actually has: nothing the vase draws crosses it. The stem is painted exactly

@@ -377,7 +377,13 @@ public static class StillLifeRenderer
         // by a line the stem is really in front of.
         if (flower is not null)
         {
-            DrawStemInsideOpening(canvas, flower, profile, material, paint);
+            // The near lip's half width, in canvas units: the profile's rim thickness is in the
+            // vessel's own space, so it has to be scaled by the body before it can inset the
+            // opening the stem disappears under.
+            var lip = new System.Numerics.Vector2(
+                profile.RimThickness * 1.1f * body.Size.X,
+                profile.RimThickness * 1.1f * body.Size.Y);
+            DrawStemInsideOpening(canvas, flower, lip, material, paint);
         }
     }
 
@@ -617,7 +623,7 @@ public static class StillLifeRenderer
     private static void DrawStemInsideOpening(
         SKCanvas canvas,
         VaseFlower flower,
-        CeramicProfile profile,
+        System.Numerics.Vector2 lipHalf,
         CeramicMaterial ceramic,
         SKPaint paint)
     {
@@ -627,10 +633,9 @@ public static class StillLifeRenderer
         var radius = flower.OpeningRadius;
         var top = flower.MouthTop;
         var bottom = center.Y + radius.Y;
-        var lipHalf = profile.RimThickness * 1.1f;
         var inset = new System.Numerics.Vector2(
-            MathF.Max(radius.X - lipHalf, radius.X * 0.6f),
-            MathF.Max(radius.Y - lipHalf, radius.Y * 0.6f));
+            MathF.Max(radius.X - lipHalf.X, radius.X * 0.6f),
+            MathF.Max(radius.Y - lipHalf.Y, radius.Y * 0.6f));
         var reach = plant.StemThickness * 2.5f;
 
         canvas.Save();
