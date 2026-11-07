@@ -10,9 +10,11 @@ Skia → PNG/save path.
   [`vase-flower-handoff.md`](vase-flower-handoff.md) and [`.agents/todo-7.md`](../.agents/todo-7.md).
 - **Checklist:** [`.agents/todo-8.md`](../.agents/todo-8.md).
 - **Status:** implementation, tests, artifacts and documentation complete; **visual review
-  partially passed** — the canonical blue case was reviewed at full resolution, one defect (a leaf
-  hidden behind the head) was found and fixed, and the cream glaze, alternate seeds, variation
-  extremes and 320 px legibility still need `formloom-vasedaisy-sheet.png`. See
+  partially passed** — the canonical blue case was reviewed at full resolution, and the review
+  sheet followed. Two defects were found and fixed: a leaf hidden behind the head, and a
+  size-dependent loss of the stem inside the mouth that only appeared in the sheet's 320 px cells.
+  The sheet that exposed them predates both fixes, so the cream glaze, alternate seeds, variation
+  extremes and 320 px legibility need a fresh sheet from the current build to be closed. See
   [Visual review](#visual-review). The timing numbers are left in the artifact with the reason
   stated under [Timing observations](#timing-observations).
 
@@ -233,10 +235,47 @@ Cosmetic observations, recorded separately and **not** changed:
   caps it. Enlarging it means spending the top margin, which is a different design decision, not a
   defect.
 
+Failed, and fixed — the second defect, found in the group sheet:
+
+6. **The stem vanished at the mouth in the 320 px sheet cells.** In every cell of
+   `formloom-vasedaisy-sheet.png` the stem stopped dead at the rim and the cavity stayed empty, so
+   the flower looked stuck into the lip — the same symptom on the tulip sheet
+   (`formloom-vaseflower-sheet-2.png`). Measured on cell 0 with a green-ink test
+   (`g > 75 && g > r + 12 && g > b + 12`) the stem contributed **8 pixels in 4 rows**, all above
+   the rim; the same measurement on the full-resolution tulip
+   (`formloom-vaseflower-red-blue-seed-42-variation-0.35-3.png`, 1024 px, crop `34x30+492+212`)
+   found **215 green pixels** running through the cavity to the near lip. The defect was therefore
+   present at 320 and absent at 1024 — a scale dependence, not a geometry error, and it affected
+   every flower family because they share the pass.
+
+   The cause is a fixed-space transform left over from an earlier draw step: the mouth
+   continuation reset the canvas to identity but then scaled it by a constant 1024 instead of the
+   scene's own size. At 1024 that is invisible; at 320 the whole pass draws 3.2× too far out and
+   falls off the canvas. The pass now scales by `scene.Width` / `scene.Height`, the same way the
+   scene's initial transform does.
+
+   Three guards now hold this open at the sheet's own size, because the existing size matrix
+   started at 640 and never sampled 320:
+
+   - 320 × 320 joined the supported-size matrix, so the per-size bounds, silhouette and
+     stem-inside-opening assertions all run at the cell size;
+   - the sheet test scans the **composited sheet** cell by cell and requires green ink inside each
+     cell's own opening — the artifact itself is checked, not just a render of the same size;
+   - the tulip has the same check at 320 px for all eight of its cases, since it regressed there too.
+
+   Both pixel checks test green **dominance** rather than a brightness floor: inside the cavity
+   the stem is darkened by the depth gradient and thinned by antialiasing to barely a pixel at 320.
+
+**The sheets that exposed both defects predate them.** The daisy sheet shows a single leaf in all
+eight cells — 86–88 green blade pixels to the left of the stem in each cell and **zero** to the
+right — which is the pre-fix geometry, so it is stale for the leaf question *and* was produced by
+the build that still had the fixed 1024 transform. It remains valid as the reason the two defects
+were found, and the fixes are proven by the tests above rather than by that image.
+
 Not reviewed yet: the **cream glaze**, alternate seeds and the variation extremes beyond the one
-canonical case, and legibility at 320 px sheet cells. Those need
-`formloom-vasedaisy-sheet.png` from the `procedural-preview` artifact; the sheet was not part of
-this upload, so those boxes stay open rather than being assumed.
+canonical case, and legibility at 320 px sheet cells. The sheet has now been supplied, but it is a
+pre-fix render, so a fresh `formloom-vasedaisy-sheet.png` from the current `procedural-preview`
+artifact is needed before those boxes can be closed; they stay open rather than being assumed.
 
 ## Known limitations
 
