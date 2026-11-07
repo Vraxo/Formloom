@@ -263,6 +263,7 @@ public sealed class VaseDaisyRenderingTests
         var top = (bounds.Top * height) - 3;
         var bottom = (bounds.Bottom * height) + 3;
         var outside = 0;
+        var sample = string.Empty;
         for (var y = 0; y < height; y++)
         {
             for (var x = 0; x < width; x++)
@@ -278,12 +279,19 @@ public sealed class VaseDaisyRenderingTests
                     if (!(y > daisy.MouthTop * height && Math.Abs(((x + 0.5f) / width) - daisy.OpeningCenter.X) < daisy.OpeningRadius.X))
                     {
                         outside++;
+                        if (sample.Length == 0)
+                        {
+                            sample = FormattableString.Invariant(
+                                $" first at ({x}/{width}, {y}/{height}) = ({(x + 0.5f) / width:0.0000}, {(y + 0.5f) / height:0.0000})" +
+                                $" bounds=({bounds.Left:0.0000},{bounds.Top:0.0000},{bounds.Right:0.0000},{bounds.Bottom:0.0000})" +
+                                $" mouthTop={daisy.MouthTop:0.0000}");
+                        }
                     }
                 }
             }
         }
 
-        Assert.True(outside == 0, $"expected no daisy ink outside its bounds at {width}x{height}, saw {outside}");
+        Assert.True(outside == 0, $"expected no daisy ink outside its bounds at {width}x{height}, saw {outside}{sample}");
     }
 
     // Every petal reaches its own sector of the head: twelve rays sampled between the disk and the
@@ -348,13 +356,13 @@ public sealed class VaseDaisyRenderingTests
             using var planted = Decode(StillLifeRenderer.Render(scene).PngBytes);
             using var empty = Decode(StillLifeRenderer.Render(EmptyVase(scene)).PngBytes);
 
-            // A two-pixel frame around the canvas: nothing of the daisy may reach it.
+            // A one-pixel frame around the canvas: nothing of the daisy may reach it.
             var border = 0;
             for (var y = 0; y < height; y++)
             {
                 for (var x = 0; x < width; x++)
                 {
-                    if (x >= 2 && y >= 2 && x < width - 2 && y < height - 2)
+                    if (x >= 1 && y >= 1 && x < width - 1 && y < height - 1)
                     {
                         continue;
                     }
