@@ -254,6 +254,73 @@ public sealed class VaseDaisyRenderingTests
 
         // The daisy is drawn at every supported size: it is not a 1024-only pixel offset.
         Assert.True(changed > 10, $"expected daisy pixels at {width}x{height}, saw {changed}");
+
+        // And it is drawn only inside its own measured bounds, in that canvas's own units.
+        var daisy = scene.VaseDaisy!;
+        var bounds = daisy.Plant.Bounds;
+        var left = (bounds.Left * width) - 3;
+        var right = (bounds.Right * width) + 3;
+        var top = (bounds.Top * height) - 3;
+        var bottom = (bounds.Bottom * height) + 3;
+        var outside = 0;
+        var sample = string.Empty;
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                if (Delta(planted.GetPixel(x, y), empty.GetPixel(x, y)) == 0)
+                {
+                    continue;
+                }
+
+                if (x >= left && x <= right && y >= top && y <= bottom)
+                {
+                    continue;
+                }
+
+                // The mouth's own continuation is the one documented exception below the rim.
+                if (y > daisy.MouthTop * height && Math.Abs(((x + 0.5f) / width) - daisy.OpeningCenter.X) < daisy.OpeningRadius.X)
+                {
+                    continue;
+                }
+
+                outside++;
+                if (sample.Length == 0)
+                {
+                    sample = string.Create(
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        $" first at ({(x + 0.5f) / width:0.0000}, {(y + 0.5f) / height:0.0000}) of {width}x{height}; bounds=({bounds.Left:0.0000},{bounds.Top:0.0000},{bounds.Right:0.0000},{bounds.Bottom:0.0000}); mouthTop={daisy.MouthTop:0.0000} opening={daisy.OpeningCenter.X:0.0000}/{daisy.OpeningRadius.X:0.0000}");
+                }
+            }
+        }
+
+        Assert.True(outside == 0, $"expected no daisy ink outside its bounds at {width}x{height}, saw {outside}{sample}");
+
+        // The mouth's continuation has to land in the opening at every size, in that canvas's own
+        // units: a continuation painted in the 1024 reference space would leave the opening empty
+        // and drop a stray stub at reference coordinates instead.
+        var inOpening = 0;
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                if (Delta(planted.GetPixel(x, y), empty.GetPixel(x, y)) == 0)
+                {
+                    continue;
+                }
+
+                var dx = ((x + 0.5f) / width) - daisy.OpeningCenter.X;
+                var dy = ((y + 0.5f) / height) - daisy.OpeningCenter.Y;
+                var reachX = daisy.OpeningRadius.X + (2f / width);
+                var reachY = daisy.OpeningRadius.Y + (2f / height);
+                if (((dx * dx) / (reachX * reachX)) + ((dy * dy) / (reachY * reachY)) <= 1f)
+                {
+                    inOpening++;
+                }
+            }
+        }
+
+        Assert.True(inOpening > 0, $"expected the stem inside the opening at {width}x{height}, saw {inOpening} pixels");
     }
 
     [Fact]
