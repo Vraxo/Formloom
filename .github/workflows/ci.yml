@@ -57,40 +57,6 @@ jobs:
       - name: Test
         run: dotnet test --solution Formloom.slnx --configuration Release --no-build --no-restore --report-trx --results-directory TestResults
 
-      - name: Surface failing tests
-        if: failure()
-        run: |
-          python3 - <<'PY'
-          import glob
-          import xml.etree.ElementTree as ET
-
-          ns = '{http://microsoft.com/schemas/VisualStudio/TeamTest/2010}'
-          failures = []
-          for path in glob.glob('TestResults/**/*.trx', recursive=True):
-              try:
-                  root = ET.parse(path).getroot()
-              except Exception:
-                  continue
-              for unit in root.iter(ns + 'UnitTestResult'):
-                  if unit.get('outcome') == 'Failed':
-                      name = unit.get('testName', '?')
-                      message = ''
-                      for node in unit.iter(ns + 'Message'):
-                          message = ' '.join((node.text or '').split())
-                          break
-                      failures.append((name, message[:240]))
-
-          seen = set()
-          for name, message in failures:
-              if name in seen:
-                  continue
-              seen.add(name)
-              print('::error::FAIL ' + name + ' :: ' + message)
-              if len(seen) >= 12:
-                  break
-          print('failed test entries: ' + str(len(failures)))
-          PY
-
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
