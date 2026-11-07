@@ -81,6 +81,7 @@ Continue the existing case normalization, repeated-whitespace normalization, and
 
 - [ ] Start from latest `main`; record the exact HEAD commit and confirm the working tree is clean.
 - [ ] Read `.agents/todo-7.md` and `docs/vase-flower-handoff.md` in full.
+- [ ] Reconcile the Phase 7 handoff's stale `Authored but not executed` statements with the later post-fix artifact and visual review: verify the exact evidence, remove or rewrite contradictory claims, and distinguish the original pre-fix sheet from the later stem-continuation fix artifact. Do not overstate which full-resolution samples were inspected.
 - [ ] Inspect the current `VaseFlower`, `FlowerKind`, `TulipColor`, `TulipPlant`, `TulipGeometry`, and `TulipMaterial` implementations.
 - [ ] Trace a tulip prompt end-to-end through parsing, Core scene construction, validation, renderer, generation service, desktop session, preview metadata, and PNG save.
 - [ ] Inspect the exact draw order for flower clipping, vase cavity, far rim, near lip, vase contour, and stem continuation.
