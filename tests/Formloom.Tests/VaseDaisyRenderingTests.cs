@@ -128,43 +128,32 @@ public sealed class VaseDaisyRenderingTests
             var plant = daisy.Plant;
             using var planted = Decode(StillLifeRenderer.Render(scene).PngBytes);
             using var empty = Decode(StillLifeRenderer.Render(EmptyVase(scene)).PngBytes);
-            var head = BloomWindow(plant, 0);
 
             // The petals read as white rather than as a grey or cream wash: bright and close to
             // neutral, counted only where the daisy actually painted over the empty vase.
-            var petals = Coloured(planted, empty, head, pixel =>
-                pixel.Red > 195 && pixel.Green > 195 && pixel.Blue > 185 &&
-                Math.Abs(pixel.Red - pixel.Blue) < 24);
+            var head = BloomWindow(plant, 0);
+            var petals = Coloured(planted, empty, head, IsPetalWhite);
             Assert.True(petals > 1500, $"{prompt} does not read as white: {petals} petal pixels");
 
             // The centre is golden, drawn over the petal roots.
             var disk = DiskWindow(plant.Bloom);
-            var gold = Coloured(planted, empty, disk, pixel =>
-                pixel.Red > 150 && pixel.Green > 110 && pixel.Blue < 120 &&
-                pixel.Red > pixel.Green && pixel.Green > pixel.Blue);
+            var gold = Coloured(planted, empty, disk, IsDiskGold);
             Assert.True(gold > 260, $"{prompt} lost its golden centre: {gold} disk pixels");
 
-            // Nothing of the head is cut by the vase: no white or golden pixel sits below the
-            // mouth's top edge, down to the table horizon.
-            var horizon = (int)MathF.Floor((float)scene.TableHorizon * Canvas);
-            var belowMouth = 0;
-            for (var y = (int)MathF.Round(daisy.MouthTop * Canvas); y < horizon; y++)
-            {
-                for (var x = 0; x < Canvas; x++)
-                {
-                    var pixel = planted.GetPixel(x, y);
-                    var white = pixel.Red > 195 && pixel.Green > 195 && pixel.Blue > 185 && Math.Abs(pixel.Red - pixel.Blue) < 24;
-                    var golden = pixel.Red > 150 && pixel.Green > 110 && pixel.Blue < 120 && pixel.Red > pixel.Green && pixel.Green > pixel.Blue;
-                    if (white || golden)
-                    {
-                        belowMouth++;
-                    }
-                }
-            }
-
-            Assert.Equal(0, belowMouth);
+            // Nothing of the head is cut by the vase: the warm tabletop and the glaze highlights
+            // are neither white petals nor a golden disk once the comparison is made against the
+            // same empty vase, so any such pixel below the mouth is a leak.
+            var belowTheMouth = new Window(0f, daisy.MouthTop, 1f, (float)scene.TableHorizon);
+            var leaked = Coloured(planted, empty, belowTheMouth, pixel => IsPetalWhite(pixel) || IsDiskGold(pixel));
+            Assert.Equal(0, leaked);
         }
     }
+
+    private static bool IsPetalWhite(SKColor pixel) =>
+        pixel.Red > 195 && pixel.Green > 195 && pixel.Blue > 185 && Math.Abs(pixel.Red - pixel.Blue) < 24;
+
+    private static bool IsDiskGold(SKColor pixel) =>
+        pixel.Red > 150 && pixel.Green > 110 && pixel.Blue < 120 && pixel.Red > pixel.Green && pixel.Green > pixel.Blue;
 
     [Theory]
     [MemberData(nameof(ExportCases))]
