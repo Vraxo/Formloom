@@ -42,6 +42,7 @@ public sealed class VaseDaisyRenderingTests
     public static TheoryData<int, int> Dimensions()
     {
         var data = new TheoryData<int, int>();
+
         // 320 x 320 is the review sheet's cell size: it is where the mouth continuation was
         // silently missing before the matrix reset used the scene's own size.
         foreach (var (width, height) in new[] { (64, 64), (256, 256), (320, 320), (640, 480), (2048, 1024), (4096, 1024) })

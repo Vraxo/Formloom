@@ -240,6 +240,7 @@ public sealed class VaseFlowerRenderingTests
                 for (var x = 0; x < Cell; x++)
                 {
                     var pixel = planted.GetPixel(x, y);
+
                     // Green dominance, not a brightness floor: inside the cavity the stem is
                     // darkened by the depth gradient and thinned by antialiasing at 320 px.
                     if (Delta(pixel, empty.GetPixel(x, y)) == 0 ||
