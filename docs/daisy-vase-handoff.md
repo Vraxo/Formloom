@@ -236,6 +236,19 @@ visual pass is made. To close it, open `procedural-preview` from run `4238283640
   [42382836401](https://github.com/Vraxo/Formloom/actions/runs/42382836401) green on the first
   attempt; `procedural-preview` 3.26 MB, `test-results-Release` 125 KB. Merged as `a5b8cae`;
   post-merge run [42384279037](https://github.com/Vraxo/Formloom/actions/runs/42384279037) green.
+- PR [#47](https://github.com/Vraxo/Formloom/pull/47) — desktop/component coverage, the two extra
+  pixel properties, README, this document, and the Phase 7 correction. The run sequence is worth
+  recording because the tests earned it: [42385310068](https://github.com/Vraxo/Formloom/actions/runs/42385310068)
+  failed at the per-size bounds property, [42385431384](https://github.com/Vraxo/Formloom/actions/runs/42385431384)
+  reported the first offenders, [42385571746](https://github.com/Vraxo/Formloom/actions/runs/42385571746)
+  failed to compile the diagnostic string,
+  [42385649123](https://github.com/Vraxo/Formloom/actions/runs/42385649123) produced the coordinates
+  that identified the fixed-matrix continuation bug described above, and
+  [42385814291](https://github.com/Vraxo/Formloom/actions/runs/42385814291) was green with the fix.
+  Run [42385997594](https://github.com/Vraxo/Formloom/actions/runs/42385997594) is the green run on
+  the shipping code state (the temporary failed-test annotation step already removed); the
+  documentation commit that follows it is verified by the run on the PR's final head, which is
+  named in the PR conversation.
 - **Not claimed:** native Photino/WebView2 dialog, window lifecycle, resize or accessibility
   behaviour. Those are not exercised by headless tests or Linux CI, in this milestone or any
   earlier one.

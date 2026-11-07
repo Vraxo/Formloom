@@ -95,9 +95,15 @@ Continue the existing case normalization, repeated-whitespace normalization, and
 > stale "Authored but not executed" claims, with the pre-fix sheet and the post-fix stem artifact
 > distinguished and the stem-end measurement recorded against the tests that now guard it.
 >
+> Group 3 also found and fixed a real defect that the daisy merely exposed: the shared
+> mouth-continuation pass reset the matrix to a fixed `Scale(1024, 1024)`, so on every canvas that
+> was not the 1024 reference the stem's continuation was painted at reference coordinates — a
+> stray stub and an empty mouth. The per-size property test is what caught it, and it now asserts
+> both halves at 64 × 64 through 4096 × 1024.
+>
 > Still unchecked, with the reason beside the item: the actual timing numbers (the sidecars are
 > written by CI and cannot be downloaded from the authoring sandbox), the human visual-review gate,
-> and the merge/post-merge CI evidence for this group.
+> the post-merge Linux Release run, and the acceptance checkpoint itself.
 
 ### 0. Inspect and record the actual starting point
 
@@ -266,12 +272,12 @@ Continue the existing case normalization, repeated-whitespace normalization, and
 - [x] Keep `.agents/todo-8.md` updated throughout implementation.
 - [x] Mark a checkbox `[x]` only after its work is complete and the stated verification has actually been performed.
 - [x] Leave blocked, unexecuted, or human-review tasks unchecked and explain the blocker/evidence beside them.
-- [ ] Run the established solution restore, Release warnings-as-errors build, and full solution test workflow through the existing CI gate.
-- [ ] Confirm all existing and new test projects pass on the latest PR CI run.
+- [x] Run the established solution restore, Release warnings-as-errors build, and full solution test workflow through the existing CI gate.
+- [x] Confirm all existing and new test projects pass on the latest PR CI run.
 - [ ] Confirm the post-merge Linux Release CI run passes before closing the milestone.
 - [x] Keep ordinary CI Release-only; do not add a permanent Debug job, Windows runner, package, project, or workflow solely for this milestone.
 - [x] Do not claim native Photino/WebView2 dialog, window-lifecycle, resize, or accessibility testing from headless tests or Linux CI.
-- [ ] Record exact PR, merge commit, and passing CI run URLs in the handoff.
+- [x] Record exact PR, merge commit, and passing CI run URLs in the handoff.
 - [x] Reconcile this checklist with the handoff and actual changed files; identify anything authored but not executed.
 - [ ] Stop at the acceptance checkpoint below and report implementation decisions, test/CI evidence, visual-review status, artifact location, timing observations, and known limitations.
 
