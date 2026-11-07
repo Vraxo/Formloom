@@ -255,6 +255,17 @@ public sealed class VaseDaisyTests
                     Assert.NotEqual(plant.Leaves[0].Attachment, plant.Leaves[1].Attachment);
                     Assert.True(plant.Leaves[0].Tip.X < plant.Leaves[0].Attachment.X);
                     Assert.True(plant.Leaves[1].Tip.X > plant.Leaves[1].Attachment.X);
+
+                    // A leaf the head covers is a leaf the viewer does not see, so every leaf has
+                    // to clear the bloom's own silhouette: below it, or beyond its side.
+                    var bloom = plant.Bloom;
+                    foreach (var leaf in plant.Leaves)
+                    {
+                        var beyondTheSide = MathF.Abs(leaf.Tip.X - bloom.Center.X) > bloom.RadiusX;
+                        Assert.True(
+                            leaf.Tip.Y > bloom.Bottom - 0.004f || beyondTheSide,
+                            $"a leaf sits inside the head's silhouette at seed {seed}, variation {variation}");
+                    }
                 }
             }
         }

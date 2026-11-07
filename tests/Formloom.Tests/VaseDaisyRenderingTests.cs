@@ -114,11 +114,15 @@ public sealed class VaseDaisyRenderingTests
             }
         }
 
-        // The head fills its box, both leaves flank the stem and the stem reaches the opening.
+        // The head fills its box, the stem reaches the opening, and both leaves are actually
+        // visible. "Changed pixels" is not enough for a leaf: a leaf hidden behind the petals is
+        // covered by daisy ink too, so the count is of green blade pixels. This is the property
+        // the first rendered daisy failed — it had two leaves in its geometry and one on screen.
         Assert.True(Count(planted, empty, BloomWindow(plant, 0)) > 1200, $"{name} lost its head");
         foreach (var leaf in plant.Leaves)
         {
-            Assert.True(Count(planted, empty, LeafWindow(leaf)) > 40, $"{name} lost a leaf");
+            var blade = Coloured(planted, empty, LeafWindow(leaf), IsLeafGreen);
+            Assert.True(blade > 40, $"{name} shows no leaf at ({leaf.Attachment.X:0.000},{leaf.Attachment.Y:0.000}): {blade} green pixels");
         }
 
         Assert.True(Count(planted, empty, StemWindow(daisy)) > 40, $"{name} lost the stem above the rim");
@@ -183,6 +187,9 @@ public sealed class VaseDaisyRenderingTests
 
     private static bool IsPetalWhite(SKColor pixel) =>
         pixel.Red > 195 && pixel.Green > 195 && pixel.Blue > 185 && Math.Abs(pixel.Red - pixel.Blue) < 24;
+
+    private static bool IsLeafGreen(SKColor pixel) =>
+        pixel.Green > 85 && pixel.Green > pixel.Red + 12 && pixel.Green > pixel.Blue + 12;
 
     private static bool IsDiskGold(SKColor pixel) =>
         pixel.Red > 150 && pixel.Green > 110 && pixel.Blue < 120 && pixel.Red > pixel.Green && pixel.Green > pixel.Blue;
