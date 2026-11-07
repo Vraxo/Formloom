@@ -295,6 +295,32 @@ public sealed class VaseDaisyRenderingTests
         }
 
         Assert.True(outside == 0, $"expected no daisy ink outside its bounds at {width}x{height}, saw {outside}{sample}");
+
+        // The mouth's continuation has to land in the opening at every size, in that canvas's own
+        // units: a continuation painted in the 1024 reference space would leave the opening empty
+        // and drop a stray stub at reference coordinates instead.
+        var inOpening = 0;
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                if (Delta(planted.GetPixel(x, y), empty.GetPixel(x, y)) == 0)
+                {
+                    continue;
+                }
+
+                var dx = ((x + 0.5f) / width) - daisy.OpeningCenter.X;
+                var dy = ((y + 0.5f) / height) - daisy.OpeningCenter.Y;
+                var reachX = daisy.OpeningRadius.X + (2f / width);
+                var reachY = daisy.OpeningRadius.Y + (2f / height);
+                if (((dx * dx) / (reachX * reachX)) + ((dy * dy) / (reachY * reachY)) <= 1f)
+                {
+                    inOpening++;
+                }
+            }
+        }
+
+        Assert.True(inOpening > 0, $"expected the stem inside the opening at {width}x{height}, saw {inOpening} pixels");
     }
 
     [Fact]

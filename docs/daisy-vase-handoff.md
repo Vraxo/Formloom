@@ -108,6 +108,20 @@ unioned with a narrow column across the rim band). The daisy adds no tabletop ca
 not touch the shadow mask. Silhouettes include the head; detail omission drops the petal edge
 strokes and the leaf veins.
 
+## A bug this milestone found and fixed
+
+Proving that the daisy's ink stays inside its own measured bounds at every supported size
+exposed a defect in the shared mouth-continuation pass, not in the daisy: `DrawStemInsideOpening`
+stepped out of the vase's space with `ResetMatrix()` followed by a **fixed** `Scale(1024, 1024)`,
+while the renderer's base transform is `Scale(scene.Width / 1024, scene.Height / 1024)`. On the
+1024 × 1024 reference canvas the two agree, which is why nothing caught it; on every other canvas
+the continuation was painted at reference coordinates — a stray stub near `(508, 166)` in device
+pixels, and an empty mouth where the stem should enter. The matrix now resets to the scene's own
+size, and the per-size test asserts both halves of the property: no daisy ink outside its bounds,
+and the stem visibly inside the opening at 64 × 64 through 4096 × 1024. Canonical 1024 renders are
+byte-identical before and after; the tulip, which shares the pass, was affected at every other
+size until this fix.
+
 ## Tests
 
 `VaseDaisyTests` (Core) and `VaseDaisyRenderingTests` (pixels), plus

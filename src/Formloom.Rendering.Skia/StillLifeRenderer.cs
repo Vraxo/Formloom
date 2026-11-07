@@ -400,7 +400,7 @@ public static class StillLifeRenderer
             var lip = new System.Numerics.Vector2(
                 profile.RimThickness * 1.1f * body.Size.X,
                 profile.RimThickness * 1.1f * body.Size.Y);
-            DrawStemInsideOpening(canvas, planted, lip, material, paint);
+            DrawStemInsideOpening(canvas, scene, planted, lip, material, paint);
         }
     }
 
@@ -641,6 +641,7 @@ public static class StillLifeRenderer
     // occlusion.
     private static void DrawStemInsideOpening(
         SKCanvas canvas,
+        StillLifeScene scene,
         VaseStem stem,
         System.Numerics.Vector2 lipHalf,
         CeramicMaterial ceramic,
@@ -659,9 +660,12 @@ public static class StillLifeRenderer
 
         // Step out of the vase's own 0..1 space and redraw in the canvas 0..1 space the flower
         // pass uses, so the stem's width and direction carry over unchanged. The clip the vase
-        // already set is kept: clips live in device space, not in the matrix.
+        // already set is kept: clips live in device space, not in the matrix. The reset uses the
+        // scene's own size rather than the 1024 reference: the base transform is
+        // `width / 1024`, so a fixed 1024 here would paint the continuation at reference
+        // coordinates on every other canvas, leaving a stray stub and an empty mouth.
         canvas.ResetMatrix();
-        canvas.Scale(1024, 1024);
+        canvas.Scale(scene.Width, scene.Height);
 
         // Two clockwise subpaths in one path: the winding rule unions them, so the column and
         // the opening form a single mask with no seam between them.
