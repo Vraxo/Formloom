@@ -138,7 +138,7 @@ public sealed class VaseDaisyRenderingTests
             Assert.True(petals > 1500, $"{prompt} does not read as white: {petals} petal pixels");
 
             // The centre is golden, drawn over the petal roots.
-            var disk = DiskWindow(plant.Bloom, 0);
+            var disk = DiskWindow(plant.Bloom);
             var gold = Coloured(planted, empty, disk, pixel =>
                 pixel.Red > 150 && pixel.Green > 110 && pixel.Blue < 120 &&
                 pixel.Red > pixel.Green && pixel.Green > pixel.Blue);
@@ -384,14 +384,14 @@ public sealed class VaseDaisyRenderingTests
             ((bloom.Bottom * canvas) + grow) / canvas);
     }
 
-    private static Window DiskWindow(DaisyBloom bloom, int grow)
+    private static Window DiskWindow(DaisyBloom bloom)
     {
         var disk = bloom.Disk;
         return new(
-            ((disk.Center.X - disk.RadiusX) * Canvas) - grow,
-            ((disk.Center.Y - disk.RadiusY) * Canvas) - grow,
-            ((disk.Center.X + disk.RadiusX) * Canvas) + grow,
-            ((disk.Center.Y + disk.RadiusY) * Canvas) + grow);
+            disk.Center.X - disk.RadiusX,
+            disk.Center.Y - disk.RadiusY,
+            disk.Center.X + disk.RadiusX,
+            disk.Center.Y + disk.RadiusY);
     }
 
     private static Window LeafWindow(DaisyLeaf leaf)
