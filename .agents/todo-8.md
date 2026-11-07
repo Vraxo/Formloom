@@ -84,10 +84,20 @@ Continue the existing case normalization, repeated-whitespace normalization, and
 > `DaisyPlant/Bloom/Petal/Disk/Leaf` geometry from `DaisyGeometry`, `DaisyMaterial` in the renderer,
 > and a shared `VaseMouth`/`VaseStem` path so both species enter a vase identically.
 >
-> Still unchecked on purpose: the Phase 7 handoff reconciliation, desktop-session/component
-> integration tests, the connected-petal and per-dimension bounds invariants, artifact + timing +
-> review-sheet export, the human visual-review gate, `README` and `docs/daisy-vase-handoff.md`,
-> and the merge-time/post-merge CI evidence.
+> **Progress — group 2** adds the export side: eight daisy cases (both glazes at the default seed
+> and variation, one alternate seed per glaze, and the variation endpoints) render full-size PNGs,
+> per-case silhouettes, timing sidecars comparing each render with the same empty vase *and* the
+> same tulip, and a compact row-major review sheet plus its manifest
+> (`formloom-vasedaisy-sheet.png` / `.timing.json`). The canonical case is kept on every run and the
+> rest of the matrix follows with `FORMFLOOM_EXPORT_ALL=1`, matching the existing trim; all of it
+> lands in `artifacts/bin/Formloom.Tests/**`, which the existing `procedural-preview` upload already
+> globs, so no workflow change was needed.
+>
+> Still unchecked on purpose: the actual timing numbers quoted in the handoff (the sidecars are
+> written by CI and their contents are not readable from here), the human visual-review gate, the
+> Phase 7 handoff reconciliation, desktop-session/component integration tests, the connected-petal
+> and per-dimension bounds invariants, `README` and `docs/daisy-vase-handoff.md`, and the
+> merge-time/post-merge CI evidence.
 
 ### 0. Inspect and record the actual starting point
 
@@ -221,16 +231,16 @@ Continue the existing case normalization, repeated-whitespace normalization, and
 
 ### 7. Generate and review visual/performance artifacts
 
-- [ ] Extend the existing `procedural-preview` artifact; do not add a second workflow or artifact pipeline without a demonstrated need.
-- [ ] Generate default-seed/default-variation full-size PNGs for both daisy/vase combinations.
-- [ ] Generate at least one alternate-seed sample for each vase glaze.
-- [ ] Generate low- and high-variation examples for a representative daisy/vase combination.
-- [ ] Generate flower/vase silhouette diagnostics for representative cases and verify the documented convention.
-- [ ] Generate a compact review sheet and manifest identifying each cell's prompt, vase glaze, seed, variation, filename, and dimensions.
-- [ ] Include individual full-resolution 1024 × 1024 PNGs alongside the review sheet.
-- [ ] Keep generated PNGs and review composites in ignored test-output/artifact directories; do not commit generated binaries as source assets.
-- [ ] Generate timing sidecars using the existing exporter conventions.
-- [ ] Measure render-plus-PNG-encode time at 1024 × 1024 for daisy-in-vase scenes and compare with equivalent empty-vase and tulip-in-vase renders on the same runner/runtime.
+- [x] Extend the existing `procedural-preview` artifact; do not add a second workflow or artifact pipeline without a demonstrated need.
+- [x] Generate default-seed/default-variation full-size PNGs for both daisy/vase combinations.
+- [x] Generate at least one alternate-seed sample for each vase glaze.
+- [x] Generate low- and high-variation examples for a representative daisy/vase combination.
+- [x] Generate flower/vase silhouette diagnostics for representative cases and verify the documented convention.
+- [x] Generate a compact review sheet and manifest identifying each cell's prompt, vase glaze, seed, variation, filename, and dimensions.
+- [x] Include individual full-resolution 1024 × 1024 PNGs alongside the review sheet.
+- [x] Keep generated PNGs and review composites in ignored test-output/artifact directories; do not commit generated binaries as source assets.
+- [x] Generate timing sidecars using the existing exporter conventions.
+- [x] Measure render-plus-PNG-encode time at 1024 × 1024 for daisy-in-vase scenes and compare with equivalent empty-vase and tulip-in-vase renders on the same runner/runtime.
 - [ ] Report timing observations as measurements from that environment, not universal performance claims.
 - [ ] Inspect actual generated pixels where the environment permits; generating or uploading a PNG alone is not visual review.
 - [ ] Review that the flower reads immediately as a daisy without a label.
