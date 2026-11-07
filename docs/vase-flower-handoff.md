@@ -196,8 +196,11 @@ ordinary-prompt preservation.
 determinism, subject token, changed-pixel floor against the empty vase, *nothing* changed
 below the rim outside the opening ellipse (and a floor on the changed pixels inside it, so the
 stem's continuation cannot silently disappear), nothing changed outside the flower's bounds
-above it, a row-by-row check that the stem covers the rim band and the opening down to the near
-lip (which catches both a rim stroke painted over the stem and a stroke that stops short),
+above it, a row-by-row check that the stem covers the rim band and the opening all the way to the near
+lip's inner edge, which is read off the empty vase's own brightest step rather than from a pixel
+count, plus the converse (a few rows into the lip the stem is gone, so the stroke cannot poke
+through the rim that hides it) — together they catch a rim or contour stroke painted over the
+stem, a stroke that stops short, and a stroke that overshoots,
 bloom/leaf/stem presence counts, petal-colour identity (both colour tests key on red dominance,
 because the stem and the leaves are green and a bare "warm pixel" test also matches the stem's
 own light edge where it enters the mouth), and no petal pixel below the mouth top; five output

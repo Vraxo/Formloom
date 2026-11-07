@@ -165,14 +165,15 @@ public sealed class VaseFlowerRenderingTests
         using var planted = Decode(image.PngBytes);
         using var empty = Decode(StillLifeRenderer.Render(EmptyVase(scene)).PngBytes);
         var rim = (int)MathF.Round((float)flower.MouthTop * Canvas);
-        var bottom = (flower.OpeningCenter.Y + flower.OpeningRadius.Y) * Canvas;
-        var lipInner = (int)MathF.Round(bottom) - RimBand;
+        var bottom = (int)MathF.Round((float)(flower.OpeningCenter.Y + flower.OpeningRadius.Y) * Canvas);
+        var lipInner = LipInnerRow(empty, flower, bottom);
 
         // The stem covers the rim band and the opening on every row from just above the tangent
         // down to the near lip, so the planted render differs from the same empty vase at the
         // stem's own column all the way. A rim stroke painted over the stem leaves a row that
-        // matches the empty vase, and so does a stroke that stops inside the opening.
-        for (var y = rim - 8; y <= lipInner; y++)
+        // matches the empty vase, and so does a stroke that stops inside the opening — the end
+        // has to reach the lip's inner edge, not merely some row above it.
+        for (var y = rim - 8; y <= lipInner - 2; y++)
         {
             var centre = StemColumn(flower.Plant, y);
             var covered = false;
@@ -183,7 +184,41 @@ public sealed class VaseFlowerRenderingTests
 
             Assert.True(covered, $"{name} lost the stem at the mouth on row {y}");
         }
+
+        // And the lip covers the end: a few rows into the lip the stem is gone, so the stroke
+        // cannot poke through the rim that is meant to hide it.
+        var under = StemColumn(flower.Plant, lipInner + 3);
+        for (var column = under - 2; column <= under + 2; column++)
+        {
+            Assert.Equal(0, Delta(planted.GetPixel(column, lipInner + 3), empty.GetPixel(column, lipInner + 3)));
+        }
     }
+
+    // The row where the near lip's inner edge crosses the stem's column, read off the empty vase
+    // rather than from a pixel count: the lip is the brightest step below the opening's centre,
+    // so the check keeps working if the profile's rim thickness or the vase's size ever change.
+    private static int LipInnerRow(SKBitmap empty, VaseFlower flower, int bottom)
+    {
+        var column = StemColumn(flower.Plant, bottom);
+        var row = bottom;
+        var best = 0;
+        var previous = Brightness(empty.GetPixel(column, (int)MathF.Round((float)flower.OpeningCenter.Y * Canvas)));
+        for (var y = (int)MathF.Round((float)flower.OpeningCenter.Y * Canvas) + 1; y <= bottom; y++)
+        {
+            var here = Brightness(empty.GetPixel(column, y));
+            if (here - previous > best)
+            {
+                best = here - previous;
+                row = y;
+            }
+
+            previous = here;
+        }
+
+        return row;
+    }
+
+    private static int Brightness(SKColor pixel) => (pixel.Red + pixel.Green + pixel.Blue) / 3;
 
     [Theory]
     [MemberData(nameof(Dimensions))]
