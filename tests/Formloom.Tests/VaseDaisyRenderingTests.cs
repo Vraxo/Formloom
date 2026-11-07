@@ -142,8 +142,11 @@ public sealed class VaseDaisyRenderingTests
 
             // Nothing of the head is cut by the vase: the warm tabletop and the glaze highlights
             // are neither white petals nor a golden disk once the comparison is made against the
-            // same empty vase, so any such pixel below the mouth is a leak.
-            var belowTheMouth = new Window(0f, daisy.MouthTop, 1f, (float)scene.TableHorizon);
+            // same empty vase, so any such pixel below the mouth is a leak. The shared flower
+            // clip deliberately overshoots the tangent by 0.002 so the bloom is never sliced at
+            // the rim, so the scan starts below that antialiased slack.
+            var firstRow = (MathF.Ceiling(daisy.MouthTop * Canvas) + 2) / Canvas;
+            var belowTheMouth = new Window(0f, firstRow, 1f, (float)scene.TableHorizon);
             var leaked = Coloured(planted, empty, belowTheMouth, pixel => IsPetalWhite(pixel) || IsDiskGold(pixel));
             Assert.Equal(0, leaked);
         }
