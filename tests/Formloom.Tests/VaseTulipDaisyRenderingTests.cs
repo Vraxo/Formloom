@@ -612,7 +612,9 @@ public sealed class VaseTulipDaisyRenderingTests
 
         if (width >= 4096)
         {
-            var probeY = (int)MathF.Round((stemBase.Y + ((extension.End.Y - stemBase.Y) * 0.36f)) * height);
+            var probeY = Math.Min(
+                (int)MathF.Round((stemBase.Y + ((extension.End.Y - stemBase.Y) * 0.15f)) * height),
+                lipInner - 3);
             var expectedCenter = StemColumn(completeStem, (probeY + 0.5f) / height, width);
             var weightedX = 0d;
             var totalWeight = 0d;
