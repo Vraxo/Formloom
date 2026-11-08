@@ -299,15 +299,15 @@ public sealed class VaseTulipDaisyRenderingTests
             var timer = Stopwatch.StartNew();
             var rendered = StillLifeRenderer.Render(scene);
             timer.Stop();
-            using var image = Decode(rendered.PngBytes);
+            using var cellBitmap = Decode(rendered.PngBytes);
             using var empty = Decode(StillLifeRenderer.Render(EmptyVase(scene)).PngBytes);
             var pair = scene.VaseTulipDaisy!;
-            AssertSmallCellReadability(image, empty, pair, sample.Name);
+            AssertSmallCellReadability(cellBitmap, empty, pair, sample.Name);
 
             var left = (index % columns) * Cell;
             var top = (index / columns) * Cell;
             canvas.DrawBitmap(
-                image,
+                cellBitmap,
                 new SKRect(left, top, left + Cell, top + Cell),
                 new SKSamplingOptions(SKFilterMode.Linear));
             manifest.Add(new
@@ -372,21 +372,26 @@ public sealed class VaseTulipDaisyRenderingTests
 
     private static void AssertSmallCellReadability(SKBitmap planted, SKBitmap empty, VaseTulipDaisy pair, string name)
     {
-        Assert.True(Coloured(planted, empty, TulipBloomWindow(pair.Tulip, 2, Cell, Cell), pixel => IsTulipPetal(pixel, pair.TulipColor)) > 45,
+        Assert.True(
+            Coloured(planted, empty, TulipBloomWindow(pair.Tulip, 2, Cell, Cell), pixel => IsTulipPetal(pixel, pair.TulipColor)) > 45,
             $"{name} has no readable tulip colour at {Cell}px");
-        Assert.True(Coloured(planted, empty, DaisyBloomWindow(pair.Daisy, 2, Cell, Cell), IsPetalWhite) > 45,
+        Assert.True(
+            Coloured(planted, empty, DaisyBloomWindow(pair.Daisy, 2, Cell, Cell), IsPetalWhite) > 45,
             $"{name} has no readable daisy petals at {Cell}px");
-        Assert.True(Coloured(planted, empty, DiskWindow(pair.Daisy.Bloom.Disk, 2, Cell, Cell), IsDiskGold) > 6,
+        Assert.True(
+            Coloured(planted, empty, DiskWindow(pair.Daisy.Bloom.Disk, 2, Cell, Cell), IsDiskGold) > 6,
             $"{name} has no readable disk at {Cell}px");
         foreach (var leaf in pair.Tulip.Leaves)
         {
-            Assert.True(Coloured(planted, empty, LeafWindow(leaf, 2, Cell, Cell), IsLeafGreen) > 1,
+            Assert.True(
+                Coloured(planted, empty, LeafWindow(leaf, 2, Cell, Cell), IsLeafGreen) > 1,
                 $"{name} lost a tulip leaf at {Cell}px");
         }
 
         foreach (var leaf in pair.Daisy.Leaves)
         {
-            Assert.True(Coloured(planted, empty, LeafWindow(leaf, 2, Cell, Cell), IsLeafGreen) > 1,
+            Assert.True(
+                Coloured(planted, empty, LeafWindow(leaf, 2, Cell, Cell), IsLeafGreen) > 1,
                 $"{name} lost a daisy leaf at {Cell}px");
         }
 
@@ -545,7 +550,7 @@ public sealed class VaseTulipDaisyRenderingTests
             return false;
         }
 
-        var reach = MathF.Max(pair.Tulip.StemThickness, pair.Daisy.StemThickness) * 2.5f + (2f / Canvas);
+        var reach = (MathF.Max(pair.Tulip.StemThickness, pair.Daisy.StemThickness) * 2.5f) + (2f / Canvas);
         return MathF.Abs(px - pair.Tulip.StemBase.X) <= reach || MathF.Abs(px - pair.Daisy.StemBase.X) <= reach;
     }
 
