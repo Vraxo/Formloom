@@ -332,4 +332,6 @@ for both colours. Review of the original render found a stem discontinuity at th
 the user then confirmed that fix while flagging a sharp downward turn at the interior ends. The
 shared renderer now continues each stem along its reverse base tangent. The supplied red/cream,
 seed-42 sample visually confirms smooth entry and near-lip disappearance; the remaining samples
-still need review. Follow-up [PR #53](https://github.com/Vraxo/Formloom/pull/53) passes Linux Release CI run [42503292243](https://github.com/Vraxo/Formloom/actions/runs/42503292243), including the tangent/continuity pixel checks. PR #53 remains open and must not be merged without explicit user approval; its post-merge CI gate is pending.
+still need review. Follow-up [PR #53](https://github.com/Vraxo/Formloom/pull/53) is merged as
+[`02286c5`](https://github.com/Vraxo/Formloom/commit/02286c55c21ed46cc332796c2861b3354ca6dd20),
+and its post-merge [Linux Release CI run 42507895872](https://github.com/Vraxo/Formloom/actions/runs/42507895872) passed. The merged change also adds an opt-in antialiasing toggle, enabled by default; this is a rasterization option and does not alter prompts or generated geometry.

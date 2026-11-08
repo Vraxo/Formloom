@@ -19,7 +19,7 @@ The existing single-tulip and single-daisy prompts, geometry generators, and sav
 
 ## Current status
 
-Phase 9 PR [#52](https://github.com/Vraxo/Formloom/pull/52) merged as `1311f91e582554c2601c0b9476265a1a62ab123d`; post-merge Linux Release run [42493951766](https://github.com/Vraxo/Formloom/actions/runs/42493951766) passed. The user's review first found the stems severed at the vase opening; after the vase-first contact fix they reported a sudden downward turn at both interior stem ends. That turn came from the straight below-base extension and is not intended. Follow-up PR [#53](https://github.com/Vraxo/Formloom/pull/53) now uses a tangent-matched cubic continuation. Source commit `ed6c204` and workflow-restored head `54f7f4a` passed CI runs [42502794944](https://github.com/Vraxo/Formloom/actions/runs/42502794944) and [42502940039](https://github.com/Vraxo/Formloom/actions/runs/42502940039); documentation head `ccda66a` also passed [42503292243](https://github.com/Vraxo/Formloom/actions/runs/42503292243). Build, full tests, and preview upload succeeded. A temporary diagnostic step was used for one test run to locate a too-low pixel probe, then removed; no permanent workflow change remains. The user supplied the updated red/cream, seed-42 image; visual inspection shows continuous stems with a smooth tangent into the opening and near-lip occlusion for this sample. The other color/glaze and variation samples and timing sidecars remain unreviewed; direct artifact downloads are blocked by the sandbox host allowlist. Do not merge PR #53 without explicit user approval.
+Phase 9 PR [#52](https://github.com/Vraxo/Formloom/pull/52) merged as `1311f91e582554c2601c0b9476265a1a62ab123d`; post-merge Linux Release run [42493951766](https://github.com/Vraxo/Formloom/actions/runs/42493951766) passed. Follow-up PR [#53](https://github.com/Vraxo/Formloom/pull/53) merged as `02286c55c21ed46cc332796c2861b3354ca6dd20`; head `0c7a59e` passed pre-merge Linux Release run [42507262563](https://github.com/Vraxo/Formloom/actions/runs/42507262563), and the post-merge main run [42507895872](https://github.com/Vraxo/Formloom/actions/runs/42507895872) passed build, full tests, and preview upload. PR #53 includes the tangent-matched stem continuation and an optional antialiasing render toggle, on by default; this affects rasterization only, not scene geometry or prompts. The user supplied the updated red/cream seed-42 image; visual inspection shows continuous stems with a smooth tangent into the opening and near-lip occlusion for that sample. The remaining color/glaze/seed/variation samples and timing sidecars remain unreviewed; direct artifact downloads are blocked by the sandbox host allowlist.
 
 ## Starting point
 
@@ -265,7 +265,7 @@ The supported order is intentionally fixed: tulip first, then daisy, followed by
 - [x] Generate timing sidecars using the existing exporter conventions.
 - [x] Measure render-plus-PNG-encode for the mixed arrangement alongside the same empty vase, standalone tulip, and standalone daisy on the same runner/runtime.
 - [ ] Record timing as environment-specific observations; do not claim a universal per-flower cost from one Stopwatch sample.
-- [ ] Inspect actual generated pixels; generating/uploading a PNG alone is not visual review.
+- [ ] Inspect the full generated review sheet and remaining cases; one user-supplied red/cream seed-42 image passes the stem/tangent spot-check, but reviewing one PNG is not a full visual review.
 - [ ] Review that both species read immediately and distinctly at normal viewing size.
 - [ ] Review that the overall arrangement feels intentionally composed, not like two flowers accidentally colliding.
 - [ ] Review that the two blooms have clear silhouette separation and readable colour/material separation.
@@ -293,14 +293,14 @@ The supported order is intentionally fixed: tulip first, then daisy, followed by
 - [x] Leave blocked, unexecuted, or human-review tasks unchecked and explain the blocker/evidence beside them.
 - [x] Run the established solution restore, Release warnings-as-errors build, and full solution test workflow through the existing CI gate.
 - [x] Confirm all existing and new test projects pass on the latest PR CI run.
-- [x] Confirm Phase 9 PR #52's post-merge Linux Release run [42493951766](https://github.com/Vraxo/Formloom/actions/runs/42493951766) passed; leave follow-up PR #53's post-merge run pending explicit approval and merge.
+- [x] Confirm Phase 9 PR #52 and follow-up PR #53 post-merge Linux Release runs passed: [42493951766](https://github.com/Vraxo/Formloom/actions/runs/42493951766) and [42507895872](https://github.com/Vraxo/Formloom/actions/runs/42507895872).
 - [x] Keep ordinary CI Release-only; do not add a permanent Debug job, Windows runner, package, project, or workflow solely for this milestone.
 - [x] Do not claim native Photino/WebView2 dialog, window-lifecycle, resize, or accessibility testing from headless tests or Linux CI.
-- [x] Record the Phase 9 PR #52 merge commit/run and follow-up PR #53 head/CI run in the handoff; the follow-up merge commit/run remain pending approval.
+- [x] Record both Phase 9 merge commits and post-merge CI runs in the handoff; PR #53 merged as `02286c5` and run [42507895872](https://github.com/Vraxo/Formloom/actions/runs/42507895872) passed.
 - [x] Reconcile the checklist with the handoff and actual changed files; identify anything authored but not executed.
 - [x] Stop at the acceptance checkpoint below and report implementation decisions, test/CI evidence, visual-review status, artifact location, timing observations, and known limitations.
 
-**Pending gates:** visually review the remaining tangent-corrected color/glaze and variation samples, and read the timing sidecars. The uploaded red/cream seed-42 sample has been visually reviewed and passes the contact/tangent check; direct artifact downloads remain blocked by the sandbox's Azure blob host restriction. PR #52 is merged as `1311f91` with post-merge run [42493951766](https://github.com/Vraxo/Formloom/actions/runs/42493951766) green. PR #53 remains open; its latest Linux Release run [42503292243](https://github.com/Vraxo/Formloom/actions/runs/42503292243) is green, but do not merge without explicit user approval. The PR #53 post-merge gate is therefore not yet applicable.
+**Pending gates:** visually review the remaining tangent-corrected color/glaze and variation samples, and read the timing sidecars. The uploaded red/cream seed-42 sample has been visually reviewed and passes the contact/tangent check; direct artifact downloads remain blocked by the sandbox Azure blob host restriction. PR #53 is merged, and its post-merge Linux Release run [42507895872](https://github.com/Vraxo/Formloom/actions/runs/42507895872) is green. The merge/CI gates are complete; the full aesthetic review and timing read-back are not.
 
 ## Acceptance checklist
 
@@ -319,7 +319,7 @@ The supported order is intentionally fixed: tulip first, then daisy, followed by
 - [x] Automated Core/parser, geometry, renderer invariant, desktop integration, and all existing regression tests pass.
 - [x] Generated full-resolution samples and a correctly mapped review sheet are available; visual review is honestly recorded as passed or pending.
 - [x] README and handoff accurately document supported prompts, architecture, evidence, exclusions, and limitations.
-- [ ] The follow-up change passes its post-merge Linux Release run. **PR #53's latest Linux Release gate [42503292243](https://github.com/Vraxo/Formloom/actions/runs/42503292243) is green; PR #53 is unmerged, so its post-merge run must wait for explicit approval and merge. Phase 9 PR #52's post-merge run [42493951766](https://github.com/Vraxo/Formloom/actions/runs/42493951766) already passed.**
+- [x] The follow-up change passes its post-merge Linux Release run: PR #53 merged as `02286c5`; main run [42507895872](https://github.com/Vraxo/Formloom/actions/runs/42507895872) passed. PR #52 post-merge run [42493951766](https://github.com/Vraxo/Formloom/actions/runs/42493951766) also passed.
 - [x] The agent stops and reports implementation decisions, actual test/CI evidence, sample artifacts, visual observations, and known limitations.
 - [x] Do not continue to larger bouquets, another flower species, another container type, or arbitrary arrangements without review.
 

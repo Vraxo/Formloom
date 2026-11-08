@@ -10,18 +10,18 @@ User review of the seed-42 output first identified the stem discontinuity at the
 confirmed that contact looked repaired while flagging a sharp downward turn at both interior ends.
 That bend came from the straight below-base extension and was not intended. Follow-up PR
 [#53](https://github.com/Vraxo/Formloom/pull/53) now extends each stem along the reverse base
-tangent with a cubic, then clips it inside the near lip. Source commit `ed6c204` and the final
-workflow-restored head `54f7f4a` passed Linux Release run
-[42502940039](https://github.com/Vraxo/Formloom/actions/runs/42502940039), including build, full
-test suite, and preview upload. The updated review notes at `ccda66a` also passed run
-[42503292243](https://github.com/Vraxo/Formloom/actions/runs/42503292243). A temporary diagnostic workflow step was used for one run to locate
-a test probe below the near-lip occlusion and has since been removed; no permanent workflow change
-remains. The user supplied the updated red/cream, seed-42 image, which was reviewed at full size
-and in an enlarged mouth crop: both stems are continuous, follow a smooth tangent into the opening,
-and disappear beneath the near lip. This confirms that sample only; the other color/glaze and
-variation cases still need review. Direct artifact downloads remain blocked by the sandbox's
-outbound allowlist, and timing sidecar values have not been read. Do not merge PR #53 without
-explicit user approval.
+tangent with a cubic, then clips it inside the near lip. PR #53 merged as
+`02286c55c21ed46cc332796c2861b3354ca6dd20`; head `0c7a59e` passed pre-merge Linux Release run
+[42507262563](https://github.com/Vraxo/Formloom/actions/runs/42507262563), and post-merge main run
+[42507895872](https://github.com/Vraxo/Formloom/actions/runs/42507895872) passed build, full tests,
+and preview upload. The merge also adds an optional antialiasing render control, enabled by default;
+it changes rasterization only, not scene geometry or prompts. A temporary diagnostic workflow step
+was used for one run to locate a test probe below the near-lip occlusion and has since been removed;
+no permanent workflow change remains. The user supplied the updated red/cream, seed-42 image,
+reviewed at full size and in an enlarged mouth crop: both stems are continuous, follow a smooth
+tangent into the opening, and disappear beneath the near lip. This confirms that sample only; the
+other color/glaze, alternate-seed, and variation cases still need review. Direct artifact downloads remain blocked by
+the sandbox's outbound allowlist, and timing sidecar values have not been read.
 
 - **Starting point:** Phase 9 branched from `main` at `863dd75`, after Phase 8 PR #51 merged as
   `c441a9a`.
@@ -184,8 +184,8 @@ control exhaustive exports for other families; it does not gate render tests.
 **Visual review is partial.** The user-supplied updated red/cream, seed-42 image was inspected
 at full size and in an enlarged mouth crop. Both stems cross the far rim continuously, follow a
 smooth tangent into the opening, and disappear beneath the near lip; no abrupt downward kink is
-visible in this sample. The remaining default glaze/color combinations and variation-endpoint
-samples still need review. The latest green [PR #53 CI run 42503292243](https://github.com/Vraxo/Formloom/actions/runs/42503292243) uploaded the procedural-preview artifact, but this agent cannot download the artifact directly because GitHub redirects it to a host outside the sandbox's allowlist.
+visible in this sample. The remaining default color/glaze combinations, alternate-seed cases,
+and variation-endpoint samples still need review. Post-merge [main CI run 42507895872](https://github.com/Vraxo/Formloom/actions/runs/42507895872) uploaded the procedural-preview artifact, but this agent cannot download the artifact directly because GitHub redirects it to a host outside the sandbox's allowlist.
 
 ## Timing and limitations
 
@@ -197,7 +197,5 @@ those numeric values have not been read into this handoff, so no timing numbers 
 claim are made here. They remain a review follow-up alongside visual inspection of the artifact.
 
 Headless Linux CI does not test Photino/WebView2 native dialogs, Windows window lifecycle, visual
-accessibility, or native resize behavior. No such coverage is claimed. Phase 9's post-merge CI is
-green, and follow-up PR #53's current Linux Release CI is green. Remaining gates are post-fix human
-visual review, optional timing-sidecar read-back, explicit user approval before merging PR #53, and
-its post-merge Linux Release run. Do not merge to close this handoff without the user's approval.
+accessibility, or native resize behavior. No such coverage is claimed. Phase 9's post-merge CI and
+follow-up PR #53's post-merge Linux Release run [42507895872](https://github.com/Vraxo/Formloom/actions/runs/42507895872) are green. The implementation, merge, and CI gates are complete; remaining follow-ups are human visual review of the remaining color/glaze and variation samples and optional timing-sidecar read-back.
