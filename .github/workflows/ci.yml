@@ -57,30 +57,6 @@ jobs:
       - name: Test
         run: dotnet test --solution Formloom.slnx --configuration Release --no-build --no-restore --report-trx --results-directory TestResults
 
-      - name: Report failed tests
-        if: always()
-        run: |
-          python3 - <<'PY'
-          import glob
-          import xml.etree.ElementTree as ET
-
-          def escape(value):
-              return value.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
-
-          for path in glob.glob("TestResults/**/*.trx", recursive=True):
-              root = ET.parse(path).getroot()
-              for result in root.findall(".//{*}UnitTestResult"):
-                  if result.get("outcome") != "Failed":
-                      continue
-                  output = result.find(".//{*}ErrorInfo/{*}Message")
-                  message = output.text if output is not None and output.text else "Test failed without an error message."
-                  stack = result.find(".//{*}ErrorInfo/{*}StackTrace")
-                  if stack is not None and stack.text:
-                      message += "\n" + stack.text
-                  title = escape("Test failure: " + (result.get("testName") or "unknown test"))
-                  print(f"::error title={title}::{escape(message)}")
-          PY
-
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
