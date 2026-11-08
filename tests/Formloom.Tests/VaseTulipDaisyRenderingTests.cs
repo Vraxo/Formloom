@@ -578,7 +578,7 @@ public sealed class VaseTulipDaisyRenderingTests
             Vector2.Dot(Vector2.Normalize(baseTangent), Vector2.Normalize(continuationTangent)) > 0.999f,
             $"{name} interior continuation does not follow the stem's base tangent");
 
-        var lipInner = LipInnerRow(empty, stemBase.X, openingCenter, openingRadius);
+        var lipInner = LipInnerRowAlongStem(empty, completeStem, openingCenter, openingRadius, width, height);
         var first = Math.Max(0, (int)MathF.Floor((mouthTop - 0.02f) * height));
         var last = Math.Min(height - 1, lipInner - 2);
         var pixelReach = Math.Max(2, (int)MathF.Ceiling(thickness * width / 2) + 2);
@@ -634,7 +634,7 @@ public sealed class VaseTulipDaisyRenderingTests
         }
 
         var buriedY = Math.Min(height - 1, lipInner + 3);
-        var buriedX = (int)MathF.Round(stemBase.X * width);
+        var buriedX = StemColumn(completeStem, (buriedY + 0.5f) / height, width);
         for (var offset = -pixelReach; offset <= pixelReach; offset++)
         {
             var x = buriedX + offset;
@@ -915,6 +915,36 @@ public sealed class VaseTulipDaisyRenderingTests
         var previous = Brightness(empty.GetPixel(column, centerRow));
         for (var y = centerRow + 1; y <= bottom; y++)
         {
+            var here = Brightness(empty.GetPixel(column, y));
+            if (here - previous > best)
+            {
+                best = here - previous;
+                row = y;
+            }
+
+            previous = here;
+        }
+
+        return row;
+    }
+
+    private static int LipInnerRowAlongStem(
+        SKBitmap empty,
+        ImmutableArray<CubicSegment> stem,
+        Vector2 center,
+        Vector2 radius,
+        int width,
+        int height)
+    {
+        var centerRow = Math.Clamp((int)MathF.Round(center.Y * height), 0, height - 1);
+        var bottom = Math.Clamp((int)MathF.Round((center.Y + radius.Y) * height), 0, height - 1);
+        var firstColumn = Math.Clamp(StemColumn(stem, (centerRow + 0.5f) / height, width), 0, width - 1);
+        var previous = Brightness(empty.GetPixel(firstColumn, centerRow));
+        var best = 0;
+        var row = bottom;
+        for (var y = centerRow + 1; y <= bottom; y++)
+        {
+            var column = Math.Clamp(StemColumn(stem, (y + 0.5f) / height, width), 0, width - 1);
             var here = Brightness(empty.GetPixel(column, y));
             if (here - previous > best)
             {
