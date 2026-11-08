@@ -243,7 +243,7 @@ public sealed class VaseTulipDaisyTests
         {
             VaseTulipDaisy = pair with { Daisy = null! },
         }), StringComparison.Ordinal);
-        Assert.Contains("stems must stay distinct", SceneValidator.Validate(scene with
+        Assert.Contains("stem bases must stay distinct", SceneValidator.Validate(scene with
         {
             VaseTulipDaisy = pair with { Daisy = pair.Daisy with { StemBase = pair.Tulip.StemBase } },
         }), StringComparison.Ordinal);
