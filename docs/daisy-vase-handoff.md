@@ -9,14 +9,14 @@ Skia → PNG/save path.
 - **Previous milestone:** Phase 7, a tulip in a ceramic vase — see
   [`vase-flower-handoff.md`](vase-flower-handoff.md) and [`.agents/todo-7.md`](../.agents/todo-7.md).
 - **Checklist:** [`.agents/todo-8.md`](../.agents/todo-8.md).
-- **Status:** implementation, tests, artifacts and documentation complete; **visual review
-  partially passed** — the canonical blue case was reviewed at full resolution, and the review
-  sheet followed. Two defects were found and fixed: a leaf hidden behind the head, and a
-  size-dependent loss of the stem inside the mouth that only appeared in the sheet's 320 px cells.
-  The sheet that exposed them predates both fixes, so the cream glaze, alternate seeds, variation
-  extremes and 320 px legibility need a fresh sheet from the current build to be closed. See
-  [Visual review](#visual-review). The timing numbers are left in the artifact with the reason
-  stated under [Timing observations](#timing-observations).
+- **Status:** implementation, tests, artifacts and documentation complete; **visual review passed**
+  on the fixed build. Two defects were found and fixed on the way: a leaf hidden behind the head,
+  and a size-dependent loss of the stem inside the mouth that only appeared in the sheet's 320 px
+  cells. The canonical blue case was reviewed at full resolution, then both group sheets were
+  reviewed cell by cell on the merged build, closing the cream glaze, alternate seeds, variation
+  extremes and 320 px legibility items. See [Visual review](#visual-review). The timing numbers are
+  left in the artifact with the reason stated under
+  [Timing observations](#timing-observations).
 
 ## What ships
 
@@ -272,10 +272,47 @@ right — which is the pre-fix geometry, so it is stale for the leaf question *a
 the build that still had the fixed 1024 transform. It remains valid as the reason the two defects
 were found, and the fixes are proven by the tests above rather than by that image.
 
-Not reviewed yet: the **cream glaze**, alternate seeds and the variation extremes beyond the one
-canonical case, and legibility at 320 px sheet cells. The sheet has now been supplied, but it is a
-pre-fix render, so a fresh `formloom-vasedaisy-sheet.png` from the current `procedural-preview`
-artifact is needed before those boxes can be closed; they stay open rather than being assumed.
+### The group sheets re-reviewed on the fixed build — passed
+
+`formloom-vasedaisy-sheet-2.png` and `formloom-vaseflower-sheet-3.png` were rendered by the merged
+build (run `42450438121`, merge `e738f50`) and reviewed cell by cell. Both defects are gone, and the
+three review items that depended on the sheet are closed:
+
+7. **Cream and blue glazes** — the white daisy with its golden disk reads against both. On the cream
+   vases the petals separate from the rim because the head sits above it, and the warm brown
+   interior keeps the green stem and both blades legible inside the mouth, where the blue vases use
+   the dark navy cavity. The tulips hold the same way: red and yellow against cream and against blue.
+8. **Alternate seeds and variation extremes** — seeds 1337 and 20261105, and variation 0 and 1, in
+   both glazes: twelve petals every time, no broken or detached petal, no gap in the ring, both
+   leaves attached on opposite sides, no clipping, no canvas-edge collision. The highest head tip in
+   the sheets keeps a margin of about 8 px inside its 320 px cell.
+9. **Legibility at 320 px** — every cell reads immediately as a daisy or a tulip; the golden disk
+   and the twelve petal notches survive a head that is about a tenth of the canvas.
+
+Measured on the same sheets, with green ink defined as `g > r + 8 && g > b + 14 && g > 45` so that
+the dark teal backdrop does not count:
+
+| check | daisy sheet | tulip sheet |
+| --- | --- | --- |
+| cells showing two blades (ink left / right of the stem) | 8 / 8 — 94–113 px left, 81–95 px right | 8 / 8 — 41–56 px left, 42–55 px right |
+| green ink inside the mouth, per cell | 12–35 px | 21–46 px |
+| green ink on the lip or body below the mouth | 0 px in every cell | 0 px in every cell |
+
+The cream cells show less in-mouth ink than the blue ones (12–20 against 29–35) because the same
+green is blended against a lighter interior; the stem is visibly there in all of them.
+
+Cosmetic observations from this pass, recorded and **not** acted on:
+
+- At **variation 0** the stem between the bloom and the rim is short, so the two blades sit close to
+  the petals' underside and to the rim — cramped, not intersecting, and the honest consequence of a
+  small flower in a tall vase.
+- At **variation 1** the mouth tilts and the white near lip thickens; the stem still crosses the
+  cavity and disappears behind the lip. That is the vase profile's own variation, inherited from
+  Phase 7, not a flower defect.
+
+Still open: the **timing observations**, which need the artifact's timing sidecar read back — the
+daisy figures have not been transcribed — and any constant tuning the owner wants after looking at
+the sheets.
 
 ## Known limitations
 
