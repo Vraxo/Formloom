@@ -405,7 +405,6 @@ public static class StillLifeRenderer
         canvas.DrawPath(outline, paint);
         paint.Style = SKPaintStyle.Fill;
         canvas.Restore();
-
     }
 
     // A contained scene draws the bowl whole and then clips the fruit away wherever the
@@ -1338,6 +1337,4 @@ public static class StillLifeRenderer
         (byte)(color.Red * 0.42),
         (byte)(color.Green * 0.42),
         (byte)(color.Blue * 0.44));
-
-
 }
