@@ -13,12 +13,15 @@ That bend came from the straight below-base extension and was not intended. Foll
 tangent with a cubic, then clips it inside the near lip. Source commit `ed6c204` and the final
 workflow-restored head `54f7f4a` passed Linux Release run
 [42502940039](https://github.com/Vraxo/Formloom/actions/runs/42502940039), including build, full
-test suite, and preview upload. A temporary diagnostic workflow step was used for one run to locate
+test suite, and preview upload. The updated review notes at `ccda66a` also passed run
+[42503292243](https://github.com/Vraxo/Formloom/actions/runs/42503292243). A temporary diagnostic workflow step was used for one run to locate
 a test probe below the near-lip occlusion and has since been removed; no permanent workflow change
-remains. The newest artifact has not been visually inspected in this sandbox because its binary
-host is outside the outbound allowlist, so aesthetic verification of the tangent correction remains
-pending. Timing sidecar values have also not been read. Do not merge PR #53 without explicit user
-approval.
+remains. The user supplied the updated red/cream, seed-42 image, which was reviewed at full size
+and in an enlarged mouth crop: both stems are continuous, follow a smooth tangent into the opening,
+and disappear beneath the near lip. This confirms that sample only; the other color/glaze and
+variation cases still need review. Direct artifact downloads remain blocked by the sandbox's
+outbound allowlist, and timing sidecar values have not been read. Do not merge PR #53 without
+explicit user approval.
 
 - **Starting point:** Phase 9 branched from `main` at `863dd75`, after Phase 8 PR #51 merged as
   `c441a9a`.
@@ -178,13 +181,11 @@ all four default prompt combinations, and separate dimension coverage uses all c
 64 × 64, 320 × 320, 640 × 480, 2048 × 1024 and 4096 × 1024. `FORMFLOOM_EXPORT_ALL=1` continues to
 control exhaustive exports for other families; it does not gate render tests.
 
-**Post-fix visual review is pending.** The user-supplied seed-42 reproduction and enlarged rim crop
-were visually inspected and confirm that the original stems broke at the vase contact. Inspect the
-new `procedural-preview` artifact on the green [PR #53 CI run 42500331364](https://github.com/Vraxo/Formloom/actions/runs/42500331364) at normal sheet size and in
-its ten full-resolution samples before marking the correction aesthetically verified. This agent
-could not download the artifact because GitHub redirects it to a blob host outside the sandbox's
-allowlist. Check both stems at contact and through the opening, near-lip occlusion, the four default
-color/glaze combinations, leaves, flower separation, and variation-endpoint silhouettes.
+**Visual review is partial.** The user-supplied updated red/cream, seed-42 image was inspected
+at full size and in an enlarged mouth crop. Both stems cross the far rim continuously, follow a
+smooth tangent into the opening, and disappear beneath the near lip; no abrupt downward kink is
+visible in this sample. The remaining default glaze/color combinations and variation-endpoint
+samples still need review. The latest green [PR #53 CI run 42503292243](https://github.com/Vraxo/Formloom/actions/runs/42503292243) uploaded the procedural-preview artifact, but this agent cannot download the artifact directly because GitHub redirects it to a host outside the sandbox's allowlist.
 
 ## Timing and limitations
 

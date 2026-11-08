@@ -330,4 +330,6 @@ JSON manifest, and ten full-size PNGs with silhouettes and timing sidecars: the 
 colour/glaze combinations, one alternate seed for each tulip colour, and low/high-variation samples
 for both colours. Review of the original render found a stem discontinuity at the vase opening;
 the user then confirmed that fix while flagging a sharp downward turn at the interior ends. The
-shared renderer now continues each stem along its reverse base tangent. Follow-up [PR #53](https://github.com/Vraxo/Formloom/pull/53) passes Linux Release CI run [42502940039](https://github.com/Vraxo/Formloom/actions/runs/42502940039), including the tangent/continuity pixel checks. The latest artifact still needs human visual review before the correction is considered aesthetically verified. PR #53 remains open and must not be merged without explicit user approval; its post-merge CI gate is pending.
+shared renderer now continues each stem along its reverse base tangent. The supplied red/cream,
+seed-42 sample visually confirms smooth entry and near-lip disappearance; the remaining samples
+still need review. Follow-up [PR #53](https://github.com/Vraxo/Formloom/pull/53) passes Linux Release CI run [42503292243](https://github.com/Vraxo/Formloom/actions/runs/42503292243), including the tangent/continuity pixel checks. PR #53 remains open and must not be merged without explicit user approval; its post-merge CI gate is pending.
