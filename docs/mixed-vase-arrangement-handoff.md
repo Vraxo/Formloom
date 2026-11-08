@@ -5,11 +5,12 @@
 Phase 9 implements a fixed pair using the existing tulip, daisy, vase, renderer, desktop prompt,
 and PNG-save paths. PR [#52](https://github.com/Vraxo/Formloom/pull/52) is open on
 `arena/7dff6cbd-formloom`. Do not merge it without explicit user approval. Linux Release CI run
-[42491100329](https://github.com/Vraxo/Formloom/actions/runs/42491100329) passed on implementation
-and curated-artifact commit `46ae3d8`. The final docs/checklist update is separate and must pass its
-own PR check; the live [PR checks](https://github.com/Vraxo/Formloom/pull/52/checks) are the source
-of truth for that head. Human visual review remains **pending**: no aesthetic pass is claimed from
-generated output or pixel assertions alone.
+[42493291154](https://github.com/Vraxo/Formloom/actions/runs/42493291154) passed on documentation
+head `67f3550`; the implementation and curated-artifact commit `46ae3d8` also passed run
+[42491100329](https://github.com/Vraxo/Formloom/actions/runs/42491100329). The live
+[PR checks](https://github.com/Vraxo/Formloom/pull/52/checks) remain the source of truth for the
+current head. Human visual review remains **pending**: no aesthetic pass is claimed from generated
+output or pixel assertions alone.
 
 - **Starting point:** Phase 9 branched from `main` at `863dd75`, after Phase 8 PR #51 merged as
   `c441a9a`.
@@ -23,10 +24,11 @@ generated output or pixel assertions alone.
 - **Implementation history / ending code commit:** source implementation `1199641`; CI analyzer
   fixes `9475563`; the rim-clearance layout correction `4621b4f`; validation assertion fix
   `ab9041a`; curated review-artifact coverage `46ae3d8`. Commit `46ae3d8` is the last
-  implementation/test/artifact commit; the README, this handoff and checklist are documentation
-  closure on the same open PR, whose live head is shown in [#52](https://github.com/Vraxo/Formloom/pull/52).
-  A temporary test-annotation CI step used to expose the earlier assertion failure was reverted; the
-  final workflow diff adds no step or job.
+  implementation/test/artifact commit; documentation/checklist commit `67f3550` also passed Linux
+  Release CI. The README, this handoff and checklist are closure on the same open PR, whose live
+  head is shown in [#52](https://github.com/Vraxo/Formloom/pull/52). A temporary test-annotation CI
+  step used to expose the earlier assertion failure was reverted; the final workflow diff adds no
+  step or job.
 
 ## Supported prompts
 
@@ -165,7 +167,7 @@ all four default prompt combinations, and separate dimension coverage uses all c
 control exhaustive exports for other families; it does not gate render tests.
 
 **Visual review is pending.** Open the `procedural-preview` artifact attached to the green
-implementation/artifact [PR #52 CI run](https://github.com/Vraxo/Formloom/actions/runs/42491100329) and inspect the sheet
+[PR #52 CI run](https://github.com/Vraxo/Formloom/actions/runs/42493291154) and inspect the sheet
 at normal size and its ten full-resolution samples before marking the aesthetic gate passed. In
 particular check the four default glaze/color combinations, both leaves per plant, flower
 separation, natural entry through one mouth, lip occlusion, and variation-endpoint silhouettes.

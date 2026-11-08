@@ -19,7 +19,7 @@ The existing single-tulip and single-daisy scenes must remain unchanged. Do not 
 
 ## Current status
 
-Implementation, focused tests, and the curated Phase 9 export matrix are in PR [#52](https://github.com/Vraxo/Formloom/pull/52). Linux Release run [42491100329](https://github.com/Vraxo/Formloom/actions/runs/42491100329) passed on implementation/artifact commit `46ae3d8`; `procedural-preview` and test results uploaded. The current documentation/checklist-only update still needs its own PR check. The 1280 × 960 review sheet and ten full-size samples are available in the CI artifact, but human visual review and numerical timing read-back remain pending. PR #52 is open; do not merge without explicit user approval. The post-merge CI gate is therefore not yet applicable.
+Implementation, focused tests, the curated Phase 9 export matrix, README and handoff are in PR [#52](https://github.com/Vraxo/Formloom/pull/52). Linux Release run [42493291154](https://github.com/Vraxo/Formloom/actions/runs/42493291154) passed on documentation head `67f3550`; implementation/artifact commit `46ae3d8` also passed run [42491100329](https://github.com/Vraxo/Formloom/actions/runs/42491100329). Both test results and `procedural-preview` uploaded. The 1280 × 960 review sheet and ten full-size samples are available in the CI artifact, but human visual review and numerical timing read-back remain pending. PR #52 is open; do not merge without explicit user approval. The post-merge CI gate is therefore not yet applicable.
 
 ## Starting point
 
@@ -300,7 +300,7 @@ The supported order is intentionally fixed: tulip first, then daisy, followed by
 - [x] Reconcile the checklist with the handoff and actual changed files; identify anything authored but not executed.
 - [x] Stop at the acceptance checkpoint below and report implementation decisions, test/CI evidence, visual-review status, artifact location, timing observations, and known limitations.
 
-**Pending gates:** human review of `procedural-preview` (sheet `formloom-vase-tulip-daisy-sheet.png`, 1280 × 960, 4 columns × 3 rows, plus ten full-size PNG/silhouette pairs) and reading the timing sidecars; PR #52 remains open, so its post-merge run and exact merge commit are not available. Latest recorded green implementation run: [42491100329](https://github.com/Vraxo/Formloom/actions/runs/42491100329) on `46ae3d8`; the final docs-only commit's check is tracked on [PR #52](https://github.com/Vraxo/Formloom/pull/52).
+**Pending gates:** human review of `procedural-preview` (sheet `formloom-vase-tulip-daisy-sheet.png`, 1280 × 960, 4 columns × 3 rows, plus ten full-size PNG/silhouette pairs) and reading the timing sidecars; PR #52 remains open, so its post-merge run and exact merge commit are not available. Recorded green docs/checklist PR check: [42493291154](https://github.com/Vraxo/Formloom/actions/runs/42493291154) on documentation head `67f3550`; the live PR status at [#52](https://github.com/Vraxo/Formloom/pull/52) tracks any later documentation-only evidence update.
 
 ## Acceptance checklist
 
