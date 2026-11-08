@@ -2,15 +2,20 @@
 
 ## Status and scope
 
-Phase 9 implements a fixed pair using the existing tulip, daisy, vase, renderer, desktop prompt,
-and PNG-save paths. PR [#52](https://github.com/Vraxo/Formloom/pull/52) is open on
-`arena/7dff6cbd-formloom`. Do not merge it without explicit user approval. Linux Release CI run
-[42493291154](https://github.com/Vraxo/Formloom/actions/runs/42493291154) passed on documentation
-head `67f3550`; the implementation and curated-artifact commit `46ae3d8` also passed run
-[42491100329](https://github.com/Vraxo/Formloom/actions/runs/42491100329). The live
-[PR checks](https://github.com/Vraxo/Formloom/pull/52/checks) remain the source of truth for the
-current head. Human visual review remains **pending**: no aesthetic pass is claimed from generated
-output or pixel assertions alone.
+Phase 9's fixed pair uses the existing tulip, daisy, vase, renderer, desktop prompt, and PNG-save
+paths. PR [#52](https://github.com/Vraxo/Formloom/pull/52) was merged as
+`1311f91e582554c2601c0b9476265a1a62ab123d`; post-merge Linux Release CI run
+[42493951766](https://github.com/Vraxo/Formloom/actions/runs/42493951766) passed on that commit.
+User review of the low-variation seed-42 output then identified a visible stem discontinuity at the
+vase opening. The shared renderer has been changed in follow-up PR
+[#53](https://github.com/Vraxo/Formloom/pull/53), currently open on
+`arena/d4f813cf-formloom`; do not merge it without explicit user approval. Contact-fix commit
+`d604e54ccb2863044c664e2e724233e29d094773` passed Linux Release CI run
+[42500331364](https://github.com/Vraxo/Formloom/actions/runs/42500331364), including build, full
+test suite, and procedural-preview upload. The post-fix artifact has not been visually inspected:
+its download URL is served from a host outside this sandbox's outbound allowlist. The user-supplied
+image confirms the original defect; no aesthetic pass is claimed for the corrected render. Timing
+sidecar values have also not been read.
 
 - **Starting point:** Phase 9 branched from `main` at `863dd75`, after Phase 8 PR #51 merged as
   `c441a9a`.
@@ -21,14 +26,10 @@ output or pixel assertions alone.
 - **Design recorded before implementation:** `.agents/todo-9.md` and the initial PR description
   recorded the typed pair, strict grammar, profile-relative left/right layout, separate layout
   stream, and two-stem mouth continuation before source changes.
-- **Implementation history / ending code commit:** source implementation `1199641`; CI analyzer
-  fixes `9475563`; the rim-clearance layout correction `4621b4f`; validation assertion fix
-  `ab9041a`; curated review-artifact coverage `46ae3d8`. Commit `46ae3d8` is the last
-  implementation/test/artifact commit; documentation/checklist commit `67f3550` also passed Linux
-  Release CI. The README, this handoff and checklist are closure on the same open PR, whose live
-  head is shown in [#52](https://github.com/Vraxo/Formloom/pull/52). A temporary test-annotation CI
-  step used to expose the earlier assertion failure was reverted; the final workflow diff adds no
-  step or job.
+- **Implementation history:** the original Phase 9 code/artifact head was `46ae3d8`; its
+  documentation/checklist head was `67f3550`. PR #52 merged as `1311f91`. The contact fix was
+  introduced in `4119570` and its StyleCop whitespace correction is `d604e54`. The first follow-up CI run, `42500222714`, failed on blank-line diagnostics; those were
+  corrected before the final green run `42500331364`. No workflow step or job was added.
 
 ## Supported prompts
 
@@ -87,12 +88,14 @@ attachment, margins, deterministic layout, and bounded behavior across seeds and
 
 ## Rendering and desktop integration
 
-`StillLifeRenderer` materializes the existing species-specific content values, draws tulip then
-daisy before the shared vase under the existing flower/mouth-top clip, and passes both stems into
-the ceramic mouth continuation. The same opening/lip-inset mask keeps the stems in the cavity and
-behind the near lip. The daisy remains rendered by `DaisyMaterial`, the tulip by `TulipMaterial`,
-and each plant retains its green geometry/material path. The pair adds no tabletop shadow; shadow
-mask, vase body and existing single-flower paths are covered by regression assertions.
+`StillLifeRenderer` now paints the shared ceramic first, then draws each complete flower and stem
+as one path over the far rim. This removes the old join between a flower clipped at the mouth and a
+separate mouth-continuation stroke. The interior stem segment receives the cavity-depth gradient. A short continuation below each
+typed stem base is drawn through the opening inset by the near lip, so it cannot overpaint that lip. Standalone tulip, standalone daisy, and the mixed pair use this shared path. The species
+materials and plant geometry remain separate, the pair adds no tabletop shadow, and vase/shadow
+invariants remain covered. New row-by-row pixel checks assert visibility from the far-rim contact
+through the opening, disappearance beneath the near lip, and no visible stem pixels on the vase
+wall at preview and full-resolution sizes.
 
 The strict pair parser runs before standalone fallbacks. Desktop prompt help adds one concise pair
 example. Four subject tokens are whitelisted in `PngSaveService`:
@@ -110,11 +113,12 @@ selection, failed-prompt preview/metadata retention, and the component's prompt-
 ## Verification
 
 The sandbox has no .NET SDK, so no local SDK build or test run was possible. CI is the authoritative
-verification. The current implementation run before the final artifact/diagnostic additions was
-[42491100329](https://github.com/Vraxo/Formloom/actions/runs/42491100329), which passed Restore,
-Release build with warnings as errors, the full solution test step, test-result upload, and
-`procedural-preview` upload. The final docs/artifact commit still needs its own green run; record its
-commit and URL here before treating the PR checks as final.
+verification. Follow-up run [42500331364](https://github.com/Vraxo/Formloom/actions/runs/42500331364)
+passed Restore, Release build with warnings as errors, the full solution test step, test-result
+upload, and `procedural-preview` upload on `d604e54`. The initial follow-up run
+[42500222714](https://github.com/Vraxo/Formloom/actions/runs/42500222714) failed the build only on
+StyleCop blank-line diagnostics; the formatting correction is included in the passing head. The
+post-fix artifact is available on the PR run, but this sandbox cannot fetch its Azure-hosted binary.
 
 Coverage includes:
 
@@ -122,10 +126,10 @@ Coverage includes:
   identity, exclusivity, specific invalid-half errors, safe bounds, flower counts and species
   geometry; 4 combinations × 7 seeds × 4 variation values; independent named streams and
   standalone geometry stability.
-- Renderer: non-vacuous petal, white-petal, disk, four-leaf and both-stem pixels; base fit,
-  separated stems/blooms, mouth continuation and near-lip occlusion; changed-pixel bounds, shadow
-  equality, silhouettes, diagnostic/detail omission, deterministic PNGs and supported square and
-  rectangular sizes.
+- Renderer: non-vacuous petal, white-petal, disk, four-leaf and both-stem pixels; row-by-row
+  continuity from far-rim contact through the mouth; inset continuation and near-lip disappearance;
+  wall-leak and changed-pixel bounds; shadow equality, silhouettes, diagnostic/detail omission,
+  deterministic PNGs and supported square and rectangular sizes.
 - Desktop: all combinations through the pipeline, preview/save metadata, rejection retention,
   prompt help, and the four safe save tokens.
 
@@ -166,12 +170,13 @@ all four default prompt combinations, and separate dimension coverage uses all c
 64 × 64, 320 × 320, 640 × 480, 2048 × 1024 and 4096 × 1024. `FORMFLOOM_EXPORT_ALL=1` continues to
 control exhaustive exports for other families; it does not gate render tests.
 
-**Visual review is pending.** Open the `procedural-preview` artifact attached to the green
-[PR #52 CI run](https://github.com/Vraxo/Formloom/actions/runs/42493291154) and inspect the sheet
-at normal size and its ten full-resolution samples before marking the aesthetic gate passed. In
-particular check the four default glaze/color combinations, both leaves per plant, flower
-separation, natural entry through one mouth, lip occlusion, and variation-endpoint silhouettes.
-This handoff does not claim the agent has visually inspected those images.
+**Post-fix visual review is pending.** The user-supplied seed-42 reproduction and enlarged rim crop
+were visually inspected and confirm that the original stems broke at the vase contact. Inspect the
+new `procedural-preview` artifact on the green [PR #53 CI run 42500331364](https://github.com/Vraxo/Formloom/actions/runs/42500331364) at normal sheet size and in
+its ten full-resolution samples before marking the correction aesthetically verified. This agent
+could not download the artifact because GitHub redirects it to a blob host outside the sandbox's
+allowlist. Check both stems at contact and through the opening, near-lip occlusion, the four default
+color/glaze combinations, leaves, flower separation, and variation-endpoint silhouettes.
 
 ## Timing and limitations
 
@@ -183,6 +188,7 @@ those numeric values have not been read into this handoff, so no timing numbers 
 claim are made here. They remain a review follow-up alongside visual inspection of the artifact.
 
 Headless Linux CI does not test Photino/WebView2 native dialogs, Windows window lifecycle, visual
-accessibility, or native resize behavior. No such coverage is claimed. The remaining acceptance
-gates are human visual review, final commit CI, merge only with explicit approval, and post-merge
-Linux Release CI; do not merge to close this handoff without the user's approval.
+accessibility, or native resize behavior. No such coverage is claimed. Phase 9's post-merge CI is
+green, and follow-up PR #53's current Linux Release CI is green. Remaining gates are post-fix human
+visual review, optional timing-sidecar read-back, explicit user approval before merging PR #53, and
+its post-merge Linux Release run. Do not merge to close this handoff without the user's approval.
