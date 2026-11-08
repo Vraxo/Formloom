@@ -148,7 +148,7 @@ Continue the existing case normalization, repeated-whitespace normalization, and
 - [x] Ensure the petals visibly radiate from behind/around the central disk, with no gaps that make them look detached.
 - [x] Build a distinct golden-yellow central disk with a gently domed or softly textured appearance; do not use a flat yellow circle with no volume cues.
 - [x] Keep the disk visually centred over the petal roots and attached to the bloom; no floating gap or oversized button-like centre.
-- [ ] Make the flower read immediately as a daisy at normal viewing size, not a sunflower, generic star, gear, pinwheel, or tulip.
+- [x] Make the flower read immediately as a daisy at normal viewing size, not a sunflower, generic star, gear, pinwheel, or tulip. Reviewed at full size and cell by cell on the fixed-build daisy and tulip sheets (run `42450438121`); the handoff records the pass.
 - [x] Keep the bloom orientation and stem transition botanically plausible for a simple illustrated still life.
 - [x] Keep the daisy proportionate to the existing vase; it must be clearly visible without overwhelming the vessel or canvas.
 - [x] Keep the entire flower inside safe canvas margins across supported sizes, seeds, and variation values.
@@ -173,7 +173,7 @@ Continue the existing case normalization, repeated-whitespace normalization, and
 - [x] Ensure the flower does not add a tabletop cast shadow or alter the vase's existing shadow mask unless the handoff explicitly justifies a scoped change.
 - [x] Preserve silhouette and detail-omission diagnostic semantics, extending them only as needed for daisy-specific geometry.
 - [x] Ensure diagnostic rendering cannot contaminate a subsequent normal render.
-- [ ] Keep rendering CPU-friendly at 1024 × 1024 and representative supported sizes.
+- [x] Keep rendering CPU-friendly at 1024 × 1024 and representative supported sizes. Observed 134.228 ms for the canonical 1024² daisy and 21.635–25.2857 ms per 320 px sheet cell on the CI runner. These are single-sample observations, not a repeated benchmark or universal guarantee.
 - [x] Preserve deterministic pixel output for identical inputs on the same supported runtime.
 
 ### 4. Extend the strict prompt, generation, and save path
@@ -276,31 +276,31 @@ Continue the existing case normalization, repeated-whitespace normalization, and
 - [x] Leave blocked, unexecuted, or human-review tasks unchecked and explain the blocker/evidence beside them.
 - [x] Run the established solution restore, Release warnings-as-errors build, and full solution test workflow through the existing CI gate.
 - [x] Confirm all existing and new test projects pass on the latest PR CI run.
-- [ ] Confirm the post-merge Linux Release CI run passes before closing the milestone.
+- [x] Confirm the post-merge Linux Release CI run passes before closing the milestone: [run 42452083956](https://github.com/Vraxo/Formloom/actions/runs/42452083956), green on merge `6c48a7a`.
 - [x] Keep ordinary CI Release-only; do not add a permanent Debug job, Windows runner, package, project, or workflow solely for this milestone.
 - [x] Do not claim native Photino/WebView2 dialog, window-lifecycle, resize, or accessibility testing from headless tests or Linux CI.
 - [x] Record exact PR, merge commit, and passing CI run URLs in the handoff.
 - [x] Reconcile this checklist with the handoff and actual changed files; identify anything authored but not executed.
-- [ ] Stop at the acceptance checkpoint below and report implementation decisions, test/CI evidence, visual-review status, artifact location, timing observations, and known limitations.
+- [x] Stop at the acceptance checkpoint below and report implementation decisions, test/CI evidence, visual-review status, artifact location, timing observations, and known limitations; handoff and final close-out report provide this summary.
 
 ## Acceptance checklist
 
-- [ ] All existing fruit, ceramic, mixed-scene, bowl-containment, cup-liquid, and tulip-in-vase prompts continue working unchanged.
-- [ ] Both daisy-in-blue-vase and daisy-in-cream-vase prompts parse and generate through the existing desktop prompt-to-PNG path.
-- [ ] Core represents the daisy as typed contents of one existing vase, not an unrelated scene entry or untyped generic object.
-- [ ] The daisy has exactly one open bloom, one stem, and two leaves, with a fixed documented petal count.
-- [ ] The bloom has clearly radial white petals and a distinct golden-yellow centre, and reads as a daisy at normal viewing size.
-- [ ] The stem is derived from vase-local mouth geometry and appears to enter the vase naturally.
-- [ ] The vase mouth/rim/body correctly occludes the hidden stem section; the bloom and leaves remain visible above the opening.
-- [ ] Daisy geometry is deterministic for identical inputs and bounded across seeds, variation, and supported output sizes.
-- [ ] Daisy random streams do not perturb tulip, vase, fruit, cup, or bowl output.
-- [ ] The daisy adds no unintended tabletop shadow, vase-body repainting, exterior leakage, or canvas-edge collision.
-- [ ] Automated Core/parser, renderer invariant, desktop integration, and existing regression tests pass.
+- [x] All existing fruit, ceramic, mixed-scene, bowl-containment, cup-liquid, and tulip-in-vase prompts continue working unchanged.
+- [x] Both daisy-in-blue-vase and daisy-in-cream-vase prompts parse and generate through the existing desktop prompt-to-PNG path.
+- [x] Core represents the daisy as typed contents of one existing vase, not an unrelated scene entry or untyped generic object.
+- [x] The daisy has exactly one open bloom, one stem, and two leaves, with a fixed documented petal count.
+- [x] The bloom has clearly radial white petals and a distinct golden-yellow centre, and reads as a daisy at normal viewing size.
+- [x] The stem is derived from vase-local mouth geometry and appears to enter the vase naturally.
+- [x] The vase mouth/rim/body correctly occludes the hidden stem section; the bloom and leaves remain visible above the opening.
+- [x] Daisy geometry is deterministic for identical inputs and bounded across seeds, variation, and supported output sizes.
+- [x] Daisy random streams do not perturb tulip, vase, fruit, cup, or bowl output.
+- [x] The daisy adds no unintended tabletop shadow, vase-body repainting, exterior leakage, or canvas-edge collision.
+- [x] Automated Core/parser, renderer invariant, desktop integration, and existing regression tests pass.
 - [x] Generated full-resolution samples and a correctly mapped review sheet are available; visual review is honestly recorded as passed or pending. Recorded as **passed** in [`docs/daisy-vase-handoff.md`](../docs/daisy-vase-handoff.md) after the two defects found in review were fixed and re-reviewed.
-- [ ] README and handoff accurately document supported prompts, architecture, evidence, exclusions, and limitations.
-- [ ] The completed change passes the repository's Linux Release CI gate and post-merge run.
-- [ ] The agent stops and reports implementation decisions, actual test/CI evidence, sample artifacts, visual observations, and known limitations.
-- [ ] Do not continue to another flower species, plant family, container type, or relationship milestone without review.
+- [x] README and handoff accurately document supported prompts, architecture, evidence, exclusions, and limitations.
+- [x] The completed change passes the repository's Linux Release CI gate and post-merge run.
+- [x] The agent stops and reports implementation decisions, actual test/CI evidence, sample artifacts, visual observations, and known limitations.
+- [x] Do not continue to another flower species, plant family, container type, or relationship milestone without review.
 
 ## Explicitly out of scope
 
