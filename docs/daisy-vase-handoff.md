@@ -14,9 +14,8 @@ Skia → PNG/save path.
   and a size-dependent loss of the stem inside the mouth that only appeared in the sheet's 320 px
   cells. The canonical blue case was reviewed at full resolution, then both group sheets were
   reviewed cell by cell on the merged build, closing the cream glaze, alternate seeds, variation
-  extremes and 320 px legibility items. See [Visual review](#visual-review). The timing numbers are
-  left in the artifact with the reason stated under
-  [Timing observations](#timing-observations).
+  extremes and 320 px legibility items. The timing figures have been read back from the run's
+  sidecars and are recorded under [Timing observations](#timing-observations).
 
 ## What ships
 
@@ -175,19 +174,28 @@ dimensions and the cell's render-and-encode time.
 
 ## Timing observations
 
-Each sidecar records three Stopwatch samples from one runner instance: the daisy's
-render-and-encode time, the same empty vase's, and the same tulip in the same glaze, plus both
-deltas. The canonical file is
-`formloom-vasedaisy-white-blue-seed-42-variation-0.35.timing.json` in the `procedural-preview`
-artifact of run `42382836401`.
+Read from the sidecars supplied from run `42450438121` (the post-merge build), all measured on one
+runner instance — 4 processors, .NET 10.0.14, Ubuntu 24.04.5 LTS, 1024 × 1024.
 
-**No numbers are quoted in this document.** The authoring sandbox could not download the artifact
-(every `gh run download` and log fetch returns `EOF`), so the sidecar was never read out of the
-run; writing figures from memory or from another run would be fabrication. Open the canonical
-sidecar and read the pair directly. Treat whatever it says as a single-sample observation from
-that environment, exactly as the Phase 7 read-back is treated — the daisy adds one clipped stem
-stroke, two leaf fills, twelve petal fills and one disk fill to the empty vase, so a large
-difference would be noise, not a cost model.
+Canonical case, `formloom-vasedaisy-white-blue-seed-42-variation-0.35.timing.json`:
+
+| sample | render + encode |
+| --- | --- |
+| white daisy in the blue vase (seed 42, variation 0.35) | **134.228 ms** |
+| the same empty vase | 130.7872 ms |
+| the same tulip in the same glaze | 130.0086 ms |
+
+The daisy costs **+3.44 ms** over the empty vase and **+4.22 ms** over the tulip: one clipped stem
+stroke, two leaf fills, twelve petal fills and one disk fill. Encoded sizes in the same file are
+218 947 B for the empty vase and 228 430 B for the tulip.
+
+The 320 px review sheet, `formloom-vasedaisy-sheet.timing.json`, eight cells in one 1280 × 640
+sheet: **21.64–25.29 ms** per cell, 185.16 ms of cell rendering in total.
+
+These are single samples, not a cost model, and the deltas sit inside the noise: the tulip's own
+sidecars from two separate runs report −6.11 ms and −100.54 ms against the same empty vase. Any
+absolute claim that a flower "costs N milliseconds" would be wrong; re-measure with repetitions
+before tuning anything on these figures.
 
 ## Visual review
 
