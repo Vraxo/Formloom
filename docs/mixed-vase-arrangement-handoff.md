@@ -6,16 +6,19 @@ Phase 9's fixed pair uses the existing tulip, daisy, vase, renderer, desktop pro
 paths. PR [#52](https://github.com/Vraxo/Formloom/pull/52) was merged as
 `1311f91e582554c2601c0b9476265a1a62ab123d`; post-merge Linux Release CI run
 [42493951766](https://github.com/Vraxo/Formloom/actions/runs/42493951766) passed on that commit.
-User review of the low-variation seed-42 output then identified a visible stem discontinuity at the
-vase opening. The shared renderer has been changed in follow-up PR
-[#53](https://github.com/Vraxo/Formloom/pull/53), currently open on
-`arena/d4f813cf-formloom`; do not merge it without explicit user approval. Contact-fix commit
-`d604e54ccb2863044c664e2e724233e29d094773` passed Linux Release CI run
-[42500331364](https://github.com/Vraxo/Formloom/actions/runs/42500331364), including build, full
-test suite, and procedural-preview upload. The post-fix artifact has not been visually inspected:
-its download URL is served from a host outside this sandbox's outbound allowlist. The user-supplied
-image confirms the original defect; no aesthetic pass is claimed for the corrected render. Timing
-sidecar values have also not been read.
+User review of the seed-42 output first identified the stem discontinuity at the vase opening, then
+confirmed that contact looked repaired while flagging a sharp downward turn at both interior ends.
+That bend came from the straight below-base extension and was not intended. Follow-up PR
+[#53](https://github.com/Vraxo/Formloom/pull/53) now extends each stem along the reverse base
+tangent with a cubic, then clips it inside the near lip. Source commit `ed6c204` and the final
+workflow-restored head `54f7f4a` passed Linux Release run
+[42502940039](https://github.com/Vraxo/Formloom/actions/runs/42502940039), including build, full
+test suite, and preview upload. A temporary diagnostic workflow step was used for one run to locate
+a test probe below the near-lip occlusion and has since been removed; no permanent workflow change
+remains. The newest artifact has not been visually inspected in this sandbox because its binary
+host is outside the outbound allowlist, so aesthetic verification of the tangent correction remains
+pending. Timing sidecar values have also not been read. Do not merge PR #53 without explicit user
+approval.
 
 - **Starting point:** Phase 9 branched from `main` at `863dd75`, after Phase 8 PR #51 merged as
   `c441a9a`.
@@ -27,9 +30,11 @@ sidecar values have also not been read.
   recorded the typed pair, strict grammar, profile-relative left/right layout, separate layout
   stream, and two-stem mouth continuation before source changes.
 - **Implementation history:** the original Phase 9 code/artifact head was `46ae3d8`; its
-  documentation/checklist head was `67f3550`. PR #52 merged as `1311f91`. The contact fix was
-  introduced in `4119570` and its StyleCop whitespace correction is `d604e54`. The first follow-up CI run, `42500222714`, failed on blank-line diagnostics; those were
-  corrected before the final green run `42500331364`. No workflow step or job was added.
+  documentation/checklist head was `67f3550`. PR #52 merged as `1311f91`. The first contact fix
+  landed in `4119570` with StyleCop cleanup in `d604e54`; the tangent-matched continuation is in
+  `ed6c204`, with the full-resolution probe adjustment in `1d03d40`. A temporary failure-reporting
+  workflow step was used once to locate a probe below the lip and removed in `54f7f4a`; it is not
+  part of the final workflow. Final workflow-restored CI run `42502940039` passed.
 
 ## Supported prompts
 
@@ -90,12 +95,14 @@ attachment, margins, deterministic layout, and bounded behavior across seeds and
 
 `StillLifeRenderer` now paints the shared ceramic first, then draws each complete flower and stem
 as one path over the far rim. This removes the old join between a flower clipped at the mouth and a
-separate mouth-continuation stroke. The interior stem segment receives the cavity-depth gradient. A short continuation below each
-typed stem base is drawn through the opening inset by the near lip, so it cannot overpaint that lip. Standalone tulip, standalone daisy, and the mixed pair use this shared path. The species
-materials and plant geometry remain separate, the pair adds no tabletop shadow, and vase/shadow
-invariants remain covered. New row-by-row pixel checks assert visibility from the far-rim contact
-through the opening, disappearance beneath the near lip, and no visible stem pixels on the vase
-wall at preview and full-resolution sizes.
+separate mouth-continuation stroke. The interior stem segment receives the cavity-depth gradient. A short cubic continuation below
+each typed stem base follows the reverse base tangent, then is clipped through the opening inset
+by the near lip, avoiding a sharp directional break without overpainting that lip. Standalone
+tulip, standalone daisy, and the mixed pair use this shared path. The species materials and plant
+geometry remain separate, the pair adds no tabletop shadow, and vase/shadow invariants remain
+covered. New row-by-row pixel checks assert visibility from the far-rim contact through the
+opening, disappearance beneath the near lip, and no visible stem pixels on the vase wall at
+preview and full-resolution sizes.
 
 The strict pair parser runs before standalone fallbacks. Desktop prompt help adds one concise pair
 example. Four subject tokens are whitelisted in `PngSaveService`:
@@ -113,12 +120,13 @@ selection, failed-prompt preview/metadata retention, and the component's prompt-
 ## Verification
 
 The sandbox has no .NET SDK, so no local SDK build or test run was possible. CI is the authoritative
-verification. Follow-up run [42500331364](https://github.com/Vraxo/Formloom/actions/runs/42500331364)
+verification. Final workflow-restored run [42502940039](https://github.com/Vraxo/Formloom/actions/runs/42502940039)
 passed Restore, Release build with warnings as errors, the full solution test step, test-result
-upload, and `procedural-preview` upload on `d604e54`. The initial follow-up run
-[42500222714](https://github.com/Vraxo/Formloom/actions/runs/42500222714) failed the build only on
-StyleCop blank-line diagnostics; the formatting correction is included in the passing head. The
-post-fix artifact is available on the PR run, but this sandbox cannot fetch its Azure-hosted binary.
+upload, and `procedural-preview` upload. It includes the tangent-matched continuation and pixel
+checks on the PR head. Earlier tangent-probe checks exposed a test sample below the near lip; a
+one-run diagnostic step surfaced the row, the probe was moved above the lip, and the temporary
+workflow step was removed before the final green run. The post-fix artifact is available on the PR
+run, but this sandbox cannot fetch its Azure-hosted binary.
 
 Coverage includes:
 
@@ -127,16 +135,16 @@ Coverage includes:
   geometry; 4 combinations × 7 seeds × 4 variation values; independent named streams and
   standalone geometry stability.
 - Renderer: non-vacuous petal, white-petal, disk, four-leaf and both-stem pixels; row-by-row
-  continuity from far-rim contact through the mouth; inset continuation and near-lip disappearance;
-  wall-leak and changed-pixel bounds; shadow equality, silhouettes, diagnostic/detail omission,
-  deterministic PNGs and supported square and rectangular sizes.
+  continuity from far-rim contact through the mouth; tangent-matched continuation (including a
+  full-resolution centerline check) and near-lip disappearance; wall-leak and changed-pixel bounds;
+  shadow equality, silhouettes, diagnostic/detail omission, deterministic PNGs, and supported sizes.
 - Desktop: all combinations through the pipeline, preview/save metadata, rejection retention,
   prompt help, and the four safe save tokens.
 
 The existing workflow remains one Linux Release job; no workflow step, job, package, runner, or
-artifact pipeline is added by the final change. The interim test-failure annotation step used while
-diagnosing CI is absent from the final tree. Test-result and procedural-preview artifacts continue
-to use the repository's existing upload steps.
+artifact pipeline is added by the final change. Both temporary test-diagnostic steps used while
+diagnosing assertions have been removed. Test-result and procedural-preview artifacts continue to
+use the repository's existing upload steps.
 
 ## Review artifacts
 
