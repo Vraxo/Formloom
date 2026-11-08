@@ -7,18 +7,26 @@ namespace Formloom.Rendering.Skia;
 
 public static class StillLifeRenderer
 {
-    public static RenderedImage Render(StillLifeScene scene) => RenderCore(scene, silhouette: false);
+    public static RenderedImage Render(StillLifeScene scene, RenderOptions? options = null) =>
+        RenderCore(scene, silhouette: false, options: options);
 
-    public static RenderedImage RenderSilhouette(StillLifeScene scene) => RenderCore(scene, silhouette: true);
+    public static RenderedImage RenderSilhouette(StillLifeScene scene, RenderOptions? options = null) =>
+        RenderCore(scene, silhouette: true, options: options);
 
     internal static RenderedImage RenderShadowMask(StillLifeScene scene) => RenderCore(scene, silhouette: false, shadowMask: true);
 
     internal static RenderedImage RenderWithoutInstanceDetail(StillLifeScene scene, int depth) =>
         RenderCore(scene, silhouette: false, omittedDetailDepth: depth);
 
-    private static RenderedImage RenderCore(StillLifeScene scene, bool silhouette, bool shadowMask = false, int? omittedDetailDepth = null)
+    private static RenderedImage RenderCore(
+        StillLifeScene scene,
+        bool silhouette,
+        bool shadowMask = false,
+        int? omittedDetailDepth = null,
+        RenderOptions? options = null)
     {
         ArgumentNullException.ThrowIfNull(scene);
+        var antialias = options?.Antialiasing ?? true;
         if (scene.Width is < 64 or > 4096 || scene.Height is < 64 or > 4096)
         {
             throw new ArgumentOutOfRangeException(nameof(scene));
@@ -42,19 +50,19 @@ public static class StillLifeRenderer
         canvas.Clear(SKColors.Transparent);
         if (!silhouette && !shadowMask)
         {
-            DrawSetting(canvas, scene);
+            DrawSetting(canvas, scene, antialias);
         }
 
         var ordered = scene.Objects.OrderBy(entry => entry.Depth).ToArray();
         if (scene.Containment is { } containment)
         {
-            DrawContainment(canvas, scene, containment, silhouette, shadowMask, omittedDetailDepth);
+            DrawContainment(canvas, scene, containment, silhouette, shadowMask, omittedDetailDepth, antialias);
         }
         else if (shadowMask)
         {
             foreach (var entry in ordered)
             {
-                DrawObject(canvas, scene, entry, silhouette: false, shadowsOnly: ordered.Length > 1, skipBody: true);
+                DrawObject(canvas, scene, entry, silhouette: false, shadowsOnly: ordered.Length > 1, skipBody: true, antialias: antialias);
             }
         }
         else
@@ -63,13 +71,13 @@ public static class StillLifeRenderer
             {
                 foreach (var entry in ordered)
                 {
-                    DrawObject(canvas, scene, entry, silhouette: false, shadowsOnly: true, omittedDetailDepth: omittedDetailDepth);
+                    DrawObject(canvas, scene, entry, silhouette: false, shadowsOnly: true, omittedDetailDepth: omittedDetailDepth, antialias: antialias);
                 }
             }
 
             foreach (var entry in ordered)
             {
-                DrawObject(canvas, scene, entry, silhouette, skipShadows: ordered.Length > 1, omittedDetailDepth: omittedDetailDepth);
+                DrawObject(canvas, scene, entry, silhouette, skipShadows: ordered.Length > 1, omittedDetailDepth: omittedDetailDepth, antialias: antialias);
             }
         }
 
@@ -86,11 +94,12 @@ public static class StillLifeRenderer
         bool skipShadows = false,
         bool shadowsOnly = false,
         bool skipBody = false,
-        int? omittedDetailDepth = null)
+        int? omittedDetailDepth = null,
+        bool antialias = true)
     {
         if (entry.Fruit is { } fruit)
         {
-            DrawFruit(canvas, ForInstance(scene, fruit, omittedDetailDepth), silhouette, skipShadows, shadowsOnly, skipBody);
+            DrawFruit(canvas, ForInstance(scene, fruit, omittedDetailDepth), silhouette, skipShadows, shadowsOnly, skipBody, antialias);
             return;
         }
 
@@ -127,20 +136,21 @@ public static class StillLifeRenderer
             shadowsOnly,
             skipBody,
             entry.Depth == omittedDetailDepth,
-            beverage);
+            beverage,
+            antialias);
 
         if (pairTulip is not null && pairDaisy is not null)
         {
-            DrawVaseFlower(canvas, scene, pairTulip, silhouette, entry.Depth == omittedDetailDepth);
-            DrawVaseDaisy(canvas, scene, pairDaisy, silhouette, entry.Depth == omittedDetailDepth);
+            DrawVaseFlower(canvas, scene, pairTulip, silhouette, entry.Depth == omittedDetailDepth, antialias);
+            DrawVaseDaisy(canvas, scene, pairDaisy, silhouette, entry.Depth == omittedDetailDepth, antialias);
         }
         else if (tulip is not null)
         {
-            DrawVaseFlower(canvas, scene, tulip, silhouette, entry.Depth == omittedDetailDepth);
+            DrawVaseFlower(canvas, scene, tulip, silhouette, entry.Depth == omittedDetailDepth, antialias);
         }
         else if (daisy is not null)
         {
-            DrawVaseDaisy(canvas, scene, daisy, silhouette, entry.Depth == omittedDetailDepth);
+            DrawVaseDaisy(canvas, scene, daisy, silhouette, entry.Depth == omittedDetailDepth, antialias);
         }
     }
 
@@ -153,14 +163,14 @@ public static class StillLifeRenderer
         SurfaceDetail = fruit.Depth == omittedDetailDepth ? 0 : scene.SurfaceDetail,
     };
 
-    private static void DrawSetting(SKCanvas canvas, StillLifeScene scene)
+    private static void DrawSetting(SKCanvas canvas, StillLifeScene scene, bool antialias)
     {
         var warmth = (float)scene.BackgroundWarmth;
         using var background = SKShader.CreateLinearGradient(
             new SKPoint(0, 0), new SKPoint(1024, 900),
             [new SKColor((byte)(70 + (warmth * 20)), 89, 82), new SKColor(29, 43, 43)],
             null, SKShaderTileMode.Clamp);
-        using var paint = new SKPaint { IsAntialias = true, Shader = background };
+        using var paint = new SKPaint { IsAntialias = antialias, Shader = background };
         canvas.DrawRect(0, 0, 1024, 1024, paint);
         var horizon = (float)scene.TableHorizon * 1024;
         using var wood = SKShader.CreateLinearGradient(
@@ -177,11 +187,18 @@ public static class StillLifeRenderer
         canvas.DrawPath(table, paint);
         canvas.Save();
         canvas.ClipPath(table);
-        WoodGrain.Draw(canvas, scene, horizon);
+        WoodGrain.Draw(canvas, scene, horizon, antialias);
         canvas.Restore();
     }
 
-    private static void DrawFruit(SKCanvas canvas, StillLifeScene scene, bool silhouette, bool skipShadows = false, bool shadowsOnly = false, bool skipBody = false)
+    private static void DrawFruit(
+        SKCanvas canvas,
+        StillLifeScene scene,
+        bool silhouette,
+        bool skipShadows = false,
+        bool shadowsOnly = false,
+        bool skipBody = false,
+        bool antialias = true)
     {
         var apple = scene.Body;
         var centerX = apple.Center.X * 1024;
@@ -190,7 +207,7 @@ public static class StillLifeRenderer
         var height = apple.Size.Y * 1024;
         var left = centerX - (width / 2);
         var bottom = top + height;
-        using var paint = new SKPaint { IsAntialias = true };
+        using var paint = new SKPaint { IsAntialias = antialias };
         if (!silhouette && !skipShadows)
         {
             var shadowScale = shadowsOnly ? width / (0.43f * 1024) : 1;
@@ -199,8 +216,8 @@ public static class StillLifeRenderer
             paint.Color = new SKColor(12, 20, 17, 80);
             canvas.DrawOval(centerX - (scene.LightDirection.X * 65 * shadowScale), bottom + (3 * shadowScale), width * (shadowsOnly ? 0.5f : 0.55f), 24 * shadowScale, paint);
             paint.MaskFilter = null;
-            DrawContactShadow(canvas, centerX - (width * 0.13f), bottom - (height * 0.009f), width * 0.22f, height * 0.035f);
-            DrawContactShadow(canvas, centerX + (width * 0.13f), bottom - (height * 0.005f), width * 0.23f, height * 0.035f);
+            DrawContactShadow(canvas, centerX - (width * 0.13f), bottom - (height * 0.009f), width * 0.22f, height * 0.035f, antialias);
+            DrawContactShadow(canvas, centerX + (width * 0.13f), bottom - (height * 0.005f), width * 0.23f, height * 0.035f, antialias);
         }
 
         if (shadowsOnly || skipBody)
@@ -254,7 +271,7 @@ public static class StillLifeRenderer
         }
 
         var stemX = 0.5f + ((float)apple.StemLean * 0.2f);
-        DrawStemAttachment(canvas, shape, stemX, contour.TopAttachment, silhouette);
+        DrawStemAttachment(canvas, shape, stemX, contour.TopAttachment, silhouette, antialias);
         canvas.Save();
         canvas.Translate(stemX + contour.TopAttachment.X - 0.5f, contour.TopAttachment.Y - 0.155f);
         canvas.RotateDegrees((float)(apple.LeafAngle * 180 / Math.PI));
@@ -301,7 +318,8 @@ public static class StillLifeRenderer
         bool shadowsOnly,
         bool skipBody,
         bool omitDetail,
-        BeverageKind? beverage = null)
+        BeverageKind? beverage = null,
+        bool antialias = true)
     {
         var profile = CeramicForms.For(ceramic.Kind);
         var body = ceramic.Body;
@@ -311,7 +329,7 @@ public static class StillLifeRenderer
         var height = body.Size.Y * 1024;
         var left = centerX - (width / 2);
         var contactY = top + (profile.BaseBottom * height);
-        using var paint = new SKPaint { IsAntialias = true };
+        using var paint = new SKPaint { IsAntialias = antialias };
         if (!silhouette && !skipShadows)
         {
             var shadowScale = shadowsOnly ? width / (0.43f * 1024) : 1;
@@ -321,8 +339,8 @@ public static class StillLifeRenderer
             canvas.DrawOval(centerX - (scene.LightDirection.X * 65 * shadowScale), contactY + (3 * shadowScale), width * (shadowsOnly ? 0.5f : 0.55f), 24 * shadowScale, paint);
             paint.MaskFilter = null;
             var baseHalf = width * profile.BaseWidth * 0.28f;
-            DrawContactShadow(canvas, centerX - baseHalf, contactY - (height * 0.006f), width * 0.17f, height * 0.03f);
-            DrawContactShadow(canvas, centerX + baseHalf, contactY - (height * 0.003f), width * 0.18f, height * 0.03f);
+            DrawContactShadow(canvas, centerX - baseHalf, contactY - (height * 0.006f), width * 0.17f, height * 0.03f, antialias);
+            DrawContactShadow(canvas, centerX + baseHalf, contactY - (height * 0.003f), width * 0.18f, height * 0.03f, antialias);
         }
 
         if (shadowsOnly || skipBody)
@@ -375,9 +393,9 @@ public static class StillLifeRenderer
         paint.Shader = null;
         canvas.Save();
         canvas.ClipPath(outline);
-        DrawGlazeMottle(canvas, ceramic, material);
+        DrawGlazeMottle(canvas, ceramic, material, antialias);
         var accents = !omitDetail && scene.SurfaceDetail > 0;
-        DrawMouth(canvas, scene, profile, material, paint, beverage, accents);
+        DrawMouth(canvas, scene, profile, material, paint, beverage, accents, antialias);
 
         // The cup's finish sheen normally washes over the mouth as well. It is held off the
         // drink so the glaze can never recolour the beverage: the lip and body keep it, the
@@ -387,7 +405,7 @@ public static class StillLifeRenderer
         {
             var surface = CupLiquidSurface.For(profile);
             using var drink = CreateEllipsePath(surface.ClipCenter, surface.ClipRadius);
-            canvas.ClipPath(drink, SKClipOperation.Difference, antialias: true);
+            canvas.ClipPath(drink, SKClipOperation.Difference, antialias: antialias);
         }
 
         using var highlight = SKShader.CreateRadialGradient(
@@ -417,14 +435,15 @@ public static class StillLifeRenderer
         BowlContainment containment,
         bool silhouette,
         bool shadowMask,
-        int? omittedDetailDepth)
+        int? omittedDetailDepth,
+        bool antialias)
     {
         var bowl = containment.Bowl;
         var content = containment.Content;
         if (shadowMask)
         {
             // Only the bowl touches the table; contained fruit casts no tabletop shadow.
-            DrawCeramic(canvas, scene, bowl, silhouette: false, skipShadows: false, shadowsOnly: false, skipBody: true, omitDetail: false);
+            DrawCeramic(canvas, scene, bowl, silhouette: false, skipShadows: false, shadowsOnly: false, skipBody: true, omitDetail: false, antialias: antialias);
             return;
         }
 
@@ -436,23 +455,25 @@ public static class StillLifeRenderer
             skipShadows: false,
             shadowsOnly: false,
             skipBody: false,
-            omitDetail: bowl.Depth == omittedDetailDepth);
+            omitDetail: bowl.Depth == omittedDetailDepth,
+            antialias: antialias);
         if (!silhouette)
         {
-            DrawCavityContactShadow(canvas, containment);
+            DrawCavityContactShadow(canvas, containment, antialias);
         }
 
         canvas.Save();
         using (var near = CreateCanvasPath(containment, BowlGeometry.FrontWall(containment.Profile)))
         {
-            canvas.ClipPath(near, SKClipOperation.Difference, antialias: true);
+            canvas.ClipPath(near, SKClipOperation.Difference, antialias: antialias);
         }
 
         DrawFruit(
             canvas,
             ForInstance(scene, content, content.Depth == omittedDetailDepth ? content.Depth : null),
             silhouette,
-            skipShadows: true);
+            skipShadows: true,
+            antialias: antialias);
         canvas.Restore();
     }
 
@@ -484,7 +505,7 @@ public static class StillLifeRenderer
     // Subtle contact shadow clipped to the cavity, hugging the inside of the near rim under
     // the fruit. It is painted before the content, so the fruit covers its middle and only
     // the pool around the base stays visible. It never leaves the opening.
-    private static void DrawCavityContactShadow(SKCanvas canvas, BowlContainment containment)
+    private static void DrawCavityContactShadow(SKCanvas canvas, BowlContainment containment, bool antialias)
     {
         var body = containment.Bowl.Body;
         var profile = containment.Profile;
@@ -505,12 +526,12 @@ public static class StillLifeRenderer
 
         // The content is wider than the visible cavity sliver on either side, so the shadow
         // is a pool that spreads out from under it into both side lobes of the opening.
-        DrawCavityPool(canvas, centerX, frontRim - (radiusY * 0.30f), contentWidth * 1.05f, radiusY * 0.80f, 86);
-        DrawCavityPool(canvas, centerX, frontRim - (radiusY * 0.10f), contentWidth * 0.75f, radiusY * 0.45f, 120);
+        DrawCavityPool(canvas, centerX, frontRim - (radiusY * 0.30f), contentWidth * 1.05f, radiusY * 0.80f, 86, antialias);
+        DrawCavityPool(canvas, centerX, frontRim - (radiusY * 0.10f), contentWidth * 0.75f, radiusY * 0.45f, 120, antialias);
         canvas.Restore();
     }
 
-    private static void DrawCavityPool(SKCanvas canvas, float x, float y, float radiusX, float radiusY, byte alpha)
+    private static void DrawCavityPool(SKCanvas canvas, float x, float y, float radiusX, float radiusY, byte alpha, bool antialias)
     {
         canvas.Save();
         canvas.Translate(x, y);
@@ -519,7 +540,7 @@ public static class StillLifeRenderer
             SKPoint.Empty, 1,
             [new SKColor(8, 8, 10, alpha), new SKColor(8, 8, 10, (byte)(alpha * 0.8f)), new SKColor(8, 8, 10, 0)],
             [0f, 0.62f, 1f], SKShaderTileMode.Clamp);
-        using var paint = new SKPaint { IsAntialias = true, Color = SKColors.White, Shader = gradient };
+        using var paint = new SKPaint { IsAntialias = antialias, Color = SKColors.White, Shader = gradient };
         canvas.DrawOval(0, 0, 1, 1, paint);
         canvas.Restore();
     }
@@ -528,14 +549,14 @@ public static class StillLifeRenderer
     // and, when accents are enabled, two broad reflections. Everything is clipped to the
     // inner opening, so the lip and rim strokes stay in front of it and nothing can reach the
     // exterior, the handle or the table.
-    private static void DrawCupLiquid(SKCanvas canvas, CeramicProfile profile, BeverageKind beverage, bool accents, SKPaint paint)
+    private static void DrawCupLiquid(SKCanvas canvas, CeramicProfile profile, BeverageKind beverage, bool accents, SKPaint paint, bool antialias)
     {
         var surface = CupLiquidSurface.For(profile);
         var material = BeverageMaterial.For(beverage);
         canvas.Save();
         using (var opening = CreateEllipsePath(surface.ClipCenter, surface.ClipRadius))
         {
-            canvas.ClipPath(opening, antialias: true);
+            canvas.ClipPath(opening, antialias: antialias);
         }
 
         using (var body = SKShader.CreateRadialGradient(
@@ -608,7 +629,8 @@ public static class StillLifeRenderer
         StillLifeScene scene,
         VaseFlower flower,
         bool silhouette,
-        bool omitDetail)
+        bool omitDetail,
+        bool antialias)
     {
         var plant = flower.Plant;
         var material = TulipMaterial.For(flower.Color);
@@ -616,7 +638,7 @@ public static class StillLifeRenderer
         canvas.Save();
         canvas.Scale(1024, 1024);
 
-        using var paint = new SKPaint { IsAntialias = true, Color = SKColors.White };
+        using var paint = new SKPaint { IsAntialias = antialias, Color = SKColors.White };
         DrawTulipStem(canvas, plant, material, silhouette, paint);
         foreach (var leaf in plant.Leaves)
         {
@@ -643,7 +665,8 @@ public static class StillLifeRenderer
             material.StemEdge,
             ceramic.CavityColor,
             silhouette,
-            paint);
+            paint,
+            antialias);
         canvas.Restore();
     }
 
@@ -666,7 +689,8 @@ public static class StillLifeRenderer
         SKColor stemEdge,
         SKColor cavityColor,
         bool silhouette,
-        SKPaint paint)
+        SKPaint paint,
+        bool antialias)
     {
         var lipHalf = new System.Numerics.Vector2(
             rimThickness * 1.1f * vaseSize.X,
@@ -688,7 +712,7 @@ public static class StillLifeRenderer
         canvas.Save();
         using (var opening = CreateEllipsePath(openingCenter, inset))
         {
-            canvas.ClipPath(opening, antialias: true);
+            canvas.ClipPath(opening, antialias: antialias);
         }
 
         using var builder = new SKPathBuilder();
@@ -794,7 +818,8 @@ public static class StillLifeRenderer
         StillLifeScene scene,
         VaseDaisy flower,
         bool silhouette,
-        bool omitDetail)
+        bool omitDetail,
+        bool antialias)
     {
         var plant = flower.Plant;
         var material = DaisyMaterial.For(flower.Appearance);
@@ -802,7 +827,7 @@ public static class StillLifeRenderer
         canvas.Save();
         canvas.Scale(1024, 1024);
 
-        using var paint = new SKPaint { IsAntialias = true, Color = SKColors.White };
+        using var paint = new SKPaint { IsAntialias = antialias, Color = SKColors.White };
         using (var stem = CreateOpenPath(plant.Stem))
         {
             StrokeStem(
@@ -844,7 +869,8 @@ public static class StillLifeRenderer
             material.StemEdge,
             ceramic.CavityColor,
             silhouette,
-            paint);
+            paint,
+            antialias);
         canvas.Restore();
     }
 
@@ -1079,7 +1105,7 @@ public static class StillLifeRenderer
         builder.Close();
     }
 
-    private static void DrawGlazeMottle(SKCanvas canvas, CeramicInstance ceramic, CeramicMaterial material)
+    private static void DrawGlazeMottle(SKCanvas canvas, CeramicInstance ceramic, CeramicMaterial material, bool antialias)
     {
         if (material.MottleAlpha == 0)
         {
@@ -1087,7 +1113,7 @@ public static class StillLifeRenderer
         }
 
         var random = Pcg32.ForStream(ceramic.Seed, ceramic.Kind.ToString().ToLowerInvariant() + ".glaze.detail");
-        using var paint = new SKPaint { IsAntialias = true, Color = SKColors.White };
+        using var paint = new SKPaint { IsAntialias = antialias, Color = SKColors.White };
         for (var index = 0; index < 3; index++)
         {
             var x = 0.2f + ((float)random.NextDouble() * 0.6f);
@@ -1110,7 +1136,8 @@ public static class StillLifeRenderer
         CeramicMaterial material,
         SKPaint paint,
         BeverageKind? beverage,
-        bool accents)
+        bool accents,
+        bool antialias)
     {
         var center = profile.MouthCenter;
         var radius = profile.MouthRadius;
@@ -1131,7 +1158,7 @@ public static class StillLifeRenderer
         // the ceramic edge always reads as being in front of the liquid.
         if (beverage is { } drink && profile.Kind == CeramicKind.Cup)
         {
-            DrawCupLiquid(canvas, profile, drink, accents, paint);
+            DrawCupLiquid(canvas, profile, drink, accents, paint, antialias);
         }
 
         // The thin far rim and thick near lip are both part of the vessel pass. Vase plants
@@ -1180,7 +1207,7 @@ public static class StillLifeRenderer
         }
     }
 
-    private static void DrawContactShadow(SKCanvas canvas, float x, float y, float radiusX, float radiusY)
+    private static void DrawContactShadow(SKCanvas canvas, float x, float y, float radiusX, float radiusY, bool antialias)
     {
         canvas.Save();
         canvas.Translate(x, y);
@@ -1189,14 +1216,14 @@ public static class StillLifeRenderer
             SKPoint.Empty, 1,
             [new SKColor(20, 15, 10, 205), new SKColor(20, 15, 10, 85), new SKColor(20, 15, 10, 0)],
             [0f, 0.38f, 1f], SKShaderTileMode.Clamp);
-        using var paint = new SKPaint { IsAntialias = true, Color = SKColors.White, Shader = gradient };
+        using var paint = new SKPaint { IsAntialias = antialias, Color = SKColors.White, Shader = gradient };
         canvas.DrawOval(0, 0, 1, 1, paint);
         canvas.Restore();
     }
 
-    private static void DrawStemAttachment(SKCanvas canvas, SKPath body, float stemX, System.Numerics.Vector2 attachment, bool silhouette)
+    private static void DrawStemAttachment(SKCanvas canvas, SKPath body, float stemX, System.Numerics.Vector2 attachment, bool silhouette, bool antialias)
     {
-        using var paint = new SKPaint { IsAntialias = true, Color = SKColors.White };
+        using var paint = new SKPaint { IsAntialias = antialias, Color = SKColors.White };
         if (!silhouette)
         {
             canvas.Save();

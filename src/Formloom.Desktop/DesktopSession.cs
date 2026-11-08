@@ -7,15 +7,25 @@ using Microsoft.Extensions.Logging;
 namespace Formloom.Desktop;
 
 internal sealed class DesktopSession(
-    Func<GenerationRequest, Task<DesktopGenerationResult>> generate,
+    Func<GenerationRequest, RenderOptions?, Task<DesktopGenerationResult>> generate,
     Func<RenderedImage, ulong, Task<SaveResult>> save,
     ILogger<DesktopSession> logger)
 {
+    public DesktopSession(
+        Func<GenerationRequest, Task<DesktopGenerationResult>> generate,
+        Func<RenderedImage, ulong, Task<SaveResult>> save,
+        ILogger<DesktopSession> logger)
+        : this((request, _) => generate(request), save, logger)
+    {
+    }
+
     public string Prompt { get; set; } = "a red apple on a wooden table";
 
     public string SeedText { get; set; } = "42";
 
     public double Variation { get; set; } = 0.35;
+
+    public bool Antialiasing { get; set; } = true;
 
     public bool Generating { get; private set; }
 
@@ -35,6 +45,10 @@ internal sealed class DesktopSession(
 
     public double RenderedVariation { get; private set; }
 
+    public bool RenderedAntialiasing { get; private set; } = true;
+
+    public string RenderedAntialiasingStatus => RenderedAntialiasing ? "on" : "off";
+
     public bool IsBusy => Generating || Saving;
 
     public async Task GenerateAsync()
@@ -53,11 +67,12 @@ internal sealed class DesktopSession(
         }
 
         var request = new GenerationRequest(Prompt, seed, Variation);
+        var renderOptions = new RenderOptions(Antialiasing);
         Generating = true;
         Status = "Constructing your image…";
         try
         {
-            var result = await generate(request);
+            var result = await generate(request, renderOptions);
             if (result.Error is not null || result.Image is null || result.PreviewUrl is null)
             {
                 Error = result.Error ?? "Could not generate a complete image. Please try again.";
@@ -70,6 +85,7 @@ internal sealed class DesktopSession(
             ImageDescription = request.Prompt;
             RenderedSeed = request.Seed;
             RenderedVariation = request.Variation;
+            RenderedAntialiasing = renderOptions.Antialiasing;
             Status = "Image ready. Save PNG to keep this study.";
         }
         catch (Exception exception)

@@ -14,17 +14,45 @@ public sealed class AppComponentTests
     public async Task InitialMarkupHasBoundDefaultsLabelsAndDisabledSave()
     {
         await using var context = new BunitContext();
-        context.Services.AddSingleton(CreateSession(_ => Task.FromResult(Success())));
+        var session = CreateSession(_ => Task.FromResult(Success()));
+        context.Services.AddSingleton(session);
         var component = context.Render<App>();
         Assert.Equal("a red apple on a wooden table", component.Find("#prompt").GetAttribute("value"));
         Assert.Equal("42", component.Find("#seed").GetAttribute("value"));
         Assert.Equal("0.35", component.Find("#variation").GetAttribute("value"));
+        Assert.True(session.Antialiasing);
+        Assert.True(component.Find("#antialiasing").HasAttribute("checked"));
         Assert.True(component.Find(".secondary").HasAttribute("disabled"));
         Assert.Empty(component.FindAll(".preview img"));
         Assert.Single(component.FindAll("label[for='prompt']"));
         Assert.Single(component.FindAll("label[for='seed']"));
         Assert.Single(component.FindAll("label[for='variation']"));
         Assert.Equal("polite", component.Find("[role='status']").GetAttribute("aria-live"));
+    }
+
+    [Fact]
+    public async Task AntialiasCheckboxPassesRenderOptionAndLabelsSavedPreview()
+    {
+        await using var context = new BunitContext();
+        RenderOptions? capturedOptions = null;
+        var session = new DesktopSession(
+            (request, options) =>
+            {
+                capturedOptions = options;
+                return Task.FromResult(Success());
+            },
+            (_, _) => Task.FromResult(new SaveResult(false, "Saved")),
+            NullLogger<DesktopSession>.Instance);
+        context.Services.AddSingleton(session);
+        var component = context.Render<App>();
+
+        await component.Find("#antialiasing").ChangeAsync(false);
+        Assert.False(session.Antialiasing);
+        await component.Find("form").TriggerEventAsync("onsubmit", EventArgs.Empty);
+
+        Assert.NotNull(capturedOptions);
+        Assert.False(capturedOptions!.Antialiasing);
+        Assert.Contains("AA off", component.Find(".preview-footer").TextContent, StringComparison.Ordinal);
     }
 
     [Fact]

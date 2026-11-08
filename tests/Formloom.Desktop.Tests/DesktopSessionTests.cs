@@ -9,6 +9,30 @@ namespace Formloom.Desktop.Tests;
 public sealed class DesktopSessionTests
 {
     [Fact]
+    public async Task AntialiasingDefaultsOnAndIsPassedAsRenderOnlyOption()
+    {
+        RenderOptions? capturedOptions = null;
+        var session = new DesktopSession(
+            (request, options) =>
+            {
+                capturedOptions = options;
+                return Task.FromResult(Success());
+            },
+            (_, _) => Task.FromResult(new SaveResult(false, "Saved")),
+            NullLogger<DesktopSession>.Instance);
+
+        Assert.True(session.Antialiasing);
+        await session.GenerateAsync();
+        Assert.True(capturedOptions!.Antialiasing);
+        Assert.True(session.RenderedAntialiasing);
+
+        session.Antialiasing = false;
+        await session.GenerateAsync();
+        Assert.False(capturedOptions!.Antialiasing);
+        Assert.False(session.RenderedAntialiasing);
+    }
+
+    [Fact]
     public async Task FailedPromptRetainsSuccessfulImageAndMetadata()
     {
         var session = CreateSession(request => Task.FromResult(request.Prompt == "unsupported"

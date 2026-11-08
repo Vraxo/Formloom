@@ -18,6 +18,9 @@ textarea { resize: vertical; min-height: 88px; }
 .label-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 output { color: #d1dfc3; font-size: 13px; font-variant-numeric: tabular-nums; }
 input[type="range"] { width: 100%; accent-color: #c4d5a8; margin: 16px 0 0; cursor: pointer; }
+.render-option { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.render-option input[type="checkbox"] { width: 16px; height: 16px; margin: 0; accent-color: #c4d5a8; cursor: pointer; }
+.render-option label { display: inline; font-weight: 500; cursor: pointer; }
 button { border: none; border-radius: 6px; padding: 11px 18px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
 button:disabled, fieldset:disabled { opacity: .55; }
 button:disabled { cursor: not-allowed; }

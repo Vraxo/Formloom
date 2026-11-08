@@ -18,7 +18,7 @@ public sealed class VaseTulipDaisyPipelineTests
         RenderedImage? saved = null;
         ulong savedSeed = 0;
         var session = new DesktopSession(
-            generator.GenerateAsync,
+            (request, options) => generator.GenerateAsync(request, options),
             (image, seed) =>
             {
                 saved = image;
