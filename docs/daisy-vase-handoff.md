@@ -9,8 +9,10 @@ Skia → PNG/save path.
 - **Previous milestone:** Phase 7, a tulip in a ceramic vase — see
   [`vase-flower-handoff.md`](vase-flower-handoff.md) and [`.agents/todo-7.md`](../.agents/todo-7.md).
 - **Checklist:** [`.agents/todo-8.md`](../.agents/todo-8.md).
-- **Status:** implementation, tests, artifacts and documentation complete; **visual review passed**
-  on the fixed build. Two defects were found and fixed on the way: a leaf hidden behind the head,
+- **Status:** Phase 8 complete through PR #50, merge `6c48a7a`; implementation, tests, artifacts,
+  documentation, timing read-back and visual review are closed. The final post-merge Linux Release
+  CI run [42452083956](https://github.com/Vraxo/Formloom/actions/runs/42452083956) passed. Two defects
+  were found and fixed on the way: a leaf hidden behind the head,
   and a size-dependent loss of the stem inside the mouth that only appeared in the sheet's 320 px
   cells. The canonical blue case was reviewed at full resolution, then both group sheets were
   reviewed cell by cell on the merged build, closing the cream glaze, alternate seeds, variation
@@ -366,6 +368,17 @@ the sheets.
   the shipping code state (the temporary failed-test annotation step already removed); the
   documentation commit that follows it is verified by the run on the PR's final head, which is
   named in the PR conversation.
+- PR [#48](https://github.com/Vraxo/Formloom/pull/48) — leaf visibility and the 320 px
+  mouth-continuation scaling fix. Final PR CI [42403728011](https://github.com/Vraxo/Formloom/actions/runs/42403728011)
+  passed on `3faba58`; merged as `e738f50`; post-merge CI
+  [42450438121](https://github.com/Vraxo/Formloom/actions/runs/42450438121) passed.
+- PR [#49](https://github.com/Vraxo/Formloom/pull/49) — recorded the fixed-build visual review.
+  CI [42451534351](https://github.com/Vraxo/Formloom/actions/runs/42451534351) passed on `0869d70`;
+  merged as `039892a`.
+- PR [#50](https://github.com/Vraxo/Formloom/pull/50) — transcribed the supplied timing sidecars.
+  CI [42451740669](https://github.com/Vraxo/Formloom/actions/runs/42451740669) passed on `d0f5d92`;
+  merged as `6c48a7a`; final post-merge Linux Release CI
+  [42452083956](https://github.com/Vraxo/Formloom/actions/runs/42452083956) passed.
 - **Not claimed:** native Photino/WebView2 dialog, window lifecycle, resize or accessibility
   behaviour. Those are not exercised by headless tests or Linux CI, in this milestone or any
   earlier one.
