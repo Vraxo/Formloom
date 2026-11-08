@@ -40,7 +40,11 @@ internal static class VaseTulipDaisyGeometry
     private static TulipPlant PlaceTulip(TulipPlant plant, Vector2 targetBase, float headDrift)
     {
         Vector2 Transform(Vector2 point) => TransformPoint(point, plant.StemBase, plant.StemTop, targetBase, headDrift);
-        Vector2 TransformHead(Vector2 point) => targetBase + ((point - plant.StemBase) * PlantScale) + new Vector2(headDrift, 0f);
+        Vector2 TransformHead(Vector2 point)
+        {
+            var targetTop = Transform(plant.StemTop);
+            return targetTop + ((point - plant.StemTop) * PlantScale);
+        }
 
         var stem = TransformSegments(plant.Stem, Transform);
         var leaves = plant.Leaves
@@ -78,7 +82,11 @@ internal static class VaseTulipDaisyGeometry
     private static DaisyPlant PlaceDaisy(DaisyPlant plant, Vector2 targetBase, float headDrift)
     {
         Vector2 Transform(Vector2 point) => TransformPoint(point, plant.StemBase, plant.StemTop, targetBase, headDrift);
-        Vector2 TransformHead(Vector2 point) => targetBase + ((point - plant.StemBase) * PlantScale) + new Vector2(headDrift, 0f);
+        Vector2 TransformHead(Vector2 point)
+        {
+            var targetTop = Transform(plant.StemTop);
+            return targetTop + ((point - plant.StemTop) * PlantScale);
+        }
 
         var stem = TransformSegments(plant.Stem, Transform);
         var leaves = plant.Leaves
@@ -124,6 +132,8 @@ internal static class VaseTulipDaisyGeometry
         };
     }
 
+    // Preserve the source plants' vertical rim clearance: stems and leaves keep their original
+    // height, while TransformHead uniformly scales each bloom around its transformed stem top.
     private static Vector2 TransformPoint(
         Vector2 point,
         Vector2 originalBase,
@@ -135,8 +145,9 @@ internal static class VaseTulipDaisyGeometry
         var progress = rise > 0
             ? Math.Clamp((originalBase.Y - point.Y) / rise, 0f, 1f)
             : 0f;
-        var drift = new Vector2(headDrift * progress, 0f);
-        return targetBase + ((point - originalBase) * PlantScale) + drift;
+        var x = targetBase.X + ((point.X - originalBase.X) * PlantScale) + (headDrift * progress);
+        var y = targetBase.Y + (point.Y - originalBase.Y);
+        return new Vector2(x, y);
     }
 
     private static ImmutableArray<CubicSegment> TransformSegments(

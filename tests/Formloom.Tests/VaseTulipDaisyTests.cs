@@ -172,12 +172,14 @@ public sealed class VaseTulipDaisyTests
                     foreach (var leaf in pair.Tulip.Leaves)
                     {
                         Assert.True(TulipGeometry.DistanceToStem(pair.Tulip, leaf.Attachment) < 0.0015f);
+                        Assert.True(leaf.Attachment.Y < pair.MouthTop - 0.004f);
                         Assert.True(leaf.Tip.Y < leaf.Attachment.Y);
                     }
 
                     foreach (var leaf in pair.Daisy.Leaves)
                     {
                         Assert.True(DaisyGeometry.DistanceToStem(pair.Daisy, leaf.Attachment) < 0.0015f);
+                        Assert.True(leaf.Attachment.Y < pair.MouthTop - 0.004f);
                         Assert.True(leaf.Tip.Y < leaf.Attachment.Y);
                     }
                 }
