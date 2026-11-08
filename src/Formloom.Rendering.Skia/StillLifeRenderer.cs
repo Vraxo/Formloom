@@ -113,6 +113,24 @@ public static class StillLifeRenderer
         {
             pairTulip = new VaseFlower(pair.Vase, FlowerKind.Tulip, pair.TulipColor, pair.Tulip);
             pairDaisy = new VaseDaisy(pair.Vase, pair.DaisyAppearance, pair.Daisy);
+        }
+
+        // Paint the vase first and the complete plant geometry afterwards. In particular, a
+        // stem must cross the far rim as one path; splitting it between a clipped flower pass
+        // and a separately clipped mouth pass creates a visible seam at their contact.
+        DrawCeramic(
+            canvas,
+            scene,
+            ceramic,
+            silhouette,
+            skipShadows,
+            shadowsOnly,
+            skipBody,
+            entry.Depth == omittedDetailDepth,
+            beverage);
+
+        if (pairTulip is not null && pairDaisy is not null)
+        {
             DrawVaseFlower(canvas, scene, pairTulip, silhouette, entry.Depth == omittedDetailDepth);
             DrawVaseDaisy(canvas, scene, pairDaisy, silhouette, entry.Depth == omittedDetailDepth);
         }
@@ -124,35 +142,6 @@ public static class StillLifeRenderer
         {
             DrawVaseDaisy(canvas, scene, daisy, silhouette, entry.Depth == omittedDetailDepth);
         }
-
-        VaseStem? stem = null;
-        VaseStem? secondStem = null;
-        if (pair is not null)
-        {
-            stem = VaseStem.For(pairTulip!);
-            secondStem = VaseStem.For(pairDaisy!);
-        }
-        else if (tulip is not null)
-        {
-            stem = VaseStem.For(tulip);
-        }
-        else if (daisy is not null)
-        {
-            stem = VaseStem.For(daisy);
-        }
-
-        DrawCeramic(
-            canvas,
-            scene,
-            ceramic,
-            silhouette,
-            skipShadows,
-            shadowsOnly,
-            skipBody,
-            entry.Depth == omittedDetailDepth,
-            beverage,
-            stem,
-            secondStem);
     }
 
     private static StillLifeScene ForInstance(StillLifeScene scene, FruitInstance fruit, int? omittedDetailDepth = null) => scene with
@@ -312,9 +301,7 @@ public static class StillLifeRenderer
         bool shadowsOnly,
         bool skipBody,
         bool omitDetail,
-        BeverageKind? beverage = null,
-        VaseStem? stem = null,
-        VaseStem? secondStem = null)
+        BeverageKind? beverage = null)
     {
         var profile = CeramicForms.For(ceramic.Kind);
         var body = ceramic.Body;
@@ -419,27 +406,6 @@ public static class StillLifeRenderer
         paint.Style = SKPaintStyle.Fill;
         canvas.Restore();
 
-        // The stem goes in last, after even the vase's own contour: that contour runs along the
-        // far rim exactly where the stem enters, so anything painted under it is sliced in half
-        // by a line the stem is really in front of.
-        if (stem is { } planted)
-        {
-            // The near lip's half width, in canvas units: the profile's rim thickness is in the
-            // vessel's own space, so it has to be scaled by the body before it can inset the
-            // opening the stem disappears under.
-            var lip = new System.Numerics.Vector2(
-                profile.RimThickness * 1.1f * body.Size.X,
-                profile.RimThickness * 1.1f * body.Size.Y);
-            DrawStemInsideOpening(canvas, scene, planted, lip, material, paint);
-        }
-
-        if (secondStem is { } second)
-        {
-            var lip = new System.Numerics.Vector2(
-                profile.RimThickness * 1.1f * body.Size.X,
-                profile.RimThickness * 1.1f * body.Size.Y);
-            DrawStemInsideOpening(canvas, scene, second, lip, material, paint);
-        }
     }
 
     // A contained scene draws the bowl whole and then clips the fruit away wherever the
@@ -635,10 +601,9 @@ public static class StillLifeRenderer
         canvas.Restore();
     }
 
-    // A tulip in a vase. The flower is drawn before the vase and clipped to the half-plane
-    // above the mouth's top edge, so nothing can reach the exterior wall or the table. The
-    // mouth's paint then picks the stem up inside the opening (see DrawStemInsideOpening),
-    // which is the only place the planted vase differs from the empty one below the rim.
+    // The ceramic has already been painted. Draw the whole plant now so its stem crosses the
+    // far rim as one uninterrupted path, then add only the below-base continuation inside the
+    // opening. This avoids joining two independently clipped strokes at the point of contact.
     private static void DrawVaseFlower(
         SKCanvas canvas,
         StillLifeScene scene,
@@ -648,12 +613,9 @@ public static class StillLifeRenderer
     {
         var plant = flower.Plant;
         var material = TulipMaterial.For(flower.Color);
+        var ceramic = CeramicMaterial.For(flower.Vase, scene.Variation, omitDetail ? 0 : scene.SurfaceDetail);
         canvas.Save();
         canvas.Scale(1024, 1024);
-        using (var clip = CreateFlowerClip(flower.MouthTop))
-        {
-            canvas.ClipPath(clip, antialias: true);
-        }
 
         using var paint = new SKPaint { IsAntialias = true, Color = SKColors.White };
         DrawTulipStem(canvas, plant, material, silhouette, paint);
@@ -667,122 +629,100 @@ public static class StillLifeRenderer
             DrawTulipPetal(canvas, scene, petal, material, silhouette, omitDetail, paint);
         }
 
+        DrawStemExtensionInsideOpening(
+            canvas,
+            flower.OpeningCenter,
+            flower.OpeningRadius,
+            flower.Vase.Body.Size,
+            flower.Profile.RimThickness,
+            plant.StemBase,
+            plant.Stem,
+            plant.StemTop.Y,
+            plant.StemThickness,
+            material.StemLight,
+            material.StemBase,
+            material.StemEdge,
+            ceramic.CavityColor,
+            silhouette,
+            paint);
         canvas.Restore();
     }
 
-    // The stem's visible continuation inside the mouth, painted once, after the whole vase. The
-    // vase's own contour stroke runs along the far rim exactly where the stem enters, so a stem
-    // painted under it was sliced in half by a line it is really in front of. One clip does both
-    // jobs: the opening, inset by the near lip so the stem still disappears under it, plus a
-    // narrow column that carries the stem across the rim band. One paint means no seam. Both
-    // species enter a vase through this one path, so a daisy can never drift from the tulip's
-    // occlusion.
-    private static void DrawStemInsideOpening(
+    // The main stem is rendered once, on top of the far rim. This short continuation starts
+    // exactly at its typed base and is clipped to the inner mouth so it reaches under—but never
+    // paints over—the near lip. Keeping this as an interior-only extension makes the contact
+    // point independent of canvas size, ellipse tangent, and antialiasing.
+    private static void DrawStemExtensionInsideOpening(
         SKCanvas canvas,
-        StillLifeScene scene,
-        VaseStem stem,
-        System.Numerics.Vector2 lipHalf,
-        CeramicMaterial ceramic,
+        System.Numerics.Vector2 openingCenter,
+        System.Numerics.Vector2 openingRadius,
+        System.Numerics.Vector2 vaseSize,
+        float rimThickness,
+        System.Numerics.Vector2 stemBase,
+        ImmutableArray<CubicSegment> stemPath,
+        float stemTop,
+        float thickness,
+        SKColor stemLight,
+        SKColor stemColor,
+        SKColor stemEdge,
+        SKColor cavityColor,
+        bool silhouette,
         SKPaint paint)
     {
-        var center = stem.Center;
-        var radius = stem.Radius;
-        var top = stem.MouthTop;
-        var bottom = center.Y + radius.Y;
+        var lipHalf = new System.Numerics.Vector2(
+            rimThickness * 1.1f * vaseSize.X,
+            rimThickness * 1.1f * vaseSize.Y);
         var inset = new System.Numerics.Vector2(
-            MathF.Max(radius.X - lipHalf.X, radius.X * 0.6f),
-            MathF.Max(radius.Y - lipHalf.Y, radius.Y * 0.6f));
-        var reach = stem.Thickness * 2.5f;
+            MathF.Max(openingRadius.X - lipHalf.X, openingRadius.X * 0.6f),
+            MathF.Max(openingRadius.Y - lipHalf.Y, openingRadius.Y * 0.6f));
+        var end = new System.Numerics.Vector2(
+            stemBase.X,
+            openingCenter.Y + openingRadius.Y + (thickness * 3));
 
         canvas.Save();
-
-        // Step out of the vase's own 0..1 space and redraw in the canvas 0..1 space the flower
-        // pass uses, so the stem's width and direction carry over unchanged. The clip the vase
-        // already set is kept: clips live in device space, not in the matrix. The reset uses the
-        // scene's own size rather than the 1024 reference: the base transform is
-        // `width / 1024`, so a fixed 1024 here would paint the continuation at reference
-        // coordinates on every other canvas, leaving a stray stub and an empty mouth.
-        canvas.ResetMatrix();
-        canvas.Scale(scene.Width, scene.Height);
-
-        // Two clockwise subpaths in one path: the winding rule unions them, so the column and
-        // the opening form a single mask with no seam between them.
-        using (var mask = new SKPathBuilder())
+        using (var opening = CreateEllipsePath(openingCenter, inset))
         {
-            AppendEllipsePath(mask, center, inset);
-            mask.MoveTo(stem.StemBase.X - reach, top - 0.03f);
-            mask.LineTo(stem.StemBase.X + reach, top - 0.03f);
-            mask.LineTo(stem.StemBase.X + reach, center.Y);
-            mask.LineTo(stem.StemBase.X - reach, center.Y);
-            mask.Close();
-            using var clip = mask.Detach();
-            canvas.ClipPath(clip, antialias: true);
+            canvas.ClipPath(opening, antialias: true);
         }
 
-        using var path = CreateExtendedStemPath(stem.Path, new(stem.StemBase.X, bottom + (stem.Thickness * 3)));
+        using var builder = new SKPathBuilder();
+        builder.MoveTo(stemBase.X, stemBase.Y);
+        builder.LineTo(end.X, end.Y);
+        using var extension = builder.Detach();
         StrokeStem(
             canvas,
-            path,
-            stem.Thickness,
-            stem.StemBase.X,
-            stem.StemTop.Y,
-            stem.StemLight,
-            stem.StemColor,
-            stem.StemEdge,
-            silhouette: false,
+            extension,
+            thickness,
+            stemBase.X,
+            stemTop,
+            stemLight,
+            stemColor,
+            stemEdge,
+            silhouette,
             paint);
-        using var depth = SKShader.CreateLinearGradient(
-            new SKPoint(center.X, top),
-            new SKPoint(center.X, bottom),
-            [ceramic.CavityColor.WithAlpha(0), ceramic.CavityColor.WithAlpha(210)],
-            null, SKShaderTileMode.Clamp);
-        paint.Style = SKPaintStyle.Stroke;
-        paint.StrokeWidth = stem.Thickness;
-        paint.StrokeCap = SKStrokeCap.Round;
-        paint.Color = SKColors.White;
-        paint.Shader = depth;
-        canvas.DrawPath(path, paint);
-        paint.Shader = null;
-        paint.Style = SKPaintStyle.Fill;
-        paint.StrokeCap = SKStrokeCap.Butt;
-        canvas.Restore();
-    }
 
-    // The stem path with a straight continuation below its typed end, so the stroke runs under
-    // the near lip instead of stopping in the middle of the opening.
-    private static SKPath CreateExtendedStemPath(ImmutableArray<CubicSegment> path, System.Numerics.Vector2 end)
-    {
-        using var builder = new SKPathBuilder();
-        builder.MoveTo(path[0].Start.X, path[0].Start.Y);
-        foreach (var segment in path)
+        if (!silhouette)
         {
-            builder.CubicTo(
-                segment.Control1.X,
-                segment.Control1.Y,
-                segment.Control2.X,
-                segment.Control2.Y,
-                segment.End.X,
-                segment.End.Y);
+            var bottom = openingCenter.Y + openingRadius.Y;
+            using var depth = SKShader.CreateLinearGradient(
+                new SKPoint(openingCenter.X, openingCenter.Y - openingRadius.Y),
+                new SKPoint(openingCenter.X, bottom),
+                [cavityColor.WithAlpha(0), cavityColor.WithAlpha(210)],
+                null, SKShaderTileMode.Clamp);
+            paint.Style = SKPaintStyle.Stroke;
+            paint.StrokeWidth = thickness;
+            paint.StrokeCap = SKStrokeCap.Round;
+            paint.Color = SKColors.White;
+            paint.Shader = depth;
+            using var mainStem = CreateOpenPath(stemPath);
+            canvas.DrawPath(mainStem, paint);
+            canvas.DrawPath(extension, paint);
+            paint.Shader = null;
+            paint.Style = SKPaintStyle.Fill;
+            paint.StrokeCap = SKStrokeCap.Butt;
         }
 
-        builder.LineTo(end.X, end.Y);
-        return builder.Detach();
-    }
-
-    // The only hard edge the flower has is the mouth's own top tangent, taken from the vase
-    // profile: a profile-aware half-plane, not a screen-space rectangle around the bloom. It
-    // reaches two pixels into the opening so that it overlaps the vase's own stem pass instead
-    // of meeting it edge to edge, which would leave a one-row seam across the stem.
-    private static SKPath CreateFlowerClip(float mouthTop)
-    {
-        var top = mouthTop + 0.002f;
-        using var builder = new SKPathBuilder();
-        builder.MoveTo(0, top);
-        builder.LineTo(1, top);
-        builder.LineTo(1, -0.05f);
-        builder.LineTo(0, -0.05f);
-        builder.Close();
-        return builder.Detach();
+        canvas.Restore();
     }
 
     private static void DrawTulipStem(SKCanvas canvas, TulipPlant plant, TulipMaterial material, bool silhouette, SKPaint paint)
@@ -840,11 +780,9 @@ public static class StillLifeRenderer
         paint.StrokeCap = SKStrokeCap.Butt;
     }
 
-    // A daisy in a vase. Same envelope as the tulip: the flower is drawn before the vase and
-    // clipped to the half-plane above the mouth's top edge, and its stem is picked up inside the
-    // opening by the mouth's own pass. The head is drawn back to front — upper petals, lower
-    // petals, then the golden disk over their roots — so the bloom reads as one radial flower
-    // rather than as spokes around a button.
+    // A daisy in a vase. As with the tulip, the whole stem is drawn after the vessel so the
+    // far-rim contact is a single stroke. Petals are drawn back to front, then the golden disk
+    // closes their roots; the interior-only stem continuation is added last.
     private static void DrawVaseDaisy(
         SKCanvas canvas,
         StillLifeScene scene,
@@ -854,12 +792,9 @@ public static class StillLifeRenderer
     {
         var plant = flower.Plant;
         var material = DaisyMaterial.For(flower.Appearance);
+        var ceramic = CeramicMaterial.For(flower.Vase, scene.Variation, omitDetail ? 0 : scene.SurfaceDetail);
         canvas.Save();
         canvas.Scale(1024, 1024);
-        using (var clip = CreateFlowerClip(flower.MouthTop))
-        {
-            canvas.ClipPath(clip, antialias: true);
-        }
 
         using var paint = new SKPaint { IsAntialias = true, Color = SKColors.White };
         using (var stem = CreateOpenPath(plant.Stem))
@@ -888,6 +823,22 @@ public static class StillLifeRenderer
         }
 
         DrawDaisyDisk(canvas, plant.Bloom.Disk, material, silhouette, omitDetail, paint);
+        DrawStemExtensionInsideOpening(
+            canvas,
+            flower.OpeningCenter,
+            flower.OpeningRadius,
+            flower.Vase.Body.Size,
+            flower.Profile.RimThickness,
+            plant.StemBase,
+            plant.Stem,
+            plant.StemTop.Y,
+            plant.StemThickness,
+            material.StemLight,
+            material.StemBase,
+            material.StemEdge,
+            ceramic.CavityColor,
+            silhouette,
+            paint);
         canvas.Restore();
     }
 
@@ -1177,9 +1128,9 @@ public static class StillLifeRenderer
             DrawCupLiquid(canvas, profile, drink, accents, paint);
         }
 
-        // The thin far rim, then the thick near lip: the stem crosses the first one on the way
-        // in and goes under the second, which is why the stem is painted after this pass (see
-        // DrawCeramic) rather than between the two strokes.
+        // The thin far rim and thick near lip are both part of the vessel pass. Vase plants
+        // are drawn afterwards: their continuous stems cross the far edge, while the separate
+        // below-base extension is clipped just inside the near lip.
         paint.Style = SKPaintStyle.Stroke;
         paint.StrokeWidth = profile.RimThickness;
         paint.Color = material.LipColor.WithAlpha(225);
@@ -1388,50 +1339,5 @@ public static class StillLifeRenderer
         (byte)(color.Green * 0.42),
         (byte)(color.Blue * 0.44));
 
-    // Everything the mouth's pass needs from a flower's stem. Both species build it, so the
-    // tulip and the daisy enter the vase through exactly the same occlusion and continuation.
-    private readonly record struct VaseStem(
-        System.Numerics.Vector2 Center,
-        System.Numerics.Vector2 Radius,
-        float MouthTop,
-        System.Numerics.Vector2 StemBase,
-        System.Numerics.Vector2 StemTop,
-        float Thickness,
-        ImmutableArray<CubicSegment> Path,
-        SKColor StemLight,
-        SKColor StemColor,
-        SKColor StemEdge)
-    {
-        public static VaseStem For(VaseFlower flower)
-        {
-            var material = TulipMaterial.For(flower.Color);
-            return new(
-                flower.OpeningCenter,
-                flower.OpeningRadius,
-                flower.MouthTop,
-                flower.Plant.StemBase,
-                flower.Plant.StemTop,
-                flower.Plant.StemThickness,
-                flower.Plant.Stem,
-                material.StemLight,
-                material.StemBase,
-                material.StemEdge);
-        }
 
-        public static VaseStem For(VaseDaisy daisy)
-        {
-            var material = DaisyMaterial.For(daisy.Appearance);
-            return new(
-                daisy.OpeningCenter,
-                daisy.OpeningRadius,
-                daisy.MouthTop,
-                daisy.Plant.StemBase,
-                daisy.Plant.StemTop,
-                daisy.Plant.StemThickness,
-                daisy.Plant.Stem,
-                material.StemLight,
-                material.StemBase,
-                material.StemEdge);
-        }
-    }
 }
