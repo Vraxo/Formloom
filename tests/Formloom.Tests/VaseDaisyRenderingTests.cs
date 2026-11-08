@@ -43,8 +43,8 @@ public sealed class VaseDaisyRenderingTests
     {
         var data = new TheoryData<int, int>();
 
-        // 320 x 320 is the review sheet's cell size: it is where the mouth continuation was
-        // silently missing before the matrix reset used the scene's own size.
+        // 320 x 320 is the review sheet's cell size, so the tests exercise stem contact at the
+        // actual preview scale rather than assuming that full-resolution rendering is enough.
         foreach (var (width, height) in new[] { (64, 64), (256, 256), (320, 320), (640, 480), (2048, 1024), (4096, 1024) })
         {
             data.Add(width, height);
@@ -157,8 +157,8 @@ public sealed class VaseDaisyRenderingTests
             // are neither white petals nor a golden disk once the comparison is made against the
             // same empty vase, and the only spot below the mouth where the daisy may legitimately
             // change pixels is the opening, where its stem is carried under the near lip. So the
-            // scan runs below the mouth, outside the opening, and starts below the shared clip's
-            // own 0.002 overshoot at the tangent.
+            // scan runs below the mouth, outside the opening, beginning just below the tangent
+            // where the stem's complete path crosses the far rim into the cavity.
             var firstRow = (int)MathF.Ceiling(daisy.MouthTop * Canvas) + 2;
             var horizon = (int)MathF.Floor((float)scene.TableHorizon * Canvas);
             var leaked = 0;

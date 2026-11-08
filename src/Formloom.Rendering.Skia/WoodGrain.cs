@@ -6,13 +6,13 @@ namespace Formloom.Rendering.Skia;
 
 internal static class WoodGrain
 {
-    public static void Draw(SKCanvas canvas, StillLifeScene scene, float horizon)
+    public static void Draw(SKCanvas canvas, StillLifeScene scene, float horizon, bool antialias)
     {
         var random = Pcg32.ForStream(scene.Seed, "table.grain");
         var knotX = 790 + ((float)random.NextDouble() * 90);
         var knotY = horizon + ((1024 - horizon) * (0.45f + ((float)random.NextDouble() * 0.12f)));
         var strength = (float)scene.GrainStrength;
-        using var paint = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke };
+        using var paint = new SKPaint { IsAntialias = antialias, Style = SKPaintStyle.Stroke };
         var bandY = horizon - 40;
         while (bandY < 1080)
         {

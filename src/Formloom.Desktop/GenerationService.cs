@@ -6,7 +6,10 @@ namespace Formloom.Desktop;
 
 internal sealed class GenerationService(ILogger<GenerationService> logger)
 {
-    public async Task<DesktopGenerationResult> GenerateAsync(GenerationRequest request)
+    public Task<DesktopGenerationResult> GenerateAsync(GenerationRequest request) =>
+        GenerateAsync(request, new RenderOptions());
+
+    public async Task<DesktopGenerationResult> GenerateAsync(GenerationRequest request, RenderOptions? renderOptions)
     {
         try
         {
@@ -18,7 +21,7 @@ internal sealed class GenerationService(ILogger<GenerationService> logger)
                     return new DesktopGenerationResult(null, null, generated.Error);
                 }
 
-                var rendered = StillLifeRenderer.Render(generated.Scene!);
+                var rendered = StillLifeRenderer.Render(generated.Scene!, renderOptions);
                 var preview = "data:image/png;base64," + Convert.ToBase64String(rendered.PngBytes);
                 return new DesktopGenerationResult(rendered, preview, null);
             });

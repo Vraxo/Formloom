@@ -27,6 +27,11 @@
                     </div>
                     <input id="variation" type="range" min="0" max="1" step="0.01" @bind="Session.Variation" @bind:event="oninput" />
                     <p class="help">Subtle at the left. More organic at the right.</p>
+                    <div class="render-option">
+                        <input id="antialiasing" type="checkbox" @bind="Session.Antialiasing" />
+                        <label for="antialiasing">Smooth edges (antialiasing)</label>
+                    </div>
+                    <p class="help">On by default. Turn off edge smoothing for pixel inspection; soft shadow blur is unchanged. Generate again to apply.</p>
                     <button class="primary" type="submit">@(Session.Generating ? "Generating…" : "Generate image") <span aria-hidden="true">↗</span></button>
                 </fieldset>
             </form>
@@ -48,7 +53,7 @@
                 }
             </div>
             <div class="preview-footer">
-                <p>@(Session.Image is null ? "Your first study is waiting." : $"Seed {Session.RenderedSeed} · Variation {Session.RenderedVariation:P0}")</p>
+                <p>@(Session.Image is null ? "Your first study is waiting." : $"Seed {Session.RenderedSeed} · Variation {Session.RenderedVariation:P0} · AA {Session.RenderedAntialiasingStatus}")</p>
                 <button type="button" class="secondary" disabled="@(Session.Image is null || Session.IsBusy)" @onclick="Session.SaveAsync">@(Session.Saving ? "Saving…" : "Save PNG")</button>
             </div>
         </section>

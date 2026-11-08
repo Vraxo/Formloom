@@ -1,5 +1,6 @@
 using Formloom.Core;
 using Formloom.Desktop;
+using Formloom.Rendering.Skia;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
@@ -18,6 +19,25 @@ public sealed class GenerationServiceTests
         Assert.Equal("data:image/png;base64," + Convert.ToBase64String(result.Image.PngBytes), result.PreviewUrl);
     }
 
+    [Fact]
+    public async Task OptionalAntialiasingSettingChangesOnlyRenderedPixels()
+    {
+        var service = new GenerationService(NullLogger<GenerationService>.Instance);
+        var request = new GenerationRequest("a green apple on a wooden table", Width: 64, Height: 64);
+        var smooth = await service.GenerateAsync(request);
+        var hardEdged = await service.GenerateAsync(request, new RenderOptions(Antialiasing: false));
+
+        Assert.Null(smooth.Error);
+        Assert.Null(hardEdged.Error);
+        var smoothImage = Assert.IsType<RenderedImage>(smooth.Image);
+        var hardEdgedImage = Assert.IsType<RenderedImage>(hardEdged.Image);
+        Assert.Equal(smoothImage.Subject, hardEdgedImage.Subject);
+        Assert.Equal(smoothImage.Width, hardEdgedImage.Width);
+        Assert.Equal(smoothImage.Height, hardEdgedImage.Height);
+        Assert.NotEqual(smoothImage.PngBytes, hardEdgedImage.PngBytes);
+        Assert.Equal($"data:image/png;base64,{Convert.ToBase64String(hardEdgedImage.PngBytes)}", hardEdged.PreviewUrl);
+    }
+
     [Theory]
     [InlineData("a green pear on a wooden table", "pear")]
     [InlineData("a yellow pear on a wooden table", "pear")]
@@ -30,7 +50,7 @@ public sealed class GenerationServiceTests
         Formloom.Rendering.Skia.RenderedImage? saved = null;
         ulong savedSeed = 0;
         var session = new DesktopSession(
-            generator.GenerateAsync,
+            (request, options) => generator.GenerateAsync(request, options),
             (image, seed) =>
             {
                 saved = image;

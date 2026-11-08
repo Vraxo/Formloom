@@ -134,6 +134,8 @@ public sealed class VaseTulipDaisyRenderingTests
 
         AssertStemVisibleAboveRim(planted, empty, pair.Tulip, pair.MouthTop, name + " tulip");
         AssertStemVisibleAboveRim(planted, empty, pair.Daisy, pair.MouthTop, name + " daisy");
+        AssertStemContinuousThroughMouth(planted, empty, pair, pair.Tulip, name + " tulip");
+        AssertStemContinuousThroughMouth(planted, empty, pair, pair.Daisy, name + " daisy");
         AssertStemContinuationInsideOpening(planted, empty, pair, pair.Tulip, name + " tulip");
         AssertStemContinuationInsideOpening(planted, empty, pair, pair.Daisy, name + " daisy");
         AssertChangedPixelsStayOnThePlantsOrInsideTheMouth(planted, empty, pair, name);
@@ -203,6 +205,13 @@ public sealed class VaseTulipDaisyRenderingTests
         using var bitmap = Decode(image.PngBytes);
         Assert.Equal(width, bitmap.Width);
         Assert.Equal(height, bitmap.Height);
+        if (Math.Min(width, height) >= Cell)
+        {
+            var pair = scene.VaseTulipDaisy!;
+            using var empty = Decode(StillLifeRenderer.Render(EmptyVase(scene)).PngBytes);
+            AssertStemContinuousThroughMouth(bitmap, empty, pair, pair.Tulip, $"{width}x{height} tulip", width, height);
+            AssertStemContinuousThroughMouth(bitmap, empty, pair, pair.Daisy, $"{width}x{height} daisy", width, height);
+        }
     }
 
     [Theory]
@@ -227,6 +236,14 @@ public sealed class VaseTulipDaisyRenderingTests
         var keep = ExportArtifacts.Keeps(stem, Canonical, RetainedReviewStems);
         var directory = AppContext.BaseDirectory;
         var pair = scene.VaseTulipDaisy!;
+        var emptyTimer = Stopwatch.StartNew();
+        var empty = StillLifeRenderer.Render(EmptyVase(scene));
+        emptyTimer.Stop();
+        using var plantedBitmap = Decode(rendered.PngBytes);
+        using var emptyBitmap = Decode(empty.PngBytes);
+        AssertStemContinuousThroughMouth(plantedBitmap, emptyBitmap, pair, pair.Tulip, name + " tulip");
+        AssertStemContinuousThroughMouth(plantedBitmap, emptyBitmap, pair, pair.Daisy, name + " daisy");
+
         var emptyMilliseconds = (double?)null;
         var tulipMilliseconds = (double?)null;
         var daisyMilliseconds = (double?)null;
@@ -235,9 +252,6 @@ public sealed class VaseTulipDaisyRenderingTests
         var daisyBytes = (int?)null;
         if (name == "red-blue")
         {
-            var emptyTimer = Stopwatch.StartNew();
-            var empty = StillLifeRenderer.Render(EmptyVase(scene));
-            emptyTimer.Stop();
             emptyMilliseconds = emptyTimer.Elapsed.TotalMilliseconds;
             emptyBytes = empty.PngBytes.Length;
 
@@ -441,6 +455,8 @@ public sealed class VaseTulipDaisyRenderingTests
 
         AssertStemVisibleAboveRim(planted, empty, pair.Tulip, pair.MouthTop, name + " tulip", Cell, Cell);
         AssertStemVisibleAboveRim(planted, empty, pair.Daisy, pair.MouthTop, name + " daisy", Cell, Cell);
+        AssertStemContinuousThroughMouth(planted, empty, pair, pair.Tulip, name + " tulip", Cell, Cell);
+        AssertStemContinuousThroughMouth(planted, empty, pair, pair.Daisy, name + " daisy", Cell, Cell);
     }
 
     private static void AssertStemVisibleAboveRim(
@@ -497,6 +513,158 @@ public sealed class VaseTulipDaisyRenderingTests
 
         var expectedRows = Math.Max(5, (last - first + 1) / 3);
         Assert.True(visibleRows >= expectedRows, $"{name} stem is not visible above the rim: {visibleRows}/{last - first + 1} rows");
+    }
+
+    private static void AssertStemContinuousThroughMouth(
+        SKBitmap planted,
+        SKBitmap empty,
+        VaseTulipDaisy pair,
+        TulipPlant plant,
+        string name,
+        int width = Canvas,
+        int height = Canvas) =>
+        AssertStemContinuousThroughMouthCore(
+            planted,
+            empty,
+            plant.Stem,
+            plant.StemBase,
+            plant.StemThickness,
+            pair.OpeningCenter,
+            pair.OpeningRadius,
+            pair.MouthTop,
+            name,
+            width,
+            height);
+
+    private static void AssertStemContinuousThroughMouth(
+        SKBitmap planted,
+        SKBitmap empty,
+        VaseTulipDaisy pair,
+        DaisyPlant plant,
+        string name,
+        int width = Canvas,
+        int height = Canvas) =>
+        AssertStemContinuousThroughMouthCore(
+            planted,
+            empty,
+            plant.Stem,
+            plant.StemBase,
+            plant.StemThickness,
+            pair.OpeningCenter,
+            pair.OpeningRadius,
+            pair.MouthTop,
+            name,
+            width,
+            height);
+
+    private static void AssertStemContinuousThroughMouthCore(
+        SKBitmap planted,
+        SKBitmap empty,
+        ImmutableArray<CubicSegment> segments,
+        Vector2 stemBase,
+        float thickness,
+        Vector2 openingCenter,
+        Vector2 openingRadius,
+        float mouthTop,
+        string name,
+        int width,
+        int height)
+    {
+        var extension = InteriorStemExtension(segments, stemBase, thickness, openingCenter, openingRadius);
+        var completeStem = segments.Add(extension);
+        var baseTangent = stemBase - segments[0].Control1;
+        var continuationTangent = extension.Control1 - extension.Start;
+        Assert.True(
+            Vector2.Dot(Vector2.Normalize(baseTangent), Vector2.Normalize(continuationTangent)) > 0.999f,
+            $"{name} interior continuation does not follow the stem's base tangent");
+
+        var lipInner = LipInnerRowAlongStem(empty, completeStem, openingCenter, openingRadius, width, height);
+        var first = Math.Max(0, (int)MathF.Floor((mouthTop - 0.02f) * height));
+        var last = Math.Min(height - 1, lipInner - 2);
+        var pixelReach = Math.Max(2, (int)MathF.Ceiling(thickness * width / 2) + 2);
+        Assert.True(last >= first, $"{name} has no pixels available for the mouth-continuity check");
+
+        for (var y = first; y <= last; y++)
+        {
+            var expectedX = StemColumn(completeStem, (y + 0.5f) / height, width);
+            var visible = false;
+            for (var offset = -pixelReach; offset <= pixelReach; offset++)
+            {
+                var x = expectedX + offset;
+                if (x < 0 || x >= width || Delta(planted.GetPixel(x, y), empty.GetPixel(x, y)) == 0)
+                {
+                    continue;
+                }
+
+                if ((y + 0.5f) / height > mouthTop + 0.01f)
+                {
+                    Assert.True(
+                        InsideEllipse(openingCenter, openingRadius, x, y, width, height, 2),
+                        $"{name} stem leaked onto the vase wall at {x},{y}");
+                }
+
+                visible = true;
+                break;
+            }
+
+            Assert.True(visible, $"{name} stem has a gap at its vase contact or inside the opening on row {y}");
+        }
+
+        if (width >= 4096)
+        {
+            var probeY = Math.Min(
+                (int)MathF.Round((stemBase.Y + ((extension.End.Y - stemBase.Y) * 0.15f)) * height),
+                lipInner - 3);
+            var expectedCenter = StemColumn(completeStem, (probeY + 0.5f) / height, width);
+            var weightedX = 0d;
+            var totalWeight = 0d;
+            for (var x = expectedCenter - pixelReach; x <= expectedCenter + pixelReach; x++)
+            {
+                if (x >= 0 && x < width)
+                {
+                    var delta = Delta(planted.GetPixel(x, probeY), empty.GetPixel(x, probeY));
+                    weightedX += (x + 0.5d) * delta;
+                    totalWeight += delta;
+                }
+            }
+
+            Assert.True(totalWeight > 0, $"{name} tangent probe is not visible at {probeY}");
+            var renderedCenter = weightedX / totalWeight;
+            Assert.True(
+                Math.Abs(renderedCenter - expectedCenter) <= 2.5,
+                $"{name} interior continuation turns abruptly: expected center {expectedCenter}, rendered {renderedCenter:0.0}");
+        }
+
+        var buriedY = Math.Min(height - 1, lipInner + 3);
+        var buriedX = StemColumn(completeStem, (buriedY + 0.5f) / height, width);
+        for (var offset = -pixelReach; offset <= pixelReach; offset++)
+        {
+            var x = buriedX + offset;
+            if (x >= 0 && x < width)
+            {
+                Assert.Equal(0, Delta(planted.GetPixel(x, buriedY), empty.GetPixel(x, buriedY)));
+            }
+        }
+    }
+
+    // Mirror the renderer's tangent-matched mouth extension so row checks follow the expected
+    // curve below StemBase instead of assuming an artificial vertical stub.
+    private static CubicSegment InteriorStemExtension(
+        ImmutableArray<CubicSegment> segments,
+        Vector2 stemBase,
+        float thickness,
+        Vector2 openingCenter,
+        Vector2 openingRadius)
+    {
+        var end = new Vector2(stemBase.X, openingCenter.Y + openingRadius.Y + (thickness * 3));
+        var length = end.Y - stemBase.Y;
+        var tangent = stemBase - segments[0].Control1;
+        var downward = tangent.LengthSquared() > 1e-10f ? Vector2.Normalize(tangent) : Vector2.UnitY;
+        return new(
+            stemBase,
+            stemBase + (downward * (length * 0.4f)),
+            end - new Vector2(0, length * 0.3f),
+            end);
     }
 
     private static void AssertStemContinuationInsideOpening(
@@ -749,6 +917,36 @@ public sealed class VaseTulipDaisyRenderingTests
         var previous = Brightness(empty.GetPixel(column, centerRow));
         for (var y = centerRow + 1; y <= bottom; y++)
         {
+            var here = Brightness(empty.GetPixel(column, y));
+            if (here - previous > best)
+            {
+                best = here - previous;
+                row = y;
+            }
+
+            previous = here;
+        }
+
+        return row;
+    }
+
+    private static int LipInnerRowAlongStem(
+        SKBitmap empty,
+        ImmutableArray<CubicSegment> stem,
+        Vector2 center,
+        Vector2 radius,
+        int width,
+        int height)
+    {
+        var centerRow = Math.Clamp((int)MathF.Round(center.Y * height), 0, height - 1);
+        var bottom = Math.Clamp((int)MathF.Round((center.Y + radius.Y) * height), 0, height - 1);
+        var firstColumn = Math.Clamp(StemColumn(stem, (centerRow + 0.5f) / height, width), 0, width - 1);
+        var previous = Brightness(empty.GetPixel(firstColumn, centerRow));
+        var best = 0;
+        var row = bottom;
+        for (var y = centerRow + 1; y <= bottom; y++)
+        {
+            var column = Math.Clamp(StemColumn(stem, (y + 0.5f) / height, width), 0, width - 1);
             var here = Brightness(empty.GetPixel(column, y));
             if (here - previous > best)
             {

@@ -19,7 +19,7 @@ public sealed class CupLiquidPipelineTests
         RenderedImage? saved = null;
         ulong savedSeed = 0;
         var session = new DesktopSession(
-            generator.GenerateAsync,
+            (request, options) => generator.GenerateAsync(request, options),
             (image, seed) =>
             {
                 saved = image;
@@ -69,7 +69,7 @@ public sealed class CupLiquidPipelineTests
     {
         var generator = new GenerationService(NullLogger<GenerationService>.Instance);
         var session = new DesktopSession(
-            generator.GenerateAsync,
+            (request, options) => generator.GenerateAsync(request, options),
             (_, _) => Task.FromResult(new SaveResult(false, "Saved")),
             NullLogger<DesktopSession>.Instance);
 

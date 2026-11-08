@@ -15,11 +15,11 @@ The arrangement consists of exactly:
 
 Both stems must enter the same vase opening. Their visible paths must be distinct and physically plausible; the two blooms must not collide, merge into an unreadable mass, or look like separate flowers pasted over the background.
 
-The existing single-tulip and single-daisy scenes must remain unchanged. Do not add a new flower species, vase type, scene object, arbitrary bouquet editor, or general botanical framework.
+The existing single-tulip and single-daisy prompts, geometry generators, and save paths remain supported. Their stem/vase contact pixels are intentionally corrected by the shared renderer because the same seam can recur outside the mixed arrangement. Do not add a new flower species, vase type, scene object, arbitrary bouquet editor, or general botanical framework.
 
 ## Current status
 
-Implementation, focused tests, the curated Phase 9 export matrix, README and handoff are in PR [#52](https://github.com/Vraxo/Formloom/pull/52). Linux Release run [42493291154](https://github.com/Vraxo/Formloom/actions/runs/42493291154) passed on documentation head `67f3550`; implementation/artifact commit `46ae3d8` also passed run [42491100329](https://github.com/Vraxo/Formloom/actions/runs/42491100329). Both test results and `procedural-preview` uploaded. The 1280 × 960 review sheet and ten full-size samples are available in the CI artifact, but human visual review and numerical timing read-back remain pending. PR #52 is open; do not merge without explicit user approval. The post-merge CI gate is therefore not yet applicable.
+Phase 9 PR [#52](https://github.com/Vraxo/Formloom/pull/52) merged as `1311f91e582554c2601c0b9476265a1a62ab123d`; post-merge Linux Release run [42493951766](https://github.com/Vraxo/Formloom/actions/runs/42493951766) passed. The user's review first found the stems severed at the vase opening; after the vase-first contact fix they reported a sudden downward turn at both interior stem ends. That turn came from the straight below-base extension and is not intended. Follow-up PR [#53](https://github.com/Vraxo/Formloom/pull/53) now uses a tangent-matched cubic continuation. Source commit `ed6c204` and workflow-restored head `54f7f4a` passed CI runs [42502794944](https://github.com/Vraxo/Formloom/actions/runs/42502794944) and [42502940039](https://github.com/Vraxo/Formloom/actions/runs/42502940039); documentation head `ccda66a` also passed [42503292243](https://github.com/Vraxo/Formloom/actions/runs/42503292243). Build, full tests, and preview upload succeeded. A temporary diagnostic step was used for one test run to locate a too-low pixel probe, then removed; no permanent workflow change remains. The user supplied the updated red/cream, seed-42 image; visual inspection shows continuous stems with a smooth tangent into the opening and near-lip occlusion for this sample. The other color/glaze and variation samples and timing sidecars remain unreviewed; direct artifact downloads are blocked by the sandbox host allowlist. Do not merge PR #53 without explicit user approval.
 
 ## Starting point
 
@@ -33,7 +33,7 @@ Implementation, focused tests, the curated Phase 9 export matrix, README and han
 - Source projects live under `src/`; tests live under `tests/`.
 - Stack: .NET 10 / C# 14, PhotinoX.Blazor desktop, SkiaSharp CPU rendering, xUnit v3, existing Linux Release CI.
 - Existing flower content is represented by two deliberately species-specific typed vase contents: `VaseFlower` for tulips and `VaseDaisy` for daisies. They share only shape-agnostic vase-mouth and stem-rendering helpers.
-- The existing renderer uses normalized geometry, vase-profile-aware stem attachment, bounded named random streams, explicit flower clipping, and a dedicated continuation pass for stems inside the vase opening.
+- The renderer uses normalized geometry, vase-profile-aware stem attachment, bounded named random streams, and a shared vase-first plant pass: each full stem crosses the far rim continuously, while a tangent-matched below-base continuation is clipped inside the near lip.
 - Inspect the actual current code before choosing exact types, files, or draw order. Names and paths in this document are orientation, not permission to assume implementation details have stayed fixed.
 
 ## Phase 8 prerequisite
@@ -92,7 +92,7 @@ The supported order is intentionally fixed: tulip first, then daisy, followed by
 - Keep Core independent of Skia, pixels, bitmaps, native resources, and desktop/UI types.
 - Reuse the existing prompt → Core → scene construction → Skia renderer → PNG/save path.
 - Preserve all existing prompts, parser contracts, subject tokens, safe filenames, image paths, and desktop session semantics.
-- Preserve the accepted visual appearance and deterministic output of all existing single-flower scenes, especially the tulip and daisy.
+- Preserve deterministic flower geometry and accepted species/material appearance. The shared renderer may intentionally change only vase/flower contact pixels and the short interior stem continuation to eliminate the recurring seam.
 - Add no package, project, framework, CI runner, permanent workflow job, downloaded image, stock texture, or external asset.
 - Do not introduce a generic bouquet/plant framework, arbitrary flower collection, unrestricted composition engine, universal contents/relationship abstraction, scene graph, object registry, reflection-based dispatch, physics engine, or 3D renderer.
 - Model the mixed arrangement explicitly and narrowly: one existing vase, one tulip, one daisy, fixed species/quantity, and one authored composition.
@@ -110,7 +110,7 @@ The supported order is intentionally fixed: tulip first, then daisy, followed by
 - [x] Inspect the current `VaseFlower`, `VaseDaisy`, `TulipPlant`, `DaisyPlant`, `VaseMouth`, and `VaseStem` representations. The two standalone content records each hold the same scene vase plus their species-specific plant; `VaseStem` is a renderer-only projection consumed by the single-stem mouth pass.
 - [x] Trace existing standalone tulip and daisy prompts through parser, scene construction, validation, rendering, desktop session, preview metadata, and PNG save. Flow is exact parser → `SceneGenerator` → typed vase content/`SceneValidator` → `StillLifeRenderer` → `GenerationService` → `DesktopSession` preview/save metadata → whitelisted `PngSaveService` token.
 - [x] Inspect the precise tulip and daisy geometry bounds and their measured bloom/stem/leaf dimensions for the default vase. Canonical seed 42/variation 0.35 sidecars: shared mouth center (0.49615, 0.22116), radii (0.04801, 0.02822). Tulip stem base-to-top 0.08129, thickness 0.00600; bloom 0.07686 × 0.08354; bounds 0.10306 × 0.16889; leaves about 0.05584 × 0.01240 and 0.05156 × 0.00981. Daisy stem base-to-top 0.13852, thickness 0.00408; bloom 0.10017 × 0.08614, disk 0.03371 × 0.02899; bounds 0.13893 × 0.19914; leaves about 0.07312 × 0.02194 and 0.06361 × 0.01908. All values are normalized scene units; per-leaf sizes derived from the canonical seeded geometry formulas.
-- [x] Inspect the starting flower draw order, flower clipping planes, vase body/rim occlusion, and stem continuation mask. At the Phase 9 starting point, `DrawCeramic` accepted one `VaseStem?`; the final pair path draws the tulip and daisy before the vase, then passes both stems through the existing lip-inset opening/column continuation mask.
+- [x] Inspect the original flower draw order, clipping planes, vase body/rim occlusion, and continuation mask. Phase 9 originally drew plants before the vase and split stem geometry across a mouth pass; follow-up PR #53 draws the ceramic first, then each full plant/stem, and uses a tangent-matched below-base extension clipped inside the near lip.
 - [x] Inspect the random-stream derivation and prove how each standalone species remains independent of vase glaze and the other species. Vase form uses `vase.form`; tulip uses `tulip.stem`, `tulip.leaves`, `tulip.bloom`; daisy uses `daisy.stem`, `daisy.leaves`, `daisy.petals`, `daisy.disk`. Color/glaze are material inputs; existing tests assert glaze independence and stream non-perturbation.
 - [x] Inspect current prompt tests, renderer pixel/property tests, desktop pipeline tests, preview exporter, manifest, and artifact naming conventions. The starting retention policy kept one canonical full-size sample per family; Phase 9 extends the shared helper to retain its ten explicitly curated review samples, while exhaustive exports for other families remain behind `FORMFLOOM_EXPORT_ALL=1`.
 - [x] Inspect the Phase 8 visual sheets and known limitations so the mixed arrangement addresses actual composition constraints rather than assumptions. The two 1280 × 640, 4×2 fixed-build sheets show both centered single blooms clear above the rim; the daisy head/bounds are wider and taller than the tulip. The vase opening is only 0.096 scene units wide, so layout must keep two bases separately inside it while the heads diverge above; the accepted variation-0 crowded leaf band and tilted high-variation mouth are cosmetic limits, not regressions.
@@ -166,9 +166,9 @@ The supported order is intentionally fixed: tulip first, then daisy, followed by
 ### 3. Render both flowers with correct depth and vase occlusion
 
 - [x] Extend the existing CPU Skia renderer and retain the current renderer entry point and PNG encoder.
-- [x] Draw both plants behind the vase body/rim using the established profile-aware flower clipping convention.
+- [x] Draw each complete plant after the vase so the full stem crosses the far rim continuously; follow the stem's reverse base tangent into the mouth and clip only that smooth below-base continuation inside the near lip.
 - [x] Preserve the existing vase body, cavity, far rim, near lip, contour, foot, glaze, highlights, and shadow exactly outside intended stem/mouth overlap.
-- [x] Render both stems entering the same mouth, with each continuation clipped to the opening and correctly darkened by the vase cavity.
+- [x] Render both stems continuously through the far-rim contact into the same mouth, shade the interior segment with the cavity gradient, and continue smoothly along the reverse base tangent before clipping behind the near lip.
 - [x] Ensure both stems remain visible inside the opening without being merged into one thick stroke.
 - [x] Preserve the near-lip occlusion: neither stem may paint across the front lip or leak onto the vase exterior.
 - [x] Choose and document a deterministic per-plant draw/depth order so the stems, leaves, tulip petals, daisy petals, and disk overlap predictably.
@@ -225,7 +225,7 @@ The supported order is intentionally fixed: tulip first, then daisy, followed by
 - [x] Test vase glaze independence for both plant geometries.
 - [x] Test that red versus yellow changes only tulip colour/material, not daisy appearance or placement.
 - [x] Test that new arrangement streams do not perturb standalone tulip or daisy geometry.
-- [x] Add a single-flower regression test using the pre-Phase-9 canonical output or a reproducible before/after comparison to prove standalone tulip and daisy outputs remain unchanged.
+- [x] Preserve standalone tulip/daisy geometry generation and prompts. Follow-up PR #53 intentionally updates their shared stem/vase contact pixels; standalone and mixed renderer tests now assert continuous contact, wall containment, and near-lip disappearance rather than claiming byte-identical pre-fix images.
 - [x] Retain all existing parser, Core, geometry, validation, and relationship regression tests.
 
 ### 6. Add renderer pixel/invariant and desktop integration tests
@@ -284,7 +284,7 @@ The supported order is intentionally fixed: tulip first, then daisy, followed by
 - [x] Update the README current-capability section to mention one tulip plus one daisy sharing one existing ceramic vase.
 - [x] Document the exact four mixed-arrangement prompts and their strict grammar.
 - [x] Document the fixed composition: one red/yellow tulip, one white/golden daisy, two stems, four leaves, and one blue/cream vase.
-- [x] Document that single-tulip and single-daisy prompts remain supported independently and unchanged.
+- [x] Document that single-tulip and single-daisy prompts and save paths remain supported; the shared stem/vase contact rendering receives the same correction as the mixed arrangement.
 - [x] Document that same-species pairs, extra flowers, arbitrary bouquets, new species, and other containers remain unsupported.
 - [x] Update the architecture overview only as much as needed to explain the narrow mixed arrangement and its renderer ordering.
 - [x] Add `docs/mixed-vase-arrangement-handoff.md` with starting/ending commits, Phase 8 prerequisite evidence, design decisions, typed Core model, normalized layout, stem attachment, draw order, grammar, subject tokens, tests, CI evidence, artifacts, timing observations, visual-review status, and known limitations.
@@ -293,33 +293,33 @@ The supported order is intentionally fixed: tulip first, then daisy, followed by
 - [x] Leave blocked, unexecuted, or human-review tasks unchecked and explain the blocker/evidence beside them.
 - [x] Run the established solution restore, Release warnings-as-errors build, and full solution test workflow through the existing CI gate.
 - [x] Confirm all existing and new test projects pass on the latest PR CI run.
-- [ ] Confirm the post-merge Linux Release CI run passes before closing the milestone.
+- [x] Confirm Phase 9 PR #52's post-merge Linux Release run [42493951766](https://github.com/Vraxo/Formloom/actions/runs/42493951766) passed; leave follow-up PR #53's post-merge run pending explicit approval and merge.
 - [x] Keep ordinary CI Release-only; do not add a permanent Debug job, Windows runner, package, project, or workflow solely for this milestone.
 - [x] Do not claim native Photino/WebView2 dialog, window-lifecycle, resize, or accessibility testing from headless tests or Linux CI.
-- [ ] Record exact PR, merge commit, and passing CI run URLs in the handoff.
+- [x] Record the Phase 9 PR #52 merge commit/run and follow-up PR #53 head/CI run in the handoff; the follow-up merge commit/run remain pending approval.
 - [x] Reconcile the checklist with the handoff and actual changed files; identify anything authored but not executed.
 - [x] Stop at the acceptance checkpoint below and report implementation decisions, test/CI evidence, visual-review status, artifact location, timing observations, and known limitations.
 
-**Pending gates:** human review of `procedural-preview` (sheet `formloom-vase-tulip-daisy-sheet.png`, 1280 × 960, 4 columns × 3 rows, plus ten full-size PNG/silhouette pairs) and reading the timing sidecars; PR #52 remains open, so its post-merge run and exact merge commit are not available. Recorded green docs/checklist PR check: [42493291154](https://github.com/Vraxo/Formloom/actions/runs/42493291154) on documentation head `67f3550`; the live PR status at [#52](https://github.com/Vraxo/Formloom/pull/52) tracks any later documentation-only evidence update.
+**Pending gates:** visually review the remaining tangent-corrected color/glaze and variation samples, and read the timing sidecars. The uploaded red/cream seed-42 sample has been visually reviewed and passes the contact/tangent check; direct artifact downloads remain blocked by the sandbox's Azure blob host restriction. PR #52 is merged as `1311f91` with post-merge run [42493951766](https://github.com/Vraxo/Formloom/actions/runs/42493951766) green. PR #53 remains open; its latest Linux Release run [42503292243](https://github.com/Vraxo/Formloom/actions/runs/42503292243) is green, but do not merge without explicit user approval. The PR #53 post-merge gate is therefore not yet applicable.
 
 ## Acceptance checklist
 
 - [x] Phase 8 is verified complete and its post-merge Linux Release CI evidence is recorded.
-- [x] All existing single-flower and non-flower prompts continue working unchanged.
+- [x] Existing single-flower and non-flower prompts, geometry generation, and save paths remain supported; only the intended vase/flower contact pixels are corrected in the shared renderer.
 - [x] All four mixed tulip-and-daisy prompts parse and generate through the existing desktop prompt-to-PNG path.
 - [x] Core represents one explicit mixed arrangement associated with one existing vase, not three unrelated scene entries or an arbitrary flower collection.
 - [x] The arrangement contains exactly one tulip, one daisy, two stems, and four leaves.
 - [x] Both stems fit and enter the same vase opening naturally.
-- [ ] The two blooms remain distinct, recognizable, and balanced at normal viewing size. **Human visual review remains pending.**
-- [ ] The daisy retains its white radial petals and golden disk; the tulip retains its red/yellow cupped-petal appearance. **Pixel invariants pass, but the aesthetic read remains pending visual review.**
-- [x] The vase mouth/rim/body correctly occludes both hidden stem sections; neither stem leaks onto the exterior vase wall.
+- [ ] The two blooms remain distinct, recognizable, and balanced at normal viewing size across all cases. **The uploaded red/cream seed-42 sample reads clearly; review of the full matrix remains pending.**
+- [ ] The daisy retains its white radial petals and golden disk; the tulip retains its red/yellow cupped-petal appearance across all combinations. **The uploaded red/cream seed-42 sample passes this spot-check; the complete aesthetic review remains pending.**
+- [x] Automated pixel checks confirm both stems remain continuous through the opening, stay off the vase wall, and disappear behind the near lip; the uploaded red/cream seed-42 sample also visually confirms a smooth tangent at the contact, with broader sample review still pending.
 - [x] Arrangement geometry is deterministic for identical inputs and bounded across seeds, variation, and supported output sizes.
-- [x] New arrangement randomness does not perturb standalone tulip/daisy geometry or any older scene output.
+- [x] New arrangement randomness does not perturb standalone tulip/daisy geometry; the shared renderer's only intentional visual correction is at vase/flower stem contact, with pixel tests bounding changes to the plants and mouth.
 - [x] The mixed arrangement adds no unintended tabletop shadow, vase-body repainting, exterior leakage, or canvas-edge collision.
 - [x] Automated Core/parser, geometry, renderer invariant, desktop integration, and all existing regression tests pass.
 - [x] Generated full-resolution samples and a correctly mapped review sheet are available; visual review is honestly recorded as passed or pending.
 - [x] README and handoff accurately document supported prompts, architecture, evidence, exclusions, and limitations.
-- [ ] The completed change passes the repository's Linux Release CI gate and post-merge run. **PR #52 is still open: the PR Linux Release gate is green on the implementation/artifact commit, but the post-merge run cannot exist until approval and merge.**
+- [ ] The follow-up change passes its post-merge Linux Release run. **PR #53's latest Linux Release gate [42503292243](https://github.com/Vraxo/Formloom/actions/runs/42503292243) is green; PR #53 is unmerged, so its post-merge run must wait for explicit approval and merge. Phase 9 PR #52's post-merge run [42493951766](https://github.com/Vraxo/Formloom/actions/runs/42493951766) already passed.**
 - [x] The agent stops and reports implementation decisions, actual test/CI evidence, sample artifacts, visual observations, and known limitations.
 - [x] Do not continue to larger bouquets, another flower species, another container type, or arbitrary arrangements without review.
 

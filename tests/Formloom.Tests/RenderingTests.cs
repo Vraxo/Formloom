@@ -49,6 +49,20 @@ public sealed class RenderingTests
         Assert.Equal(first.Bytes, second.Bytes);
     }
 
+    [Fact]
+    public void AntialiasingCanBeDisabledForInspectionWhileDefaultRemainsUnchanged()
+    {
+        var scene = SceneGenerator.Generate(new("a red apple on a wooden table", Width: 256, Height: 256)).Scene!;
+        var defaultRender = StillLifeRenderer.Render(scene);
+        var explicitDefault = StillLifeRenderer.Render(scene, new RenderOptions());
+        var aliased = StillLifeRenderer.Render(scene, new RenderOptions(Antialiasing: false));
+        var repeatedAliased = StillLifeRenderer.Render(scene, new RenderOptions(Antialiasing: false));
+
+        Assert.Equal(defaultRender.PngBytes, explicitDefault.PngBytes);
+        Assert.NotEqual(defaultRender.PngBytes, aliased.PngBytes);
+        Assert.Equal(aliased.PngBytes, repeatedAliased.PngBytes);
+    }
+
     [Theory]
     [InlineData("red", 256)]
     [InlineData("green", 256)]

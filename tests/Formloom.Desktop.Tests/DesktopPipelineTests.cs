@@ -71,7 +71,7 @@ public sealed class DesktopPipelineTests
     {
         var generator = new GenerationService(NullLogger<GenerationService>.Instance);
         return new DesktopSession(
-            generator.GenerateAsync,
+            (request, options) => generator.GenerateAsync(request, options),
             (_, _) => Task.FromResult(new SaveResult(false, "No dialog is opened by this test")),
             NullLogger<DesktopSession>.Instance);
     }
