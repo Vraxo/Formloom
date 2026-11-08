@@ -101,9 +101,10 @@ Continue the existing case normalization, repeated-whitespace normalization, and
 > stray stub and an empty mouth. The per-size property test is what caught it, and it now asserts
 > both halves at 64 × 64 through 4096 × 1024.
 >
-> Still unchecked, with the reason beside the item: the actual timing numbers (the sidecars are
-> written by CI and cannot be downloaded from the authoring sandbox), the human visual-review gate,
-> the post-merge Linux Release run, and the acceptance checkpoint itself.
+> **Final close-out:** all checklist and acceptance boxes are complete. The timing sidecars were
+> supplied and read, visual review passed on the fixed-build sheets, and the final post-merge Linux
+> Release run [42452733510](https://github.com/Vraxo/Formloom/actions/runs/42452733510) is green on
+> merge `c441a9a` (PR #51). See the handoff's timing, visual-review and verification sections.
 
 ### 0. Inspect and record the actual starting point
 

@@ -98,13 +98,25 @@ public static class StillLifeRenderer
         var beverage = scene.CupContents is { } contents && contents.Cup == ceramic
             ? contents.Beverage
             : (BeverageKind?)null;
+        var pair = scene.VaseTulipDaisy is { } arrangement && ReferenceEquals(arrangement.Vase, ceramic) && !shadowsOnly && !skipBody
+            ? arrangement
+            : null;
         var tulip = scene.VaseFlower is { } planted && planted.Vase == ceramic && !shadowsOnly && !skipBody
             ? planted
             : null;
         var daisy = scene.VaseDaisy is { } sown && sown.Vase == ceramic && !shadowsOnly && !skipBody
             ? sown
             : null;
-        if (tulip is not null)
+        VaseFlower? pairTulip = null;
+        VaseDaisy? pairDaisy = null;
+        if (pair is not null)
+        {
+            pairTulip = new VaseFlower(pair.Vase, FlowerKind.Tulip, pair.TulipColor, pair.Tulip);
+            pairDaisy = new VaseDaisy(pair.Vase, pair.DaisyAppearance, pair.Daisy);
+            DrawVaseFlower(canvas, scene, pairTulip, silhouette, entry.Depth == omittedDetailDepth);
+            DrawVaseDaisy(canvas, scene, pairDaisy, silhouette, entry.Depth == omittedDetailDepth);
+        }
+        else if (tulip is not null)
         {
             DrawVaseFlower(canvas, scene, tulip, silhouette, entry.Depth == omittedDetailDepth);
         }
@@ -114,7 +126,13 @@ public static class StillLifeRenderer
         }
 
         VaseStem? stem = null;
-        if (tulip is not null)
+        VaseStem? secondStem = null;
+        if (pair is not null)
+        {
+            stem = VaseStem.For(pairTulip!);
+            secondStem = VaseStem.For(pairDaisy!);
+        }
+        else if (tulip is not null)
         {
             stem = VaseStem.For(tulip);
         }
@@ -123,7 +141,18 @@ public static class StillLifeRenderer
             stem = VaseStem.For(daisy);
         }
 
-        DrawCeramic(canvas, scene, ceramic, silhouette, skipShadows, shadowsOnly, skipBody, entry.Depth == omittedDetailDepth, beverage, stem);
+        DrawCeramic(
+            canvas,
+            scene,
+            ceramic,
+            silhouette,
+            skipShadows,
+            shadowsOnly,
+            skipBody,
+            entry.Depth == omittedDetailDepth,
+            beverage,
+            stem,
+            secondStem);
     }
 
     private static StillLifeScene ForInstance(StillLifeScene scene, FruitInstance fruit, int? omittedDetailDepth = null) => scene with
@@ -284,7 +313,8 @@ public static class StillLifeRenderer
         bool skipBody,
         bool omitDetail,
         BeverageKind? beverage = null,
-        VaseStem? stem = null)
+        VaseStem? stem = null,
+        VaseStem? secondStem = null)
     {
         var profile = CeramicForms.For(ceramic.Kind);
         var body = ceramic.Body;
@@ -401,6 +431,14 @@ public static class StillLifeRenderer
                 profile.RimThickness * 1.1f * body.Size.X,
                 profile.RimThickness * 1.1f * body.Size.Y);
             DrawStemInsideOpening(canvas, scene, planted, lip, material, paint);
+        }
+
+        if (secondStem is { } second)
+        {
+            var lip = new System.Numerics.Vector2(
+                profile.RimThickness * 1.1f * body.Size.X,
+                profile.RimThickness * 1.1f * body.Size.Y);
+            DrawStemInsideOpening(canvas, scene, second, lip, material, paint);
         }
     }
 

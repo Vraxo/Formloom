@@ -19,6 +19,8 @@ internal sealed class PngSaveService(PngFileWriter writer, ILogger<PngSaveServic
         "red-tulip-in-blue-vase", "red-tulip-in-cream-vase",
         "yellow-tulip-in-blue-vase", "yellow-tulip-in-cream-vase",
         "white-daisy-in-blue-vase", "white-daisy-in-cream-vase",
+        "red-tulip-and-white-daisy-in-blue-vase", "red-tulip-and-white-daisy-in-cream-vase",
+        "yellow-tulip-and-white-daisy-in-blue-vase", "yellow-tulip-and-white-daisy-in-cream-vase",
     ];
 
     private PhotinoWindow? window;

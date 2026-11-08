@@ -124,6 +124,35 @@ public static class PromptParser
         return new(cup, beverage);
     }
 
+    // One fixed tulip-first pair growing out of one existing vase. The exact grammar is
+    // "<tulip> and a white daisy in <vase> on a wooden table"; other orders, counts and
+    // contents are rejected whole rather than being read as an ordinary empty vase.
+    public static VaseTulipDaisyPrompt? ParseVaseTulipDaisy(string? prompt)
+    {
+        var normalized = Normalize(prompt);
+        if (normalized is null)
+        {
+            return null;
+        }
+
+        var match = Regex.Match(
+            normalized[..^Setting.Length],
+            @"\A(?<tulip>" + TulipDescriptor + @") and (?<daisy>" + DaisyDescriptor + @") in (?<vase>" + VaseDescriptor + @")\z");
+        if (!match.Success)
+        {
+            return null;
+        }
+
+        var vase = ParseDescriptor(match.Groups["vase"].Value).Ceramic;
+        if (vase is null || vase.Kind != CeramicKind.Vase)
+        {
+            return null;
+        }
+
+        var color = match.Groups["tulip"].Value == "a red tulip" ? TulipColor.Red : TulipColor.Yellow;
+        return new(vase, color, DaisyAppearance.WhiteWithGoldenDisk);
+    }
+
     // A single tulip growing out of a single existing vase. The exact grammar is
     // "<tulip> in <vase> on a wooden table"; anything else is rejected whole rather than
     // being read as an ordinary empty vase.
