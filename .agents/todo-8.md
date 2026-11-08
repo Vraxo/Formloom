@@ -253,8 +253,9 @@ Continue the existing case normalization, repeated-whitespace normalization, and
 - [x] Review that the bloom has a clear radial petal arrangement and a distinct golden centre, not a sunflower, gear, star, pinwheel, or tulip.
 - [x] Review that the stem enters the vase naturally and is hidden at the mouth/body in the correct places.
 - [x] Review that exactly two leaves are visible, attached, balanced, and not awkwardly intersecting the bloom.
-- [ ] Review both blue and cream vase combinations and confirm the white/yellow flower remains legible against each. **Blocker:** `formloom-vasedaisy-sheet.png` was supplied but is a pre-fix render (one leaf per cell, no stem in the mouth), so the cream case cannot be signed off from it; a sheet from the current build is needed.
-- [ ] Review alternate seeds and variation extremes for broken petals, uneven gaps, malformed leaves, excessive bends, clipping, or canvas-edge collisions. **Blocker:** same pre-fix sheet.
+- [x] Review both blue and cream vase combinations and confirm the white/yellow flower remains legible against each. Reviewed on `formloom-vasedaisy-sheet-2.png` and `formloom-vaseflower-sheet-3.png` from the merged build (run `42450438121`): white petals and golden disk read against both glazes, and the warm brown cream interior keeps the stem and blades legible in the mouth where the blue vases use the navy cavity.
+- [x] Review alternate seeds and variation extremes for broken petals, uneven gaps, malformed leaves, excessive bends, clipping, or canvas-edge collisions. Seeds 1337 and 20261105 at variation 0 and 1 in both glazes: twelve petals, no broken petal, both leaves on opposite sides, no clipping, ~8 px margin to the cell edge.
+- [x] Review legibility at 320 px sheet cells: every cell reads immediately as a daisy or a tulip, and the golden disk and petal notches survive at that size. Measured 12–35 green px inside the daisy mouths and 21–46 in the tulips, with zero green ink on the lip or body below the mouth in all sixteen cells.
 - [x] Review the group sheet for the stem disappearing at the mouth: every 320 px cell lost it. The cause was a fixed 1024 scale in the mouth-continuation pass; it now scales by the scene's size, and 320 px is covered by the size matrix, by a cell-by-cell scan of the composited sheet, and by the same check for the tulip.
 - [x] Review vase rim, mouth, body, glaze, foot, and tabletop grounding for regressions.
 - [x] Review that flower materials fit the existing illustrated still-life lighting and are not flat, neon, plastic, or excessively noisy.
@@ -295,7 +296,7 @@ Continue the existing case normalization, repeated-whitespace normalization, and
 - [ ] Daisy random streams do not perturb tulip, vase, fruit, cup, or bowl output.
 - [ ] The daisy adds no unintended tabletop shadow, vase-body repainting, exterior leakage, or canvas-edge collision.
 - [ ] Automated Core/parser, renderer invariant, desktop integration, and existing regression tests pass.
-- [ ] Generated full-resolution samples and a correctly mapped review sheet are available; visual review is honestly recorded as passed or pending.
+- [x] Generated full-resolution samples and a correctly mapped review sheet are available; visual review is honestly recorded as passed or pending. Recorded as **passed** in [`docs/daisy-vase-handoff.md`](../docs/daisy-vase-handoff.md) after the two defects found in review were fixed and re-reviewed.
 - [ ] README and handoff accurately document supported prompts, architecture, evidence, exclusions, and limitations.
 - [ ] The completed change passes the repository's Linux Release CI gate and post-merge run.
 - [ ] The agent stops and reports implementation decisions, actual test/CI evidence, sample artifacts, visual observations, and known limitations.
