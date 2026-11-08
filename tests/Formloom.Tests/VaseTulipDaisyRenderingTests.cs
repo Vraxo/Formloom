@@ -570,6 +570,14 @@ public sealed class VaseTulipDaisyRenderingTests
         int width,
         int height)
     {
+        var extension = InteriorStemExtension(segments, stemBase, thickness, openingCenter, openingRadius);
+        var completeStem = segments.Add(extension);
+        var baseTangent = stemBase - segments[0].Control1;
+        var continuationTangent = extension.Control1 - extension.Start;
+        Assert.True(
+            Vector2.Dot(Vector2.Normalize(baseTangent), Vector2.Normalize(continuationTangent)) > 0.999f,
+            $"{name} interior continuation does not follow the stem's base tangent");
+
         var lipInner = LipInnerRow(empty, stemBase.X, openingCenter, openingRadius);
         var first = Math.Max(0, (int)MathF.Floor((mouthTop - 0.02f) * height));
         var last = Math.Min(height - 1, lipInner - 2);
@@ -578,7 +586,7 @@ public sealed class VaseTulipDaisyRenderingTests
 
         for (var y = first; y <= last; y++)
         {
-            var expectedX = StemColumn(segments, (y + 0.5f) / height, width);
+            var expectedX = StemColumn(completeStem, (y + 0.5f) / height, width);
             var visible = false;
             for (var offset = -pixelReach; offset <= pixelReach; offset++)
             {
@@ -602,6 +610,29 @@ public sealed class VaseTulipDaisyRenderingTests
             Assert.True(visible, $"{name} stem has a gap at its vase contact or inside the opening on row {y}");
         }
 
+        if (width >= 4096)
+        {
+            var probeY = (int)MathF.Round((stemBase.Y + ((extension.End.Y - stemBase.Y) * 0.36f)) * height);
+            var expectedCenter = StemColumn(completeStem, (probeY + 0.5f) / height, width);
+            var weightedX = 0d;
+            var totalWeight = 0d;
+            for (var x = expectedCenter - pixelReach; x <= expectedCenter + pixelReach; x++)
+            {
+                if (x >= 0 && x < width)
+                {
+                    var delta = Delta(planted.GetPixel(x, probeY), empty.GetPixel(x, probeY));
+                    weightedX += (x + 0.5d) * delta;
+                    totalWeight += delta;
+                }
+            }
+
+            Assert.True(totalWeight > 0, $"{name} tangent probe is not visible at {probeY}");
+            var renderedCenter = weightedX / totalWeight;
+            Assert.True(
+                Math.Abs(renderedCenter - expectedCenter) <= 2.5,
+                $"{name} interior continuation turns abruptly: expected center {expectedCenter}, rendered {renderedCenter:0.0}");
+        }
+
         var buriedY = Math.Min(height - 1, lipInner + 3);
         var buriedX = (int)MathF.Round(stemBase.X * width);
         for (var offset = -pixelReach; offset <= pixelReach; offset++)
@@ -612,6 +643,26 @@ public sealed class VaseTulipDaisyRenderingTests
                 Assert.Equal(0, Delta(planted.GetPixel(x, buriedY), empty.GetPixel(x, buriedY)));
             }
         }
+    }
+
+    // Mirror the renderer's tangent-matched mouth extension so row checks follow the expected
+    // curve below StemBase instead of assuming an artificial vertical stub.
+    private static CubicSegment InteriorStemExtension(
+        ImmutableArray<CubicSegment> segments,
+        Vector2 stemBase,
+        float thickness,
+        Vector2 openingCenter,
+        Vector2 openingRadius)
+    {
+        var end = new Vector2(stemBase.X, openingCenter.Y + openingRadius.Y + (thickness * 3));
+        var length = end.Y - stemBase.Y;
+        var tangent = stemBase - segments[0].Control1;
+        var downward = tangent.LengthSquared() > 1e-10f ? Vector2.Normalize(tangent) : Vector2.UnitY;
+        return new(
+            stemBase,
+            stemBase + (downward * (length * 0.4f)),
+            end - new Vector2(0, length * 0.3f),
+            end);
     }
 
     private static void AssertStemContinuationInsideOpening(

@@ -647,10 +647,10 @@ public static class StillLifeRenderer
         canvas.Restore();
     }
 
-    // The main stem is rendered once, on top of the far rim. This short continuation starts
-    // exactly at its typed base and is clipped to the inner mouth so it reaches under—but never
-    // paints over—the near lip. Keeping this as an interior-only extension makes the contact
-    // point independent of canvas size, ellipse tangent, and antialiasing.
+    // The main stem is rendered once, on top of the far rim. Its short continuation starts at
+    // the typed base along the reverse base tangent, then eases downward inside the mouth. The
+    // inset clip makes it reach under—but never paint over—the near lip without an abrupt bend at
+    // the join or a dependency on canvas size and antialiasing.
     private static void DrawStemExtensionInsideOpening(
         SKCanvas canvas,
         System.Numerics.Vector2 openingCenter,
@@ -677,6 +677,13 @@ public static class StillLifeRenderer
         var end = new System.Numerics.Vector2(
             stemBase.X,
             openingCenter.Y + openingRadius.Y + (thickness * 3));
+        var extensionLength = end.Y - stemBase.Y;
+        var baseTangent = stemBase - stemPath[0].Control1;
+        var downward = baseTangent.LengthSquared() > 1e-10f
+            ? System.Numerics.Vector2.Normalize(baseTangent)
+            : System.Numerics.Vector2.UnitY;
+        var control1 = stemBase + (downward * (extensionLength * 0.4f));
+        var control2 = end - new System.Numerics.Vector2(0, extensionLength * 0.3f);
 
         canvas.Save();
         using (var opening = CreateEllipsePath(openingCenter, inset))
@@ -686,7 +693,7 @@ public static class StillLifeRenderer
 
         using var builder = new SKPathBuilder();
         builder.MoveTo(stemBase.X, stemBase.Y);
-        builder.LineTo(end.X, end.Y);
+        builder.CubicTo(control1.X, control1.Y, control2.X, control2.Y, end.X, end.Y);
         using var extension = builder.Detach();
         StrokeStem(
             canvas,
