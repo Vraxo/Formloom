@@ -68,13 +68,16 @@ public static class SceneValidator
             return "A scene cannot be both a filled cup and a fruit inside a bowl.";
         }
 
-        var flower = scene.VaseFlower is not null || scene.VaseDaisy is not null;
+        var flower = scene.VaseFlower is not null || scene.VaseDaisy is not null || scene.VaseTulipDaisy is not null;
         if (flower && (containment is not null || scene.CupContents is not null))
         {
             return "A scene cannot hold a flower and another contents relationship at the same time.";
         }
 
-        if (scene.VaseFlower is not null && scene.VaseDaisy is not null)
+        var vaseFlowerRelationships = (scene.VaseFlower is null ? 0 : 1) +
+            (scene.VaseDaisy is null ? 0 : 1) +
+            (scene.VaseTulipDaisy is null ? 0 : 1);
+        if (vaseFlowerRelationships > 1)
         {
             return "A scene cannot hold two flower arrangements at the same time.";
         }
@@ -82,6 +85,11 @@ public static class SceneValidator
         if (scene.CupContents is { } contents)
         {
             return ValidateCupContents(objects, contents);
+        }
+
+        if (scene.VaseTulipDaisy is { } pair)
+        {
+            return ValidateVaseTulipDaisy(objects, pair);
         }
 
         if (scene.VaseFlower is { } tulip)
@@ -302,6 +310,122 @@ public static class SceneValidator
 
         return null;
     }
+
+    // The mixed contents are one fixed tulip and one fixed daisy sharing the exact vase entry.
+    // Validate both species through their standalone rules first, then validate the pair-only
+    // opening fit and left/right separation constraints.
+    private static string? ValidateVaseTulipDaisy(ImmutableArray<SceneEntry> objects, VaseTulipDaisy pair)
+    {
+        if (pair.Vase is null || pair.Vase.Kind != CeramicKind.Vase)
+        {
+            return "A mixed flower arrangement must reference one vase.";
+        }
+
+        if (!Enum.IsDefined(pair.Vase.Glaze))
+        {
+            return "A vase must have a blue or cream glaze.";
+        }
+
+        if (!Enum.IsDefined(pair.TulipColor))
+        {
+            return "A mixed arrangement's tulip must be red or yellow.";
+        }
+
+        if (pair.DaisyAppearance != DaisyAppearance.WhiteWithGoldenDisk)
+        {
+            return "A mixed arrangement's daisy must have white petals and a golden centre.";
+        }
+
+        if (objects.Length != 1 || !ReferenceEquals(objects[0].Ceramic, pair.Vase))
+        {
+            return "A mixed flower arrangement must contain exactly its shared vase and no other object.";
+        }
+
+        var tulipError = ValidateVaseFlower(
+            objects,
+            new VaseFlower(pair.Vase, FlowerKind.Tulip, pair.TulipColor, pair.Tulip));
+        if (tulipError is not null)
+        {
+            return "The tulip in the mixed arrangement is invalid: " + tulipError;
+        }
+
+        var daisyError = ValidateVaseDaisy(
+            objects,
+            new VaseDaisy(pair.Vase, pair.DaisyAppearance, pair.Daisy));
+        if (daisyError is not null)
+        {
+            return "The daisy in the mixed arrangement is invalid: " + daisyError;
+        }
+
+        var opening = VaseMouth.Center(pair.Vase, VaseMouth.Profile(pair.Vase));
+        var radius = VaseMouth.Radius(pair.Vase, VaseMouth.Profile(pair.Vase));
+        var minimumStemGap = ((pair.Tulip.StemThickness + pair.Daisy.StemThickness) / 2) + 0.001f;
+        if (pair.Tulip.StemBase.X >= opening.X || pair.Daisy.StemBase.X <= opening.X ||
+            pair.Daisy.StemBase.X - pair.Tulip.StemBase.X <= minimumStemGap)
+        {
+            return "The mixed arrangement's stem bases must stay distinct and left-to-right inside the vase opening.";
+        }
+
+        var tulipStem = CurveBuilder.Extent(pair.Tulip.Stem);
+        var daisyStem = CurveBuilder.Extent(pair.Daisy.Stem);
+        if (daisyStem.Left - tulipStem.Right <= minimumStemGap)
+        {
+            return "The mixed arrangement's tulip and daisy stems must stay distinct and left-to-right.";
+        }
+
+        var tulipBloom = MeasureTulipBloom(pair.Tulip);
+        var daisyBloom = MeasureDaisyBloom(pair.Daisy);
+        if (daisyBloom.Left - tulipBloom.Right < 0.003f)
+        {
+            return "The mixed arrangement's tulip and daisy blooms must stay distinct and separated.";
+        }
+
+        foreach (var stemBase in new[] { pair.Tulip.StemBase, pair.Daisy.StemBase })
+        {
+            var x = MathF.Abs(stemBase.X - opening.X) + (minimumStemGap * 0.5f);
+            var y = stemBase.Y - opening.Y;
+            var reach = ((x / radius.X) * (x / radius.X)) + ((y / radius.Y) * (y / radius.Y));
+            if (reach >= 0.95f)
+            {
+                return "Both mixed-arrangement stems must fit inside the vase's rim-inset opening.";
+            }
+        }
+
+        return null;
+    }
+
+    private static ProfileExtent MeasureTulipBloom(TulipPlant plant)
+    {
+        var extent = new ProfileExtent(float.MaxValue, float.MaxValue, float.MinValue, float.MinValue);
+        foreach (var petal in plant.Bloom.Petals)
+        {
+            extent = Union(extent, CurveBuilder.Extent(petal.Outline));
+        }
+
+        return extent;
+    }
+
+    private static ProfileExtent MeasureDaisyBloom(DaisyPlant plant)
+    {
+        var extent = new ProfileExtent(float.MaxValue, float.MaxValue, float.MinValue, float.MinValue);
+        foreach (var petal in plant.Bloom.Petals)
+        {
+            extent = Union(extent, CurveBuilder.Extent(petal.Outline));
+        }
+
+        var disk = plant.Bloom.Disk;
+        return Union(extent, new ProfileExtent(
+            disk.Center.X - disk.RadiusX,
+            disk.Center.Y - disk.RadiusY,
+            disk.Center.X + disk.RadiusX,
+            disk.Center.Y + disk.RadiusY));
+    }
+
+    private static ProfileExtent Union(ProfileExtent first, ProfileExtent second) => new(
+        MathF.Min(first.Left, second.Left),
+        MathF.Min(first.Top, second.Top),
+        MathF.Max(first.Right, second.Right),
+        MathF.Max(first.Bottom, second.Bottom));
 
     // The drink is contents of the scene's one cup, so the cup must be exactly the ceramic
     // instance the scene already holds and nothing else may sit in the scene.

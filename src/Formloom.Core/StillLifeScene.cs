@@ -38,6 +38,10 @@ public sealed record StillLifeScene(
     // and never an entry of its own.
     public VaseDaisy? VaseDaisy { get; init; }
 
+    // The fixed mixed relationship: exactly one red/yellow tulip and one white/golden daisy
+    // share the same vase entry. It cannot be combined with any other contents relationship.
+    public VaseTulipDaisy? VaseTulipDaisy { get; init; }
+
     public ImmutableArray<SceneEntry> Objects
     {
         get
@@ -70,6 +74,11 @@ public sealed record StillLifeScene(
     {
         get
         {
+            if (VaseTulipDaisy is { } pair)
+            {
+                return pair.SubjectToken;
+            }
+
             if (VaseFlower is { } flower)
             {
                 return flower.SubjectToken;
