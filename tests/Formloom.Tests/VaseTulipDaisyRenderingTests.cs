@@ -39,6 +39,8 @@ public sealed class VaseTulipDaisyRenderingTests
         new("a yellow tulip and a white daisy in a cream ceramic vase on a wooden table", "yellow-cream-highvariation", TulipColor.Yellow, CeramicGlaze.Cream, 1337, 1),
     ];
 
+    private static readonly string[] RetainedReviewStems = ReviewSamples.Select(SampleStem).ToArray();
+
     public static TheoryData<string, string, string, string, int, double> CombinationCases()
     {
         var data = new TheoryData<string, string, string, string, int, double>();
@@ -147,6 +149,48 @@ public sealed class VaseTulipDaisyRenderingTests
         Assert.Equal(image.PngBytes, StillLifeRenderer.Render(scene).PngBytes);
     }
 
+    [Fact]
+    public void DetailOmissionAndDiagnosticPassesStayInsideTheArrangement()
+    {
+        var scene = Scene(DefaultSamples[0].Prompt, 1337, 0.6);
+        var pair = scene.VaseTulipDaisy!;
+        var bounds = PlantWindow(pair, 3);
+        using var full = Decode(StillLifeRenderer.Render(scene).PngBytes);
+        using var plain = Decode(StillLifeRenderer.RenderWithoutInstanceDetail(scene, scene.Objects[0].Depth).PngBytes);
+
+        var rim = (int)MathF.Ceiling(pair.MouthTop * Canvas) - 3;
+        var changed = 0;
+        var outside = 0;
+        for (var y = 0; y < rim; y++)
+        {
+            for (var x = 0; x < Canvas; x++)
+            {
+                if (Delta(full.GetPixel(x, y), plain.GetPixel(x, y)) == 0)
+                {
+                    continue;
+                }
+
+                changed++;
+                if (!Inside(bounds, x, y, Canvas, Canvas))
+                {
+                    outside++;
+                }
+            }
+        }
+
+        Assert.True(changed > 100, $"expected tulip and daisy details to be omitted, saw {changed} pixels");
+        Assert.Equal(0, outside);
+
+        var original = StillLifeRenderer.Render(scene);
+        using var shadows = Decode(StillLifeRenderer.RenderShadowMask(scene).PngBytes);
+        using var change = Decode(StillLifeRenderer.RenderWithoutInstanceDetail(scene, scene.Objects[0].Depth).PngBytes);
+        using var silhouette = Decode(StillLifeRenderer.RenderSilhouette(scene).PngBytes);
+        Assert.NotNull(shadows);
+        Assert.NotNull(change);
+        Assert.NotNull(silhouette);
+        Assert.Equal(original.PngBytes, StillLifeRenderer.Render(scene).PngBytes);
+    }
+
     [Theory]
     [MemberData(nameof(Dimensions))]
     public void AllCombinationsRenderAtSupportedSquareAndRectangularSizes(string prompt, int width, int height)
@@ -179,8 +223,8 @@ public sealed class VaseTulipDaisyRenderingTests
         Assert.Equal(Canvas, rendered.Width);
         Assert.Equal(Canvas, rendered.Height);
 
-        var stem = FormattableString.Invariant($"formloom-vase-tulip-daisy-{name}-seed-{seed}-variation-{variation:0.00}");
-        var keep = ExportArtifacts.Keeps(stem, Canonical);
+        var stem = SampleStem(name, seed, variation);
+        var keep = ExportArtifacts.Keeps(stem, Canonical, RetainedReviewStems);
         var directory = AppContext.BaseDirectory;
         var pair = scene.VaseTulipDaisy!;
         var emptyMilliseconds = (double?)null;
@@ -322,7 +366,7 @@ public sealed class VaseTulipDaisyRenderingTests
                 Subject = scene.SubjectToken,
                 Petals = new { Tulip = pair.Tulip.Bloom.Petals.Length, Daisy = pair.Daisy.Bloom.Petals.Length },
                 Leaves = new { Tulip = pair.Tulip.Leaves.Length, Daisy = pair.Daisy.Leaves.Length },
-                FileName = FormattableString.Invariant($"formloom-vase-tulip-daisy-{sample.Name}-seed-{sample.Seed}-variation-{sample.Variation:0.00}.png"),
+                FileName = SampleStem(sample.Name, sample.Seed, sample.Variation) + ".png",
                 Cell = index,
                 Column = index % columns,
                 Row = index / columns,
@@ -748,6 +792,11 @@ public sealed class VaseTulipDaisyRenderingTests
     private static int Delta(SKColor first, SKColor second) => Math.Max(
         Math.Max(Math.Abs(first.Red - second.Red), Math.Abs(first.Green - second.Green)),
         Math.Max(Math.Abs(first.Blue - second.Blue), Math.Abs(first.Alpha - second.Alpha)));
+
+    private static string SampleStem(string name, int seed, double variation) =>
+        FormattableString.Invariant($"formloom-vase-tulip-daisy-{name}-seed-{seed}-variation-{variation:0.00}");
+
+    private static string SampleStem(Sample sample) => SampleStem(sample.Name, sample.Seed, sample.Variation);
 
     private readonly record struct Sample(
         string Prompt,
