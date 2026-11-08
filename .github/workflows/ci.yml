@@ -57,6 +57,33 @@ jobs:
       - name: Test
         run: dotnet test --solution Formloom.slnx --configuration Release --no-build --no-restore --report-trx --results-directory TestResults
 
+      - name: Temporary test failure diagnostics
+        if: failure()
+        run: |
+          python3 - <<'PY'
+          import glob
+          import xml.etree.ElementTree as ET
+
+          found = False
+          for path in glob.glob("TestResults/**/*.trx", recursive=True):
+              root = ET.parse(path).getroot()
+              for result in root.iter():
+                  if not result.tag.endswith("UnitTestResult") or result.attrib.get("outcome") != "Failed":
+                      continue
+                  found = True
+                  parts = [result.attrib.get("testName", "unknown test")]
+                  for element in result.iter():
+                      if element.tag.endswith("Message") and element.text:
+                          parts.append(element.text.strip())
+                      elif element.tag.endswith("StackTrace") and element.text:
+                          parts.append(element.text.strip())
+                  details = " | ".join(parts)[:5000]
+                  details = details.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+                  print(f"::error::{details}")
+          if not found:
+              print("::warning::No failed test details found in TRX files")
+          PY
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
