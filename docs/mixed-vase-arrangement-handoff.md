@@ -78,8 +78,8 @@ so its radial head sits above the tulip's cupped head. Both stem bases derive fr
   targets retain their left/right ordering.
 - The fixed 0.82 profile factor narrows stem/leaf geometry horizontally and uniformly scales each
   bloom around its transformed stem top. Stem/leaf vertical coordinates remain unchanged. The
-  initial all-axis plant shrink pulled lower leaves into the mouth; CI exposed the validator
-  failure, so the final transform preserves the source vertical rim clearances instead.
+  initial all-axis transform moved leaves toward the rim; review of the existing validator's leaf
+  clearance rules led to preserving the source vertical positions in the final transform.
 
 No canvas-pixel placement constants, unconstrained optimizer, or user-selected layout is added.
 Core geometry tests verify opening fit (including thickness), stem and bloom separation, leaf
