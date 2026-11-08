@@ -9,9 +9,9 @@ Skia → PNG/save path.
 - **Previous milestone:** Phase 7, a tulip in a ceramic vase — see
   [`vase-flower-handoff.md`](vase-flower-handoff.md) and [`.agents/todo-7.md`](../.agents/todo-7.md).
 - **Checklist:** [`.agents/todo-8.md`](../.agents/todo-8.md).
-- **Status:** Phase 8 complete through PR #50, merge `6c48a7a`; implementation, tests, artifacts,
+- **Status:** Phase 8 complete through PR #51, merge `c441a9a`; implementation, tests, artifacts,
   documentation, timing read-back and visual review are closed. The final post-merge Linux Release
-  CI run [42452083956](https://github.com/Vraxo/Formloom/actions/runs/42452083956) passed. Two defects
+  CI run [42452733510](https://github.com/Vraxo/Formloom/actions/runs/42452733510) passed. Two defects
   were found and fixed on the way: a leaf hidden behind the head,
   and a size-dependent loss of the stem inside the mouth that only appeared in the sheet's 320 px
   cells. The canonical blue case was reviewed at full resolution, then both group sheets were
@@ -320,9 +320,9 @@ Cosmetic observations from this pass, recorded and **not** acted on:
   cavity and disappears behind the lip. That is the vase profile's own variation, inherited from
   Phase 7, not a flower defect.
 
-Still open: the **timing observations**, which need the artifact's timing sidecar read back — the
-daisy figures have not been transcribed — and any constant tuning the owner wants after looking at
-the sheets.
+The **timing observations are closed**: the supplied sidecars are transcribed above as
+single-run observations. The cosmetic notes from sheet review remain recorded, not pending defect
+fixes; no further constant tuning was requested.
 
 ## Known limitations
 
@@ -379,6 +379,10 @@ the sheets.
   CI [42451740669](https://github.com/Vraxo/Formloom/actions/runs/42451740669) passed on `d0f5d92`;
   merged as `6c48a7a`; final post-merge Linux Release CI
   [42452083956](https://github.com/Vraxo/Formloom/actions/runs/42452083956) passed.
+- PR [#51](https://github.com/Vraxo/Formloom/pull/51) — reconciled the completed Phase 8
+  checklist and handoff. CI [42452371136](https://github.com/Vraxo/Formloom/actions/runs/42452371136)
+  passed on `cf87cd4`; merged as `c441a9a`; final post-merge Linux Release CI
+  [42452733510](https://github.com/Vraxo/Formloom/actions/runs/42452733510) passed.
 - **Not claimed:** native Photino/WebView2 dialog, window lifecycle, resize or accessibility
   behaviour. Those are not exercised by headless tests or Linux CI, in this milestone or any
   earlier one.
