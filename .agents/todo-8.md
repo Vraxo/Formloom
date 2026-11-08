@@ -247,7 +247,7 @@ Continue the existing case normalization, repeated-whitespace normalization, and
 - [x] Keep generated PNGs and review composites in ignored test-output/artifact directories; do not commit generated binaries as source assets.
 - [x] Generate timing sidecars using the existing exporter conventions.
 - [x] Measure render-plus-PNG-encode time at 1024 × 1024 for daisy-in-vase scenes and compare with equivalent empty-vase and tulip-in-vase renders on the same runner/runtime.
-- [ ] Report timing observations as measurements from that environment, not universal performance claims.
+- [x] Report timing observations as measurements from that environment, not universal performance claims. Read back from the run `42450438121` sidecars: daisy 134.228 ms, empty vase 130.7872 ms (+3.44 ms), tulip in the same glaze 130.0086 ms (+4.22 ms) at 1024²; the 320 px sheet's eight cells 21.64–25.29 ms each. Recorded as single samples, with the tulip's own two sidecars disagreeing by ~94 ms as the stated reason not to treat them as a cost model.
 - [x] Inspect actual generated pixels where the environment permits; generating or uploading a PNG alone is not visual review.
 - [x] Review that the flower reads immediately as a daisy without a label.
 - [x] Review that the bloom has a clear radial petal arrangement and a distinct golden centre, not a sunflower, gear, star, pinwheel, or tulip.
