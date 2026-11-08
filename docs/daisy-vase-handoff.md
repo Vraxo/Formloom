@@ -10,8 +10,13 @@ Skia → PNG/save path.
   [`vase-flower-handoff.md`](vase-flower-handoff.md) and [`.agents/todo-7.md`](../.agents/todo-7.md).
 - **Checklist:** [`.agents/todo-8.md`](../.agents/todo-8.md).
 - **Status:** implementation, tests, artifacts and documentation complete; **visual review
-  pending** — see [Visual review](#visual-review) — and the timing numbers are left in the
-  artifact with the reason stated under [Timing observations](#timing-observations).
+  partially passed** — the canonical blue case was reviewed at full resolution, and the review
+  sheet followed. Two defects were found and fixed: a leaf hidden behind the head, and a
+  size-dependent loss of the stem inside the mouth that only appeared in the sheet's 320 px cells.
+  The sheet that exposed them predates both fixes, so the cream glaze, alternate seeds, variation
+  extremes and 320 px legibility need a fresh sheet from the current build to be closed. See
+  [Visual review](#visual-review). The timing numbers are left in the artifact with the reason
+  stated under [Timing observations](#timing-observations).
 
 ## What ships
 
@@ -84,7 +89,7 @@ Authored constants in `DaisyGeometry`, all normalized and vase-profile aware:
 | disk radius | `0.34 × headRadius` (× 0.86 vertically) | a golden centre that covers the petal roots without becoming a button |
 | petal roots | `0.55 × diskRadius` from the centre | the petals visibly emerge from behind the disk |
 | stem thickness | `mouthRadius.X × 0.085` | slender against the vessel |
-| leaves | exactly 2, at 34 % and 72 % of the visible stem | attached at different heights, splayed to opposite sides |
+| leaves | exactly 2, in the clear stem between the head's bottom edge and the rim | attached at different heights, splayed almost horizontally, long enough to reach past the head's silhouette |
 | flatten share | petals ordered back to front by `sin(angle)` | the upper half sits behind the lower half |
 | petal tone | 0.62 far / 0.90 near | a value hierarchy instead of flat white |
 
@@ -186,24 +191,91 @@ difference would be noise, not a cost model.
 
 ## Visual review
 
-**Recorded as pending.** The images exist and are one download away, but nothing in this milestone
-was inspected by eye — the authoring sandbox cannot fetch Actions artifacts, so no claim of a
-visual pass is made. To close it, open `procedural-preview` from run `42382836401` and judge:
+**Recorded as partially passed, with one defect found and fixed.** The canonical case
+(`formloom-vasedaisy-white-blue-seed-42-variation-0.35.png`, blue vase, seed 42, variation 0.35)
+was reviewed at full resolution by the repository owner, who supplied the PNG for inspection. The
+review was also checked against 4×/5×/6× crops of the head, of the stem and leaves, and of the
+mouth.
 
-1. does the head read immediately as a daisy — white petals radiating around a distinct golden
-   centre — rather than a sunflower, a star, a gear, a pinwheel or a tulip?
-2. are petals visible as separate shapes with slight overlap, rather than identical spokes?
-3. does the disk sit centred over the petal roots, with some volume, and not float or look like a
-   flat button?
-4. is the stem hidden where it should be — behind the far rim, in front of the near lip, gone a
-   few rows into the lip — with no band across it and no exterior-wall leak?
-5. exactly two leaves, attached, balanced, not intersecting the bloom or the rim?
-6. white and gold legible on both the blue and the cream glaze?
-7. alternate seeds and both variation extremes: no broken petals, uneven gaps, malformed leaves,
-   excessive bend, clipping, or canvas-edge collisions?
-8. rim, mouth, body, glaze, foot, tabletop and contact shadow unchanged from the empty vase?
-9. materials consistent with the rest of the still life — not flat, neon, plastic or noisy?
-10. at 320 px sheet cells, does the head still read as a flower rather than a bright blob?
+Passed on that image:
+
+1. **Reads as a daisy immediately** — white petals radiating around a distinct golden centre; not a
+   sunflower, star, gear, pinwheel or tulip. The golden disk is domed, with a lighter crown and a
+   darker ring, and it covers the petal roots, so no petal looks detached.
+2. **Petal separation** — the twelve petals read as separate overlapping shapes with restrained
+   seams between neighbours, not identical spokes and not one scalloped outline.
+3. **The stem enters the vase correctly** — it crosses the far rim, is carried into the dark cavity,
+   and disappears behind the near lip; no band across it, no stub, no exterior-wall leak, no gap at
+   the tangent. This is the tulip's own tested treatment, unchanged.
+4. **Vase and tabletop unchanged** — rim, mouth, body, glaze, foot and the contact shadow are the
+   empty vase.
+
+Failed, and fixed:
+
+5. **Only one leaf was visible.** The geometry had its two leaves, but the upper one attached inside
+   the head's vertical band (0.72 of the visible stem, in a stem only ~0.06 tall between the head
+   and the rim) and the petals swallowed it, so the flower read as having a single leaf. The pixel
+   test that was supposed to cover this counted *changed* pixels in a window around the leaf — and
+   a leaf hidden behind a petal is covered by daisy ink too, so it passed vacuously.
+
+   The fix derives the leaf band from the **head's own bottom edge** instead of a fraction of the
+   stem: `leafBandTop = headBottom + 0.22 × headRadius`, `leafBandBottom = rimTop − 0.18 ×
+   stemVisible`, with the two leaves placed at the bottom of that band and 45 % up it. The blades
+   are longer (`min(0.72 × stemVisible, 2.3 × mouthRadius.X)`) and splayed almost horizontally
+   (±~1.37 rad), so both sit in the clear stem and both reach past the head's silhouette. Two
+   invariants now guard it: a **pixel** one counting green blade pixels in each leaf's own window
+   (a covered leaf scores zero), and a **geometric** one requiring every leaf tip to lie below the
+   bloom's bottom edge or beyond its side. The vacuous "changed pixels" leaf check is gone.
+
+Cosmetic observations, recorded separately and **not** changed:
+
+- The twelve petals are fairly even in length, which gives the head a slightly emblem-like
+  symmetry. The per-petal jitter is deliberate but small.
+- The head is modest against the vase — about a tenth of the canvas — because `headroom × 0.34`
+  caps it. Enlarging it means spending the top margin, which is a different design decision, not a
+  defect.
+
+Failed, and fixed — the second defect, found in the group sheet:
+
+6. **The stem vanished at the mouth in the 320 px sheet cells.** In every cell of
+   `formloom-vasedaisy-sheet.png` the stem stopped dead at the rim and the cavity stayed empty, so
+   the flower looked stuck into the lip — the same symptom on the tulip sheet
+   (`formloom-vaseflower-sheet-2.png`). Measured on cell 0 with a green-ink test
+   (`g > 75 && g > r + 12 && g > b + 12`) the stem contributed **8 pixels in 4 rows**, all above
+   the rim; the same measurement on the full-resolution tulip
+   (`formloom-vaseflower-red-blue-seed-42-variation-0.35-3.png`, 1024 px, crop `34x30+492+212`)
+   found **215 green pixels** running through the cavity to the near lip. The defect was therefore
+   present at 320 and absent at 1024 — a scale dependence, not a geometry error, and it affected
+   every flower family because they share the pass.
+
+   The cause is a fixed-space transform left over from an earlier draw step: the mouth
+   continuation reset the canvas to identity but then scaled it by a constant 1024 instead of the
+   scene's own size. At 1024 that is invisible; at 320 the whole pass draws 3.2× too far out and
+   falls off the canvas. The pass now scales by `scene.Width` / `scene.Height`, the same way the
+   scene's initial transform does.
+
+   Three guards now hold this open at the sheet's own size, because the existing size matrix
+   started at 640 and never sampled 320:
+
+   - 320 × 320 joined the supported-size matrix, so the per-size bounds, silhouette and
+     stem-inside-opening assertions all run at the cell size;
+   - the sheet test scans the **composited sheet** cell by cell and requires green ink inside each
+     cell's own opening — the artifact itself is checked, not just a render of the same size;
+   - the tulip has the same check at 320 px for all eight of its cases, since it regressed there too.
+
+   Both pixel checks test green **dominance** rather than a brightness floor: inside the cavity
+   the stem is darkened by the depth gradient and thinned by antialiasing to barely a pixel at 320.
+
+**The sheets that exposed both defects predate them.** The daisy sheet shows a single leaf in all
+eight cells — 86–88 green blade pixels to the left of the stem in each cell and **zero** to the
+right — which is the pre-fix geometry, so it is stale for the leaf question *and* was produced by
+the build that still had the fixed 1024 transform. It remains valid as the reason the two defects
+were found, and the fixes are proven by the tests above rather than by that image.
+
+Not reviewed yet: the **cream glaze**, alternate seeds and the variation extremes beyond the one
+canonical case, and legibility at 320 px sheet cells. The sheet has now been supplied, but it is a
+pre-fix render, so a fresh `formloom-vasedaisy-sheet.png` from the current `procedural-preview`
+artifact is needed before those boxes can be closed; they stay open rather than being assumed.
 
 ## Known limitations
 

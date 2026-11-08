@@ -103,24 +103,33 @@ public static class DaisyGeometry
             stemTop);
         var stem = ImmutableArray.Create(stemSegment);
 
-        // Exactly two leaves at different heights, splayed to either side so the head never
-        // hides them and neither leaf crosses the stem.
-        var leafLength = MathF.Min(stemVisible * 0.62f, mouthRadius.X * 2.1f);
+        // The head is placed before the leaves, because the leaves have to live in the clear stem
+        // between the head's own bottom edge and the rim. Deriving them from a fraction of the
+        // stem was not enough: the head grew over the upper leaf, and the flower read as having a
+        // single leaf in the rendered image.
+        var center = new Vector2(stemTop.X, stemTop.Y - (headRadius * 0.10f));
+        var headBottom = center.Y + (headRadius * FlattenShare);
+        var leafBandTop = headBottom + (headRadius * 0.22f);
+        var leafBandBottom = rimTop - (stemVisible * 0.18f);
+        var band = MathF.Max(leafBandBottom - leafBandTop, stemVisible * 0.12f);
+
+        // Long enough to reach clearly past the head's silhouette and splayed almost horizontally,
+        // so both blades sit in that clear band instead of disappearing behind the petals.
+        var leafLength = MathF.Min(stemVisible * 0.72f, mouthRadius.X * 2.3f);
         var leaves = ImmutableArray.Create(
             CreateLeaf(
                 stemSegment,
-                rimTop - (stemVisible * 0.34f),
-                -(1.16f + Jitter(leafRandom, 0.14f, amount)),
+                leafBandBottom,
+                -(1.38f + Jitter(leafRandom, 0.08f, amount)),
                 leafLength * (1 + Jitter(leafRandom, 0.06f, amount)),
                 leafRandom),
             CreateLeaf(
                 stemSegment,
-                rimTop - (stemVisible * 0.72f),
-                1.08f + Jitter(leafRandom, 0.14f, amount),
-                leafLength * (1 + Jitter(leafRandom, 0.06f, amount)),
+                leafBandTop + (band * 0.45f),
+                1.36f + Jitter(leafRandom, 0.08f, amount),
+                leafLength * 0.88f,
                 leafRandom));
 
-        var center = new Vector2(stemTop.X, stemTop.Y - (headRadius * 0.10f));
         var diskX = headRadius * DiskShare * (1 + Jitter(diskRandom, 0.03f, amount));
         var diskY = diskX * FlattenShare;
         var petals = CreatePetals(center, headRadius, diskX, petalRandom, amount);

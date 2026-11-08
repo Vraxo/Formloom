@@ -220,6 +220,50 @@ public sealed class VaseFlowerRenderingTests
 
     private static int Brightness(SKColor pixel) => (pixel.Red + pixel.Green + pixel.Blue) / 3;
 
+    // The review sheet draws each cell at 320 px, and that is exactly the size where a
+    // fixed-space draw pass hides: the stem stops at the rim and the mouth looks empty. Assert
+    // the continuation lands inside the opening at the sheet's own size for every case, not only
+    // at the 1024 reference.
+    [Fact]
+    public void TheStemReachesTheOpeningAtTheSheetCellSize()
+    {
+        const int Cell = 320;
+        foreach (var (prompt, name, seed, variation) in Exports)
+        {
+            var scene = SceneGenerator.Generate(new(prompt, (ulong)seed, variation, Width: Cell, Height: Cell)).Scene!;
+            var flower = scene.VaseFlower!;
+            using var planted = Decode(StillLifeRenderer.Render(scene).PngBytes);
+            using var empty = Decode(StillLifeRenderer.Render(EmptyVase(scene)).PngBytes);
+            var green = 0;
+            for (var y = 0; y < Cell; y++)
+            {
+                for (var x = 0; x < Cell; x++)
+                {
+                    var pixel = planted.GetPixel(x, y);
+
+                    // Green dominance, not a brightness floor: inside the cavity the stem is
+                    // darkened by the depth gradient and thinned by antialiasing at 320 px.
+                    if (Delta(pixel, empty.GetPixel(x, y)) == 0 ||
+                        pixel.Green <= pixel.Red + 6 ||
+                        pixel.Green <= pixel.Blue + 6)
+                    {
+                        continue;
+                    }
+
+                    var dx = ((x + 0.5f) / Cell) - flower.OpeningCenter.X;
+                    var dy = ((y + 0.5f) / Cell) - flower.OpeningCenter.Y;
+                    if (((dx * dx) / (flower.OpeningRadius.X * flower.OpeningRadius.X)) +
+                        ((dy * dy) / (flower.OpeningRadius.Y * flower.OpeningRadius.Y)) <= 1f)
+                    {
+                        green++;
+                    }
+                }
+            }
+
+            Assert.True(green > 0, $"{name} lost the stem inside the opening at {Cell} px ({green} green pixels)");
+        }
+    }
+
     [Theory]
     [MemberData(nameof(Dimensions))]
     public void FlowersRenderAtOtherSupportedDimensions(int width, int height)

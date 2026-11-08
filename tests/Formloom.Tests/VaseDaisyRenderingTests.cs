@@ -42,7 +42,10 @@ public sealed class VaseDaisyRenderingTests
     public static TheoryData<int, int> Dimensions()
     {
         var data = new TheoryData<int, int>();
-        foreach (var (width, height) in new[] { (64, 64), (256, 256), (640, 480), (2048, 1024), (4096, 1024) })
+
+        // 320 x 320 is the review sheet's cell size: it is where the mouth continuation was
+        // silently missing before the matrix reset used the scene's own size.
+        foreach (var (width, height) in new[] { (64, 64), (256, 256), (320, 320), (640, 480), (2048, 1024), (4096, 1024) })
         {
             data.Add(width, height);
         }
@@ -114,11 +117,15 @@ public sealed class VaseDaisyRenderingTests
             }
         }
 
-        // The head fills its box, both leaves flank the stem and the stem reaches the opening.
+        // The head fills its box, the stem reaches the opening, and both leaves are actually
+        // visible. "Changed pixels" is not enough for a leaf: a leaf hidden behind the petals is
+        // covered by daisy ink too, so the count is of green blade pixels. This is the property
+        // the first rendered daisy failed — it had two leaves in its geometry and one on screen.
         Assert.True(Count(planted, empty, BloomWindow(plant, 0)) > 1200, $"{name} lost its head");
         foreach (var leaf in plant.Leaves)
         {
-            Assert.True(Count(planted, empty, LeafWindow(leaf)) > 40, $"{name} lost a leaf");
+            var blade = Coloured(planted, empty, LeafWindow(leaf), IsLeafGreen);
+            Assert.True(blade > 40, $"{name} shows no leaf at ({leaf.Attachment.X:0.000},{leaf.Attachment.Y:0.000}): {blade} green pixels");
         }
 
         Assert.True(Count(planted, empty, StemWindow(daisy)) > 40, $"{name} lost the stem above the rim");
@@ -183,6 +190,9 @@ public sealed class VaseDaisyRenderingTests
 
     private static bool IsPetalWhite(SKColor pixel) =>
         pixel.Red > 195 && pixel.Green > 195 && pixel.Blue > 185 && Math.Abs(pixel.Red - pixel.Blue) < 24;
+
+    private static bool IsLeafGreen(SKColor pixel) =>
+        pixel.Green > 85 && pixel.Green > pixel.Red + 12 && pixel.Green > pixel.Blue + 12;
 
     private static bool IsDiskGold(SKColor pixel) =>
         pixel.Red > 150 && pixel.Green > 110 && pixel.Blue < 120 && pixel.Red > pixel.Green && pixel.Green > pixel.Blue;
@@ -553,6 +563,7 @@ public sealed class VaseDaisyRenderingTests
         canvas.Clear(new SKColor(20, 22, 24));
 
         var manifest = new List<object>();
+        var cells = new List<(int Index, VaseDaisy Daisy)>();
         for (var index = 0; index < Cases.Length; index++)
         {
             var (prompt, name, seed, variation) = Cases[index];
@@ -571,6 +582,7 @@ public sealed class VaseDaisyRenderingTests
             }
 
             var daisy = scene.VaseDaisy!;
+            cells.Add((index, daisy));
             manifest.Add(new
             {
                 name,
@@ -614,6 +626,39 @@ public sealed class VaseDaisyRenderingTests
                 new System.Text.Json.JsonSerializerOptions { IncludeFields = true }));
         Assert.True(File.Exists(Path.Combine(directory, "formloom-vasedaisy-sheet.png")));
         Assert.Equal(Cases.Length, manifest.Count);
+
+        // The sheet is a grid of 320 px renders, so it is also the place where a fixed-space draw
+        // pass hides: every cell must still show the daisy's stem inside its own mouth.
+        foreach (var (index, daisy) in cells)
+        {
+            var originX = (index % Columns) * Cell;
+            var originY = (index / Columns) * Cell;
+            var green = 0;
+            for (var y = 0; y < Cell; y++)
+            {
+                for (var x = 0; x < Cell; x++)
+                {
+                    var dx = ((x + 0.5f) / Cell) - daisy.OpeningCenter.X;
+                    var dy = ((y + 0.5f) / Cell) - daisy.OpeningCenter.Y;
+                    var reachX = daisy.OpeningRadius.X;
+                    var reachY = daisy.OpeningRadius.Y;
+                    if (((dx * dx) / (reachX * reachX)) + ((dy * dy) / (reachY * reachY)) > 1f)
+                    {
+                        continue;
+                    }
+
+                    // Green dominance, not the full blade colour: inside the cavity the stem is
+                    // darkened by the depth gradient and thinned by antialiasing at 320 px.
+                    var pixel = sheet.GetPixel(originX + x, originY + y);
+                    if (pixel.Green > pixel.Red + 6 && pixel.Green > pixel.Blue + 6)
+                    {
+                        green++;
+                    }
+                }
+            }
+
+            Assert.True(green > 0, $"sheet cell {index} shows no stem inside the opening ({green} green pixels)");
+        }
     }
 
     private static StillLifeScene Scene(string prompt, ulong seed = 20261105, double variation = 0.35) =>
