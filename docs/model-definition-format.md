@@ -35,7 +35,7 @@ The proposed root fields are:
 | \`nodes\` | Typed construction/evaluation graph. |
 | \`outputs\` | Named geometry roots and declared render order. |
 
-IDs are stable across file renames, case-sensitive, namespaced, and unique in a catalog.
+IDs are stable across file renames, case-sensitive, namespaced, and unique in a catalog. Runtime catalog loading currently recognizes files ending in `.model.json`. Its default root is `AppContext.BaseDirectory/models`; callers and tests can pass any explicit root. Files are discovered recursively, and a second load takes a new snapshot rather than watching the directory. There is no multi-root override/merge policy yet. Prompt phrases are derived from the declared article, material-variant descriptor values, noun, and noun aliases; collisions reject all conflicting definitions.
 
 The first structural contract is now represented by [`schemas/model-definition.v1.schema.json`](../schemas/model-definition.v1.schema.json) and the renderer-neutral records under `src/Formloom.Core/Models/Definitions/`. The schema and DTOs cover the initial metadata/profile/material-token/numeric-expression/node subset; they do not yet constitute a complete runnable rose format. Semantic reference checks and the final operator payloads remain implementation work.
 
@@ -244,8 +244,8 @@ Reject a format or implementation that calls a rose helper behind a generic-look
 ## 9. Next implementation sequence
 
 1. Complete and test the versioned JSON Schema and typed Core definition records; their initial structural subset now exists but is not yet a complete rose contract.
-2. Add a loader/validator with structured file- and path-aware diagnostics and temporary-directory tests.
-3. Represent the full rose construction as a fixture and refine typed operation contracts to support it.
-4. Implement the generic interpreter and migrate the rose.
+2. External filesystem discovery and semantic validation are implemented in PR [#60](https://github.com/Vraxo/Formloom/pull/60), with temporary-directory, collision, reference, depth, and resource-limit tests. Linux / Release CI [run #269](https://github.com/Vraxo/Formloom/actions/runs/42641157403) passed all 813 tests. The PR is open; merge and post-merge CI remain pending.
+3. Design the renderer-neutral evaluated geometry representation, using the rose requirements to refine typed operation outputs and coordinate/landmark contracts.
+4. Implement the minimum reusable operations and generic evaluator, then express and migrate the rose through that path.
 
 Do not ship the draft fragment as a runtime model until it validates against the committed schema and is evaluated by the real interpreter.

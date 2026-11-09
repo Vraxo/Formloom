@@ -10,6 +10,7 @@ public static class ModelDefinitionJson
         var options = new JsonSerializerOptions
         {
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            MaxDepth = 64,
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
             WriteIndented = true,
