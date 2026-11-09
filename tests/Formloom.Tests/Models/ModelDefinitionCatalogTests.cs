@@ -367,7 +367,7 @@ public sealed class ModelDefinitionCatalogTests
                 {
                     var id = $"group.{index}";
                     var part = index == 0 ? "bloom.outer" : $"group.{index - 1}";
-                    return $"""{"op":"geometry.group","id":"{{id}}","parts":["{{part}}"]}""";
+                    return $$"""{"op":"geometry.group","id":"{{id}}","parts":["{{part}}"]}""";
                 });
             var expanded = ValidDefinition.Replace(
                 "            }\n          ],\n          \"outputs\": [\"bloom.outer\"]",
