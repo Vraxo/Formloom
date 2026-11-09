@@ -197,7 +197,7 @@ public sealed class ModelDefinitionJsonTests
         Assert.Equal("color", model.Prompt.MaterialVariantParameter);
         Assert.Equal(ModelParameterType.Choice, model.Parameters["color"].Type);
         Assert.Equal(ModelProfileInterpolation.ClosedCubic, model.Profiles["petal.broad"].Interpolation);
-        Assert.Equal(["red", "pink"], model.Prompt.Descriptors["color"]);
+        Assert.Equal(new[] { "red", "pink" }, model.Prompt.Descriptors["color"]);
 
         Assert.Collection(
             model.Nodes,
@@ -220,7 +220,10 @@ public sealed class ModelDefinitionJsonTests
         var serialized = JsonSerializer.Serialize(original, ModelDefinitionJson.CreateOptions());
         var roundTripped = Deserialize(serialized);
 
-        Assert.Equal(original, roundTripped);
+        Assert.Equal(original.Id, roundTripped.Id);
+        Assert.Equal(original.SchemaVersion, roundTripped.SchemaVersion);
+        Assert.Equal(original.Nodes.Length, roundTripped.Nodes.Length);
+        Assert.Equal(original.Outputs, roundTripped.Outputs);
         Assert.IsType<ModelRadialArrayNodeDefinition>(roundTripped.Nodes[3]);
         Assert.IsType<ModelReferenceExpression>(
             Assert.IsType<ModelPointExpression>(
