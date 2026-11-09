@@ -73,7 +73,7 @@ public static partial class ModelDefinitionValidator
 
         ValidatePrompt(definition, Add);
         ValidateMounts(definition.Mounts, Add);
-        ValidateParameters(definition.Parameters, settings, Add);
+        ValidateParameters(definition.Parameters, settings, definition.Mounts, Add);
         ValidateProfiles(definition.Profiles, settings, Add);
         ValidateMaterials(definition.Materials, Add);
         ValidateNodes(definition, settings, Add);
@@ -201,6 +201,7 @@ public static partial class ModelDefinitionValidator
     private static void ValidateParameters(
         ImmutableDictionary<string, ModelParameterDefinition>? parameters,
         ModelDefinitionCatalogOptions options,
+        ImmutableArray<string> mounts,
         Action<string, string, string> add)
     {
         if (parameters is null)
@@ -232,9 +233,9 @@ public static partial class ModelDefinitionValidator
                     add("definition.invalid-number-parameter", path, "Number parameters require defaultValue, minimum, and maximum, and cannot declare choice values.");
                 }
 
-                ValidateExpression(parameter.DefaultValue, $"{path}.defaultValue", options, [], [], add);
-                ValidateExpression(parameter.Minimum, $"{path}.minimum", options, [], [], add);
-                ValidateExpression(parameter.Maximum, $"{path}.maximum", options, [], [], add);
+                ValidateExpression(parameter.DefaultValue, $"{path}.defaultValue", options, parameters, mounts, [], add);
+                ValidateExpression(parameter.Minimum, $"{path}.minimum", options, parameters, mounts, [], add);
+                ValidateExpression(parameter.Maximum, $"{path}.maximum", options, parameters, mounts, [], add);
                 continue;
             }
 
@@ -381,7 +382,7 @@ public static partial class ModelDefinitionValidator
             switch (node)
             {
                 case ModelCubicPathNodeDefinition pathNode:
-                    ValidateCubicPath(pathNode, path, options, definition.Mounts, priorNodes.Keys, add);
+                    ValidateCubicPath(pathNode, path, options, definition.Parameters, definition.Mounts, priorNodes.Keys, add);
                     break;
                 case ModelCurveProjectNodeDefinition curveNode:
                     if (!priorNodes.TryGetValue(curveNode.Curve, out var curve) || curve is not ModelCubicPathNodeDefinition)
@@ -463,6 +464,7 @@ public static partial class ModelDefinitionValidator
         ModelCubicPathNodeDefinition node,
         string path,
         ModelDefinitionCatalogOptions options,
+        ImmutableDictionary<string, ModelParameterDefinition>? parameters,
         ImmutableArray<string> mounts,
         IEnumerable<string> priorNodes,
         Action<string, string, string> add)
@@ -482,10 +484,10 @@ public static partial class ModelDefinitionValidator
                 continue;
             }
 
-            ValidatePointExpression(segment.Start, $"{path}.segments[{index}].start", options, null, mounts, priorNodes, add);
-            ValidatePointExpression(segment.Control1, $"{path}.segments[{index}].control1", options, null, mounts, priorNodes, add);
-            ValidatePointExpression(segment.Control2, $"{path}.segments[{index}].control2", options, null, mounts, priorNodes, add);
-            ValidatePointExpression(segment.End, $"{path}.segments[{index}].end", options, null, mounts, priorNodes, add);
+            ValidatePointExpression(segment.Start, $"{path}.segments[{index}].start", options, parameters, mounts, priorNodes, add);
+            ValidatePointExpression(segment.Control1, $"{path}.segments[{index}].control1", options, parameters, mounts, priorNodes, add);
+            ValidatePointExpression(segment.Control2, $"{path}.segments[{index}].control2", options, parameters, mounts, priorNodes, add);
+            ValidatePointExpression(segment.End, $"{path}.segments[{index}].end", options, parameters, mounts, priorNodes, add);
         }
     }
 
