@@ -10,6 +10,9 @@ public static class ModelDefinitionValidator
     private const int SupportedSchemaVersion = 1;
     private const string SupportedMount = "vase-opening";
 
+    private static readonly IReadOnlyDictionary<string, ModelNodeDefinition> EmptyNodes =
+        ImmutableDictionary<string, ModelNodeDefinition>.Empty;
+
     private static readonly HashSet<string> FrameMetrics = new(StringComparer.Ordinal)
     {
         "openingCenter.x",
@@ -234,9 +237,9 @@ public static class ModelDefinitionValidator
                     add("definition.invalid-number-parameter", path, "Number parameters require defaultValue, minimum, and maximum, and cannot declare choice values.");
                 }
 
-                ValidateExpression(parameter.DefaultValue, $"{path}.defaultValue", options, parameters, mounts, [], add);
-                ValidateExpression(parameter.Minimum, $"{path}.minimum", options, parameters, mounts, [], add);
-                ValidateExpression(parameter.Maximum, $"{path}.maximum", options, parameters, mounts, [], add);
+                ValidateExpression(parameter.DefaultValue, $"{path}.defaultValue", options, parameters, mounts, EmptyNodes, add);
+                ValidateExpression(parameter.Minimum, $"{path}.minimum", options, parameters, mounts, EmptyNodes, add);
+                ValidateExpression(parameter.Maximum, $"{path}.maximum", options, parameters, mounts, EmptyNodes, add);
                 continue;
             }
 
@@ -434,11 +437,11 @@ public static class ModelDefinitionValidator
                         add("definition.random-stream-required", $"{path}.stream", "Radial arrays require a stable named random stream.");
                     }
 
-                    ValidatePointExpression(radialNode.Center, $"{path}.center", options, definition.Parameters, definition.Mounts, priorNodes.Keys, add);
-                    ValidateExpression(radialNode.RadiusX, $"{path}.radiusX", options, definition.Parameters, definition.Mounts, priorNodes.Keys, add);
-                    ValidateExpression(radialNode.RadiusY, $"{path}.radiusY", options, definition.Parameters, definition.Mounts, priorNodes.Keys, add);
-                    ValidateExpression(radialNode.StartAngle, $"{path}.startAngle", options, definition.Parameters, definition.Mounts, priorNodes.Keys, add);
-                    ValidateExpression(radialNode.Phase, $"{path}.phase", options, definition.Parameters, definition.Mounts, priorNodes.Keys, add);
+                    ValidatePointExpression(radialNode.Center, $"{path}.center", options, definition.Parameters, definition.Mounts, priorNodes, add);
+                    ValidateExpression(radialNode.RadiusX, $"{path}.radiusX", options, definition.Parameters, definition.Mounts, priorNodes, add);
+                    ValidateExpression(radialNode.RadiusY, $"{path}.radiusY", options, definition.Parameters, definition.Mounts, priorNodes, add);
+                    ValidateExpression(radialNode.StartAngle, $"{path}.startAngle", options, definition.Parameters, definition.Mounts, priorNodes, add);
+                    ValidateExpression(radialNode.Phase, $"{path}.phase", options, definition.Parameters, definition.Mounts, priorNodes, add);
                     ValidateMapping(radialNode.Mapping, $"{path}.mapping", options, definition.Parameters, definition.Mounts, priorNodes, add);
                     ValidateVariation(radialNode.Variation, $"{path}.variation", options, definition.Parameters, definition.Mounts, priorNodes, add);
                     break;
@@ -692,7 +695,7 @@ public static class ModelDefinitionValidator
         string path,
         ImmutableDictionary<string, ModelParameterDefinition>? parameters,
         ImmutableArray<string> mounts,
-        HashSet<string> priorNodes,
+        IReadOnlyDictionary<string, ModelNodeDefinition> priorNodes,
         Action<string, string, string> add)
     {
         if (string.IsNullOrWhiteSpace(reference))
