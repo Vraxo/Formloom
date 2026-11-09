@@ -263,11 +263,13 @@ Settle these through a runnable rose prototype and focused tests, not by turning
 
 Reject a format or implementation that calls a rose helper behind a generic-looking operation, requires a C# registry entry or model-ID branch, leaves counts/templates/assembly/palettes in production code, uses arbitrary scripts or network references, turns every value into an untyped dictionary, changes unrelated output when parts are added, couples Core to SkiaSharp, or requires a general scene-graph rewrite before another vase-mounted model can be added.
 
-## 9. Next implementation sequence
+## 10. Next implementation sequence
 
-1. Complete and test the versioned JSON Schema and typed Core definition records; their initial structural subset now exists but is not yet a complete rose contract.
-2. External filesystem discovery and semantic validation are implemented in PR [#60](https://github.com/Vraxo/Formloom/pull/60), with temporary-directory, collision, reference, depth, and resource-limit tests. Linux / Release CI [run #269](https://github.com/Vraxo/Formloom/actions/runs/42641157403) passed all 813 tests. The PR is open; merge and post-merge CI remain pending.
-3. Design the renderer-neutral evaluated geometry representation, using the rose requirements to refine typed operation outputs and coordinate/landmark contracts.
-4. Implement the minimum reusable operations and generic evaluator, then express and migrate the rose through that path.
+1. The initial versioned schema and typed Core subset are merged in PRs [#58](https://github.com/Vraxo/Formloom/pull/58) and [#59](https://github.com/Vraxo/Formloom/pull/59); they are a structural subset, not a complete rose model.
+2. Runtime filesystem discovery and semantic validation are merged in [PR #60](https://github.com/Vraxo/Formloom/pull/60); post-merge Linux / Release CI [run #271](https://github.com/Vraxo/Formloom/actions/runs/42646802073) passed.
+3. The renderer-neutral geometry output contract is merged in [PR #61](https://github.com/Vraxo/Formloom/pull/61), merge `13fdc700`; post-merge Linux / Release CI [run #282](https://github.com/Vraxo/Formloom/actions/runs/42676443120) passed.
+4. The first three reusable C# geometry algorithms are proposed in [PR #62](https://github.com/Vraxo/Formloom/pull/62), with PR CI [run #277](https://github.com/Vraxo/Formloom/actions/runs/42652878775) passing 832/832 tests. Their contracts are documented in [geometry-operations.md](geometry-operations.md). These are C# algorithms, not a JSON programming language.
+5. An initial model-ID-agnostic evaluator for the five schema-v1 node types is proposed in [PR #63](https://github.com/Vraxo/Formloom/pull/63), stacked on PR #62; PR CI [run #279](https://github.com/Vraxo/Formloom/actions/runs/42656325294) passed 839/839 tests. It is not a complete rose implementation.
+6. Next: complete the rose-specific knowledge vs. reusable-algorithm inventory; verify the C# utilities against the legacy rose; then decide the smallest missing generic capabilities. Only after that author the complete rose definition. Preserve the legacy generator and renderer until automated and visual equivalence is reviewed.
 
 Do not ship the draft fragment as a runtime model until it validates against the committed schema and is evaluated by the real interpreter.

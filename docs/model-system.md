@@ -4,7 +4,7 @@
 
 **Phase:** 11 — Data-driven model system  
 **Contract version:** 0.1  
-**Implementation status:** Architecture contract plus versioned typed definitions, filesystem catalog, semantic validation, and renderer-neutral evaluated-geometry output contract. The generic evaluator, complete executable rose definition, and generic renderer integration remain unimplemented.
+**Implementation status:** Architecture contract, versioned typed definitions, filesystem catalog, semantic validation, renderer-neutral evaluated-geometry output contract, and the initial reusable C# geometry algorithms are implemented. A generic schema-v1 evaluator is under review in PR #63. The complete rose definition, generic material/style representation, and generic renderer/scene integration remain unimplemented.
 
 This document defines the intended boundary between Formloom's procedural engine and the external model knowledge it consumes. It is deliberately a contract, not a premature specification of every JSON field or procedural operator. Those details must be designed against the existing rose implementation during the next milestones.
 
@@ -216,7 +216,7 @@ JSON is a declarative model-description format, not a programming language. Do n
 
 A model that fits the existing engine vocabulary should be data-authored. A genuinely specialized model may retain a code-authored algorithm when forcing it into the data format would be less clear or more fragile. This is an explicit hybrid design choice, not a failure of the model system. Do not hide a species-specific method behind a generic-sounding operation. Keep legacy paths until automated and visual equivalence is established.
 
-Use the review questions in ADR-0001 before expanding the operation vocabulary or moving code into data. The current C# capability inventory is documented in [geometry-operations.md](geometry-operations.md); it is deliberately an algorithm reference, not an additional JSON language.
+Use the review questions in ADR-0001 before expanding the operation vocabulary or moving code into data. The initial C# algorithm inventory is documented in [geometry-operations.md](geometry-operations.md); it is a capability reference, not another model-definition language.
 
 ## 12. Explicit non-goals for this phase
 
@@ -229,7 +229,7 @@ Use the review questions in ADR-0001 before expanding the operation vocabulary o
 - Replacing SkiaSharp or the CPU-first rendering strategy.
 - Removing every conditional from the engine. Conditionals that implement generic operations are expected; conditionals whose purpose is to recognize a particular model are not.
 
-## 13. Current implementation audit (starting baseline)
+## 12. Current implementation audit (starting baseline)
 
 The audit below is against `main` at `fc4e587166617d72d2be9679aadc5a160c79878e` (2026-11-09).
 
