@@ -1,8 +1,8 @@
 # Phase 11 — Data-driven model system
 
-> **Status:** In progress. PR 1 (architecture contract) and PR 2 (model-definition format draft) are merged; PR and post-merge Linux / Release CI passed for both. PR 2b is implementing the versioned JSON Schema and typed Core definition records. No runtime catalog, evaluator, generic geometry pipeline, or migrated rose exists yet.
+> **Status:** In progress. PRs 1–2b are merged. PR #59 added the initial JSON Schema and typed Core definition records; its PR and post-merge Linux / Release CI both passed. PR 3 is implementing filesystem discovery and semantic validation. No runtime geometry evaluator, generic rendering pipeline, or migrated rose exists yet.
 >
-> **Original starting point:** `main` at `fc4e587166617d72d2be9679aadc5a160c79878e` (2026-11-09). Current `main` includes PR 1 merge `5e5e3952694f5ef5732483a01e8ec8b8fd203d8b` and PR 2 merge `41168813ce5fe9254179609c11b708efed7566a4`; implementation branch: `phase-11/model-definition-schema`.
+> **Original starting point:** `main` at `fc4e587166617d72d2be9679aadc5a160c79878e` (2026-11-09). Current `main` includes PR 1 merge `5e5e3952694f5ef5732483a01e8ec8b8fd203d8b`, PR 2 merge `41168813ce5fe9254179609c11b708efed7566a4`, and PR 2b merge `b41233e6c0d44738c8bb29751e5d8961ac6a17ce`; current implementation branch: `phase-11/model-catalog`.
 
 ## Goal
 
@@ -263,8 +263,8 @@ Core rules:
 |---|---|---|---|
 | PR 1 | Architecture contract and source audit | Complete | [PR #57](https://github.com/Vraxo/Formloom/pull/57), merge `5e5e395`, PR CI `42628176874`, main CI `42628463314` |
 | PR 2 | Model-definition format design draft | Complete | [PR #58](https://github.com/Vraxo/Formloom/pull/58), merge `4116881`, PR CI `42629742765`, main CI `42629995928` |
-| PR 2b | JSON Schema and typed Core definition records | In progress | [PR #59](https://github.com/Vraxo/Formloom/pull/59), head `9c5c23c`, Linux / Release CI run `42631302816` in progress |
-| PR 3 | Runtime model catalog and file diagnostics | Not started | — |
+| PR 2b | Initial JSON Schema and typed Core definition records | Complete (initial structural subset) | [PR #59](https://github.com/Vraxo/Formloom/pull/59), merge `b41233e`, PR CI [42631769203](https://github.com/Vraxo/Formloom/actions/runs/42631769203), main CI [42632077052](https://github.com/Vraxo/Formloom/actions/runs/42632077052) |
+| PR 3 | Runtime model catalog and semantic file validation | In progress | `phase-11/model-catalog` |
 | PR 4 | Generic geometry representation | Not started | — |
 | PR 5 | Reusable procedural operators | Not started | — |
 | PR 6 | Generic model interpreter | Not started | — |
@@ -290,4 +290,4 @@ Core rules:
 
 ## Handoff
 
-**Current status:** PR #57 (architecture) and PR #58 (format draft) are merged with passing PR and post-merge CI. PR #59 adds the first JSON Schema and typed Core definition DTOs; its current-head Linux / Release build/test run is pending. This is a structural contract only: the runtime catalog, semantic validator, evaluator, geometry representation, and rose migration have not been implemented.
+**Current status:** PR #57, #58, and #59 are merged. PR #59's PR run [42631769203](https://github.com/Vraxo/Formloom/actions/runs/42631769203) and post-merge main run [42632077052](https://github.com/Vraxo/Formloom/actions/runs/42632077052) both passed. The initial schema/DTO subset supports typed parsing of five operation variants but does not yet validate graph references or load external directories. PR 3 now begins the filesystem catalog and semantic validation.
