@@ -10,18 +10,20 @@ User review of the seed-42 output first identified the stem discontinuity at the
 confirmed that contact looked repaired while flagging a sharp downward turn at both interior ends.
 That bend came from the straight below-base extension and was not intended. Follow-up PR
 [#53](https://github.com/Vraxo/Formloom/pull/53) now extends each stem along the reverse base
-tangent with a cubic, then clips it inside the near lip. Source commit `ed6c204` and the final
-workflow-restored head `54f7f4a` passed Linux Release run
-[42502940039](https://github.com/Vraxo/Formloom/actions/runs/42502940039), including build, full
-test suite, and preview upload. The updated review notes at `ccda66a` also passed run
-[42503292243](https://github.com/Vraxo/Formloom/actions/runs/42503292243). A temporary diagnostic workflow step was used for one run to locate
-a test probe below the near-lip occlusion and has since been removed; no permanent workflow change
-remains. The user supplied the updated red/cream, seed-42 image, which was reviewed at full size
-and in an enlarged mouth crop: both stems are continuous, follow a smooth tangent into the opening,
-and disappear beneath the near lip. This confirms that sample only; the other color/glaze and
-variation cases still need review. Direct artifact downloads remain blocked by the sandbox's
-outbound allowlist, and timing sidecar values have not been read. Do not merge PR #53 without
-explicit user approval.
+tangent with a cubic, then clips it inside the near lip. PR #53 merged as
+`02286c55c21ed46cc332796c2861b3354ca6dd20`; head `0c7a59e` passed pre-merge Linux Release run
+[42507262563](https://github.com/Vraxo/Formloom/actions/runs/42507262563), and post-merge main run
+[42507895872](https://github.com/Vraxo/Formloom/actions/runs/42507895872) passed build, full tests,
+and preview upload. The merge also adds an optional antialiasing render control, enabled by default;
+it changes rasterization only, not scene geometry or prompts. A temporary diagnostic workflow step
+was used for one run to locate a test probe below the near-lip occlusion and has since been removed;
+no permanent workflow change remains. The user supplied the 1280 × 960 review sheet, its timing
+manifest, and all ten 1024 × 1024 case images. Full-size review confirms distinct blooms, attached
+leaves, smooth stem continuation into the vase mouth, and expected disappearance beneath the near
+lip across the default combinations, alternate seeds, and variation extremes. No obvious collision,
+clipping, or contact defect was found. The user also supplied all ten individual full-size timing
+sidecars; they have been read and recorded below as single-run observations. Direct GitHub artifact
+downloads remain blocked by the sandbox's outbound allowlist, but are no longer needed for this review.
 
 - **Starting point:** Phase 9 branched from `main` at `863dd75`, after Phase 8 PR #51 merged as
   `c441a9a`.
@@ -181,23 +183,50 @@ all four default prompt combinations, and separate dimension coverage uses all c
 64 × 64, 320 × 320, 640 × 480, 2048 × 1024 and 4096 × 1024. `FORMFLOOM_EXPORT_ALL=1` continues to
 control exhaustive exports for other families; it does not gate render tests.
 
-**Visual review is partial.** The user-supplied updated red/cream, seed-42 image was inspected
-at full size and in an enlarged mouth crop. Both stems cross the far rim continuously, follow a
-smooth tangent into the opening, and disappear beneath the near lip; no abrupt downward kink is
-visible in this sample. The remaining default glaze/color combinations and variation-endpoint
-samples still need review. The latest green [PR #53 CI run 42503292243](https://github.com/Vraxo/Formloom/actions/runs/42503292243) uploaded the procedural-preview artifact, but this agent cannot download the artifact directly because GitHub redirects it to a host outside the sandbox's allowlist.
+**Visual review is complete for the supplied set.** The user-provided 1280 × 960 sheet (ten occupied
+320 × 320 cells) and all ten matching 1024 × 1024 case images were inspected. Across default
+color/glaze combinations, alternate seeds, and variation extremes, the tulip and daisy remain
+distinct; the white radial petals and golden disk are legible; all four leaves appear attached; and
+both stems enter the same mouth smoothly before disappearing beneath the near lip. No obvious bloom
+collision, stem crossing, malformed leaf, clipping, or vase/contact regression was found. The small
+dark oval on the tabletop is the intentional wood-grain knot motif, not a stray object or shadow.
+No art changes are requested from this review. The user-supplied files provide full-size pixels, so
+this visual check does not depend on downloading the CI artifact.
 
 ## Timing and limitations
 
-Each full-size case sidecar records render-plus-PNG-encode time plus framework, operating system,
-processor count and PNG byte counts. The canonical red/blue case also measures the same empty vase,
-standalone red tulip and standalone white daisy on the same runner; these are single observations,
-not a benchmark or universal cost model. The sidecars are uploaded in `procedural-preview`, but
-those numeric values have not been read into this handoff, so no timing numbers or performance
-claim are made here. They remain a review follow-up alongside visual inspection of the artifact.
+The user-supplied sheet manifest records one render-and-PNG-encode observation per 320 × 320 cell
+(cells 0–9, milliseconds): 32.1135, 31.3668, 32.9531, 32.0450, 34.2429, 33.0688, 34.1690,
+45.6050, 36.1054, and 36.1202. The range is 31.3668–45.6050 ms (mean 34.7790 ms); cell 7,
+red/cream at high variation, is the maximum. These are sheet-size single observations, not full-size
+case timings, a benchmark, or a universal cost model.
+
+The ten individual full-size sidecars all report 1024 × 1024 renders on .NET 10.0.14, Ubuntu
+24.04.5 LTS, with 4 processors. One render-plus-PNG-encode observation and encoded PNG size per
+case are recorded here:
+
+| Case | Seed | Variation | Milliseconds | PNG bytes |
+| --- | ---: | ---: | ---: | ---: |
+| red / blue | 42 | 0.35 | 134.8625 | 241,097 |
+| red / cream | 42 | 0.35 | 132.8377 | 231,986 |
+| yellow / blue | 42 | 0.35 | 135.8291 | 241,262 |
+| yellow / cream | 42 | 0.35 | 137.5908 | 232,153 |
+| red / blue, alternate seed | 1337 | 0.35 | 144.3281 | 248,389 |
+| yellow / cream, alternate seed | 20261105 | 0.35 | 192.4158 | 239,379 |
+| red / blue, low variation | 42 | 0 | 140.7037 | 246,648 |
+| red / cream, high variation | 42 | 1 | 138.3798 | 228,890 |
+| yellow / blue, low variation | 20261105 | 0 | 142.2735 | 250,573 |
+| yellow / cream, high variation | 1337 | 1 | 137.9443 | 241,136 |
+
+Full-size times range from 132.8377 to 192.4158 ms (mean 143.7165 ms, median 138.1620 ms).
+The yellow/cream alternate-seed case is the largest single observation; with one sample per case,
+that is not evidence of a case-specific regression. The canonical red/blue seed-42 sidecar also
+records same-run render-plus-encode values for the mixed arrangement (134.8625 ms), empty vase
+(131.2930 ms), standalone tulip (133.1371 ms), and standalone daisy (134.2400 ms), plus their PNG
+sizes. These are individual environment-specific observations; do not subtract or generalize them
+as a per-flower cost model. The sheet manifest's `Generated` timestamp is Nov 8, which the user
+clarified is consistent with the review taking place on Nov 9.
 
 Headless Linux CI does not test Photino/WebView2 native dialogs, Windows window lifecycle, visual
-accessibility, or native resize behavior. No such coverage is claimed. Phase 9's post-merge CI is
-green, and follow-up PR #53's current Linux Release CI is green. Remaining gates are post-fix human
-visual review, optional timing-sidecar read-back, explicit user approval before merging PR #53, and
-its post-merge Linux Release run. Do not merge to close this handoff without the user's approval.
+accessibility, or native resize behavior. No such coverage is claimed. Phase 9's post-merge CI and
+follow-up PR #53's post-merge Linux Release run [42507895872](https://github.com/Vraxo/Formloom/actions/runs/42507895872) are green. The implementation, merge, CI, visual-review, and timing-sidecar read-back gates are complete. The timing figures remain single observations, not a repeated benchmark.

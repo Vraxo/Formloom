@@ -276,7 +276,7 @@ Automated coverage: both prompts through parser, generator and validator; a reje
 
 Artifacts: a routine CI run keeps `formloom-vasedaisy-sheet.png` (a plain row-major grid of eight 320 px cells, no text in the cells because the CI image has no font stack), `formloom-vasedaisy-sheet.timing.json` (the authoritative cell → case key), and one canonical full-size case, `formloom-vasedaisy-white-blue-seed-42-variation-0.35.png` with its `-silhouette.png` and `.timing.json`. Setting `FORMFLOOM_EXPORT_ALL=1` writes the whole matrix: both glazes at the default seed and variation, one alternate seed per glaze, and the variation endpoints. Each sidecar records the daisy's render-and-encode time next to the same empty vase's and the same tulip in the same glaze, on the same runner.
 
-Visual review of the daisy is **pending** — the artifact exists, but no human has looked at it yet. See the [Phase 8 handoff](docs/daisy-vase-handoff.md) for design decisions, evidence, artifact names, timings and limits, and the [checklist](.agents/todo-8.md).
+Visual review of the daisy is **complete**: full-size and sheet review found two defects, both were fixed and re-reviewed, and the final samples pass. See the [Phase 8 handoff](docs/daisy-vase-handoff.md) for evidence, artifact names, timing observations and limitations, and the [checklist](.agents/todo-8.md).
 
 ## Phase 9: a fixed tulip-and-daisy arrangement in one vase
 
@@ -330,6 +330,12 @@ JSON manifest, and ten full-size PNGs with silhouettes and timing sidecars: the 
 colour/glaze combinations, one alternate seed for each tulip colour, and low/high-variation samples
 for both colours. Review of the original render found a stem discontinuity at the vase opening;
 the user then confirmed that fix while flagging a sharp downward turn at the interior ends. The
-shared renderer now continues each stem along its reverse base tangent. The supplied red/cream,
-seed-42 sample visually confirms smooth entry and near-lip disappearance; the remaining samples
-still need review. Follow-up [PR #53](https://github.com/Vraxo/Formloom/pull/53) passes Linux Release CI run [42503292243](https://github.com/Vraxo/Formloom/actions/runs/42503292243), including the tangent/continuity pixel checks. PR #53 remains open and must not be merged without explicit user approval; its post-merge CI gate is pending.
+shared renderer now continues each stem along its reverse base tangent. The supplied sheet and all ten 1024 × 1024 samples have now been reviewed: flowers remain distinct, stems enter the opening smoothly
+and disappear beneath the near lip, and no obvious collision, clipping, or attachment defect was
+found. The small dark tabletop oval is the intentional wood-grain knot. The full-size timing
+sidecars have also been read: the ten render-plus-encode observations range from 132.8377 to
+192.4158 ms on the reported .NET 10 / Ubuntu runner, with one sample per case and no benchmark
+claim. The sheet manifest reports separate 320 × 320 cell timings. Follow-up
+[PR #53](https://github.com/Vraxo/Formloom/pull/53) is merged as
+[`02286c5`](https://github.com/Vraxo/Formloom/commit/02286c55c21ed46cc332796c2861b3354ca6dd20),
+and its post-merge [Linux Release CI run 42507895872](https://github.com/Vraxo/Formloom/actions/runs/42507895872) passed. The merged change also adds an opt-in antialiasing toggle, enabled by default; this is a rasterization option and does not alter prompts or generated geometry.
