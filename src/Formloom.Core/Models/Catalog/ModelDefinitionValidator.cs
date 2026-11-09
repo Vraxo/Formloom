@@ -736,9 +736,10 @@ public static class ModelDefinitionValidator
             return;
         }
 
-        if (parts.Length == 4 && parts[0] == "node")
+        var nodeParts = reference.Split(':', StringSplitOptions.None);
+        if (nodeParts.Length == 4 && nodeParts[0] == "node")
         {
-            if (!priorNodes.TryGetValue(parts[1], out var node))
+            if (!priorNodes.TryGetValue(nodeParts[1], out var node))
             {
                 add("definition.node-reference-not-found", path, $"Node reference '{reference}' must target an earlier operation node.");
                 return;
@@ -746,11 +747,11 @@ public static class ModelDefinitionValidator
 
             var validLandmark = node switch
             {
-                ModelCurveProjectNodeDefinition => parts[2] is "point" or "tangent",
-                ModelProfileMapNodeDefinition => parts[2] is "root" or "tip" or "attachment",
+                ModelCurveProjectNodeDefinition => nodeParts[2] is "point" or "tangent",
+                ModelProfileMapNodeDefinition => nodeParts[2] is "root" or "tip" or "attachment",
                 _ => false,
             };
-            if (!validLandmark || parts[3] is not ("x" or "y"))
+            if (!validLandmark || nodeParts[3] is not ("x" or "y"))
             {
                 add("definition.invalid-node-landmark", path, $"Node reference '{reference}' does not identify a numeric landmark.");
             }
@@ -758,6 +759,6 @@ public static class ModelDefinitionValidator
             return;
         }
 
-        add("definition.invalid-reference", path, $"Reference '{reference}' must use parameters.*, frame.*, or node.* syntax.");
+        add("definition.invalid-reference", path, $"Reference '{reference}' must use parameters.*, frame.*, or node:<node-id>:<landmark>:<axis> syntax.");
     }
 }
