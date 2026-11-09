@@ -16,15 +16,14 @@ public sealed class VaseFlowerTests
         ("a yellow tulip in a cream ceramic vase on a wooden table", TulipColor.Yellow, CeramicGlaze.Cream),
     ];
 
-    // Every flower phrasing the grammar must refuse whole. Each row names a species, colour,
-    // container or relationship the milestone deliberately does not support.
+    // Every tulip phrasing this grammar must refuse whole. The separate rose grammar handles
+    // red/pink roses without letting the tulip parser reinterpret them.
     public static readonly string[] Rejected =
     [
         "a pink tulip in a blue ceramic vase on a wooden table",
         "a white tulip in a blue ceramic vase on a wooden table",
         "a purple tulip in a cream ceramic vase on a wooden table",
         "a tulip in a blue ceramic vase on a wooden table",
-        "a red rose in a blue ceramic vase on a wooden table",
         "a yellow sunflower in a cream ceramic vase on a wooden table",
         "a red daisy in a blue ceramic vase on a wooden table",
         "a red tulip in a blue ceramic bowl on a wooden table",
@@ -113,6 +112,19 @@ public sealed class VaseFlowerTests
 
         // A refused flower prompt never degrades into an empty vase.
         Assert.Null(generated.Scene);
+    }
+
+    [Fact]
+    public void RosePromptIsNotParsedAsATulipButUsesTheRoseGenerationPath()
+    {
+        const string prompt = "a red rose in a blue ceramic vase on a wooden table";
+        Assert.Null(PromptParser.ParseVaseFlower(prompt));
+
+        var generated = SceneGenerator.Generate(new(prompt));
+        Assert.Null(generated.Error);
+        Assert.NotNull(generated.Scene);
+        Assert.Equal(RoseColor.Red, generated.Scene!.VaseRose!.Color);
+        Assert.Null(generated.Scene.VaseFlower);
     }
 
     [Fact]

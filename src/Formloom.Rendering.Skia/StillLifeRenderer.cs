@@ -116,6 +116,9 @@ public static class StillLifeRenderer
         var daisy = scene.VaseDaisy is { } sown && sown.Vase == ceramic && !shadowsOnly && !skipBody
             ? sown
             : null;
+        var rose = scene.VaseRose is { } plantedRose && ReferenceEquals(plantedRose.Vase, ceramic) && !shadowsOnly && !skipBody
+            ? plantedRose
+            : null;
         VaseFlower? pairTulip = null;
         VaseDaisy? pairDaisy = null;
         if (pair is not null)
@@ -151,6 +154,10 @@ public static class StillLifeRenderer
         else if (daisy is not null)
         {
             DrawVaseDaisy(canvas, scene, daisy, silhouette, entry.Depth == omittedDetailDepth, antialias);
+        }
+        else if (rose is not null)
+        {
+            DrawVaseRose(canvas, scene, rose, silhouette, entry.Depth == omittedDetailDepth, antialias);
         }
     }
 
@@ -872,6 +879,166 @@ public static class StillLifeRenderer
             paint,
             antialias);
         canvas.Restore();
+    }
+
+    // The rose shares the vase-first, continuous-stem contact path with the other flowers, while
+    // keeping its layered petals and serrated leaves in species-specific geometry and material.
+    private static void DrawVaseRose(
+        SKCanvas canvas,
+        StillLifeScene scene,
+        VaseRose rose,
+        bool silhouette,
+        bool omitDetail,
+        bool antialias)
+    {
+        var plant = rose.Plant;
+        var material = RoseMaterial.For(rose.Color);
+        var ceramic = CeramicMaterial.For(rose.Vase, scene.Variation, omitDetail ? 0 : scene.SurfaceDetail);
+        canvas.Save();
+        canvas.Scale(1024, 1024);
+
+        using var paint = new SKPaint { IsAntialias = antialias, Color = SKColors.White };
+        using (var stem = CreateOpenPath(plant.Stem))
+        {
+            StrokeStem(
+                canvas,
+                stem,
+                plant.StemThickness,
+                plant.StemBase.X,
+                plant.StemTop.Y,
+                material.StemLight,
+                material.StemBase,
+                material.StemEdge,
+                silhouette,
+                paint);
+        }
+
+        foreach (var leaf in plant.Leaves)
+        {
+            DrawRoseLeaf(canvas, leaf, material, silhouette, omitDetail, paint);
+        }
+
+        foreach (var petal in plant.Bloom.Petals)
+        {
+            DrawRosePetal(canvas, scene, plant.Bloom, petal, material, silhouette, omitDetail, paint);
+        }
+
+        DrawStemExtensionInsideOpening(
+            canvas,
+            rose.OpeningCenter,
+            rose.OpeningRadius,
+            rose.Vase.Body.Size,
+            rose.Profile.RimThickness,
+            plant.StemBase,
+            plant.Stem,
+            plant.StemTop.Y,
+            plant.StemThickness,
+            material.StemLight,
+            material.StemBase,
+            material.StemEdge,
+            ceramic.CavityColor,
+            silhouette,
+            paint,
+            antialias);
+        canvas.Restore();
+    }
+
+    private static void DrawRoseLeaf(
+        SKCanvas canvas,
+        RoseLeaf leaf,
+        RoseMaterial material,
+        bool silhouette,
+        bool omitDetail,
+        SKPaint paint)
+    {
+        using var blade = CreatePath(leaf.Outline);
+        if (silhouette)
+        {
+            paint.Color = SKColors.Black;
+            canvas.DrawPath(blade, paint);
+            return;
+        }
+
+        using var shade = SKShader.CreateLinearGradient(
+            new SKPoint(leaf.Attachment.X, leaf.Attachment.Y),
+            new SKPoint(leaf.Tip.X, leaf.Tip.Y),
+            [material.LeafLight, material.LeafBase, material.LeafEdge],
+            [0f, 0.55f, 1f], SKShaderTileMode.Clamp);
+        paint.Color = SKColors.White;
+        paint.Shader = shade;
+        canvas.DrawPath(blade, paint);
+        paint.Shader = null;
+        if (omitDetail)
+        {
+            return;
+        }
+
+        using var vein = CreateOpenPath(leaf.Vein);
+        paint.Style = SKPaintStyle.Stroke;
+        paint.StrokeWidth = MathF.Max(leaf.Width * 0.07f, 0.001f);
+        paint.StrokeCap = SKStrokeCap.Round;
+        paint.Color = material.LeafEdge.WithAlpha(145);
+        canvas.DrawPath(vein, paint);
+        paint.Style = SKPaintStyle.Fill;
+        paint.StrokeCap = SKStrokeCap.Butt;
+    }
+
+    private static void DrawRosePetal(
+        SKCanvas canvas,
+        StillLifeScene scene,
+        RoseBloom bloom,
+        RosePetal petal,
+        RoseMaterial material,
+        bool silhouette,
+        bool omitDetail,
+        SKPaint paint)
+    {
+        using var shape = CreatePath(petal.Outline);
+        if (silhouette)
+        {
+            paint.Color = SKColors.Black;
+            canvas.DrawPath(shape, paint);
+            return;
+        }
+
+        var tone = petal.Tone;
+        var shadow = Blend(material.PetalShadow, material.PetalBase, 0.22f + (tone * 0.38f));
+        var baseColor = Blend(material.PetalBase, material.PetalLight, tone * 0.38f);
+        var light = Blend(baseColor, material.PetalLight, 0.48f);
+        using (var shade = SKShader.CreateLinearGradient(
+            new SKPoint(
+                petal.Root.X + (scene.LightDirection.X * bloom.RadiusX * 0.12f),
+                petal.Root.Y + (scene.LightDirection.Y * bloom.RadiusY * 0.12f)),
+            new SKPoint(
+                petal.Tip.X + (scene.LightDirection.X * bloom.RadiusX * 0.10f),
+                petal.Tip.Y + (scene.LightDirection.Y * bloom.RadiusY * 0.10f)),
+            [shadow, baseColor, light],
+            [0f, 0.62f, 1f],
+            SKShaderTileMode.Clamp))
+        {
+            paint.Color = SKColors.White;
+            paint.Shader = shade;
+            canvas.DrawPath(shape, paint);
+            paint.Shader = null;
+        }
+
+        if (omitDetail)
+        {
+            return;
+        }
+
+        paint.Style = SKPaintStyle.Stroke;
+        paint.StrokeWidth = MathF.Max(bloom.RadiusX * 0.024f, 0.001f);
+        paint.Color = material.PetalEdge.WithAlpha(petal.Layer == RosePetalLayer.Outer ? (byte)92 : (byte)120);
+        canvas.DrawPath(shape, paint);
+
+        using var fold = CreateOpenPath(petal.Fold);
+        paint.StrokeWidth = MathF.Max(bloom.RadiusX * 0.017f, 0.0009f);
+        paint.StrokeCap = SKStrokeCap.Round;
+        paint.Color = material.PetalFold.WithAlpha(petal.Layer == RosePetalLayer.Inner ? (byte)150 : (byte)92);
+        canvas.DrawPath(fold, paint);
+        paint.Style = SKPaintStyle.Fill;
+        paint.StrokeCap = SKStrokeCap.Butt;
     }
 
     private static void DrawDaisyLeaf(

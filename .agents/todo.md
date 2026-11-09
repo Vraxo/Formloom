@@ -54,7 +54,8 @@ Keep package versions centrally managed in `Directory.Packages.props`. Do not ad
 8. Keep generated visual content procedural. Do not use ImageGen, stock imagery, downloaded textures, embedded screenshots, or a hand-painted finished still-life image as the output.
 9. Do not make the first renderer GPU-dependent. The app must work on an ordinary CPU-only machine.
 10. Update the checkboxes in this file as tasks are completed. Do not mark a task complete unless its acceptance criteria are met.
-11. Do not commit changes unless explicitly asked. Do not proceed beyond the final checkpoint below.
+11. For reviewer-facing generated output, follow the reusable [focused CI review-artifact guidance](../docs/review-artifacts.md): make a small, useful one-download bundle when it reduces reviewer friction, preserve complementary broad artifacts, and verify the uploaded contents.
+12. Do not commit changes unless explicitly asked. Do not proceed beyond the final checkpoint below.
 
 ---
 

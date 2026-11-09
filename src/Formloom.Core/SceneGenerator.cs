@@ -38,6 +38,11 @@ public static class SceneGenerator
             return GenerateCupContents(cupContents, request);
         }
 
+        if (PromptParser.ParseVaseRose(request.Prompt) is { } vaseRose)
+        {
+            return GenerateVaseRose(vaseRose, request);
+        }
+
         if (PromptParser.ParseVaseTulipDaisy(request.Prompt) is { } vaseTulipDaisy)
         {
             return GenerateVaseTulipDaisy(vaseTulipDaisy, request);
@@ -56,7 +61,7 @@ public static class SceneGenerator
         var parsed = PromptParser.ParseObjects(request.Prompt);
         if (parsed is null)
         {
-            return new(null, "That prompt is not supported. Use one to three objects on a wooden table: a red/green/yellow apple, a green/yellow pear, an orange, or a blue/cream ceramic bowl, cup or vase. Join objects with 'and'; three-object lists may use commas. One fruit may also be placed inside a bowl: '<fruit> in a blue ceramic bowl on a wooden table'. One cup may be filled with coffee or tea: 'a blue ceramic cup filled with coffee on a wooden table'. One vase may hold a single tulip: 'a red tulip in a blue ceramic vase on a wooden table', or one tulip and one white daisy: 'a red tulip and a white daisy in a blue ceramic vase on a wooden table'.");
+            return new(null, "That prompt is not supported. Use one to three objects on a wooden table: a red/green/yellow apple, a green/yellow pear, an orange, or a blue/cream ceramic bowl, cup or vase. Join objects with 'and'; three-object lists may use commas. One fruit may also be placed inside a bowl: '<fruit> in a blue ceramic bowl on a wooden table'. One cup may be filled with coffee or tea: 'a blue ceramic cup filled with coffee on a wooden table'. A vase may hold one red/yellow tulip ('a red tulip in a blue ceramic vase on a wooden table'), one white daisy ('a white daisy in a cream ceramic vase on a wooden table'), the fixed red-tulip-and-white-daisy pair ('a red tulip and a white daisy in a blue ceramic vase on a wooden table'), or one red/pink rose ('a red rose in a blue ceramic vase on a wooden table').");
         }
 
         return GenerateObjects(parsed.Value, request);
@@ -173,6 +178,24 @@ public static class SceneGenerator
         var filled = scene with { CupContents = new CupContents(scene.Ceramics[0], prompt.Beverage) };
         var error = SceneValidator.Validate(filled);
         return error is null ? new(filled, null) : new(null, error);
+    }
+
+    // A rose is typed content of the vase built by the ordinary single-object path; it keeps
+    // that exact vase instance and has no independent scene entry or shadow.
+    private static GenerationResult GenerateVaseRose(VaseRosePrompt prompt, GenerationRequest request)
+    {
+        var empty = GenerateObjects([ObjectPrompt.FromCeramic(prompt.Vase with { Kind = CeramicKind.Vase })], request);
+        if (empty.Scene is not { } scene)
+        {
+            return empty;
+        }
+
+        var planted = scene with
+        {
+            VaseRose = VaseRose.Create(scene.Ceramics[0], prompt.Color, request.Seed, request.Variation),
+        };
+        var error = SceneValidator.Validate(planted);
+        return error is null ? new(planted, null) : new(null, error);
     }
 
     // The fixed pair shares the vase built by the ordinary single-object path; the

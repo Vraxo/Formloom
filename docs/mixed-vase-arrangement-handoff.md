@@ -18,12 +18,14 @@ and preview upload. The merge also adds an optional antialiasing render control,
 it changes rasterization only, not scene geometry or prompts. A temporary diagnostic workflow step
 was used for one run to locate a test probe below the near-lip occlusion and has since been removed;
 no permanent workflow change remains. The user supplied the 1280 × 960 review sheet, its timing
-manifest, and all ten 1024 × 1024 case images. Full-size review confirms distinct blooms, attached
-leaves, smooth stem continuation into the vase mouth, and expected disappearance beneath the near
-lip across the default combinations, alternate seeds, and variation extremes. No obvious collision,
-clipping, or contact defect was found. The user also supplied all ten individual full-size timing
-sidecars; they have been read and recorded below as single-run observations. Direct GitHub artifact
-downloads remain blocked by the sandbox's outbound allowlist, but are no longer needed for this review.
+manifest, all ten 1024 × 1024 case images, and all ten individual full-size timing sidecars. Assistant-
+side artifact inspection covered all ten sheet cells at 320 × 320 and all ten full-size images.
+Blooms are distinct, leaves appear attached, and stems continue smoothly into the mouth before
+disappearing beneath the near lip across default combinations, alternate seeds, and variation
+extremes. No obvious collision, clipping, or contact defect was found. This is a record of agent
+inspection, not a claim of separate user acceptance. The timing sidecars have been read and are
+recorded below as single-run observations. Direct GitHub artifact downloads remain blocked by the
+sandbox's outbound allowlist, but are no longer needed for this review.
 
 - **Starting point:** Phase 9 branched from `main` at `863dd75`, after Phase 8 PR #51 merged as
   `c441a9a`.
@@ -183,15 +185,16 @@ all four default prompt combinations, and separate dimension coverage uses all c
 64 × 64, 320 × 320, 640 × 480, 2048 × 1024 and 4096 × 1024. `FORMFLOOM_EXPORT_ALL=1` continues to
 control exhaustive exports for other families; it does not gate render tests.
 
-**Visual review is complete for the supplied set.** The user-provided 1280 × 960 sheet (ten occupied
-320 × 320 cells) and all ten matching 1024 × 1024 case images were inspected. Across default
+**Visual review is complete for the supplied set.** Assistant-side artifact inspection covered all
+ten occupied 320 × 320 sheet cells and all ten matching 1024 × 1024 case images. Across default
 color/glaze combinations, alternate seeds, and variation extremes, the tulip and daisy remain
 distinct; the white radial petals and golden disk are legible; all four leaves appear attached; and
 both stems enter the same mouth smoothly before disappearing beneath the near lip. No obvious bloom
 collision, stem crossing, malformed leaf, clipping, or vase/contact regression was found. The small
 dark oval on the tabletop is the intentional wood-grain knot motif, not a stray object or shadow.
-No art changes are requested from this review. The user-supplied files provide full-size pixels, so
-this visual check does not depend on downloading the CI artifact.
+This records agent-side inspection, not separate user acceptance. No art changes are requested
+from this review. The user-supplied files provide full-size pixels, so this visual check does not
+depend on downloading the CI artifact.
 
 ## Timing and limitations
 
