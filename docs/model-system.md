@@ -4,7 +4,7 @@
 
 **Phase:** 11 — Data-driven model system  
 **Contract version:** 0.1  
-**Implementation status:** Architecture contract only. The model-definition format, catalog, interpreter, and renderer integration are not implemented yet.
+**Implementation status:** Architecture contract plus versioned typed definitions, filesystem catalog, semantic validation, and renderer-neutral evaluated-geometry output contract. The generic evaluator, complete executable rose definition, and generic renderer integration remain unimplemented.
 
 This document defines the intended boundary between Formloom's procedural engine and the external model knowledge it consumes. It is deliberately a contract, not a premature specification of every JSON field or procedural operator. Those details must be designed against the existing rose implementation during the next milestones.
 

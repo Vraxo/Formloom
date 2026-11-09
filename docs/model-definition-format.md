@@ -103,7 +103,25 @@ If the rose can be expressed without this tree after prototyping, remove it. Non
 
 A radial array declares count, start angle, phase, source geometry/profile, and bounded perturbations per element (angle, length, width, tone, as justified). Each node and repeated element receives a stable stream derived from generation seed and stable model/node/element identifiers. Adding or reordering unrelated parts must not alter existing output. Definitions declare ranges; the interpreter owns the PRNG and stream derivation.
 
-## 5. Materials and rendering
+## 5. Evaluated geometry output contract
+
+The model-definition graph is an authoring/evaluation input; a renderer should not consume definition nodes directly. The interpreter emits a renderer-neutral ModelGeometry value containing:
+
+- the stable model ID and declared coordinate space;
+- an ordered immutable list of evaluated cubic paths;
+- a unique path ID and source definition-node ID for each path;
+- open/closed path semantics;
+- an optional material-slot key and a detail-pass flag.
+
+For the first implementation, emitted paths use **scene-normalized coordinates** (positive X right, positive Y down). Profile-local and part-local values are resolved by the evaluator before output. This deliberately gives the first renderer one unambiguous coordinate system; later local-transform support must be introduced as an explicit, versioned contract rather than inferred by the renderer.
+
+The output list is flattened in draw order. The definition graph may retain groups and reusable source nodes, but a rendering backend should not need to understand definition-graph structure or group node types. Each evaluated path is a drawable leaf. The array order is the draw order and must be preserved.
+
+Path bounds are conservative bounds of the cubic control hull, not a sampled estimate of the visible curve. They may be larger than the exact curve bounds, but they cannot exclude points on the cubic. Geometry validation rejects missing/duplicate IDs, empty paths, non-finite coordinates, disconnected adjacent segments, and closed paths whose final endpoint does not meet their first start. The validator does not impose a 0..1 bounds restriction: scene-normalized geometry may intentionally extend beyond the canvas and can be clipped by the scene/rendering layer.
+
+This is the output contract only. It does not yet interpret ModelNodeDefinition, evaluate expressions, construct a rose, or render any geometry.
+
+## 6. Materials and rendering
 
 Definitions describe appearance without SkiaSharp types. A material variant contains named color tokens (petal base/light/shadow/edge/fold, stem/leaf base/light/edge, etc.). The first typed Core DTOs and schema represent these token maps. Renderer-neutral material slot/style definitions (fills, gradients, strokes, and detail bindings) still need to be finalized with the generic geometry output design. Parts will eventually bind to named material slots.
 
