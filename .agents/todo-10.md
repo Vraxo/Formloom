@@ -1,6 +1,6 @@
 # Phase 10 — A Red or Pink Rose in a Ceramic Vase
 
-> **Status:** Implementation, automated verification, and agent-side visual review are complete. Linux / Release CI passed on review-recording commit `1b771996cb223317ddf617047c6e3c09d50bb35b` in run `42590714896`; preview artifact `13660659546` was uploaded. The canonical and robustness sheets, eight full-size renders, and four silhouettes were inspected from the user-provided attachments; no blocking visual issue was found. Timing sidecars are transcribed in the handoff as single-runner observations, not benchmarks. Focused-bundle CI run [42592879325](https://github.com/Vraxo/Formloom/actions/runs/42592879325) passed, uploading `phase10-rose-review` artifact [13661842949](https://github.com/Vraxo/Formloom/actions/runs/42592879325/artifacts/13661842949) (24 rose PNG/sidecar files plus an index), alongside the comprehensive `procedural-preview`. PR [#55](https://github.com/Vraxo/Formloom/pull/55) is open; keep it open and do not merge.
+> **Status:** Implementation, automated verification, and agent-side visual review are complete. Linux / Release CI passed on review-recording commit `1b771996cb223317ddf617047c6e3c09d50bb35b` in run `42590714896`; preview artifact `13660659546` was uploaded. The canonical and robustness sheets, eight full-size renders, and four silhouettes were inspected from the user-provided attachments; no blocking visual issue was found. Timing sidecars are transcribed in the handoff as single-runner observations, not benchmarks. To make black-on-transparent silhouettes visible in dark previewers, the focused bundle now includes an opaque-white 2 × 2 silhouette contact sheet while preserving the original masks. Linux / Release run [42597119777](https://github.com/Vraxo/Formloom/actions/runs/42597119777) passed and uploaded `phase10-rose-review` artifact [13663464131](https://github.com/Vraxo/Formloom/actions/runs/42597119777/artifacts/13663464131) (25 PNG/sidecar files plus an index), alongside the comprehensive `procedural-preview`. PR [#55](https://github.com/Vraxo/Formloom/pull/55) is open; keep it open and do not merge.
 
 ## Goal
 
@@ -207,7 +207,7 @@ Expected subject tokens and default seed-42 save names:
 
 ### 8. Generate, map, and visually review the rose artifacts
 
-> CI generated and uploaded the preview in review-recording run `42590714896` (artifact `13660659546`, 8,551,852 bytes). The user supplied the two sheets, eight full-size render PNGs, four silhouettes, and all ten `.timing.json` sidecars; visual and timing findings are recorded below. Focused-bundle run `42592879325` uploaded `phase10-rose-review` artifact `13661842949` (2,441,169 bytes), collecting just these files in one download while preserving the full `procedural-preview`.
+> CI generated and uploaded the preview in review-recording run `42590714896` (artifact `13660659546`, 8,551,852 bytes). The user supplied the two sheets, eight full-size render PNGs, four silhouettes, and all ten `.timing.json` sidecars; visual and timing findings are recorded below. The initial focused-bundle run `42592879325` uploaded 24 rose PNG/sidecar files. After the user noted that the transparent black masks appeared blank on a dark preview background, run `42597119777` uploaded the improved `phase10-rose-review` artifact `13663464131` (2,462,625 bytes), including a white-backed silhouette sheet and preserving the original masks and comprehensive `procedural-preview`.
 
 - [x] Generate all four canonical prompt × vase combinations at seed 42 and variation 0.35.
 - [x] Generate a 2 × 2 canonical review sheet with 512 × 512 px cells so all four combinations can be compared at a useful size.
@@ -248,9 +248,9 @@ Expected subject tokens and default seed-42 save names:
 - [ ] Confirm the merged build's post-merge Linux Release CI only after the PR is merged; do not describe a PR run as post-merge.
 - [x] Keep the existing single Linux Release workflow. Do not add a permanent Debug job, Windows runner, package, project, workflow job, or CI service for this milestone.
 - [x] Add a focused `phase10-rose-review` artifact to the existing job, so the rose review images and sidecars can be downloaded as one curated bundle alongside the comprehensive preview.
-- [ ] Add a white-backed 2 × 2 canonical silhouette contact sheet for immediate visual inspection while retaining all four original transparent masks.
+- [x] Add a white-backed 2 × 2 canonical silhouette contact sheet for immediate visual inspection while retaining all four original transparent masks.
 - [x] Capture the reusable focused-review-artifact guidance in [`docs/review-artifacts.md`](../docs/review-artifacts.md) and link it from the shared agent working rules.
-- [x] Record the available evidence: PR #55, CI runs `42590714896` and `42592879325`, the comprehensive preview artifact `13660659546`, focused rose-review artifact `13661842949`, and this handoff. There is no merge commit because the PR remains open by instruction.
+- [x] Record the available evidence: PR #55, CI runs `42590714896`, `42592879325`, and `42597119777`, comprehensive preview artifacts `13660659546` and `13663518844`, focused rose-review artifact `13663464131`, and this handoff. There is no merge commit because the PR remains open by instruction.
 - [x] Reconcile the checklist, README, handoff, tests, and changed-file list; identify anything authored but not executed.
 - [x] Do not claim native Photino/WebView2 dialogs, window lifecycle, resize, or accessibility behavior was tested from headless CI.
 - [x] Create focused PR #55 and leave it open for review; do not merge without explicit user approval.
