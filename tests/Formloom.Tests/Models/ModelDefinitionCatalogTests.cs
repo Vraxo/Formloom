@@ -370,10 +370,11 @@ public sealed class ModelDefinitionCatalogTests
                     return $$"""{"op":"geometry.group","id":"{{id}}","parts":["{{part}}"]}""";
                 });
             var expanded = ValidDefinition.Replace(
-                "            }\n          ],\n          \"outputs\": [\"bloom.outer\"]",
-                "            },\n" + string.Join(",\n", groups) +
-                "\n          ],\n          \"outputs\": [\"group.63\"]",
+                "    }\n  ],\n  \"outputs\": [\"bloom.outer\"]",
+                "    },\n" + string.Join(",\n", groups) +
+                "\n  ],\n  \"outputs\": [\"group.63\"]",
                 StringComparison.Ordinal);
+            Assert.NotEqual(ValidDefinition, expanded);
             File.WriteAllText(Path.Combine(root, "test.model.json"), expanded);
 
             var result = ModelDefinitionCatalog.Load(root);
