@@ -6,7 +6,7 @@ namespace Formloom.Core.Geometry;
 
 public static class CubicCurveProjector
 {
-    private const int RefinementIterations = 12;
+    private const int RefinementIterations = 20;
 
     public static CubicCurveProjection ProjectNearest(
         ImmutableArray<CubicSegment> segments,
