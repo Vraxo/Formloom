@@ -12,6 +12,8 @@ public sealed record ModelDefinitionCatalogOptions
 
     public int MaximumRepeatCount { get; init; } = 512;
 
+    public int MaximumTotalRepeatCount { get; init; } = 2_048;
+
     public int MaximumExpressionDepth { get; init; } = 32;
 
     public int MaximumExpressionNodes { get; init; } = 256;
