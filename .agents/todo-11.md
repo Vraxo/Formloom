@@ -1,6 +1,6 @@
 # Phase 11 — Data-driven model system
 
-> **Status:** In progress. PRs #57–#60 are merged, including the external model catalog and semantic validation. PR 4 (renderer-neutral evaluated geometry contract) is in progress on `phase-11/generic-geometry`, based on `main` at `d19283b8d090d3323bde8b849b1184f612bc6433`. The geometry output records, bounds, and validator are implemented in the branch; PR review and CI remain pending. No evaluator, executable rose definition, or rose migration exists yet.
+> **Status:** In progress. PRs #57–#60 are merged. PR 4 is proposed in [PR #61](https://github.com/Vraxo/Formloom/pull/61); its latest head `cffdf942d3187bf54c52b001f992cac58da03272` passed Linux / Release run [#273](https://github.com/Vraxo/Formloom/actions/runs/42650621787), with 716/716 Core and 105/105 Desktop tests passing (821 total). PR 5 is being implemented on `phase-11/geometry-operations`, stacked on PR 4. ADR-0001 is accepted. The generic evaluator, executable rose definition, and rose migration do not exist yet.
 >
 > **Original starting point:** `main` at `fc4e587166617d72d2be9679aadc5a160c79878e` (2026-11-09). Current `main` includes PR 1 merge `5e5e3952694f5ef5732483a01e8ec8b8fd203d8b`, PR 2 merge `41168813ce5fe9254179609c11b708efed7566a4`, and PR 2b merge `b41233e6c0d44738c8bb29751e5d8961ac6a17ce`; current implementation branch: `phase-11/model-catalog`.
 
@@ -177,20 +177,24 @@ Core rules:
 
 ### 5. Extract and implement the minimum reusable operation vocabulary
 
-**PR 5 — generic operators, driven by the rose requirements.**
+**PR 5 — generic C# capabilities, driven by the rose requirements.** The permanent boundary is ADR-0001: reusable algorithms live in C#; external model data describes model-specific profiles, values, and composition. Do not turn algorithms into JSON graphs for the sake of data purity.
 
-- [x] Record the permanent hybrid-architecture decision in `docs/adr/0001-hybrid-procedural-engine.md` and reference it from the model-system contract, format draft, and this checklist.
-- [ ] Decompose `RoseGeometry.Create` into model knowledge versus reusable mathematics before implementing operators. Keep the reusable algorithms in C# and move only the rose-specific profiles/counts/proportions/choices into data.
-- [ ] Identify the smallest operation set that can express the rose: likely path/template, transform, group, ordered layer, radial repetition, curve/taper, attachment/anchor, bounded seeded variation, and material binding.
-- [ ] Treat the list as provisional; add an operation only when a rose requirement or the data-only proof model needs it.
-- [ ] Give every operation a stable ID, typed inputs, explicit coordinate behavior, output contract, validation rules, and deterministic random-stream policy.
-- [ ] Implement operations as reusable engine capabilities, not wrappers around `RoseGeometry` or other species methods.
-- [ ] Make repeated elements stable under unrelated part additions by deriving streams from model/part/operation identity and element index.
-- [ ] Add focused tests for each operator, including boundary/error cases, finite output, transform/anchor semantics, and repeatable seeded behavior.
-- [ ] Verify the same operators can be composed in more than one model fixture where possible.
-- [ ] Do not add `rose-petal`, `rose-leaf`, `create-sunflower`, or other species-named operations.
+- [x] Record the permanent hybrid-architecture decision in [ADR-0001](../docs/adr/0001-hybrid-procedural-engine.md) and reference it from the model-system contract, format draft, and this checklist.
+- [x] Audit the rose construction source and identify reusable math candidates: normalized profile mapping (petal and leaf contours), radial repetition with bounded variation, and curve projection for attachments.
+- [x] Add `ProfileMapper` as a model-independent C# algorithm for oriented, scaled profile mapping. Its mapping options cover the common petal/leaf mapping formula without petal- or leaf-specific code.
+- [x] Add `RadialArrayGenerator` as a model-independent C# algorithm. It returns ordered element angles and variation values using stable per-element named random streams.
+- [x] Add `CubicCurveProjector` as a model-independent C# algorithm for nearest-point projection onto one or more cubic segments.
+- [x] Add focused tests for mapping formulas/orientation/reversal, radial spacing/phase/determinism/stream isolation, nearest curve projection/tangents, and invalid inputs.
+- [x] Document operation semantics and explicitly identify which source-definition concerns remain interpreter or renderer responsibilities in `docs/geometry-operations.md`.
+- [x] Review the operation boundary against ADR-0001; operations are independent of JSON DTOs and model IDs.
+- [ ] Complete the full rose data-versus-algorithm inventory (including frame-derived sizing, stem construction, leaf anatomy/veins, petal folds/tone, materials, and draw order).
+- [ ] Decide how validated definition nodes and evaluated expressions invoke these C# capabilities in the generic interpreter.
+- [ ] Connect operation outputs to `ModelGeometry` and define generic handling for path construction and ordered grouping.
+- [ ] Verify profile mapping and curve projection against actual rose contours/attachments; compare output against Phase 10 evidence before changing or removing legacy code.
+- [ ] Add further shared capabilities only when the rose or second-model proof demonstrates a model-independent need; keep specialized algorithms in C# when data composition would be less clear.
+- [ ] Verify reuse with a second model fixture; do not create species-named operations.
 
-**Acceptance gate:** The operation vocabulary is small, typed, reusable, deterministic, and sufficient to construct the current rose without a rose-specific generator.
+**Acceptance gate:** The shared C# operation vocabulary is sufficient to express the common rose construction mathematics without model-specific branches. This gate is not complete until the interpreter and rose prototype prove it in context.
 
 ### 6. Model interpreter/evaluator
 
