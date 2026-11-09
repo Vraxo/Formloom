@@ -1,8 +1,8 @@
 # Phase 11 — Data-driven model system
 
-> **Status:** In progress. The Phase 11 architecture contract and source audit are being established first. No model-definition loader, interpreter, generic geometry representation, or migrated model has been implemented yet.
+> **Status:** In progress. PR 1 (architecture contract and source audit) is merged with passing PR and post-merge CI. PR 2 is designing the versioned external definition format. No runtime model loader, interpreter, generic geometry representation, or migrated model has been implemented yet.
 >
-> **Starting point:** `main` at `fc4e587166617d72d2be9679aadc5a160c79878e` (2026-11-09). The first implementation branch is `phase-11/model-system-contract`.
+> **Original starting point:** `main` at `fc4e587166617d72d2be9679aadc5a160c79878e` (2026-11-09). PR 1 merged as `5e5e3952694f5ef5732483a01e8ec8b8fd203d8b`; current format-design branch: `phase-11/model-definition-format`.
 
 ## Goal
 
@@ -71,9 +71,10 @@ Core rules:
 - [x] Inspect the current source tree and confirm the feature-folder organization from PR #56 is present.
 - [x] Inspect the rose implementation, prompt parser, generator, scene record, validator, Skia material, renderer dispatch, and existing Phase 10 handoff.
 - [ ] Re-read the complete Phase 10 checklist and handoff and identify the exact canonical/robustness PNGs and timing sidecars to preserve as the comparison baseline.
-- [ ] Run the unmodified full-solution Release build and test suite on the baseline commit, or record the latest verified CI run if a local baseline cannot be run.
-- [ ] Record the exact baseline test/CI run and the artifact IDs/paths used for subsequent comparisons.
-- [ ] Confirm that all Phase 10 supported rose prompt strings, subject tokens, seed/variation cases, dimensions, silhouette behavior, and material variants are covered by the baseline tests.
+- [x] Record the latest verified unmodified-main full-solution Release build/test run: Linux / Release run [42622879601](https://github.com/Vraxo/Formloom/actions/runs/42622879601) passed on starting commit `fc4e587166617d72d2be9679aadc5a160c79878e`.
+- [x] Record the inherited Phase 10 visual artifacts in `docs/rose-vase-handoff.md`: focused bundle [13663464131](https://github.com/Vraxo/Formloom/actions/runs/42597119777/artifacts/13663464131) and procedural-preview [13663518844](https://github.com/Vraxo/Formloom/actions/runs/42597119777/artifacts/13663518844). These are comparison references, not a new Phase 11 visual review.
+- [x] Confirm existing Phase 10 tests cover the four rose prompt/material combinations, rejected prompts, stable subject tokens, structural counts, deterministic rendering, canvas dimensions, silhouettes, and detail behavior.
+- [ ] Record an explicit file-by-file baseline manifest of the canonical/robustness PNGs and timing sidecars before replacing the legacy implementation.
 
 ### 1. Architecture contract and baseline documentation
 
@@ -81,29 +82,32 @@ Core rules:
 
 - [x] Write `docs/model-system.md` with the Level 2 boundary, architectural responsibilities, declarative-data rule, format direction, geometry/material boundary, determinism requirements, migration strategy, non-goals, acceptance criteria, and current source audit.
 - [x] Add this Phase 11 checklist with PR-sized milestones and evidence-based acceptance gates.
-- [ ] Review the contract against the actual rose implementation and ensure it does not assume operations the current engine has not demonstrated.
-- [ ] Verify links and paths in the two new documents.
-- [ ] Open a PR against `main`; keep it separate from model-system implementation work.
-- [ ] Obtain a passing Linux / Release CI run for the documentation PR.
-- [ ] Record the PR, commit, and CI run here. Do not mark implementation milestones complete from a passing docs-only build.
+- [x] Review the contract against the actual rose implementation and ensure it does not assume operations the current engine has not demonstrated. Candidate operators are explicitly provisional.
+- [x] Verify links and paths in `docs/model-system.md` and `.agents/todo-11.md`.
+- [x] Open PR [#57](https://github.com/Vraxo/Formloom/pull/57) against `main` as a documentation-only change.
+- [x] Obtain passing PR Linux / Release CI run [42628176874](https://github.com/Vraxo/Formloom/actions/runs/42628176874) on `77cbdc79d550304e7d3176eee051edbe67744c48`.
+- [x] Merge PR #57 as `5e5e3952694f5ef5732483a01e8ec8b8fd203d8b` and verify post-merge Linux / Release CI run [42628463314](https://github.com/Vraxo/Formloom/actions/runs/42628463314) passed.
+- [x] Record that the merge completes documentation only; it does not complete any runtime model-system milestone.
 
-**Acceptance gate:** The team has a shared, repository-resident definition of Level 2 and a concrete source audit. No schema or operator API is frozen merely by this documentation PR.
+**Acceptance gate:** Complete. The repository now has a shared Level 2 contract and a source audit. No schema or operator API was frozen by PR #57.
 
 ### 2. Model format and typed definition design
 
-**PR 2 — versioned definition contract and schema.**
+**PR 2 — versioned definition contract, schema, and typed representation.** The design draft is in [`docs/model-definition-format.md`](model-definition-format.md). It is explicitly provisional until exercised by a runnable rose prototype.
 
-- [ ] Re-read `docs/model-system.md` and enumerate the exact data required to represent the existing rose without invoking rose-specific code.
-- [ ] Choose and document the versioned external serialization contract. JSON with `System.Text.Json` is the initial direction; validate it against the rose before freezing field names.
-- [ ] Define stable, namespaced model IDs (for example, `flowers.rose`) and model definition schema versions.
+- [x] Re-read `docs/model-system.md` and enumerate the exact data required to represent the existing rose without invoking rose-specific code.
+- [x] Select JSON with `System.Text.Json` as the initial external serialization direction; keep exact fields provisional until the model fixture and typed operation contracts are tested.
+- [x] Propose stable, namespaced model IDs (for example, `flowers.rose`) and an integer schema version. Final validation rules remain open.
+- [x] Draft the coordinate spaces, generic `vase-opening` attachment frame, profile mapping, candidate operation responsibilities, deterministic repeated-element streams, material roles, and constrained numeric-expression boundary in `docs/model-definition-format.md`.
 - [ ] Define typed C# representation records for metadata, prompt descriptors, parameters, variants, parts, operation nodes, anchors, constraints, material slots, and variation ranges as actually required.
-- [ ] Define the normalized coordinate system, coordinate spaces, units, transform order, bounds semantics, and parent/local reference rules.
+- [ ] Finalize the normalized coordinate system, coordinate spaces, units, transform order, bounds semantics, and parent/local reference rules from the draft after exercising the rose fixture.
 - [ ] Define how a model declares material data without referencing SkiaSharp types.
 - [ ] Define how definitions refer to other reusable templates/definitions, if the rose requires such reuse; reject unresolved and cyclic references.
 - [ ] Define explicit resource limits for document size, node/depth counts, arrays, repetition counts, and numeric ranges.
-- [ ] Include a representative rose fragment and a complete schema/format example in the documentation.
+- [x] Include a representative rose construction fragment in `docs/model-definition-format.md`; it is clearly labeled as a sketch, not a valid runtime model.
+- [ ] Convert the draft into a JSON Schema and a complete, schema-valid rose fixture.
 - [ ] Add format-level tests for valid documents, unsupported schema versions, missing/duplicate identifiers, malformed values, unknown fields/operators where relevant, and invalid references.
-- [ ] Do not implement an expression language, embedded script, or arbitrary plugin mechanism.
+- [x] Explicitly reject a general-purpose expression language, embedded scripts, and arbitrary plugins. The format draft allows only a small typed numeric expression tree if the vase-frame formulas prove it necessary; that limited proposal must be validated or removed during prototyping.
 
 **Acceptance gate:** The versioned format can describe the rose's static knowledge and intended construction declaratively. Its C# representation is typed; it is not a bag of untyped JSON values.
 
@@ -244,8 +248,8 @@ Core rules:
 
 | Unit | Scope | Status | Evidence |
 |---|---|---|---|
-| PR 1 | Architecture contract and source audit | In progress | `docs/model-system.md`, this checklist |
-| PR 2 | Versioned model format and typed schema | Not started | — |
+| PR 1 | Architecture contract and source audit | Complete | [PR #57](https://github.com/Vraxo/Formloom/pull/57), merge `5e5e395`, PR CI `42628176874`, main CI `42628463314` |
+| PR 2 | Versioned model format and typed schema | In progress | `docs/model-definition-format.md` draft on `phase-11/model-definition-format` |
 | PR 3 | Model catalog and definition validation | Not started | — |
 | PR 4 | Generic geometry representation | Not started | — |
 | PR 5 | Reusable procedural operators | Not started | — |
@@ -272,4 +276,4 @@ Core rules:
 
 ## Handoff
 
-**Current status:** The source audit is complete and the architecture contract is being added. Phase 11 implementation has not yet moved any rose construction into external data. The next action after PR 1 is to design the smallest versioned definition format that can represent the existing rose without retaining a species-specific generator.
+**Current status:** PR #57 merged the architecture contract and source audit; both PR and post-merge Linux / Release CI passed. The rose remains code-authored. PR 2 is now drafting the JSON definition format against the actual rose requirements. The next action is to turn the reviewed draft into a versioned JSON Schema, typed Core records, and a schema-valid rose fixture before building the runtime catalog or interpreter.
