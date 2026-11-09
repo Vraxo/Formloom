@@ -48,6 +48,8 @@ The current feature-folder structure is useful and should remain. The problem is
 
 ## Architecture contract
 
+**Permanent guardrail:** [ADR-0001 — Keep Formloom a hybrid procedural engine](../docs/adr/0001-hybrid-procedural-engine.md) is accepted and governs this phase. Reusable algorithms belong in C#; model-specific facts and composition belong in external data. JSON is not a programming language, and a genuinely specialized model may remain code-authored when a data graph would be less clear or robust. Every operator/data-boundary decision must be reviewed against the ADR.
+
 The authoritative contract is [`docs/model-system.md`](../docs/model-system.md). Read it before changing the model architecture.
 
 Core rules:
@@ -177,7 +179,8 @@ Core rules:
 
 **PR 5 — generic operators, driven by the rose requirements.**
 
-- [ ] Decompose `RoseGeometry.Create` into model knowledge versus reusable mathematics before implementing operators.
+- [x] Record the permanent hybrid-architecture decision in `docs/adr/0001-hybrid-procedural-engine.md` and reference it from the model-system contract, format draft, and this checklist.
+- [ ] Decompose `RoseGeometry.Create` into model knowledge versus reusable mathematics before implementing operators. Keep the reusable algorithms in C# and move only the rose-specific profiles/counts/proportions/choices into data.
 - [ ] Identify the smallest operation set that can express the rose: likely path/template, transform, group, ordered layer, radial repetition, curve/taper, attachment/anchor, bounded seeded variation, and material binding.
 - [ ] Treat the list as provisional; add an operation only when a rose requirement or the data-only proof model needs it.
 - [ ] Give every operation a stable ID, typed inputs, explicit coordinate behavior, output contract, validation rules, and deterministic random-stream policy.

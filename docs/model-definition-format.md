@@ -4,6 +4,10 @@
 
 ## 1. Design goal
 
+**Architecture guardrail:** This format is a declarative description of model knowledge, not a replacement for the procedural engine. Reusable algorithms remain implemented in C#. Model files select profiles, counts, parameters, attachments, ordering, and appearance values and compose supported operations. Do not expand the format into a general-purpose language or encode an algorithm as a sprawling graph just to avoid C#.
+
+A genuinely specialized model may retain a code-authored construction path when the data representation would be materially less clear or robust. See [ADR-0001: Keep Formloom a hybrid procedural engine](adr/0001-hybrid-procedural-engine.md), which governs operator design and model migration.
+
 A model file describes how to construct an object by composing reusable engine operations. It must not be a bag of parameters passed into a species-specific C# generator.
 
 The existing rose is the reference fixture. The format must eventually describe its broad/curled petal and serrated-leaf profiles; 5/5/3 radial petal layers; curved stem; two curve-attached leaves; veins and petal folds; vase-frame-derived dimensions; red/pink material variants; generic gradients/strokes; and stable per-part and per-element variation.
