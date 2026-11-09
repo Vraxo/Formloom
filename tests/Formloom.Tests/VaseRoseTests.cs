@@ -376,12 +376,14 @@ public sealed class VaseRoseTests
     {
         var tulipScene = Scene("a red tulip in a blue ceramic vase on a wooden table");
         var tulip = tulipScene.VaseFlower!;
-        Assert.Equal("Only a tulip is supported.",
+        Assert.Equal(
+            "Only a tulip is supported.",
             SceneValidator.Validate(tulipScene with { VaseFlower = tulip with { Flower = FlowerKind.Rose } }));
 
         var daisyScene = Scene("a white daisy in a blue ceramic vase on a wooden table");
         var daisy = daisyScene.VaseDaisy!;
-        Assert.Equal("Only a daisy is supported.",
+        Assert.Equal(
+            "Only a daisy is supported.",
             SceneValidator.Validate(daisyScene with { VaseDaisy = daisy with { Flower = FlowerKind.Rose } }));
     }
 
