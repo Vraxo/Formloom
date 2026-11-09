@@ -176,3 +176,7 @@ dotnet_diagnostic.CA1515.severity = none
 [src/Formloom.Rendering.Skia/*.cs]
 # Renderer and encoded image are the public API used by Desktop and tests.
 dotnet_diagnostic.CA1515.severity = none
+
+[src/Formloom.Rendering.Skia/**/*.cs]
+# Renderer and encoded image are the public API used by Desktop and tests.
+dotnet_diagnostic.CA1515.severity = none
