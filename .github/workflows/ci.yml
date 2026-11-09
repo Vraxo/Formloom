@@ -57,6 +57,26 @@ jobs:
       - name: Test
         run: dotnet test --solution Formloom.slnx --configuration Release --no-build --no-restore --report-trx --results-directory TestResults
 
+      - name: Temporary failed-test diagnostics
+        if: failure()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+
+          for report in sorted(Path("TestResults").glob("**/*.trx")):
+              root = ET.parse(report).getroot()
+              for result in root.findall(".//{*}UnitTestResult"):
+                  if result.attrib.get("outcome") != "Failed":
+                      continue
+                  error = result.find(".//{*}ErrorInfo")
+                  message = " ".join((error.findtext("{*}Message") or "").split()) if error is not None else ""
+                  stack = " ".join((error.findtext("{*}StackTrace") or "").split()) if error is not None else ""
+                  detail = f"{result.attrib.get('testName', 'unknown')}: {message} {stack[:1200]}"
+                  print(f"::error title=Failed test::{detail}")
+          PY
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
