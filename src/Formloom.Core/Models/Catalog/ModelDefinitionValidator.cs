@@ -1,11 +1,10 @@
 using System.Collections.Immutable;
-using System.Globalization;
 using System.Text.RegularExpressions;
 using Formloom.Core.Models.Definitions;
 
 namespace Formloom.Core.Models.Catalog;
 
-public static partial class ModelDefinitionValidator
+public static class ModelDefinitionValidator
 {
     private const string ExpectedFormat = "formloom.model";
     private const int SupportedSchemaVersion = 1;
@@ -152,7 +151,7 @@ public static partial class ModelDefinitionValidator
 
         foreach (var value in parameter.Values)
         {
-            if (!definition.Materials.ContainsKey(value))
+            if (string.IsNullOrWhiteSpace(value) || !definition.Materials.ContainsKey(value))
             {
                 add(
                     "definition.material-variant-not-found",
@@ -162,6 +161,7 @@ public static partial class ModelDefinitionValidator
         }
 
         if (!prompt.Descriptors.TryGetValue(prompt.MaterialVariantParameter, out var descriptorValues) ||
+            descriptorValues.IsDefault ||
             !descriptorValues.SequenceEqual(parameter.Values, StringComparer.Ordinal))
         {
             add(
@@ -385,7 +385,7 @@ public static partial class ModelDefinitionValidator
                     ValidateCubicPath(pathNode, path, options, definition.Parameters, definition.Mounts, priorNodes.Keys, add);
                     break;
                 case ModelCurveProjectNodeDefinition curveNode:
-                    if (!priorNodes.TryGetValue(curveNode.Curve, out var curve) || curve is not ModelCubicPathNodeDefinition)
+                    if (string.IsNullOrWhiteSpace(curveNode.Curve) || !priorNodes.TryGetValue(curveNode.Curve, out var curve) || curve is not ModelCubicPathNodeDefinition)
                     {
                         add("definition.curve-reference-not-found", $"{path}.curve", "curve.project must reference an earlier path.cubic node.");
                     }
@@ -393,7 +393,7 @@ public static partial class ModelDefinitionValidator
                     ValidatePointExpression(curveNode.Target, $"{path}.target", options, definition.Parameters, definition.Mounts, priorNodes.Keys, add);
                     break;
                 case ModelProfileMapNodeDefinition profileNode:
-                    if (!definition.Profiles.ContainsKey(profileNode.Profile))
+                    if (string.IsNullOrWhiteSpace(profileNode.Profile) || !definition.Profiles.ContainsKey(profileNode.Profile))
                     {
                         add("definition.profile-reference-not-found", $"{path}.profile", $"Profile '{profileNode.Profile}' does not exist.");
                     }
@@ -403,7 +403,7 @@ public static partial class ModelDefinitionValidator
                     ValidateMapping(profileNode.Mapping, $"{path}.mapping", options, definition.Parameters, definition.Mounts, priorNodes.Keys, add);
                     break;
                 case ModelRadialArrayNodeDefinition radialNode:
-                    if (!definition.Profiles.ContainsKey(radialNode.Profile))
+                    if (string.IsNullOrWhiteSpace(radialNode.Profile) || !definition.Profiles.ContainsKey(radialNode.Profile))
                     {
                         add("definition.profile-reference-not-found", $"{path}.profile", $"Profile '{radialNode.Profile}' does not exist.");
                     }
@@ -505,7 +505,7 @@ public static partial class ModelDefinitionValidator
 
         for (var index = 0; index < node.Parts.Length; index++)
         {
-            if (!priorNodes.ContainsKey(node.Parts[index]))
+            if (string.IsNullOrWhiteSpace(node.Parts[index]) || !priorNodes.ContainsKey(node.Parts[index]))
             {
                 add(
                     "definition.group-reference-not-found",
