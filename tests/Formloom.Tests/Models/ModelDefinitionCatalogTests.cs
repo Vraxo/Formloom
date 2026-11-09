@@ -197,10 +197,15 @@ public sealed class ModelDefinitionCatalogTests
     {
         InDirectory(root =>
         {
-            var other = ValidDefinition.Replace(
-                "\"id\": \"flowers.test-flower\"",
-                "\"id\": \"flowers.other-flower\"",
-                StringComparison.Ordinal);
+            var other = ValidDefinition
+                .Replace(
+                    "\"id\": \"flowers.test-flower\"",
+                    "\"id\": \"flowers.other-flower\"",
+                    StringComparison.Ordinal)
+                .Replace(
+                    "\"noun\": \"test flower\"",
+                    "\"noun\": \"Test   Flower\"",
+                    StringComparison.Ordinal);
             File.WriteAllText(Path.Combine(root, "a.model.json"), ValidDefinition);
             File.WriteAllText(Path.Combine(root, "b.model.json"), other);
 
@@ -337,6 +342,29 @@ public sealed class ModelDefinitionCatalogTests
 
             Assert.Empty(result.Models);
             Assert.Contains(result.Diagnostics, item => item.Code == "definition.node-reference-not-found");
+        });
+    }
+
+    [Fact]
+    public void ForwardGroupReferencesAreRejected()
+    {
+        InDirectory(root =>
+        {
+            var withEarlyGroup = ValidDefinition.Replace(
+                "  \"nodes\": [\n    {",
+                "  \"nodes\": [\n    {\n      \"op\": \"geometry.group\",\n      \"id\": \"early.group\",\n      \"parts\": [\"later.group\"]\n    },\n    {",
+                StringComparison.Ordinal);
+            var invalid = withEarlyGroup.Replace(
+                "    }\n  ],\n  \"outputs\": [\"bloom.outer\"]",
+                "    },\n    {\n      \"op\": \"geometry.group\",\n      \"id\": \"later.group\",\n      \"parts\": [\"bloom.outer\"]\n    }\n  ],\n  \"outputs\": [\"later.group\"]",
+                StringComparison.Ordinal);
+            Assert.NotEqual(ValidDefinition, invalid);
+            File.WriteAllText(Path.Combine(root, "test.model.json"), invalid);
+
+            var result = ModelDefinitionCatalog.Load(root);
+
+            Assert.Empty(result.Models);
+            Assert.Contains(result.Diagnostics, item => item.Code == "definition.group-reference-not-found");
         });
     }
 
