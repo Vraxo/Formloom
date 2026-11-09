@@ -357,6 +357,7 @@ public static class ModelDefinitionValidator
         }
 
         var priorNodes = new Dictionary<string, ModelNodeDefinition>(StringComparer.Ordinal);
+        var totalRepeatCount = 0;
         var allIds = new HashSet<string>(StringComparer.Ordinal);
         for (var index = 0; index < definition.Nodes.Length; index++)
         {
@@ -383,7 +384,7 @@ public static class ModelDefinitionValidator
             switch (node)
             {
                 case ModelCubicPathNodeDefinition pathNode:
-                    ValidateCubicPath(pathNode, path, options, definition.Parameters, definition.Mounts, priorNodes.Keys, add);
+                    ValidateCubicPath(pathNode, path, options, definition.Parameters, definition.Mounts, priorNodes, add);
                     break;
                 case ModelCurveProjectNodeDefinition curveNode:
                     if (string.IsNullOrWhiteSpace(curveNode.Curve) || !priorNodes.TryGetValue(curveNode.Curve, out var curve) || curve is not ModelCubicPathNodeDefinition)
@@ -391,7 +392,7 @@ public static class ModelDefinitionValidator
                         add("definition.curve-reference-not-found", $"{path}.curve", "curve.project must reference an earlier path.cubic node.");
                     }
 
-                    ValidatePointExpression(curveNode.Target, $"{path}.target", options, definition.Parameters, definition.Mounts, priorNodes.Keys, add);
+                    ValidatePointExpression(curveNode.Target, $"{path}.target", options, definition.Parameters, definition.Mounts, priorNodes, add);
                     break;
                 case ModelProfileMapNodeDefinition profileNode:
                     if (string.IsNullOrWhiteSpace(profileNode.Profile) || !definition.Profiles.ContainsKey(profileNode.Profile))
@@ -399,9 +400,9 @@ public static class ModelDefinitionValidator
                         add("definition.profile-reference-not-found", $"{path}.profile", $"Profile '{profileNode.Profile}' does not exist.");
                     }
 
-                    ValidatePointExpression(profileNode.Origin, $"{path}.origin", options, definition.Parameters, definition.Mounts, priorNodes.Keys, add);
-                    ValidateExpression(profileNode.Angle, $"{path}.angle", options, definition.Parameters, definition.Mounts, priorNodes.Keys, add);
-                    ValidateMapping(profileNode.Mapping, $"{path}.mapping", options, definition.Parameters, definition.Mounts, priorNodes.Keys, add);
+                    ValidatePointExpression(profileNode.Origin, $"{path}.origin", options, definition.Parameters, definition.Mounts, priorNodes, add);
+                    ValidateExpression(profileNode.Angle, $"{path}.angle", options, definition.Parameters, definition.Mounts, priorNodes, add);
+                    ValidateMapping(profileNode.Mapping, $"{path}.mapping", options, definition.Parameters, definition.Mounts, priorNodes, add);
                     break;
                 case ModelRadialArrayNodeDefinition radialNode:
                     if (string.IsNullOrWhiteSpace(radialNode.Profile) || !definition.Profiles.ContainsKey(radialNode.Profile))
@@ -416,6 +417,17 @@ public static class ModelDefinitionValidator
                             $"{path}.count",
                             $"Radial counts must be between 1 and {options.MaximumRepeatCount}.");
                     }
+                    else
+                    {
+                        totalRepeatCount += radialNode.Count;
+                        if (totalRepeatCount > options.MaximumTotalRepeatCount)
+                        {
+                            add(
+                                "definition.total-repeat-limit-exceeded",
+                                $"{path}.count",
+                                $"The model declares {totalRepeatCount} repeated elements; the limit is {options.MaximumTotalRepeatCount}.");
+                        }
+                    }
 
                     if (string.IsNullOrWhiteSpace(radialNode.Stream))
                     {
@@ -427,8 +439,8 @@ public static class ModelDefinitionValidator
                     ValidateExpression(radialNode.RadiusY, $"{path}.radiusY", options, definition.Parameters, definition.Mounts, priorNodes.Keys, add);
                     ValidateExpression(radialNode.StartAngle, $"{path}.startAngle", options, definition.Parameters, definition.Mounts, priorNodes.Keys, add);
                     ValidateExpression(radialNode.Phase, $"{path}.phase", options, definition.Parameters, definition.Mounts, priorNodes.Keys, add);
-                    ValidateMapping(radialNode.Mapping, $"{path}.mapping", options, definition.Parameters, definition.Mounts, priorNodes.Keys, add);
-                    ValidateVariation(radialNode.Variation, $"{path}.variation", options, definition.Parameters, definition.Mounts, priorNodes.Keys, add);
+                    ValidateMapping(radialNode.Mapping, $"{path}.mapping", options, definition.Parameters, definition.Mounts, priorNodes, add);
+                    ValidateVariation(radialNode.Variation, $"{path}.variation", options, definition.Parameters, definition.Mounts, priorNodes, add);
                     break;
                 case ModelGeometryGroupNodeDefinition groupNode:
                     ValidateGroup(groupNode, path, priorNodes, add);
@@ -467,7 +479,7 @@ public static class ModelDefinitionValidator
         ModelDefinitionCatalogOptions options,
         ImmutableDictionary<string, ModelParameterDefinition>? parameters,
         ImmutableArray<string> mounts,
-        IEnumerable<string> priorNodes,
+        IReadOnlyDictionary<string, ModelNodeDefinition> priorNodes,
         Action<string, string, string> add)
     {
         if (node.Segments.IsDefaultOrEmpty)
@@ -522,7 +534,7 @@ public static class ModelDefinitionValidator
         ModelDefinitionCatalogOptions options,
         ImmutableDictionary<string, ModelParameterDefinition>? parameters,
         ImmutableArray<string> mounts,
-        IEnumerable<string> priorNodes,
+        IReadOnlyDictionary<string, ModelNodeDefinition> priorNodes,
         Action<string, string, string> add)
     {
         if (mapping is null)
@@ -546,7 +558,7 @@ public static class ModelDefinitionValidator
         ModelDefinitionCatalogOptions options,
         ImmutableDictionary<string, ModelParameterDefinition>? parameters,
         ImmutableArray<string> mounts,
-        IEnumerable<string> priorNodes,
+        IReadOnlyDictionary<string, ModelNodeDefinition> priorNodes,
         Action<string, string, string> add)
     {
         if (variation is null)
@@ -568,7 +580,7 @@ public static class ModelDefinitionValidator
         ModelDefinitionCatalogOptions options,
         ImmutableDictionary<string, ModelParameterDefinition>? parameters,
         ImmutableArray<string> mounts,
-        IEnumerable<string> priorNodes,
+        IReadOnlyDictionary<string, ModelNodeDefinition> priorNodes,
         Action<string, string, string> add)
     {
         if (point is null)
@@ -587,11 +599,11 @@ public static class ModelDefinitionValidator
         ModelDefinitionCatalogOptions options,
         ImmutableDictionary<string, ModelParameterDefinition>? parameters,
         ImmutableArray<string> mounts,
-        IEnumerable<string> priorNodes,
+        IReadOnlyDictionary<string, ModelNodeDefinition> priorNodes,
         Action<string, string, string> add)
     {
         var remaining = options.MaximumExpressionNodes;
-        ValidateExpressionNode(expression, path, 1, options.MaximumExpressionDepth, ref remaining, parameters, mounts, priorNodes.ToHashSet(StringComparer.Ordinal), add);
+        ValidateExpressionNode(expression, path, 1, options.MaximumExpressionDepth, ref remaining, parameters, mounts, priorNodes, add);
         if (remaining == options.MaximumExpressionNodes && expression is not null)
         {
             add("definition.empty-expression", path, "Numeric expressions must contain a supported expression node.");
@@ -606,7 +618,7 @@ public static class ModelDefinitionValidator
         ref int remaining,
         ImmutableDictionary<string, ModelParameterDefinition>? parameters,
         ImmutableArray<string> mounts,
-        HashSet<string> priorNodes,
+        IReadOnlyDictionary<string, ModelNodeDefinition> priorNodes,
         Action<string, string, string> add)
     {
         if (expression is null)
@@ -721,11 +733,23 @@ public static class ModelDefinitionValidator
             return;
         }
 
-        if (parts.Length >= 3 && parts[0] == "node")
+        if (parts.Length == 4 && parts[0] == "node")
         {
-            if (!priorNodes.Contains(parts[1]))
+            if (!priorNodes.TryGetValue(parts[1], out var node))
             {
                 add("definition.node-reference-not-found", path, $"Node reference '{reference}' must target an earlier operation node.");
+                return;
+            }
+
+            var validLandmark = node switch
+            {
+                ModelCurveProjectNodeDefinition => parts[2] is "point" or "tangent",
+                ModelProfileMapNodeDefinition => parts[2] is "root" or "tip" or "attachment",
+                _ => false,
+            };
+            if (!validLandmark || parts[3] is not ("x" or "y"))
+            {
+                add("definition.invalid-node-landmark", path, $"Node reference '{reference}' does not identify a numeric landmark.");
             }
 
             return;
