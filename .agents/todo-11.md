@@ -1,6 +1,6 @@
 # Phase 11 — Data-driven model system
 
-> **Status:** In progress. PRs 1–2b are merged. PR #59 added the initial JSON Schema and typed Core definition records; its PR and post-merge Linux / Release CI both passed. PR 3 is implementing filesystem discovery and semantic validation. No runtime geometry evaluator, generic rendering pipeline, or migrated rose exists yet.
+> **Status:** In progress. PRs 1–2b are merged. PR #59's PR and post-merge Linux / Release CI both passed. PR 3's catalog and semantic-validation implementation is committed to `phase-11/model-catalog`; the pull-request and Linux / Release CI checkpoint is pending. No runtime geometry evaluator, generic rendering pipeline, complete executable rose definition, or migrated rose exists yet.
 >
 > **Original starting point:** `main` at `fc4e587166617d72d2be9679aadc5a160c79878e` (2026-11-09). Current `main` includes PR 1 merge `5e5e3952694f5ef5732483a01e8ec8b8fd203d8b`, PR 2 merge `41168813ce5fe9254179609c11b708efed7566a4`, and PR 2b merge `b41233e6c0d44738c8bb29751e5d8961ac6a17ce`; current implementation branch: `phase-11/model-catalog`.
 
@@ -290,4 +290,4 @@ Core rules:
 
 ## Handoff
 
-**Current status:** PR #57, #58, and #59 are merged, with both PR and post-merge Linux / Release CI passing. PR 3 implements bounded filesystem discovery, strict typed deserialization, semantic/reference validation, prompt-collision rejection, resource limits, and reload-by-reload snapshots. Focused catalog tests cover the new behavior. The PR 3 review/CI checkpoint is pending; no built-in executable model has been added, and no geometry interpreter or rose migration exists yet.
+**Current status:** PR #57, #58, and #59 are merged, with both PR and post-merge Linux / Release CI passing. PR 3's bounded filesystem discovery, strict typed deserialization, semantic/reference validation, prompt-collision rejection, graph/resource limits, and snapshot reload behavior are committed to `phase-11/model-catalog`. Added focused catalog tests are awaiting PR CI execution. No built-in executable model has been added; no geometry representation, interpreter, or rose migration exists yet.
