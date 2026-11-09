@@ -74,3 +74,42 @@ jobs:
             artifacts/bin/Formloom.Tests/**/formloom-*.png
             artifacts/bin/Formloom.Tests/**/formloom-*.timing.json
           if-no-files-found: error
+
+      - name: Assemble focused Phase 10 rose review bundle
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          output_root="artifacts/bin/Formloom.Tests"
+          bundle="artifacts/phase10-rose-review"
+          mkdir -p "$bundle"
+          mapfile -t rose_files < <(
+            find "$output_root" -type f \
+              \( -name 'formloom-vase-rose-*.png' -o -name 'formloom-vase-rose-*.timing.json' \) \
+              -print | sort
+          )
+          if [[ "${#rose_files[@]}" -ne 24 ]]; then
+            printf 'Expected 24 rose PNG/sidecar files, found %s\n' "${#rose_files[@]}" >&2
+            printf '%s\n' "${rose_files[@]}" >&2
+            exit 1
+          fi
+          cp "${rose_files[@]}" "$bundle/"
+          cat > "$bundle/README.txt" <<'EOF'
+          Phase 10 — focused rose review bundle
+
+          This bundle contains only the Phase 10 rose review outputs:
+          - canonical and robustness 2 × 2 sheets, each with its timing manifest;
+          - eight 1024 × 1024 samples with timing/geometry sidecars;
+          - four canonical silhouette PNGs.
+
+          Start with the two sheets, then use the full-size PNGs to inspect details.
+          Timing values are single-runner render-and-encode observations, not benchmarks.
+          EOF
+
+      - name: Upload focused Phase 10 rose review bundle
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase10-rose-review
+          path: artifacts/phase10-rose-review/
+          if-no-files-found: error

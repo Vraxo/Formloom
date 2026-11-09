@@ -2,7 +2,7 @@
 
 ## Status and starting point
 
-Phase 10 began from the clean `main` commit `b6fdcde0190958622d214cfd2d5e78b6b2dbe605` after the Phase 9 documentation closeout. Implementation, automated tests, and documentation are on the Arena-tracked branch `arena/03b3bd3a-formloom`; implementation and test source were verified at `c24070cac26ca0848f5535489f1f522c643051cc`. Linux / Release CI run [42590714896](https://github.com/Vraxo/Formloom/actions/runs/42590714896) passed restore, the warnings-as-errors Release build, the full solution test step, and both artifact uploads on review-recording commit `1b771996cb223317ddf617047c6e3c09d50bb35b`. Its procedural-preview artifact is [13660659546](https://github.com/Vraxo/Formloom/actions/runs/42590714896/artifacts/13660659546) (8,551,852 bytes); test results are artifact `13661312248`. Agent-side visual review is now complete from the PNGs attached in this conversation; no blocking visual defect was found. Timing transcription remains pending because the `.timing.json` sidecars were not attached, and the sandbox cannot retrieve them through the artifact's external storage redirect. Focused PR [#55](https://github.com/Vraxo/Formloom/pull/55) is open and must remain open. Merging is outside this phase's authorization.
+Phase 10 began from the clean `main` commit `b6fdcde0190958622d214cfd2d5e78b6b2dbe605` after the Phase 9 documentation closeout. Implementation, automated tests, and documentation are on the Arena-tracked branch `arena/03b3bd3a-formloom`; implementation and test source were verified at `c24070cac26ca0848f5535489f1f522c643051cc`. Linux / Release CI run [42590714896](https://github.com/Vraxo/Formloom/actions/runs/42590714896) passed restore, the warnings-as-errors Release build, the full solution test step, and both artifact uploads on review-recording commit `1b771996cb223317ddf617047c6e3c09d50bb35b`. Its procedural-preview artifact is [13660659546](https://github.com/Vraxo/Formloom/actions/runs/42590714896/artifacts/13660659546) (8,551,852 bytes); test results are artifact `13661312248`. Agent-side visual review is complete from the attached PNGs, and timing observations are transcribed from the attached sidecars below. To avoid searching the full preview archive next time, the existing Linux / Release job now uploads a separate, curated `phase10-rose-review` bundle. Focused PR [#55](https://github.com/Vraxo/Formloom/pull/55) is open and must remain open. Merging is outside this phase's authorization.
 
 ### Phase 9 prerequisite evidence
 
@@ -50,7 +50,24 @@ The renderer tests write retained files under `artifacts/bin/Formloom.Tests/`, w
 - `formloom-vase-rose-robustness-sheet.png` and its `.timing.json` manifest: 2 × 2 cells covering alternate seed, zero variation, and full variation across both colors and both glazes.
 - Eight 1024 × 1024 rose PNGs, each with a timing/geometry sidecar; the four canonical PNGs additionally have `-silhouette.png` files.
 
-This sandbox has no .NET SDK or alternative C# compiler (`dotnet`, `csc`, `mcs`, `mono`, `msbuild`, `csi`, and `pwsh` are unavailable), so verification ran in GitHub Actions. On tested source/test head `c24070cac26ca0848f5535489f1f522c643051cc`, Linux / Release run `42588356956` passed restore, the Release warnings-as-errors build, the full solution test step, test-result upload, and procedural-preview upload. The review-recording PR-head run `42590714896` on `1b771996cb223317ddf617047c6e3c09d50bb35b` also passed all steps and uploaded preview artifact `13660659546` (8,551,852 bytes) and test-results artifact `13661312248` (158,468 bytes). A download attempt against the prior preview run ended with EOF after redirect to `productionresultssa17.blob.core.windows.net`, outside this sandbox's outbound host allowlist. The user then attached the canonical and robustness sheets, all eight 1024 × 1024 PNGs, and four canonical silhouettes; those images were inspected and the visual findings are recorded below. The `.timing.json` sidecars were not attached, so timing values remain unreported; when available, report only environment-specific observations, not a performance guarantee or benchmark.
+This sandbox has no .NET SDK or alternative C# compiler (`dotnet`, `csc`, `mcs`, `mono`, `msbuild`, `csi`, and `pwsh` are unavailable), so verification ran in GitHub Actions. On tested source/test head `c24070cac26ca0848f5535489f1f522c643051cc`, Linux / Release run `42588356956` passed restore, the Release warnings-as-errors build, the full solution test step, test-result upload, and procedural-preview upload. The review-recording PR-head run `42590714896` on `1b771996cb223317ddf617047c6e3c09d50bb35b` also passed all steps and uploaded preview artifact `13660659546` (8,551,852 bytes) and test-results artifact `13661312248` (158,468 bytes). A download attempt against the prior preview run ended with EOF after redirect to `productionresultssa17.blob.core.windows.net`, outside this sandbox's outbound host allowlist. The user attached the canonical and robustness sheets, all eight 1024 × 1024 PNGs, four canonical silhouettes, and all ten timing sidecars. The images were inspected and the timing measurements from the sidecars are transcribed below. Timings are one-runner observations only, not a performance guarantee or benchmark.
+
+### Timing observations
+
+The attached sidecars are from CI run `42589085858`: .NET 10.0.14 on Ubuntu 24.04.5 LTS with four reported processors. Each full-size measurement is one `StillLifeRenderer.Render` render-and-encode Stopwatch sample; the empty-vase sample is included for context, not as a reliable per-flower cost.
+
+| 1024 × 1024 sample | Seed / variation | Rose render + encode (ms) | Empty-vase render + encode (ms) |
+| --- | --- | ---: | ---: |
+| Red / blue canonical | 42 / 0.35 | 181.3099 | 176.6916 |
+| Red / cream canonical | 42 / 0.35 | 176.0089 | 175.7455 |
+| Pink / blue canonical | 42 / 0.35 | 212.9771 | 179.9810 |
+| Pink / cream canonical | 42 / 0.35 | 181.7996 | 173.2792 |
+| Red / blue alternate seed | 1337 / 0.35 | 187.0674 | 182.8205 |
+| Red / cream zero variation | 42 / 0.00 | 181.5532 | 176.0590 |
+| Pink / blue full variation | 1337 / 1.00 | 185.1178 | 180.4131 |
+| Pink / cream alternate seed | 20261105 / 0.35 | 249.1959 | 208.2737 |
+
+The four canonical 512 × 512 sheet-cell samples, in row-major order (red/blue, red/cream, pink/blue, pink/cream), measured 68.2865, 61.0857, 64.0705, and 61.5634 ms. The robustness sheet's row-major cells (red/blue alternate seed, red/cream zero variation, pink/blue full variation, pink/cream alternate seed) measured 65.9672, 62.1467, 66.3466, and 63.7665 ms. These isolated values are environment-specific observations, not benchmarks or a performance comparison.
 
 ## Visual review and limitations
 
