@@ -19,6 +19,8 @@ public static class PromptParser
     // golden centre are the only daisy the vocabulary names.
     private const string DaisyDescriptor = @"a white daisy";
 
+    private const string RoseDescriptor = @"a (?:red|pink) rose";
+
     private const string VaseDescriptor = @"a (?:blue|cream) ceramic vase";
 
     private const string Setting = " on a wooden table";
@@ -208,6 +210,34 @@ public static class PromptParser
         }
 
         return new(vase, DaisyAppearance.WhiteWithGoldenDisk);
+    }
+
+    // A single red or pink rose growing from one existing vase. The strict grammar matches
+    // the other standalone flower paths and refuses the entire prompt on any added content.
+    public static VaseRosePrompt? ParseVaseRose(string? prompt)
+    {
+        var normalized = Normalize(prompt);
+        if (normalized is null)
+        {
+            return null;
+        }
+
+        var match = Regex.Match(
+            normalized[..^Setting.Length],
+            @"\A(?<flower>" + RoseDescriptor + @") in (?<vase>" + VaseDescriptor + @")\z");
+        if (!match.Success)
+        {
+            return null;
+        }
+
+        var vase = ParseDescriptor(match.Groups["vase"].Value).Ceramic;
+        if (vase is null || vase.Kind != CeramicKind.Vase)
+        {
+            return null;
+        }
+
+        var color = match.Groups["flower"].Value == "a red rose" ? RoseColor.Red : RoseColor.Pink;
+        return new(vase, color);
     }
 
     public static ImmutableArray<ObjectPrompt>? ParseObjects(string? prompt)

@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Numerics;
 
 namespace Formloom.Core;
 
@@ -68,7 +69,8 @@ public static class SceneValidator
             return "A scene cannot be both a filled cup and a fruit inside a bowl.";
         }
 
-        var flower = scene.VaseFlower is not null || scene.VaseDaisy is not null || scene.VaseTulipDaisy is not null;
+        var flower = scene.VaseFlower is not null || scene.VaseDaisy is not null ||
+            scene.VaseTulipDaisy is not null || scene.VaseRose is not null;
         if (flower && (containment is not null || scene.CupContents is not null))
         {
             return "A scene cannot hold a flower and another contents relationship at the same time.";
@@ -76,7 +78,8 @@ public static class SceneValidator
 
         var vaseFlowerRelationships = (scene.VaseFlower is null ? 0 : 1) +
             (scene.VaseDaisy is null ? 0 : 1) +
-            (scene.VaseTulipDaisy is null ? 0 : 1);
+            (scene.VaseTulipDaisy is null ? 0 : 1) +
+            (scene.VaseRose is null ? 0 : 1);
         if (vaseFlowerRelationships > 1)
         {
             return "A scene cannot hold two flower arrangements at the same time.";
@@ -102,6 +105,11 @@ public static class SceneValidator
             return ValidateVaseDaisy(objects, daisy);
         }
 
+        if (scene.VaseRose is { } rose)
+        {
+            return ValidateVaseRose(objects, rose);
+        }
+
         return containment is null ? null : ValidateContainment(objects, containment);
     }
 
@@ -119,7 +127,7 @@ public static class SceneValidator
             return "A vase must have a blue or cream glaze.";
         }
 
-        if (!Enum.IsDefined(flower.Flower))
+        if (flower.Flower != FlowerKind.Tulip)
         {
             return "Only a tulip is supported.";
         }
@@ -309,6 +317,162 @@ public static class SceneValidator
         }
 
         return null;
+    }
+
+    // A rose is the one typed content of the scene's existing vase. Its fixed layer counts,
+    // stem attachment, leaf geometry and bounds are validated before the renderer sees it.
+    private static string? ValidateVaseRose(ImmutableArray<SceneEntry> objects, VaseRose rose)
+    {
+        if (rose.Vase is null || rose.Vase.Kind != CeramicKind.Vase)
+        {
+            return "Only a vase can hold a rose.";
+        }
+
+        if (!Enum.IsDefined(rose.Vase.Glaze))
+        {
+            return "A vase must have a blue or cream glaze.";
+        }
+
+        if (rose.Flower != FlowerKind.Rose)
+        {
+            return "Only a rose is supported by this arrangement.";
+        }
+
+        if (!Enum.IsDefined(rose.Color))
+        {
+            return "A rose must be red or pink.";
+        }
+
+        if (objects.Length != 1 || !ReferenceEquals(objects[0].Ceramic, rose.Vase))
+        {
+            return "A rose scene must contain exactly its shared vase and no other object.";
+        }
+
+        var plant = rose.Plant;
+        if (plant is null || plant.Stem.IsDefault || plant.Leaves.IsDefault ||
+            plant.Bloom is null || plant.Bloom.Petals.IsDefault)
+        {
+            return "A vase rose must describe one stem, two leaves and one layered bloom.";
+        }
+
+        if (plant.Stem.Length != 1 || plant.Leaves.Length != 2 || plant.Bloom.Petals.Length != RoseGeometry.PetalCount)
+        {
+            return "A vase rose must have one continuous stem, exactly two leaves and thirteen petals.";
+        }
+
+        if (!IsFinite(plant.StemBase) || !IsFinite(plant.StemTop) ||
+            !float.IsFinite(plant.StemThickness) || plant.StemThickness <= 0 ||
+            !IsFinite(plant.Bloom.Center) || !float.IsFinite(plant.Bloom.RadiusX) || plant.Bloom.RadiusX <= 0 ||
+            !float.IsFinite(plant.Bloom.RadiusY) || plant.Bloom.RadiusY <= 0 ||
+            !AreFinite(plant.Stem))
+        {
+            return "Rose geometry must be finite and positive.";
+        }
+
+        var stem = plant.Stem[0];
+        if (stem.Start != plant.StemBase || stem.End != plant.StemTop)
+        {
+            return "The rose stem must connect its typed base and bloom attachment.";
+        }
+
+        for (var index = 0; index < plant.Bloom.Petals.Length; index++)
+        {
+            var petal = plant.Bloom.Petals[index];
+            var expectedLayer = index < RoseGeometry.OuterPetalCount
+                ? RosePetalLayer.Outer
+                : index < RoseGeometry.OuterPetalCount + RoseGeometry.MiddlePetalCount
+                    ? RosePetalLayer.Middle
+                    : RosePetalLayer.Inner;
+            if (petal is null || petal.Layer != expectedLayer || !Enum.IsDefined(petal.Layer) ||
+                !IsFinite(petal.Root) || !IsFinite(petal.Tip) || !float.IsFinite(petal.Angle) ||
+                !float.IsFinite(petal.Tone) || petal.Tone is < 0 or > 1 ||
+                !AreFinite(petal.Outline) || petal.Outline.Length < 3 || !HasNonDegenerateExtent(petal.Outline) ||
+                !AreFinite(petal.Fold) || petal.Fold.Length != 1)
+            {
+                return "Rose petals must keep their finite outer, middle and inner layer structure.";
+            }
+        }
+
+        foreach (var leaf in plant.Leaves)
+        {
+            if (leaf is null || !IsFinite(leaf.Attachment) || !IsFinite(leaf.Tip) ||
+                !float.IsFinite(leaf.Width) || leaf.Width <= 0 ||
+                !AreFinite(leaf.Outline) || leaf.Outline.Length < 3 || !HasNonDegenerateExtent(leaf.Outline) ||
+                !AreFinite(leaf.Vein) || leaf.Vein.IsDefaultOrEmpty)
+            {
+                return "Every rose leaf must describe a finite blade and vein.";
+            }
+
+            if (leaf.Tip.Y >= leaf.Attachment.Y || leaf.Attachment.Y >= rose.MouthTop - 0.004f ||
+                leaf.Tip.Y >= rose.MouthTop - 0.004f || RoseGeometry.DistanceToStem(plant, leaf.Attachment) > 0.002f)
+            {
+                return "Both rose leaves must point upward and remain attached above the vase opening.";
+            }
+        }
+
+        if (plant.Leaves[0].Tip.X >= plant.Leaves[0].Attachment.X ||
+            plant.Leaves[1].Tip.X <= plant.Leaves[1].Attachment.X ||
+            plant.Leaves[0].Tip.X >= plant.Leaves[1].Tip.X ||
+            Vector2.Distance(plant.Leaves[0].Attachment, plant.Leaves[1].Attachment) <= 0.01f)
+        {
+            return "The two rose leaves must remain separate on opposite sides of the stem.";
+        }
+
+        var opening = rose.OpeningCenter;
+        var radius = rose.OpeningRadius;
+        var offsetX = (plant.StemBase.X - opening.X) / radius.X;
+        var offsetY = (plant.StemBase.Y - opening.Y) / radius.Y;
+        var reach = (offsetX * offsetX) + (offsetY * offsetY);
+        if (reach >= 0.95f || plant.StemBase.Y <= rose.MouthTop)
+        {
+            return "The rose stem must enter through the vase opening rather than the exterior wall.";
+        }
+
+        if (plant.StemTop.Y >= rose.MouthTop - 0.004f)
+        {
+            return "The rose stem must rise clear of the vase rim.";
+        }
+
+        if (plant.StemTop.X != plant.Bloom.Center.X ||
+            plant.StemTop.Y <= plant.Bloom.Top || plant.StemTop.Y >= plant.Bloom.Bottom ||
+            plant.Bloom.Top >= rose.MouthTop - 0.01f || plant.Bloom.Bottom >= rose.MouthTop - 0.004f)
+        {
+            return "The rose bloom must attach to the stem and sit above the opening, clear of the rim.";
+        }
+
+        var bounds = plant.Bounds;
+        if (!float.IsFinite(bounds.Left) || !float.IsFinite(bounds.Top) ||
+            !float.IsFinite(bounds.Right) || !float.IsFinite(bounds.Bottom))
+        {
+            return "Rose geometry must be finite and positive.";
+        }
+
+        if (bounds.Top < RoseGeometry.TopMargin - 0.012f || bounds.Left < 0.02f || bounds.Right > 0.98f ||
+            bounds.Bottom > 0.94f || bounds.Bottom > plant.StemBase.Y + (plant.StemThickness / 2) + 0.001f)
+        {
+            return "Rose bounds must remain inside the safe canvas margins.";
+        }
+
+        if (plant.Bloom.Width > radius.X * 2.6f || plant.Bloom.Height > 0.16f ||
+            plant.StemThickness > radius.X * 0.3f)
+        {
+            return "The rose bloom and stem must stay proportionate to the vase opening.";
+        }
+
+        return null;
+    }
+
+    private static bool IsFinite(Vector2 point) => float.IsFinite(point.X) && float.IsFinite(point.Y);
+
+    private static bool AreFinite(ImmutableArray<CubicSegment> segments) =>
+        !segments.IsDefaultOrEmpty && segments.All(segment =>
+            segment is not null && IsFinite(segment.Start) && IsFinite(segment.Control1) &&
+            IsFinite(segment.Control2) && IsFinite(segment.End));
+
+    private static bool HasNonDegenerateExtent(ImmutableArray<CubicSegment> segments)
+    {
+        var extent = CurveBuilder.Extent(segments);
+        return extent.Right - extent.Left > 1e-5f && extent.Bottom - extent.Top > 1e-5f;
     }
 
     // The mixed contents are one fixed tulip and one fixed daisy sharing the exact vase entry.

@@ -1,6 +1,6 @@
 # Phase 10 — A Red or Pink Rose in a Ceramic Vase
 
-> **Status:** Ready for implementation. This is a narrow, standalone third-flower milestone built on the existing vase-content and renderer paths. Start from the latest `main`; do not assume the current commit is still the one recorded below.
+> **Status:** In progress. Rose Core, parser, generation, renderer, desktop integration, Core/rendering/desktop tests, and documentation drafts are written. None have been built or executed yet; CI/artifact generation and visual review are pending, as are the final handoff evidence and review PR. This is a narrow, standalone third-flower milestone built on the existing vase-content and renderer paths. Start from the latest `main`; do not assume the current commit is still the one recorded below.
 
 ## Goal
 
@@ -17,16 +17,16 @@ Exactly one rose, one stem, and two leaves. The existing vase remains the only s
 
 ## Phase 9 prerequisite — verified evidence and required documentation reconciliation
 
-Phase 9's follow-up was merged after its checklist and handoff were written. The latest verified main commit at the time this specification was authored is `02286c55c21ed46cc332796c2861b3354ca6dd20`.
+Phase 9's follow-up was merged after its checklist and handoff were written. The latest verified main commit at the time this specification was authored was `02286c55c21ed46cc332796c2861b3354ca6dd20`. Since then, PR #54 merged the Phase 9 documentation closeout as `b6fdcde0190958622d214cfd2d5e78b6b2dbe605`; post-merge Linux / Release run [42581962836](https://github.com/Vraxo/Formloom/actions/runs/42581962836) passed. Phase 10 started from that exact latest-main commit with a clean working tree.
 
 - Phase 9 implementation PR [#52](https://github.com/Vraxo/Formloom/pull/52) merged as `1311f91e582554c2601c0b9476265a1a62ab123d`; its post-merge Linux Release run [42493951766](https://github.com/Vraxo/Formloom/actions/runs/42493951766) passed.
 - Vase stem-contact follow-up PR [#53](https://github.com/Vraxo/Formloom/pull/53) merged as `02286c55c21ed46cc332796c2861b3354ca6dd20`; its post-merge Linux Release run [42507895872](https://github.com/Vraxo/Formloom/actions/runs/42507895872) passed.
 - The PR #53 workflow artifact is artifact ID `13628551050` (`procedural-preview`). It contains the 1280 × 960 Phase 9 review sheet, ten 1024 × 1024 mixed-arrangement samples, their individual timing sidecars, and the sheet timing/manifest sidecar.
 - The sheet is 4 columns × 3 rows with 320 × 320 cells. Its first row is the four red/yellow × blue/cream canonical combinations; the remaining six cells show alternate seeds and variation extremes.
-- Artifact review performed on 2026-11-09: all ten sheet cells were inspected; the four canonical seed-42 / variation-0.35 combinations were also inspected at 1024 × 1024, along with representative high-variation samples. The two blooms remain distinguishable, all four leaves are visible, both stems enter the vase continuously, and the near lip hides the interior continuations. No blocking visual defect was found in that review. This records assistant-side artifact inspection, not a claim of separate user acceptance.
+- Artifact review performed on 2026-11-09: assistant-side inspection covered all ten 320 × 320 sheet cells and all ten user-supplied 1024 × 1024 cases (the four canonical combinations, two alternate seeds, and four variation cases). The two blooms remain distinguishable, all four leaves are visible, both stems enter the vase continuously, and the near lip hides the interior continuations. No blocking visual defect was found. This records agent-side artifact inspection, not a claim of separate user acceptance.
 - All ten 1024 × 1024 timing sidecars were read. Their observed render-and-encode values range from approximately 132.8 ms to 192.4 ms; the four canonical cases range from approximately 132.8 ms to 137.6 ms. The 320 × 320 sheet cells range from approximately 31.4 ms to 45.6 ms. These are observations from .NET 10.0.14 on Ubuntu 24.04.5 LTS with four reported processors, not performance guarantees or a universal cost model.
 
-The current Phase 9 checklist still has unchecked review items and says PR #53 is unmerged. The Phase 9 handoff also contains stale statements that the other samples were not reviewed, that timings were not read, and that PR #53 must not be merged. Those statements are obsolete in light of the merged PR, successful post-merge run, and artifact review above.
+Those statements described the repository before PR #54. They are now reconciled in the current Phase 9 checklist, README, and handoff: PR #53's merge and post-merge CI are recorded, all Phase 9 checklist items are checked, visual scope is distinguished from user acceptance, and the supplied timing sidecars are transcribed. The current Phase 10 starting point also includes the post-merge PR #54 documentation closeout; no Phase 9 source, visual, or CI discrepancy was found.
 
 ## Sequential implementation checklist
 
@@ -37,36 +37,36 @@ The current Phase 9 checklist still has unchecked review items and says PR #53 i
 - [x] Confirm that artifact `13628551050` contains the Phase 9 4 × 3 sheet, ten full-resolution mixed-arrangement images, ten individual timing sidecars, and the sheet timing sidecar.
 - [x] Inspect the ten 320 px review-sheet cells and the four canonical 1024 px samples; inspect representative high-variation samples. No blocking visual issue was found.
 - [x] Read the ten full-resolution timing sidecars and the sheet timing sidecar; record their values and environment-specific limitations above.
-- [ ] Start from the latest `main`, record its exact HEAD, and confirm that the working tree/branch has no unrelated changes. The recorded `02286c5` is the verified prerequisite commit, not an instruction to reset or force the branch backwards.
-- [ ] Re-read `.agents/todo-9.md` and `docs/mixed-vase-arrangement-handoff.md` from the current `main`; verify their contents against the merged source, CI run `42507895872`, and artifact `13628551050`.
-- [ ] Reconcile the stale PR #53 unmerged/pending language in both Phase 9 documents. Replace it with the actual merge commit and successful post-merge run.
-- [ ] Reconcile Phase 9's remaining review/timing checkboxes with the exact inspection scope and artifact evidence recorded above. Mark only what is supported; preserve any genuinely unverified limitation.
-- [ ] Record the Phase 9 visual review as assistant-side artifact inspection, not user acceptance. Distinguish the ten 320 px sheet-cell checks from the four canonical and representative individual full-resolution checks.
-- [ ] Preserve the measured timing range as environment-specific observations. Do not claim that the new renderer is faster/slower from a single noisy measurement or compare incomparable sample sizes.
-- [ ] If the current repository has advanced beyond the recorded commit, inspect all intervening changes and carry the phase forward from the actual latest `main`.
-- [ ] If Phase 9 source, visual, or CI evidence materially contradicts this verified record, stop and report the exact discrepancy before implementing Phase 10. Do not silently bury a Phase 9 defect in the rose work.
-- [ ] Confirm `.agents/todo-10.md` is the only new milestone specification being added by this phase; do not overwrite earlier checklists or handoffs.
+- [x] Start from the latest `main`, record its exact HEAD, and confirm that the working tree/branch has no unrelated changes. Phase 10 started from clean `b6fdcde0190958622d214cfd2d5e78b6b2dbe605`; do not reset to the older `02286c5` prerequisite commit.
+- [x] Re-read `.agents/todo-9.md` and `docs/mixed-vase-arrangement-handoff.md` at the current main commit; verify them against merged source, PR #53 run `42507895872`, artifact `13628551050`, and the PR #54 closeout.
+- [x] Reconcile stale PR #53 unmerged/pending language: PR #54 records merge commit `b6fdcde` and successful post-merge main run `42581962836`.
+- [x] Reconcile Phase 9 review/timing checkboxes with the evidence. All Phase 9 checklist items are checked; the full-size review/timing record is present and retains the single-observation limitations.
+- [x] Record Phase 9 visual review as assistant-side artifact inspection, not separate user acceptance. The assistant inspected all ten 320 × 320 sheet cells and all ten user-supplied 1024 × 1024 samples; the handoff now states that scope explicitly.
+- [x] Preserve measured timing as environment-specific observations: sheet cells 31.3668–45.6050 ms and full-size cases 132.8377–192.4158 ms. No performance direction or per-flower cost is inferred from one sample per case.
+- [x] Inspect repository advances beyond the spec's recorded `02286c5`: PR #54 adds the Phase 9 documentation closeout at `b6fdcde`; its latest main Linux / Release run `42581962836` passed. No later application-source change was found.
+- [x] Compare Phase 9 source, visual evidence, and CI with the verified record; no material contradiction or blocking defect was found.
+- [x] Confirm `.agents/todo-10.md` is the only Phase 10 milestone specification; preserve all earlier checklists and handoffs.
 
 **Phase 9 prerequisite gate:** continue only after the two Phase 9 documents accurately describe the merged and reviewed state, and the current `main` has passed its latest required Release CI. A newly discovered blocking issue must be resolved or reported before rose implementation begins.
 
 ### 1. Inspect the current architecture and define the narrow rose model
 
-- [ ] Read the current Core, renderer, parser, scene validation, desktop generation/save, and test implementations before editing.
-- [ ] Trace the four existing vase-content paths: standalone tulip, standalone daisy, the fixed tulip/daisy pair, and an empty vase.
-- [ ] Trace the complete prompt → Core → scene generation → validation → Skia render → DesktopSession → PNG save path for an existing standalone flower.
-- [ ] Inspect the current `FlowerKind`, `VaseMouth`, `VaseStem` projection/helpers, and shared vase-first plant draw order in the current source. Names and paths in this document are orientation only.
-- [ ] Confirm how red/yellow tulip and white/golden daisy appearances are represented and validated. Do not widen those models to accommodate rose-specific data.
-- [ ] Confirm how the renderer carries a complete stem through the far rim and clips its tangent-matched interior continuation behind the near lip.
-- [ ] Confirm how flower geometry, vase profile, transforms, bounds, variation, and named random streams are represented.
-- [ ] Choose a species-specific `RosePlant` model and its small set of supporting geometry records. Keep rose petal geometry separate from `TulipPetal` and `DaisyPetal`.
-- [ ] Add a closed `RoseColor` representation with exactly `Red` and `Pink`, or an equally narrow closed appearance representation if the existing conventions make that more coherent.
-- [ ] Add a typed `VaseRose` vase-content record that refers to the exact vase instance already held by the scene.
-- [ ] Add `FlowerKind.Rose` and update all exhaustive validation/dispatch sites deliberately. Do not make `FlowerKind` a stringly typed extension point.
-- [ ] Keep the vase as the only `SceneEntry`; the rose is vase content, not an independently transformed scene object with its own depth or shadow.
-- [ ] Make rose contents mutually exclusive with tulip-only, daisy-only, tulip/daisy pair, bowl containment, and cup contents.
-- [ ] Keep Core independent of SkiaSharp, pixel coordinates, bitmap/native resources, and Desktop/UI types.
-- [ ] Avoid broad nullable flower records, arbitrary flower arrays, a general plant registry, a generic bouquet model, reflection dispatch, or a universal contents abstraction.
-- [ ] Record the chosen typed model and exact invariants in the Phase 10 handoff.
+- [x] Read the current Core, renderer, parser, scene validation, desktop generation/save, and test implementations before editing.
+- [x] Trace the four existing vase-content paths: standalone tulip, standalone daisy, the fixed tulip/daisy pair, and an empty vase.
+- [x] Trace the complete prompt → Core → scene generation → validation → Skia render → DesktopSession → PNG save path for an existing standalone flower.
+- [x] Inspect the current `FlowerKind`, `VaseMouth`, `VaseStem` projection/helpers, and shared vase-first plant draw order in the current source. Names and paths in this document are orientation only.
+- [x] Confirm how red/yellow tulip and white/golden daisy appearances are represented and validated. Do not widen those models to accommodate rose-specific data.
+- [x] Confirm how the renderer carries a complete stem through the far rim and clips its tangent-matched interior continuation behind the near lip.
+- [x] Confirm how flower geometry, vase profile, transforms, bounds, variation, and named random streams are represented.
+- [x] Choose a species-specific `RosePlant` model and its small set of supporting geometry records. Keep rose petal geometry separate from `TulipPetal` and `DaisyPetal`.
+- [x] Add a closed `RoseColor` representation with exactly `Red` and `Pink`, or an equally narrow closed appearance representation if the existing conventions make that more coherent.
+- [x] Add a typed `VaseRose` vase-content record that refers to the exact vase instance already held by the scene.
+- [x] Add `FlowerKind.Rose` and update all exhaustive validation/dispatch sites deliberately. Do not make `FlowerKind` a stringly typed extension point.
+- [x] Keep the vase as the only `SceneEntry`; the rose is vase content, not an independently transformed scene object with its own depth or shadow.
+- [x] Make rose contents mutually exclusive with tulip-only, daisy-only, tulip/daisy pair, bowl containment, and cup contents.
+- [x] Keep Core independent of SkiaSharp, pixel coordinates, bitmap/native resources, and Desktop/UI types.
+- [x] Avoid broad nullable flower records, arbitrary flower arrays, a general plant registry, a generic bouquet model, reflection dispatch, or a universal contents abstraction.
+- [x] Record the chosen typed model and exact invariants in the Phase 10 handoff; final verification and ending-commit evidence remain pending.
 
 ### 2. Add exact rose prompt grammar and save identity
 

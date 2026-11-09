@@ -68,6 +68,7 @@ public sealed class AppComponentTests
         Assert.Contains("a red tulip in a blue ceramic vase on a wooden table", help, StringComparison.Ordinal);
         Assert.Contains("a white daisy in a cream ceramic vase on a wooden table", help, StringComparison.Ordinal);
         Assert.Contains("a red tulip and a white daisy in a blue ceramic vase on a wooden table", help, StringComparison.Ordinal);
+        Assert.Contains("a pink rose in a cream ceramic vase on a wooden table", help, StringComparison.Ordinal);
     }
 
     [Theory]
@@ -92,6 +93,10 @@ public sealed class AppComponentTests
     [InlineData("a red tulip and a white daisy in a cream ceramic vase on a wooden table")]
     [InlineData("a yellow tulip and a white daisy in a blue ceramic vase on a wooden table")]
     [InlineData("a yellow tulip and a white daisy in a cream ceramic vase on a wooden table")]
+    [InlineData("a red rose in a blue ceramic vase on a wooden table")]
+    [InlineData("a red rose in a cream ceramic vase on a wooden table")]
+    [InlineData("a pink rose in a blue ceramic vase on a wooden table")]
+    [InlineData("a pink rose in a cream ceramic vase on a wooden table")]
     public async Task InputEventsAndSubmitUseEditedValuesAndRenderPreview(string prompt)
     {
         await using var context = new BunitContext();

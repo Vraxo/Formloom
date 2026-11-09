@@ -1,0 +1,14 @@
+using System.Collections.Immutable;
+using System.Numerics;
+
+namespace Formloom.Core;
+
+/// <summary>One curved rose petal, including its restrained fold contour.</summary>
+public sealed record RosePetal(
+    RosePetalLayer Layer,
+    Vector2 Root,
+    Vector2 Tip,
+    float Angle,
+    float Tone,
+    ImmutableArray<CubicSegment> Outline,
+    ImmutableArray<CubicSegment> Fold);

@@ -6,4 +6,5 @@ public enum FlowerKind
 {
     Tulip,
     Daisy,
+    Rose,
 }

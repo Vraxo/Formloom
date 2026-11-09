@@ -42,6 +42,10 @@ public sealed record StillLifeScene(
     // share the same vase entry. It cannot be combined with any other contents relationship.
     public VaseTulipDaisy? VaseTulipDaisy { get; init; }
 
+    // One standalone red or pink rose grows from the vase already stored in Entries. It is
+    // typed content, not an extra scene entry, and is mutually exclusive with every relation.
+    public VaseRose? VaseRose { get; init; }
+
     public ImmutableArray<SceneEntry> Objects
     {
         get
@@ -77,6 +81,11 @@ public sealed record StillLifeScene(
             if (VaseTulipDaisy is { } pair)
             {
                 return pair.SubjectToken;
+            }
+
+            if (VaseRose is { } rose)
+            {
+                return rose.SubjectToken;
             }
 
             if (VaseFlower is { } flower)
