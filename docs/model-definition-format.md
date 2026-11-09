@@ -244,8 +244,8 @@ Reject a format or implementation that calls a rose helper behind a generic-look
 ## 9. Next implementation sequence
 
 1. Complete and test the versioned JSON Schema and typed Core definition records; their initial structural subset now exists but is not yet a complete rose contract.
-2. Complete the external model catalog and semantic validator; the first implementation and temporary-directory tests now exist, with CI verification pending.
-3. Represent the full rose construction as a schema-valid fixture and refine typed operation contracts to support it.
-4. Implement the generic interpreter and migrate the rose.
+2. External filesystem discovery and semantic validation are implemented in PR [#60](https://github.com/Vraxo/Formloom/pull/60), with temporary-directory, collision, reference, depth, and resource-limit tests. Linux / Release CI [run #269](https://github.com/Vraxo/Formloom/actions/runs/42641157403) passed all 813 tests. The PR is open; merge and post-merge CI remain pending.
+3. Design the renderer-neutral evaluated geometry representation, using the rose requirements to refine typed operation outputs and coordinate/landmark contracts.
+4. Implement the minimum reusable operations and generic evaluator, then express and migrate the rose through that path.
 
 Do not ship the draft fragment as a runtime model until it validates against the committed schema and is evaluated by the real interpreter.

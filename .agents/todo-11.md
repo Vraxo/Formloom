@@ -1,6 +1,6 @@
 # Phase 11 — Data-driven model system
 
-> **Status:** In progress. PRs 1–2b are merged. PR #59's PR and post-merge Linux / Release CI both passed. PR 3's catalog and semantic-validation implementation is committed to `phase-11/model-catalog`; the pull-request and Linux / Release CI checkpoint is pending. No runtime geometry evaluator, generic rendering pipeline, complete executable rose definition, or migrated rose exists yet.
+> **Status:** In progress. PRs 1–2b are merged. PR #60 (PR 3: external model catalog and semantic validation) is open against `main`; its latest head `6d1b799fc9b94c22efcae3d99a341071a35d4dc1` passed Linux / Release CI run [42641157403](https://github.com/Vraxo/Formloom/actions/runs/42641157403). The Release build and all 813 tests passed (708 Core, 105 Desktop). PR merge and post-merge `main` CI are pending. The runtime geometry representation, evaluator, complete executable rose definition, and migrated rose do not exist yet.
 >
 > **Original starting point:** `main` at `fc4e587166617d72d2be9679aadc5a160c79878e` (2026-11-09). Current `main` includes PR 1 merge `5e5e3952694f5ef5732483a01e8ec8b8fd203d8b`, PR 2 merge `41168813ce5fe9254179609c11b708efed7566a4`, and PR 2b merge `b41233e6c0d44738c8bb29751e5d8961ac6a17ce`; current implementation branch: `phase-11/model-catalog`.
 
@@ -135,10 +135,12 @@ Core rules:
 - [x] Validate typed references, supported operation types/parameters, finite numeric literals/profile points, choice/range structure, ordered graph dependencies, graph depth, anchors exposed by the initial mount contract, and resource limits before evaluation.
 - [x] Use the repository's Result/error-value conventions for expected file/definition errors; expected failures return structured diagnostics.
 - [x] Ensure the catalog can load a temporary test directory so tests prove file-based discovery independently of the production model set.
-- [x] Test missing, malformed, invalid, duplicate, and valid model directories, including discovering a newly added definition on a subsequent load.
+- [x] Test missing, malformed, invalid, duplicate, and valid model directories, including discovering a newly added definition on a subsequent load. Cover normalized cross-model prompt collisions, duplicate aliases, forward references, graph-depth and total-repeat limits.
 - [x] Document filesystem discovery, default/custom roots, diagnostic behavior, and reload semantics.
 
-**Acceptance gate:** A valid external definition is discoverable and a malformed one produces a useful diagnostic before any geometry is rendered.
+**Acceptance gate:** Complete. A valid external definition is discoverable and malformed or semantically invalid definitions produce useful diagnostics before geometry evaluation. The catalog is filesystem-backed and takes a fresh immutable snapshot on each load.
+
+**PR 3 verification:** PR [#60](https://github.com/Vraxo/Formloom/pull/60), head `6d1b799fc9b94c22efcae3d99a341071a35d4dc1`; Linux / Release CI [run #269](https://github.com/Vraxo/Formloom/actions/runs/42641157403) passed. TRX artifacts report 708/708 Core tests and 105/105 Desktop tests (813 total). Workflow artifacts: test results [13685681343](https://github.com/Vraxo/Formloom/actions/runs/42641157403/artifacts/13685681343), procedural preview [13685995955](https://github.com/Vraxo/Formloom/actions/runs/42641157403/artifacts/13685995955), and inherited Phase 10 rose review bundle [13685691345](https://github.com/Vraxo/Formloom/actions/runs/42641157403/artifacts/13685691345). This PR does not change geometry or rendering; the rose bundle remains a legacy comparison baseline, not evidence of a migrated rose.
 
 ### 4. Generic geometry representation
 
@@ -264,7 +266,7 @@ Core rules:
 | PR 1 | Architecture contract and source audit | Complete | [PR #57](https://github.com/Vraxo/Formloom/pull/57), merge `5e5e395`, PR CI `42628176874`, main CI `42628463314` |
 | PR 2 | Model-definition format design draft | Complete | [PR #58](https://github.com/Vraxo/Formloom/pull/58), merge `4116881`, PR CI `42629742765`, main CI `42629995928` |
 | PR 2b | Initial JSON Schema and typed Core definition records | Complete (initial structural subset) | [PR #59](https://github.com/Vraxo/Formloom/pull/59), merge `b41233e`, PR CI [42631769203](https://github.com/Vraxo/Formloom/actions/runs/42631769203), main CI [42632077052](https://github.com/Vraxo/Formloom/actions/runs/42632077052) |
-| PR 3 | Runtime model catalog and semantic file validation | Implementation complete; PR/CI pending | `phase-11/model-catalog` |
+| PR 3 | Runtime model catalog and semantic file validation | PR CI passed; merge/main CI pending | [PR #60](https://github.com/Vraxo/Formloom/pull/60), head `6d1b799`, Linux / Release run [42641157403](https://github.com/Vraxo/Formloom/actions/runs/42641157403), 813/813 tests |
 | PR 4 | Generic geometry representation | Not started | — |
 | PR 5 | Reusable procedural operators | Not started | — |
 | PR 6 | Generic model interpreter | Not started | — |
@@ -290,4 +292,4 @@ Core rules:
 
 ## Handoff
 
-**Current status:** PR #57, #58, and #59 are merged, with both PR and post-merge Linux / Release CI passing. PR 3's bounded filesystem discovery, strict typed deserialization, semantic/reference validation, prompt-collision rejection, graph/resource limits, and snapshot reload behavior are committed to `phase-11/model-catalog`. Added focused catalog tests are awaiting PR CI execution. No built-in executable model has been added; no geometry representation, interpreter, or rose migration exists yet.
+**Current status:** PRs #57, #58, and #59 are merged with passing PR and post-merge Linux / Release CI. PR #60 is open; its current head `6d1b799fc9b94c22efcae3d99a341071a35d4dc1` passed Linux / Release run [42641157403](https://github.com/Vraxo/Formloom/actions/runs/42641157403): Release build succeeded and all 813 tests passed (708 Core, 105 Desktop). Run artifacts: test results [13685681343](https://github.com/Vraxo/Formloom/actions/runs/42641157403/artifacts/13685681343), procedural preview [13685995955](https://github.com/Vraxo/Formloom/actions/runs/42641157403/artifacts/13685995955), and Phase 10 rose comparison bundle [13685691345](https://github.com/Vraxo/Formloom/actions/runs/42641157403/artifacts/13685691345). The catalog milestone is implemented and PR-tested; merge and post-merge `main` CI remain pending. No built-in executable model definition, generic geometry representation, interpreter, or rose migration exists yet. Do not call Level 2 complete until the data-only second-model proof passes.
