@@ -265,9 +265,9 @@ Reject a format or implementation that calls a rose helper behind a generic-look
 
 ## 9. Next implementation sequence
 
-1. Complete and test the versioned JSON Schema and typed Core definition records; their initial structural subset now exists but is not yet a complete rose contract.
-2. External filesystem discovery and semantic validation are implemented in PR [#60](https://github.com/Vraxo/Formloom/pull/60), with temporary-directory, collision, reference, depth, and resource-limit tests. Linux / Release CI [run #269](https://github.com/Vraxo/Formloom/actions/runs/42641157403) passed all 813 tests. The PR is open; merge and post-merge CI remain pending.
-3. Design the renderer-neutral evaluated geometry representation, using the rose requirements to refine typed operation outputs and coordinate/landmark contracts.
-4. Implement the minimum reusable operations and generic evaluator, then express and migrate the rose through that path.
+1. The initial versioned schema and typed Core subset are merged in PRs [#58](https://github.com/Vraxo/Formloom/pull/58) and [#59](https://github.com/Vraxo/Formloom/pull/59). They are intentionally not yet a complete executable rose contract.
+2. Runtime filesystem discovery and semantic validation are merged in [PR #60](https://github.com/Vraxo/Formloom/pull/60); post-merge Linux / Release CI [run #271](https://github.com/Vraxo/Formloom/actions/runs/42646802073) passed.
+3. The renderer-neutral evaluated geometry output contract is implemented in [PR #61](https://github.com/Vraxo/Formloom/pull/61). Its latest PR head `cffdf942d3187bf54c52b001f992cac58da03272` passed Linux / Release CI [run #273](https://github.com/Vraxo/Formloom/actions/runs/42650621787), including 821/821 tests. Merge and post-merge CI remain pending.
+4. Before expanding operators, follow [ADR-0001](adr/0001-hybrid-procedural-engine.md): decompose the real rose into reusable C# algorithms versus model-specific declarative knowledge. Add only the small set of model-independent operations demonstrated by that audit. Then implement the evaluator and only afterward author the external rose definition.
 
 Do not ship the draft fragment as a runtime model until it validates against the committed schema and is evaluated by the real interpreter.
