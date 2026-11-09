@@ -9,6 +9,11 @@ public static class ModelDefinitionCatalog
 {
     private const string DefinitionPattern = "*.model.json";
 
+    public static string DefaultRootPath => Path.Combine(AppContext.BaseDirectory, "models");
+
+    public static ModelDefinitionCatalogResult LoadDefault(ModelDefinitionCatalogOptions? options = null) =>
+        Load(DefaultRootPath, options);
+
     public static ModelDefinitionCatalogResult Load(
         string? rootPath,
         ModelDefinitionCatalogOptions? options = null)
@@ -16,7 +21,6 @@ public static class ModelDefinitionCatalog
         var settings = options ?? new ModelDefinitionCatalogOptions();
         var diagnostics = ImmutableArray.CreateBuilder<ModelDefinitionDiagnostic>();
         var models = ImmutableDictionary.CreateBuilder<string, ModelDefinition>(StringComparer.Ordinal);
-        var duplicateIds = new HashSet<string>(StringComparer.Ordinal);
 
         if (ValidateOptions(settings) is { } optionsError)
         {
@@ -47,22 +51,26 @@ public static class ModelDefinitionCatalog
             return new(models.ToImmutable(), diagnostics.ToImmutable());
         }
 
-        string[] files;
+        var files = new List<string>();
         try
         {
-            files = Directory
-                .EnumerateFiles(
-                    fullRoot,
-                    DefinitionPattern,
-                    new EnumerationOptions
-                    {
-                        AttributesToSkip = FileAttributes.ReparsePoint,
-                        IgnoreInaccessible = false,
-                        RecurseSubdirectories = true,
-                        ReturnSpecialDirectories = false,
-                    })
-                .Order(StringComparer.Ordinal)
-                .ToArray();
+            foreach (var file in Directory.EnumerateFiles(
+                fullRoot,
+                DefinitionPattern,
+                new EnumerationOptions
+                {
+                    AttributesToSkip = FileAttributes.ReparsePoint,
+                    IgnoreInaccessible = false,
+                    RecurseSubdirectories = true,
+                    ReturnSpecialDirectories = false,
+                }))
+            {
+                files.Add(file);
+                if (files.Count > settings.MaximumFiles)
+                {
+                    break;
+                }
+            }
         }
         catch (Exception exception) when (IsFileSystemException(exception))
         {
@@ -70,55 +78,126 @@ public static class ModelDefinitionCatalog
             return new(models.ToImmutable(), diagnostics.ToImmutable());
         }
 
-        if (files.Length > settings.MaximumFiles)
+        if (files.Count > settings.MaximumFiles)
         {
             diagnostics.Add(new(
                 "catalog.file-limit-exceeded",
                 fullRoot,
                 string.Empty,
-                $"The directory contains {files.Length} model files; the limit is {settings.MaximumFiles}. No definitions were loaded."));
+                $"The directory contains more than {settings.MaximumFiles} model files; no definitions were loaded."));
             return new(models.ToImmutable(), diagnostics.ToImmutable());
         }
 
+        files.Sort(StringComparer.Ordinal);
+        var candidates = new List<(string FilePath, ModelDefinition Definition)>();
         foreach (var file in files)
         {
             var relativePath = Path.GetRelativePath(fullRoot, file);
             var definition = ReadDefinition(file, relativePath, settings, diagnostics);
-            if (definition is null)
+            if (definition is not null)
             {
-                continue;
+                candidates.Add((relativePath, definition));
             }
-
-            if (duplicateIds.Contains(definition.Id))
-            {
-                diagnostics.Add(new(
-                    "catalog.duplicate-model-id",
-                    relativePath,
-                    "id",
-                    $"Model ID '{definition.Id}' is already duplicated; every definition with this ID is excluded."));
-                continue;
-            }
-
-            if (models.Remove(definition.Id))
-            {
-                duplicateIds.Add(definition.Id);
-                diagnostics.Add(new(
-                    "catalog.duplicate-model-id",
-                    relativePath,
-                    "id",
-                    $"Model ID '{definition.Id}' occurs in more than one file; every definition with this ID is excluded."));
-                continue;
-            }
-
-            models.Add(definition.Id, definition);
         }
 
-        foreach (var duplicateId in duplicateIds)
+        var rejectedModelIds = new HashSet<string>(StringComparer.Ordinal);
+        var duplicateIds = candidates
+            .GroupBy(candidate => candidate.Definition.Id, StringComparer.Ordinal)
+            .Where(group => group.Count() > 1);
+
+        foreach (var group in duplicateIds)
         {
-            models.Remove(duplicateId);
+            rejectedModelIds.Add(group.Key);
+            foreach (var candidate in group)
+            {
+                diagnostics.Add(new(
+                    "catalog.duplicate-model-id",
+                    candidate.FilePath,
+                    "id",
+                    $"Model ID '{group.Key}' occurs in more than one file; every definition with this ID is excluded."));
+            }
+        }
+
+        var promptOwners = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
+        foreach (var candidate in candidates)
+        {
+            var definition = candidate.Definition;
+            if (rejectedModelIds.Contains(definition.Id))
+            {
+                continue;
+            }
+
+            var phrasesInDefinition = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var phrase in GetPromptPhrases(definition))
+            {
+                if (!phrasesInDefinition.Add(phrase))
+                {
+                    rejectedModelIds.Add(definition.Id);
+                    diagnostics.Add(new(
+                        "definition.duplicate-prompt-phrase",
+                        candidate.FilePath,
+                        "prompt",
+                        $"The definition produces the prompt phrase '{phrase}' more than once through its noun and aliases."));
+                    continue;
+                }
+
+                if (!promptOwners.TryGetValue(phrase, out var owners))
+                {
+                    owners = new Dictionary<string, string>(StringComparer.Ordinal);
+                    promptOwners.Add(phrase, owners);
+                }
+
+                owners[definition.Id] = candidate.FilePath;
+            }
+        }
+
+        foreach (var (phrase, owners) in promptOwners.Where(entry => entry.Value.Count > 1))
+        {
+            foreach (var (modelId, filePath) in owners)
+            {
+                rejectedModelIds.Add(modelId);
+                diagnostics.Add(new(
+                    "catalog.duplicate-prompt-phrase",
+                    filePath,
+                    "prompt",
+                    $"Prompt phrase '{phrase}' is also declared by another model; every conflicting definition is excluded."));
+            }
+        }
+
+        foreach (var candidate in candidates)
+        {
+            if (!rejectedModelIds.Contains(candidate.Definition.Id))
+            {
+                models.Add(candidate.Definition.Id, candidate.Definition);
+            }
         }
 
         return new(models.ToImmutable(), diagnostics.ToImmutable());
+    }
+
+    private static IEnumerable<string> GetPromptPhrases(ModelDefinition definition)
+    {
+        var prompt = definition.Prompt;
+        if (prompt is null || prompt.Descriptors is null ||
+            string.IsNullOrWhiteSpace(prompt.MaterialVariantParameter) ||
+            !prompt.Descriptors.TryGetValue(prompt.MaterialVariantParameter, out var descriptors) ||
+            descriptors.IsDefaultOrEmpty)
+        {
+            yield break;
+        }
+
+        var nouns = new List<string> { prompt.Noun };
+        nouns.AddRange(prompt.Aliases);
+
+        foreach (var descriptor in descriptors)
+        {
+            foreach (var noun in nouns)
+            {
+                var phrase = $"{prompt.Article} {descriptor} {noun}";
+                yield return string.Join(' ', phrase.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
+                    .ToLowerInvariant();
+            }
+        }
     }
 
     private static ModelDefinition? ReadDefinition(
@@ -190,8 +269,9 @@ public static class ModelDefinitionCatalog
     private static string? ValidateOptions(ModelDefinitionCatalogOptions options)
     {
         if (options.MaximumFiles < 1 || options.MaximumFileBytes < 1 ||
-            options.MaximumNodes < 1 || options.MaximumProfilePoints < 3 ||
-            options.MaximumRepeatCount < 1 || options.MaximumExpressionDepth < 1 ||
+            options.MaximumNodes < 1 || options.MaximumGraphDepth < 1 ||
+            options.MaximumProfilePoints < 3 || options.MaximumRepeatCount < 1 ||
+            options.MaximumTotalRepeatCount < 1 || options.MaximumExpressionDepth < 1 ||
             options.MaximumExpressionNodes < 1)
         {
             return "Catalog limits must be positive; MaximumProfilePoints must be at least three.";

@@ -133,7 +133,11 @@ Requirements:
 - File size, graph depth, operation count, repetition count, and other resource-sensitive inputs must have explicit limits.
 - A definition should be independently testable in a temporary model directory, without editing a production catalog registry.
 
-The exact directory precedence, reload behavior, override rules, and JSON Schema packaging are Phase 12 design items.
+The initial catalog API uses `AppContext.BaseDirectory/models` as its default root (`LoadDefault`) and accepts an explicit custom root (`Load(rootPath)`). It recursively discovers `*.model.json` files. Each load produces a fresh immutable snapshot; calling it again reloads files added, removed, or changed since the previous call. There is no background file watcher, multi-root merge, or override precedence yet.
+
+Catalog loading is bounded by explicit file/document/node/profile/repetition/expression limits. Malformed definitions produce path-aware diagnostics while unrelated valid definitions can still load. A duplicate model ID excludes every definition with that ID. Prompt phrases are generated from the article, material-variant descriptors, noun, and noun aliases; a phrase collision excludes every conflicting definition rather than depending on file enumeration order. The result may therefore contain usable models and diagnostics at the same time.
+
+The default root is a runtime location, not a promise that a built-in model file ships today. Built-in definitions will be ordinary files copied beside the application when the first complete executable model is added. Until then, catalog tests and callers can supply an external directory explicitly.
 
 ## 6. Geometry and material contracts
 

@@ -8,6 +8,8 @@ public sealed record ModelDefinitionCatalogOptions
 
     public int MaximumNodes { get; init; } = 2_048;
 
+    public int MaximumGraphDepth { get; init; } = 64;
+
     public int MaximumProfilePoints { get; init; } = 4_096;
 
     public int MaximumRepeatCount { get; init; } = 512;

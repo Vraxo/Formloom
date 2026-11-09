@@ -360,6 +360,7 @@ public static class ModelDefinitionValidator
         }
 
         var priorNodes = new Dictionary<string, ModelNodeDefinition>(StringComparer.Ordinal);
+        var nodeDepths = new Dictionary<string, int>(StringComparer.Ordinal);
         var totalRepeatCount = 0;
         var allIds = new HashSet<string>(StringComparer.Ordinal);
         for (var index = 0; index < definition.Nodes.Length; index++)
@@ -453,6 +454,24 @@ public static class ModelDefinitionValidator
                     break;
             }
 
+            var depth = 1;
+            foreach (var dependency in GetNodeDependencies(node))
+            {
+                if (nodeDepths.TryGetValue(dependency, out var dependencyDepth))
+                {
+                    depth = Math.Max(depth, dependencyDepth + 1);
+                }
+            }
+
+            nodeDepths[node.Id] = depth;
+            if (depth > options.MaximumGraphDepth)
+            {
+                add(
+                    "definition.graph-depth-limit",
+                    path,
+                    $"The operation dependency depth is {depth}; the limit is {options.MaximumGraphDepth}.");
+            }
+
             priorNodes.Add(node.Id, node);
         }
 
@@ -473,6 +492,255 @@ public static class ModelDefinitionValidator
             {
                 add("definition.output-reference-not-found", $"outputs[{index}]", $"Output node '{definition.Outputs[index]}' does not exist.");
             }
+        }
+    }
+
+    private static IEnumerable<string> GetNodeDependencies(ModelNodeDefinition node)
+    {
+        switch (node)
+        {
+            case ModelCubicPathNodeDefinition path:
+                foreach (var segment in path.Segments)
+                {
+                    if (segment is null)
+                    {
+                        continue;
+                    }
+
+                    foreach (var dependency in GetPointDependencies(segment.Start))
+                    {
+                        yield return dependency;
+                    }
+
+                    foreach (var dependency in GetPointDependencies(segment.Control1))
+                    {
+                        yield return dependency;
+                    }
+
+                    foreach (var dependency in GetPointDependencies(segment.Control2))
+                    {
+                        yield return dependency;
+                    }
+
+                    foreach (var dependency in GetPointDependencies(segment.End))
+                    {
+                        yield return dependency;
+                    }
+                }
+
+                break;
+            case ModelCurveProjectNodeDefinition curve:
+                if (!string.IsNullOrWhiteSpace(curve.Curve))
+                {
+                    yield return curve.Curve;
+                }
+
+                foreach (var dependency in GetPointDependencies(curve.Target))
+                {
+                    yield return dependency;
+                }
+
+                break;
+            case ModelProfileMapNodeDefinition profile:
+                foreach (var dependency in GetPointDependencies(profile.Origin))
+                {
+                    yield return dependency;
+                }
+
+                foreach (var dependency in GetExpressionDependencies(profile.Angle))
+                {
+                    yield return dependency;
+                }
+
+                foreach (var dependency in GetMappingDependencies(profile.Mapping))
+                {
+                    yield return dependency;
+                }
+
+                break;
+            case ModelRadialArrayNodeDefinition radial:
+                foreach (var dependency in GetPointDependencies(radial.Center))
+                {
+                    yield return dependency;
+                }
+
+                foreach (var dependency in GetExpressionDependencies(radial.RadiusX))
+                {
+                    yield return dependency;
+                }
+
+                foreach (var dependency in GetExpressionDependencies(radial.RadiusY))
+                {
+                    yield return dependency;
+                }
+
+                foreach (var dependency in GetExpressionDependencies(radial.StartAngle))
+                {
+                    yield return dependency;
+                }
+
+                foreach (var dependency in GetExpressionDependencies(radial.Phase))
+                {
+                    yield return dependency;
+                }
+
+                foreach (var dependency in GetMappingDependencies(radial.Mapping))
+                {
+                    yield return dependency;
+                }
+
+                foreach (var dependency in GetVariationDependencies(radial.Variation))
+                {
+                    yield return dependency;
+                }
+
+                break;
+            case ModelGeometryGroupNodeDefinition group:
+                foreach (var part in group.Parts)
+                {
+                    if (!string.IsNullOrWhiteSpace(part))
+                    {
+                        yield return part;
+                    }
+                }
+
+                break;
+        }
+    }
+
+    private static IEnumerable<string> GetPointDependencies(ModelPointExpression? point)
+    {
+        if (point is null)
+        {
+            yield break;
+        }
+
+        foreach (var dependency in GetExpressionDependencies(point.X))
+        {
+            yield return dependency;
+        }
+
+        foreach (var dependency in GetExpressionDependencies(point.Y))
+        {
+            yield return dependency;
+        }
+    }
+
+    private static IEnumerable<string> GetMappingDependencies(ModelProfileMappingDefinition? mapping)
+    {
+        if (mapping is null)
+        {
+            yield break;
+        }
+
+        foreach (var dependency in GetExpressionDependencies(mapping.ScaleX))
+        {
+            yield return dependency;
+        }
+
+        foreach (var dependency in GetExpressionDependencies(mapping.ScaleY))
+        {
+            yield return dependency;
+        }
+
+        foreach (var dependency in GetExpressionDependencies(mapping.Length))
+        {
+            yield return dependency;
+        }
+
+        foreach (var dependency in GetExpressionDependencies(mapping.Width))
+        {
+            yield return dependency;
+        }
+
+        foreach (var dependency in GetExpressionDependencies(mapping.RootOffset))
+        {
+            yield return dependency;
+        }
+
+        foreach (var dependency in GetExpressionDependencies(mapping.Bend))
+        {
+            yield return dependency;
+        }
+
+        foreach (var dependency in GetExpressionDependencies(mapping.TransverseNormalization))
+        {
+            yield return dependency;
+        }
+    }
+
+    private static IEnumerable<string> GetVariationDependencies(ModelRadialVariationDefinition? variation)
+    {
+        if (variation is null)
+        {
+            yield break;
+        }
+
+        foreach (var dependency in GetExpressionDependencies(variation.Angle))
+        {
+            yield return dependency;
+        }
+
+        foreach (var dependency in GetExpressionDependencies(variation.Length))
+        {
+            yield return dependency;
+        }
+
+        foreach (var dependency in GetExpressionDependencies(variation.Width))
+        {
+            yield return dependency;
+        }
+
+        foreach (var dependency in GetExpressionDependencies(variation.Bend))
+        {
+            yield return dependency;
+        }
+
+        foreach (var dependency in GetExpressionDependencies(variation.Tone))
+        {
+            yield return dependency;
+        }
+    }
+
+    private static IEnumerable<string> GetExpressionDependencies(ModelNumberExpression? expression)
+    {
+        switch (expression)
+        {
+            case ModelReferenceExpression reference when !string.IsNullOrWhiteSpace(reference.Path):
+                var parts = reference.Path.Split(':', StringSplitOptions.None);
+                if (parts.Length == 4 && parts[0] == "node" && !string.IsNullOrWhiteSpace(parts[1]))
+                {
+                    yield return parts[1];
+                }
+
+                break;
+            case ModelArithmeticExpression arithmetic:
+                foreach (var operand in arithmetic.Operands)
+                {
+                    foreach (var dependency in GetExpressionDependencies(operand))
+                    {
+                        yield return dependency;
+                    }
+                }
+
+                break;
+            case ModelClampExpression clamp:
+                foreach (var dependency in GetExpressionDependencies(clamp.Value))
+                {
+                    yield return dependency;
+                }
+
+                foreach (var dependency in GetExpressionDependencies(clamp.Minimum))
+                {
+                    yield return dependency;
+                }
+
+                foreach (var dependency in GetExpressionDependencies(clamp.Maximum))
+                {
+                    yield return dependency;
+                }
+
+                break;
         }
     }
 

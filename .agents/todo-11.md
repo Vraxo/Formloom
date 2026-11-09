@@ -111,13 +111,13 @@ Core rules:
 
 **PR 2b — machine-checkable schema and typed Core representation.** Start the code contract without implementing file discovery or model evaluation:
 
-- [ ] Add `schemas/model-definition.v1.schema.json` using JSON Schema 2020-12, aligned with the actual typed C# representation.
-- [ ] Add typed Core records for model metadata, prompt descriptors, parameters, profiles, material variants, points, numeric expressions, and the first generic operation union.
-- [ ] Configure `System.Text.Json` polymorphic deserialization with explicit operation discriminators; unknown operation IDs must fail rather than silently fall back.
-- [ ] Keep all DTOs in Core and renderer-neutral. Do not introduce Skia types, file I/O, or object-specific C# classes.
-- [ ] Add focused round-trip/deserialization tests for each supported union member and representative model roots.
+- [x] Add `schemas/model-definition.v1.schema.json` using JSON Schema 2020-12 for the initial typed subset.
+- [x] Add renderer-neutral typed Core records for model metadata, prompt descriptors, parameters, profiles, material variants, points, numeric expressions, and the five initial operation variants.
+- [x] Configure `System.Text.Json` polymorphic deserialization with explicit operation discriminators; unknown operation IDs fail rather than silently fall back.
+- [x] Keep all DTOs in Core and renderer-neutral, with no Skia types, file I/O, or object-specific C# classes.
+- [x] Add focused round-trip/deserialization tests for each supported union member and representative model roots.
 - [ ] Add a complete rose fixture only after every required construction concept has a typed representation; do not bless the current incomplete fragment as executable.
-- [ ] Confirm the schema and serializer agree on required fields, enums, discriminators, and unknown-property behavior.
+- [x] Confirm the initial schema and serializer agree on required fields, enums, discriminators, and unknown-property behavior for the covered subset.
 
 **Acceptance gate:** A schema-valid definition can deserialize into a typed, renderer-neutral Core object graph; unsupported operations and malformed structure are rejected. This gate does not claim runtime discovery or geometry evaluation.
 - [x] Explicitly reject a general-purpose expression language, embedded scripts, and arbitrary plugins. The format draft allows only a small typed numeric expression tree if the vase-frame formulas prove it necessary; that limited proposal must be validated or removed during prototyping.
@@ -128,15 +128,15 @@ Core rules:
 
 **PR 3 — external discovery and diagnostics.**
 
-- [ ] Add a model catalog that discovers definitions from an explicit filesystem root at runtime.
-- [ ] Support a documented default model directory and a user-supplied/custom model directory without requiring an application rebuild.
-- [ ] Distribute built-in model files as ordinary files alongside the application rather than embedding object definitions in compiled C#.
-- [ ] Make duplicate IDs, duplicate prompt descriptors, invalid schema versions, missing files, and malformed definitions observable as structured diagnostics.
-- [ ] Validate references, operator names and parameter types, finite numeric values, ranges, graph depth/cycles, anchor existence, and resource limits before evaluation.
-- [ ] Use the repository's Result/error-value conventions for expected file/definition errors; do not use exceptions as ordinary validation flow.
-- [ ] Ensure the catalog can load a temporary test directory so tests can prove file-based discovery independently of the production model set.
-- [ ] Test missing, malformed, invalid, duplicate, and valid model directories, including one newly added definition after catalog creation/reload according to the chosen lifecycle.
-- [ ] Document filesystem discovery, model precedence, diagnostics, and reload/restart behavior.
+- [x] Add a model catalog that discovers definitions from an explicit filesystem root at runtime.
+- [x] Support a documented default model directory (`AppContext.BaseDirectory/models`) and a user-supplied/custom model directory through the explicit-root API.
+- [ ] Distribute complete built-in model files as ordinary files alongside the application; no complete executable model definition exists yet.
+- [x] Make duplicate IDs, duplicate normalized prompt phrases, invalid schema versions, missing roots/files, and malformed definitions observable as structured diagnostics; all conflicting definitions are excluded.
+- [x] Validate typed references, supported operation types/parameters, finite numeric literals/profile points, choice/range structure, ordered graph dependencies, graph depth, anchors exposed by the initial mount contract, and resource limits before evaluation.
+- [x] Use the repository's Result/error-value conventions for expected file/definition errors; expected failures return structured diagnostics.
+- [x] Ensure the catalog can load a temporary test directory so tests prove file-based discovery independently of the production model set.
+- [x] Test missing, malformed, invalid, duplicate, and valid model directories, including discovering a newly added definition on a subsequent load.
+- [x] Document filesystem discovery, default/custom roots, diagnostic behavior, and reload semantics.
 
 **Acceptance gate:** A valid external definition is discoverable and a malformed one produces a useful diagnostic before any geometry is rendered.
 
@@ -264,7 +264,7 @@ Core rules:
 | PR 1 | Architecture contract and source audit | Complete | [PR #57](https://github.com/Vraxo/Formloom/pull/57), merge `5e5e395`, PR CI `42628176874`, main CI `42628463314` |
 | PR 2 | Model-definition format design draft | Complete | [PR #58](https://github.com/Vraxo/Formloom/pull/58), merge `4116881`, PR CI `42629742765`, main CI `42629995928` |
 | PR 2b | Initial JSON Schema and typed Core definition records | Complete (initial structural subset) | [PR #59](https://github.com/Vraxo/Formloom/pull/59), merge `b41233e`, PR CI [42631769203](https://github.com/Vraxo/Formloom/actions/runs/42631769203), main CI [42632077052](https://github.com/Vraxo/Formloom/actions/runs/42632077052) |
-| PR 3 | Runtime model catalog and semantic file validation | In progress | `phase-11/model-catalog` |
+| PR 3 | Runtime model catalog and semantic file validation | Implementation complete; PR/CI pending | `phase-11/model-catalog` |
 | PR 4 | Generic geometry representation | Not started | — |
 | PR 5 | Reusable procedural operators | Not started | — |
 | PR 6 | Generic model interpreter | Not started | — |
@@ -290,4 +290,4 @@ Core rules:
 
 ## Handoff
 
-**Current status:** PR #57, #58, and #59 are merged. PR #59's PR run [42631769203](https://github.com/Vraxo/Formloom/actions/runs/42631769203) and post-merge main run [42632077052](https://github.com/Vraxo/Formloom/actions/runs/42632077052) both passed. The initial schema/DTO subset supports typed parsing of five operation variants but does not yet validate graph references or load external directories. PR 3 now begins the filesystem catalog and semantic validation.
+**Current status:** PR #57, #58, and #59 are merged, with both PR and post-merge Linux / Release CI passing. PR 3 implements bounded filesystem discovery, strict typed deserialization, semantic/reference validation, prompt-collision rejection, resource limits, and reload-by-reload snapshots. Focused catalog tests cover the new behavior. The PR 3 review/CI checkpoint is pending; no built-in executable model has been added, and no geometry interpreter or rose migration exists yet.

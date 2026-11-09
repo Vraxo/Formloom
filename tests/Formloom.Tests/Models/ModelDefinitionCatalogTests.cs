@@ -193,6 +193,43 @@ public sealed class ModelDefinitionCatalogTests
     }
 
     [Fact]
+    public void ConflictingPromptPhrasesExcludeEveryConflictingModel()
+    {
+        InDirectory(root =>
+        {
+            var other = ValidDefinition.Replace(
+                "\"id\": \"flowers.test-flower\"",
+                "\"id\": \"flowers.other-flower\"",
+                StringComparison.Ordinal);
+            File.WriteAllText(Path.Combine(root, "a.model.json"), ValidDefinition);
+            File.WriteAllText(Path.Combine(root, "b.model.json"), other);
+
+            var result = ModelDefinitionCatalog.Load(root);
+
+            Assert.Empty(result.Models);
+            Assert.Equal(2, result.Diagnostics.Count(item => item.Code == "catalog.duplicate-prompt-phrase"));
+        });
+    }
+
+    [Fact]
+    public void DuplicateNounAliasPhraseRejectsItsDefinition()
+    {
+        InDirectory(root =>
+        {
+            var invalid = ValidDefinition.Replace(
+                "\"aliases\": []",
+                "\"aliases\": [\"test flower\"]",
+                StringComparison.Ordinal);
+            File.WriteAllText(Path.Combine(root, "test.model.json"), invalid);
+
+            var result = ModelDefinitionCatalog.Load(root);
+
+            Assert.Empty(result.Models);
+            Assert.Contains(result.Diagnostics, item => item.Code == "definition.duplicate-prompt-phrase");
+        });
+    }
+
+    [Fact]
     public void MissingProfileReferenceRejectsDefinition()
     {
         InDirectory(root =>
@@ -296,6 +333,33 @@ public sealed class ModelDefinitionCatalogTests
     }
 
     [Fact]
+    public void ExcessiveOperationDependencyDepthRejectsDefinition()
+    {
+        InDirectory(root =>
+        {
+            const int groupCount = 64;
+            var groups = Enumerable.Range(0, groupCount)
+                .Select(index =>
+                {
+                    var id = $"group.{index}";
+                    var part = index == 0 ? "bloom.outer" : $"group.{index - 1}";
+                    return $"""{"op":"geometry.group","id":"{{id}}","parts":["{{part}}"]}""";
+                });
+            var expanded = ValidDefinition.Replace(
+                "            }\n          ],\n          \"outputs\": [\"bloom.outer\"]",
+                "            },\n" + string.Join(",\n", groups) +
+                "\n          ],\n          \"outputs\": [\"group.63\"]",
+                StringComparison.Ordinal);
+            File.WriteAllText(Path.Combine(root, "test.model.json"), expanded);
+
+            var result = ModelDefinitionCatalog.Load(root);
+
+            Assert.Empty(result.Models);
+            Assert.Contains(result.Diagnostics, item => item.Code == "definition.graph-depth-limit");
+        });
+    }
+
+    [Fact]
     public void CatalogCanDiscoverFilesAddedBetweenLoads()
     {
         InDirectory(root =>
@@ -326,6 +390,21 @@ public sealed class ModelDefinitionCatalogTests
     }
 
     [Fact]
+    public void NonPositiveTotalRepeatLimitReturnsDiagnostic()
+    {
+        InDirectory(root =>
+        {
+            var result = ModelDefinitionCatalog.Load(root, new ModelDefinitionCatalogOptions
+            {
+                MaximumTotalRepeatCount = 0,
+            });
+
+            Assert.Empty(result.Models);
+            Assert.Contains(result.Diagnostics, item => item.Code == "catalog.invalid-options");
+        });
+    }
+
+    [Fact]
     public void InvalidCatalogLimitsReturnDiagnostic()
     {
         InDirectory(root =>
@@ -338,6 +417,14 @@ public sealed class ModelDefinitionCatalogTests
             Assert.Empty(result.Models);
             Assert.Contains(result.Diagnostics, item => item.Code == "catalog.invalid-options");
         });
+    }
+
+    [Fact]
+    public void DefaultRootIsAdjacentToTheApplication()
+    {
+        Assert.Equal(
+            Path.Combine(AppContext.BaseDirectory, "models"),
+            ModelDefinitionCatalog.DefaultRootPath);
     }
 
     private static void InDirectory(Action<string> action)
