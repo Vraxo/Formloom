@@ -21,8 +21,10 @@ public sealed record VaseRose(CeramicInstance Vase, RoseColor Color, RosePlant P
     public static VaseRose Create(CeramicInstance vase, RoseColor color, ulong seed, double variation)
     {
         ArgumentNullException.ThrowIfNull(vase);
-        var profile = CeramicForms.For(CeramicKind.Vase);
-        var plant = RoseGeometry.Create(profile, vase.Body, seed, variation);
+        var profile = VaseMouth.Profile(vase);
+        var openingCenter = VaseMouth.Center(vase, profile);
+        var openingRadius = VaseMouth.Radius(vase, profile);
+        var plant = RoseGeometry.Create(profile, vase.Body, openingCenter, openingRadius, seed, variation);
         return new(vase, color, plant);
     }
 }

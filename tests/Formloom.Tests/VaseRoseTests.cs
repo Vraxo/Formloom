@@ -178,6 +178,8 @@ public sealed class VaseRoseTests
 
                     var opening = rose.OpeningCenter;
                     var radius = rose.OpeningRadius;
+                    Assert.Equal(opening.X, plant.StemBase.X);
+                    Assert.Equal(opening.Y + (radius.Y * 0.35f), plant.StemBase.Y);
                     var dx = (plant.StemBase.X - opening.X) / radius.X;
                     var dy = (plant.StemBase.Y - opening.Y) / radius.Y;
                     Assert.True((dx * dx) + (dy * dy) < 0.95f, "the rose stem must enter through the mouth");

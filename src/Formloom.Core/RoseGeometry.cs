@@ -85,8 +85,27 @@ public static class RoseGeometry
 
         var size = body.Size;
         var origin = new Vector2(body.Center.X - (size.X / 2), body.Center.Y - (size.Y / 2));
-        var openingCenter = origin + (profile.MouthCenter * size);
-        var openingRadius = profile.MouthRadius * size;
+        return Create(
+            profile,
+            body,
+            origin + (profile.MouthCenter * size),
+            profile.MouthRadius * size,
+            seed,
+            variation);
+    }
+
+    internal static RosePlant Create(
+        CeramicProfile profile,
+        CeramicDescription body,
+        Vector2 openingCenter,
+        Vector2 openingRadius,
+        ulong seed,
+        double variation)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+        ArgumentNullException.ThrowIfNull(body);
+
+        var size = body.Size;
         var mouthTop = openingCenter.Y - openingRadius.Y;
         var rimCrest = mouthTop - (profile.RimThickness * size.Y);
         var headroom = MathF.Max(rimCrest - TopMargin, 0.02f);
