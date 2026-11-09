@@ -231,6 +231,22 @@ public sealed class ModelDefinitionJsonTests
     }
 
     [Fact]
+    public void SerializerOmitsNumericFieldsFromChoiceParameters()
+    {
+        var model = Deserialize(DefinitionFixture);
+        var serialized = JsonSerializer.Serialize(model, ModelDefinitionJson.CreateOptions());
+        using var document = JsonDocument.Parse(serialized);
+        var parameters = document.RootElement.GetProperty("parameters");
+        var choice = parameters.GetProperty("color");
+        var number = parameters.GetProperty("variation");
+
+        Assert.False(choice.TryGetProperty("defaultValue", out _));
+        Assert.False(choice.TryGetProperty("minimum", out _));
+        Assert.False(choice.TryGetProperty("maximum", out _));
+        Assert.False(number.TryGetProperty("defaultChoice", out _));
+    }
+
+    [Fact]
     public void UnknownOperationDiscriminatorIsRejected()
     {
         var unsupported = DefinitionFixture.Replace(
