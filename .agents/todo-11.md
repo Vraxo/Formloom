@@ -263,7 +263,7 @@ Core rules:
 |---|---|---|---|
 | PR 1 | Architecture contract and source audit | Complete | [PR #57](https://github.com/Vraxo/Formloom/pull/57), merge `5e5e395`, PR CI `42628176874`, main CI `42628463314` |
 | PR 2 | Model-definition format design draft | Complete | [PR #58](https://github.com/Vraxo/Formloom/pull/58), merge `4116881`, PR CI `42629742765`, main CI `42629995928` |
-| PR 2b | JSON Schema and typed Core definition records | In progress | `phase-11/model-definition-schema` |
+| PR 2b | JSON Schema and typed Core definition records | In progress | [PR #59](https://github.com/Vraxo/Formloom/pull/59), head `9c5c23c`, Linux / Release CI run `42631302816` in progress |
 | PR 3 | Runtime model catalog and file diagnostics | Not started | — |
 | PR 4 | Generic geometry representation | Not started | — |
 | PR 5 | Reusable procedural operators | Not started | — |
@@ -290,4 +290,4 @@ Core rules:
 
 ## Handoff
 
-**Current status:** PR #57 (architecture) and PR #58 (format draft) are merged; their PR and post-merge Linux / Release runs passed. The rose remains code-authored. PR 2b now begins the machine-checkable format: JSON Schema plus typed Core records and serializer tests. The runtime catalog and evaluator have not been implemented.
+**Current status:** PR #57 (architecture) and PR #58 (format draft) are merged with passing PR and post-merge CI. PR #59 adds the first JSON Schema and typed Core definition DTOs; its current-head Linux / Release build/test run is pending. This is a structural contract only: the runtime catalog, semantic validator, evaluator, geometry representation, and rose migration have not been implemented.
