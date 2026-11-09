@@ -435,8 +435,10 @@ public sealed class VaseRoseRenderingTests
                     continue;
                 }
 
-                var dx = ((x + 0.5f) / canvas - bloom.Center.X) / bloom.RadiusX;
-                var dy = ((y + 0.5f) / canvas - bloom.Center.Y) / bloom.RadiusY;
+                var normalizedX = (x + 0.5f) / canvas;
+                var normalizedY = (y + 0.5f) / canvas;
+                var dx = (normalizedX - bloom.Center.X) / bloom.RadiusX;
+                var dy = (normalizedY - bloom.Center.Y) / bloom.RadiusY;
                 var radius = MathF.Sqrt((dx * dx) + (dy * dy));
                 if (radius >= innerRadius && radius <= outerRadius)
                 {
@@ -454,14 +456,15 @@ public sealed class VaseRoseRenderingTests
         var openingBottom = (int)MathF.Round((rose.OpeningCenter.Y + rose.OpeningRadius.Y) * canvas);
         var innerLip = LipInnerRow(empty, rose, canvas, openingBottom);
         var rimBand = Math.Max(5, (int)MathF.Ceiling(RimBand * (canvas / (float)Canvas)));
-        var first = mouthRow - rimBand / 2;
+        var first = mouthRow - (rimBand / 2);
         var last = innerLip - 2;
         Assert.True(last >= first, $"{name} has no measurable opening stem interval ({first}..{last})");
 
         for (var y = first; y <= last; y++)
         {
             var center = StemColumn(rose, y, canvas);
-            var halfWidth = Math.Max(2, (int)MathF.Ceiling(rose.Plant.StemThickness * canvas / 2) + 2);
+            var stemHalfWidth = (int)MathF.Ceiling((rose.Plant.StemThickness * canvas) / 2);
+            var halfWidth = Math.Max(2, stemHalfWidth + 2);
             var changed = false;
             for (var x = Math.Max(0, center - halfWidth); x <= Math.Min(planted.Width - 1, center + halfWidth); x++)
             {
@@ -556,8 +559,12 @@ public sealed class VaseRoseRenderingTests
 
     private static bool InsideOpening(VaseRose rose, int x, int y, int canvas, float marginPixels)
     {
-        var dx = ((x + 0.5f) / canvas - rose.OpeningCenter.X) / (rose.OpeningRadius.X + (marginPixels / canvas));
-        var dy = ((y + 0.5f) / canvas - rose.OpeningCenter.Y) / (rose.OpeningRadius.Y + (marginPixels / canvas));
+        var normalizedX = (x + 0.5f) / canvas;
+        var normalizedY = (y + 0.5f) / canvas;
+        var radiusX = rose.OpeningRadius.X + (marginPixels / canvas);
+        var radiusY = rose.OpeningRadius.Y + (marginPixels / canvas);
+        var dx = (normalizedX - rose.OpeningCenter.X) / radiusX;
+        var dy = (normalizedY - rose.OpeningCenter.Y) / radiusY;
         return (dx * dx) + (dy * dy) <= 1;
     }
 

@@ -252,7 +252,9 @@ public static class RoseGeometry
         var layerPetals = new List<RosePetal>(count);
         for (var index = 0; index < count; index++)
         {
-            var angle = -MathF.PI / 2 + ((index + phase) * turn) + Jitter(random, turn * 0.055f, amount);
+            var startingAngle = -MathF.PI / 2;
+            var layerAngle = (index + phase) * turn;
+            var angle = startingAngle + layerAngle + Jitter(random, turn * 0.055f, amount);
             var petalLength = length * (1 + Jitter(random, 0.035f, amount));
             var petalWidth = width * (1 + Jitter(random, 0.05f, amount));
             var petalCurl = curl + Jitter(random, 0.055f, amount);

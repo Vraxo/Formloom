@@ -280,49 +280,69 @@ public sealed class VaseRoseTests
         var rose = scene.VaseRose!;
         var plant = rose.Plant;
 
-        Assert.Equal("Only a vase can hold a rose.",
+        Assert.Equal(
+            "Only a vase can hold a rose.",
             SceneValidator.Validate(scene with { VaseRose = rose with { Vase = rose.Vase with { Kind = CeramicKind.Bowl } } }));
-        Assert.Equal("A vase must have a blue or cream glaze.",
+        Assert.Equal(
+            "A vase must have a blue or cream glaze.",
             SceneValidator.Validate(scene with { VaseRose = rose with { Vase = rose.Vase with { Glaze = (CeramicGlaze)9 } } }));
-        Assert.Equal("Only a rose is supported by this arrangement.",
+        Assert.Equal(
+            "Only a rose is supported by this arrangement.",
             SceneValidator.Validate(scene with { VaseRose = rose with { Flower = FlowerKind.Daisy } }));
-        Assert.Equal("A rose must be red or pink.",
+        Assert.Equal(
+            "A rose must be red or pink.",
             SceneValidator.Validate(scene with { VaseRose = rose with { Color = (RoseColor)9 } }));
         Assert.Contains("one stem", SceneValidator.Validate(scene with { VaseRose = rose with { Plant = null! } }), StringComparison.Ordinal);
-        Assert.Equal("A vase rose must have one continuous stem, exactly two leaves and thirteen petals.",
+        Assert.Equal(
+            "A vase rose must have one continuous stem, exactly two leaves and thirteen petals.",
             SceneValidator.Validate(scene with { VaseRose = rose with { Plant = plant with { Stem = [] } } }));
-        Assert.Equal("A vase rose must have one continuous stem, exactly two leaves and thirteen petals.",
+        Assert.Equal(
+            "A vase rose must have one continuous stem, exactly two leaves and thirteen petals.",
             SceneValidator.Validate(scene with { VaseRose = rose with { Plant = plant with { Leaves = plant.Leaves.RemoveAt(0) } } }));
-        Assert.Equal("A vase rose must have one continuous stem, exactly two leaves and thirteen petals.",
+        Assert.Equal(
+            "A vase rose must have one continuous stem, exactly two leaves and thirteen petals.",
             SceneValidator.Validate(scene with { VaseRose = rose with { Plant = plant with { Bloom = plant.Bloom with { Petals = plant.Bloom.Petals.RemoveAt(0) } } } }));
-        Assert.Equal("Rose geometry must be finite and positive.",
+        Assert.Equal(
+            "Rose geometry must be finite and positive.",
             SceneValidator.Validate(scene with { VaseRose = rose with { Plant = plant with { StemThickness = float.NaN } } }));
-        Assert.Equal("Rose petals must keep their finite outer, middle and inner layer structure.",
+        Assert.Equal(
+            "Rose petals must keep their finite outer, middle and inner layer structure.",
             SceneValidator.Validate(scene with { VaseRose = rose with { Plant = plant with { Bloom = plant.Bloom with { Petals = plant.Bloom.Petals.SetItem(0, plant.Bloom.Petals[0] with { Tone = float.NaN }) } } } }));
-        var collapsedPetal = plant.Bloom.Petals[0].Outline.Select(_ => new CubicSegment(Vector2.Zero, Vector2.Zero, Vector2.Zero, Vector2.Zero)).ToImmutableArray();
-        Assert.Equal("Rose petals must keep their finite outer, middle and inner layer structure.",
+        var collapsedPetal = plant.Bloom.Petals[0].Outline
+            .Select(_ => new CubicSegment(Vector2.Zero, Vector2.Zero, Vector2.Zero, Vector2.Zero))
+            .ToImmutableArray();
+        Assert.Equal(
+            "Rose petals must keep their finite outer, middle and inner layer structure.",
             SceneValidator.Validate(scene with { VaseRose = rose with { Plant = plant with { Bloom = plant.Bloom with { Petals = plant.Bloom.Petals.SetItem(0, plant.Bloom.Petals[0] with { Outline = collapsedPetal }) } } } }));
-        Assert.Equal("Rose petals must keep their finite outer, middle and inner layer structure.",
+        Assert.Equal(
+            "Rose petals must keep their finite outer, middle and inner layer structure.",
             SceneValidator.Validate(scene with { VaseRose = rose with { Plant = plant with { Bloom = plant.Bloom with { Petals = plant.Bloom.Petals.SetItem(10, plant.Bloom.Petals[10] with { Layer = RosePetalLayer.Outer }) } } } }));
-        var collapsedLeaf = plant.Leaves[0].Outline.Select(_ => new CubicSegment(Vector2.Zero, Vector2.Zero, Vector2.Zero, Vector2.Zero)).ToImmutableArray();
-        Assert.Equal("Every rose leaf must describe a finite blade and vein.",
+        var collapsedLeaf = plant.Leaves[0].Outline
+            .Select(_ => new CubicSegment(Vector2.Zero, Vector2.Zero, Vector2.Zero, Vector2.Zero))
+            .ToImmutableArray();
+        Assert.Equal(
+            "Every rose leaf must describe a finite blade and vein.",
             SceneValidator.Validate(scene with { VaseRose = rose with { Plant = plant with { Leaves = plant.Leaves.SetItem(0, plant.Leaves[0] with { Outline = collapsedLeaf }) } } }));
         var rightPointingLeaf = plant.Leaves[0] with
         {
             Tip = new Vector2(plant.Leaves[0].Attachment.X + 0.01f, plant.Leaves[0].Attachment.Y - 0.04f),
         };
-        Assert.Equal("The two rose leaves must remain separate on opposite sides of the stem.",
+        Assert.Equal(
+            "The two rose leaves must remain separate on opposite sides of the stem.",
             SceneValidator.Validate(scene with { VaseRose = rose with { Plant = plant with { Leaves = plant.Leaves.SetItem(0, rightPointingLeaf) } } }));
-        Assert.Equal("The rose stem must connect its typed base and bloom attachment.",
+        Assert.Equal(
+            "The rose stem must connect its typed base and bloom attachment.",
             SceneValidator.Validate(scene with { VaseRose = rose with { Plant = plant with { StemBase = new Vector2(0.2f, 0.4f) } } }));
 
         var foreignVase = rose.Vase with { };
         Assert.NotSame(rose.Vase, foreignVase);
-        Assert.Equal("A rose scene must contain exactly its shared vase and no other object.",
+        Assert.Equal(
+            "A rose scene must contain exactly its shared vase and no other object.",
             SceneValidator.Validate(scene with { VaseRose = rose with { Vase = foreignVase } }));
         var group = Scene("a blue ceramic vase and a red apple on a wooden table");
         var groupedRose = VaseRose.Create(group.Ceramics[0], RoseColor.Red, group.Seed, group.Variation);
-        Assert.Equal("A rose scene must contain exactly its shared vase and no other object.",
+        Assert.Equal(
+            "A rose scene must contain exactly its shared vase and no other object.",
             SceneValidator.Validate(group with { VaseRose = groupedRose }));
         Assert.Contains("Only a vase", SceneValidator.Validate(scene with { VaseRose = rose with { Vase = null! } }), StringComparison.Ordinal);
     }
