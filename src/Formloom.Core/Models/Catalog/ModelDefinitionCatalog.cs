@@ -151,9 +151,17 @@ public static class ModelDefinitionCatalog
             }
         }
 
-        foreach (var (phrase, owners) in promptOwners.Where(entry => entry.Value.Count > 1))
+        foreach (var (phrase, owners) in promptOwners)
         {
-            foreach (var (modelId, filePath) in owners)
+            var activeOwners = owners
+                .Where(owner => !rejectedModelIds.Contains(owner.Key))
+                .ToArray();
+            if (activeOwners.Length < 2)
+            {
+                continue;
+            }
+
+            foreach (var (modelId, filePath) in activeOwners)
             {
                 rejectedModelIds.Add(modelId);
                 diagnostics.Add(new(

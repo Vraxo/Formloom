@@ -230,6 +230,30 @@ public sealed class ModelDefinitionCatalogTests
     }
 
     [Fact]
+    public void InvalidPromptDefinitionDoesNotBlockAnotherModel()
+    {
+        InDirectory(root =>
+        {
+            var invalid = ValidDefinition.Replace(
+                "\"aliases\": []",
+                "\"aliases\": [\"test flower\"]",
+                StringComparison.Ordinal);
+            var valid = ValidDefinition.Replace(
+                "\"id\": \"flowers.test-flower\"",
+                "\"id\": \"flowers.other-flower\"",
+                StringComparison.Ordinal);
+            File.WriteAllText(Path.Combine(root, "a-invalid.model.json"), invalid);
+            File.WriteAllText(Path.Combine(root, "b-valid.model.json"), valid);
+
+            var result = ModelDefinitionCatalog.Load(root);
+
+            Assert.Contains("flowers.other-flower", result.Models.Keys);
+            Assert.DoesNotContain("flowers.test-flower", result.Models.Keys);
+            Assert.Contains(result.Diagnostics, item => item.Code == "definition.duplicate-prompt-phrase");
+        });
+    }
+
+    [Fact]
     public void MissingProfileReferenceRejectsDefinition()
     {
         InDirectory(root =>
