@@ -9,6 +9,7 @@ public static class ModelDefinitionJson
     {
         var options = new JsonSerializerOptions(JsonSerializerDefaults.Web)
         {
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
             WriteIndented = true,
         };
