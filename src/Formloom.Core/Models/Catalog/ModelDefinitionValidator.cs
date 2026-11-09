@@ -109,6 +109,7 @@ public static class ModelDefinitionValidator
         if (string.IsNullOrWhiteSpace(prompt.MaterialVariantParameter))
         {
             add("definition.invalid-material-parameter", "prompt.materialVariantParameter", "The material variant parameter is required.");
+            return;
         }
 
         if (prompt.Descriptors is null || prompt.Descriptors.Count == 0)
@@ -228,7 +229,7 @@ public static class ModelDefinitionValidator
             if (parameter.Type == ModelParameterType.Number)
             {
                 if (parameter.DefaultValue is null || parameter.Minimum is null || parameter.Maximum is null ||
-                    !parameter.Values.IsDefaultOrEmpty || parameter.DefaultChoice is not null)
+                    parameter.Values.IsDefault || !parameter.Values.IsEmpty || parameter.DefaultChoice is not null)
                 {
                     add("definition.invalid-number-parameter", path, "Number parameters require defaultValue, minimum, and maximum, and cannot declare choice values.");
                 }
@@ -453,7 +454,7 @@ public static class ModelDefinitionValidator
 
         for (var index = 0; index < definition.Outputs.Length; index++)
         {
-            if (!priorNodes.ContainsKey(definition.Outputs[index]))
+            if (string.IsNullOrWhiteSpace(definition.Outputs[index]) || !priorNodes.ContainsKey(definition.Outputs[index]))
             {
                 add("definition.output-reference-not-found", $"outputs[{index}]", $"Output node '{definition.Outputs[index]}' does not exist.");
             }
@@ -642,7 +643,7 @@ public static class ModelDefinitionValidator
             case ModelArithmeticExpression arithmetic:
                 if (!Enum.IsDefined(arithmetic.Operator) || arithmetic.Operands.IsDefaultOrEmpty ||
                     arithmetic.Operands.Length < 2 ||
-                    (arithmetic.Operator is ModelArithmeticOperator.Subtract or ModelArithmeticOperator.Divide && arithmetic.Operands.Length != 2))
+                    ((arithmetic.Operator is ModelArithmeticOperator.Subtract or ModelArithmeticOperator.Divide) && arithmetic.Operands.Length != 2))
                 {
                     add("definition.invalid-arithmetic-expression", path, "Arithmetic expressions require a supported operator and a valid operand count.");
                     break;
