@@ -262,6 +262,70 @@ public sealed class ModelDefinitionCatalogTests
     }
 
     [Fact]
+    public void NodeReferencesMustResolveToEarlierNumericLandmarks()
+    {
+        InDirectory(root =>
+        {
+            var invalid = ValidDefinition.Replace(
+                "frame.vase-opening.openingCenter.x",
+                "node:missing-node:point:x",
+                StringComparison.Ordinal);
+            File.WriteAllText(Path.Combine(root, "test.model.json"), invalid);
+
+            var result = ModelDefinitionCatalog.Load(root);
+
+            Assert.Empty(result.Models);
+            Assert.Contains(result.Diagnostics, item => item.Code == "definition.node-reference-not-found");
+        });
+    }
+
+    [Fact]
+    public void TotalRepeatedElementsAreBoundedAcrossAllNodes()
+    {
+        InDirectory(root =>
+        {
+            File.WriteAllText(Path.Combine(root, "test.model.json"), ValidDefinition);
+            var result = ModelDefinitionCatalog.Load(root, new ModelDefinitionCatalogOptions
+            {
+                MaximumTotalRepeatCount = 4,
+            });
+
+            Assert.Empty(result.Models);
+            Assert.Contains(result.Diagnostics, item => item.Code == "definition.total-repeat-limit-exceeded");
+        });
+    }
+
+    [Fact]
+    public void CatalogCanDiscoverFilesAddedBetweenLoads()
+    {
+        InDirectory(root =>
+        {
+            var initial = ModelDefinitionCatalog.Load(root);
+            Assert.Empty(initial.Models);
+
+            File.WriteAllText(Path.Combine(root, "new.model.json"), ValidDefinition);
+            var reloaded = ModelDefinitionCatalog.Load(root);
+
+            Assert.Contains("flowers.test-flower", reloaded.Models.Keys);
+        });
+    }
+
+    [Fact]
+    public void InvalidMaterialColorTokenRejectsDefinition()
+    {
+        InDirectory(root =>
+        {
+            var invalid = ValidDefinition.Replace("#B02232", "red", StringComparison.Ordinal);
+            File.WriteAllText(Path.Combine(root, "test.model.json"), invalid);
+
+            var result = ModelDefinitionCatalog.Load(root);
+
+            Assert.Empty(result.Models);
+            Assert.Contains(result.Diagnostics, item => item.Code == "definition.invalid-material-token");
+        });
+    }
+
+    [Fact]
     public void InvalidCatalogLimitsReturnDiagnostic()
     {
         InDirectory(root =>
