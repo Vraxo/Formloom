@@ -31,4 +31,4 @@ A focused review artifact is a small, self-contained download that helps a revie
 
 ## Example
 
-Phase 10's `phase10-rose-review` bundle is the concrete example: two 2 × 2 review sheets, eight full-size renders, four silhouettes, and their ten timing sidecars, plus an index. The existing `procedural-preview` remains available for broader inspection. Both artifacts are assembled in the existing Linux / Release job, and the focused bundle guards the expected set before upload.
+Phase 10's `phase10-rose-review` bundle is the concrete example: two 2 × 2 scene sheets, one white-backed canonical silhouette contact sheet, eight full-size renders, four original transparent silhouettes, and their ten timing sidecars, plus an index. The contrasting-background sheet makes the alpha masks visible in dark previewers without replacing the original mask files. The existing `procedural-preview` remains available for broader inspection. Both artifacts are assembled in the existing Linux / Release job, and the focused bundle guards the expected set before upload.

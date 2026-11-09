@@ -88,8 +88,23 @@ jobs:
               \( -name 'formloom-vase-rose-*.png' -o -name 'formloom-vase-rose-*.timing.json' \) \
               -print | sort
           )
-          if [[ "${#rose_files[@]}" -ne 24 ]]; then
-            printf 'Expected 24 rose PNG/sidecar files, found %s\n' "${#rose_files[@]}" >&2
+          png_count=0
+          timing_count=0
+          silhouette_sheet_count=0
+          for file in "${rose_files[@]}"; do
+            case "$file" in
+              *.png)
+                png_count=$((png_count + 1))
+                if [[ "$(basename "$file")" == "formloom-vase-rose-canonical-silhouette-sheet.png" ]]; then
+                  silhouette_sheet_count=$((silhouette_sheet_count + 1))
+                fi
+                ;;
+              *.timing.json) timing_count=$((timing_count + 1)) ;;
+            esac
+          done
+          if [[ "${#rose_files[@]}" -ne 25 || "$png_count" -ne 15 || "$timing_count" -ne 10 || "$silhouette_sheet_count" -ne 1 ]]; then
+            printf 'Expected 25 rose files (15 PNGs, including one white-backed silhouette sheet, and 10 timing sidecars), found %s (%s PNGs, %s timing sidecars, %s silhouette sheets)\n' \
+              "${#rose_files[@]}" "$png_count" "$timing_count" "$silhouette_sheet_count" >&2
             printf '%s\n' "${rose_files[@]}" >&2
             exit 1
           fi
@@ -99,10 +114,12 @@ jobs:
 
           This bundle contains only the Phase 10 rose review outputs:
           - canonical and robustness 2 × 2 sheets, each with its timing manifest;
+          - a white-backed 2 × 2 canonical silhouette sheet (full-resolution source masks);
           - eight 1024 × 1024 samples with timing/geometry sidecars;
-          - four canonical silhouette PNGs.
+          - four original transparent canonical silhouette PNGs.
 
-          Start with the two sheets, then use the full-size PNGs to inspect details.
+          The silhouette sheet is row-major: red/blue, red/cream, pink/blue, pink/cream.
+          Start with the sheets, then use the full-size PNGs to inspect details.
           Timing values are single-runner render-and-encode observations, not benchmarks.
           EOF
 

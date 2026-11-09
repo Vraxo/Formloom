@@ -248,6 +248,7 @@ Expected subject tokens and default seed-42 save names:
 - [ ] Confirm the merged build's post-merge Linux Release CI only after the PR is merged; do not describe a PR run as post-merge.
 - [x] Keep the existing single Linux Release workflow. Do not add a permanent Debug job, Windows runner, package, project, workflow job, or CI service for this milestone.
 - [x] Add a focused `phase10-rose-review` artifact to the existing job, so the rose review images and sidecars can be downloaded as one curated bundle alongside the comprehensive preview.
+- [ ] Add a white-backed 2 × 2 canonical silhouette contact sheet for immediate visual inspection while retaining all four original transparent masks.
 - [x] Capture the reusable focused-review-artifact guidance in [`docs/review-artifacts.md`](../docs/review-artifacts.md) and link it from the shared agent working rules.
 - [x] Record the available evidence: PR #55, CI runs `42590714896` and `42592879325`, the comprehensive preview artifact `13660659546`, focused rose-review artifact `13661842949`, and this handoff. There is no merge commit because the PR remains open by instruction.
 - [x] Reconcile the checklist, README, handoff, tests, and changed-file list; identify anything authored but not executed.

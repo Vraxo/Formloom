@@ -308,18 +308,20 @@ public sealed class VaseRoseRenderingTests
     }
 
     [Fact]
-    public void ExportCanonicalAndRobustnessSheetsWithCellManifests()
+    public void ExportCanonicalReviewSheetsAndSilhouetteSheet()
     {
         WriteSheet("canonical", Samples.Where(sample => sample.Canonical).ToArray(),
             "row-major 2 by 2; red/blue, red/cream, pink/blue, pink/cream at seed 42 and variation 0.35");
         WriteSheet("robustness", Samples.Where(sample => !sample.Canonical).ToArray(),
             "row-major 2 by 2; alternate seed, zero variation and full variation cases cover both colors and both vase glazes");
+        WriteCanonicalSilhouetteReviewSheet();
 
         var directory = AppContext.BaseDirectory;
         Assert.True(File.Exists(Path.Combine(directory, "formloom-vase-rose-canonical-sheet.png")));
         Assert.True(File.Exists(Path.Combine(directory, "formloom-vase-rose-canonical-sheet.timing.json")));
         Assert.True(File.Exists(Path.Combine(directory, "formloom-vase-rose-robustness-sheet.png")));
         Assert.True(File.Exists(Path.Combine(directory, "formloom-vase-rose-robustness-sheet.timing.json")));
+        Assert.True(File.Exists(Path.Combine(directory, "formloom-vase-rose-canonical-silhouette-sheet.png")));
     }
 
     private static void WriteSheet(string label, RoseSample[] samples, string layout)
@@ -389,6 +391,62 @@ public sealed class VaseRoseRenderingTests
                 },
                 new JsonSerializerOptions { IncludeFields = true }));
         Assert.Equal(4, cases.Count);
+    }
+
+    private static void WriteCanonicalSilhouetteReviewSheet()
+    {
+        var samples = Samples.Where(sample => sample.Canonical).ToArray();
+        Assert.Equal(4, samples.Length);
+
+        using var sheet = new SKBitmap(ReviewCell * 2, ReviewCell * 2);
+        using var canvas = new SKCanvas(sheet);
+        canvas.Clear(SKColors.White);
+
+        for (var index = 0; index < samples.Length; index++)
+        {
+            var sample = samples[index];
+            var scene = Scene(sample.Prompt, (ulong)sample.Seed, sample.Variation);
+            using var silhouette = Decode(StillLifeRenderer.RenderSilhouette(scene).PngBytes);
+            Assert.Equal(Canvas, silhouette.Width);
+            Assert.Equal(Canvas, silhouette.Height);
+
+            var left = (index % 2) * ReviewCell;
+            var top = (index / 2) * ReviewCell;
+            canvas.DrawBitmap(
+                silhouette,
+                new SKRect(left, top, left + ReviewCell, top + ReviewCell),
+                new SKSamplingOptions(SKFilterMode.Linear));
+        }
+
+        canvas.Flush();
+        var fileName = "formloom-vase-rose-canonical-silhouette-sheet.png";
+        using var image = SKImage.FromBitmap(sheet);
+        using var encoded = image.Encode(SKEncodedImageFormat.Png, 100);
+        File.WriteAllBytes(Path.Combine(AppContext.BaseDirectory, fileName), encoded.ToArray());
+
+        for (var index = 0; index < samples.Length; index++)
+        {
+            var left = (index % 2) * ReviewCell;
+            var top = (index / 2) * ReviewCell;
+            Assert.Equal(SKColors.White, sheet.GetPixel(left, top));
+
+            var darkPixels = 0;
+            for (var y = top; y < top + ReviewCell; y++)
+            {
+                for (var x = left; x < left + ReviewCell; x++)
+                {
+                    var pixel = sheet.GetPixel(x, y);
+                    if (pixel.Red < 32 && pixel.Green < 32 && pixel.Blue < 32)
+                    {
+                        darkPixels++;
+                    }
+                }
+            }
+
+            Assert.True(
+                darkPixels > 1000,
+                $"{samples[index].Name} silhouette was not visible on white: {darkPixels} dark pixels");
+        }
     }
 
     private static void AssertRoseHead(SKBitmap planted, SKBitmap empty, VaseRose rose, int canvas, string name)
