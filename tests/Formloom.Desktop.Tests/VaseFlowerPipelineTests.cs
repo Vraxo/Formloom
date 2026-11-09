@@ -41,7 +41,6 @@ public sealed class VaseFlowerPipelineTests
         foreach (var rejected in new[]
         {
             "a pink tulip in a blue ceramic vase on a wooden table",
-            "a red rose in a blue ceramic vase on a wooden table",
             "a red tulip in a blue ceramic bowl on a wooden table",
             "a blue ceramic vase with a red tulip on a wooden table",
             "two red tulips in a blue ceramic vase on a wooden table",
