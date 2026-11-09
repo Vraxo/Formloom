@@ -1,0 +1,695 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Formloom model definition v1",
+  "description": "Renderer-neutral declarative procedural model definition. Semantic references and operation constraints are validated by Formloom Core.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "schemaVersion",
+    "id",
+    "name",
+    "category",
+    "prompt",
+    "mounts",
+    "parameters",
+    "profiles",
+    "materials",
+    "nodes",
+    "outputs"
+  ],
+  "properties": {
+    "format": {
+      "const": "formloom.model"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "id": {
+      "$ref": "#/$defs/modelId"
+    },
+    "name": {
+      "$ref": "#/$defs/nonEmptyString"
+    },
+    "category": {
+      "$ref": "#/$defs/nonEmptyString"
+    },
+    "prompt": {
+      "$ref": "#/$defs/prompt"
+    },
+    "mounts": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "parameters": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/parameter"
+      }
+    },
+    "profiles": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "$ref": "#/$defs/profile"
+      }
+    },
+    "materials": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "$ref": "#/$defs/materialVariant"
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/node"
+      }
+    },
+    "outputs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/nonEmptyString"
+      }
+    }
+  },
+  "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "modelId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9-]*)+$"
+    },
+    "prompt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "article",
+        "noun",
+        "aliases",
+        "materialVariantParameter",
+        "descriptors"
+      ],
+      "properties": {
+        "article": {
+          "type": "string",
+          "enum": [
+            "a",
+            "an"
+          ]
+        },
+        "noun": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "aliases": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/nonEmptyString"
+          }
+        },
+        "materialVariantParameter": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "descriptors": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "$ref": "#/$defs/nonEmptyString"
+            }
+          }
+        }
+      }
+    },
+    "parameter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "values"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "number",
+            "choice"
+          ]
+        },
+        "defaultValue": {
+          "$ref": "#/$defs/numberExpression"
+        },
+        "minimum": {
+          "$ref": "#/$defs/numberExpression"
+        },
+        "maximum": {
+          "$ref": "#/$defs/numberExpression"
+        },
+        "defaultChoice": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "values": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/nonEmptyString"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "number"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "required": [
+              "defaultValue",
+              "minimum",
+              "maximum"
+            ],
+            "properties": {
+              "defaultChoice": false,
+              "values": {
+                "maxItems": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "choice"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "required": [
+              "defaultChoice"
+            ],
+            "properties": {
+              "minimum": false,
+              "maximum": false,
+              "defaultValue": false,
+              "values": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "closed",
+        "interpolation",
+        "points"
+      ],
+      "properties": {
+        "closed": {
+          "type": "boolean"
+        },
+        "interpolation": {
+          "enum": [
+            "linear",
+            "closedCubic"
+          ]
+        },
+        "points": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "$ref": "#/$defs/point"
+          }
+        }
+      }
+    },
+    "point": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      }
+    },
+    "materialVariant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tokens"
+      ],
+      "properties": {
+        "tokens": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
+          }
+        }
+      }
+    },
+    "numberExpression": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "literal"
+            },
+            "value": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "path"
+          ],
+          "properties": {
+            "kind": {
+              "const": "reference"
+            },
+            "path": {
+              "$ref": "#/$defs/nonEmptyString"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "operator",
+            "operands"
+          ],
+          "properties": {
+            "kind": {
+              "const": "arithmetic"
+            },
+            "operator": {
+              "enum": [
+                "add",
+                "subtract",
+                "multiply",
+                "divide",
+                "minimum",
+                "maximum"
+              ]
+            },
+            "operands": {
+              "type": "array",
+              "minItems": 2,
+              "items": {
+                "$ref": "#/$defs/numberExpression"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value",
+            "minimum",
+            "maximum"
+          ],
+          "properties": {
+            "kind": {
+              "const": "clamp"
+            },
+            "value": {
+              "$ref": "#/$defs/numberExpression"
+            },
+            "minimum": {
+              "$ref": "#/$defs/numberExpression"
+            },
+            "maximum": {
+              "$ref": "#/$defs/numberExpression"
+            }
+          }
+        }
+      ]
+    },
+    "pointExpression": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "$ref": "#/$defs/numberExpression"
+        },
+        "y": {
+          "$ref": "#/$defs/numberExpression"
+        }
+      }
+    },
+    "cubicSegment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "control1",
+        "control2",
+        "end"
+      ],
+      "properties": {
+        "start": {
+          "$ref": "#/$defs/pointExpression"
+        },
+        "control1": {
+          "$ref": "#/$defs/pointExpression"
+        },
+        "control2": {
+          "$ref": "#/$defs/pointExpression"
+        },
+        "end": {
+          "$ref": "#/$defs/pointExpression"
+        }
+      }
+    },
+    "profileMapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scaleX",
+        "scaleY",
+        "length",
+        "width",
+        "rootOffset",
+        "bend",
+        "transverseNormalization",
+        "reverseLongitudinal"
+      ],
+      "properties": {
+        "scaleX": {
+          "$ref": "#/$defs/numberExpression"
+        },
+        "scaleY": {
+          "$ref": "#/$defs/numberExpression"
+        },
+        "length": {
+          "$ref": "#/$defs/numberExpression"
+        },
+        "width": {
+          "$ref": "#/$defs/numberExpression"
+        },
+        "rootOffset": {
+          "$ref": "#/$defs/numberExpression"
+        },
+        "bend": {
+          "$ref": "#/$defs/numberExpression"
+        },
+        "transverseNormalization": {
+          "$ref": "#/$defs/numberExpression"
+        },
+        "reverseLongitudinal": {
+          "type": "boolean"
+        }
+      }
+    },
+    "radialVariation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "angle",
+        "length",
+        "width",
+        "bend",
+        "tone"
+      ],
+      "properties": {
+        "angle": {
+          "$ref": "#/$defs/numberExpression"
+        },
+        "length": {
+          "$ref": "#/$defs/numberExpression"
+        },
+        "width": {
+          "$ref": "#/$defs/numberExpression"
+        },
+        "bend": {
+          "$ref": "#/$defs/numberExpression"
+        },
+        "tone": {
+          "$ref": "#/$defs/numberExpression"
+        }
+      }
+    },
+    "node": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/cubicPathNode"
+        },
+        {
+          "$ref": "#/$defs/curveProjectNode"
+        },
+        {
+          "$ref": "#/$defs/profileMapNode"
+        },
+        {
+          "$ref": "#/$defs/radialArrayNode"
+        },
+        {
+          "$ref": "#/$defs/geometryGroupNode"
+        }
+      ]
+    },
+    "cubicPathNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "id",
+        "segments",
+        "detail"
+      ],
+      "properties": {
+        "op": {
+          "const": "path.cubic"
+        },
+        "id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "segments": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/cubicSegment"
+          }
+        },
+        "materialSlot": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "detail": {
+          "type": "boolean"
+        }
+      }
+    },
+    "curveProjectNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "id",
+        "curve",
+        "target"
+      ],
+      "properties": {
+        "op": {
+          "const": "curve.project"
+        },
+        "id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "curve": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "target": {
+          "$ref": "#/$defs/pointExpression"
+        }
+      }
+    },
+    "profileMapNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "id",
+        "profile",
+        "origin",
+        "angle",
+        "mapping",
+        "detail"
+      ],
+      "properties": {
+        "op": {
+          "const": "profile.map"
+        },
+        "id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "profile": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "origin": {
+          "$ref": "#/$defs/pointExpression"
+        },
+        "angle": {
+          "$ref": "#/$defs/numberExpression"
+        },
+        "mapping": {
+          "$ref": "#/$defs/profileMapping"
+        },
+        "materialSlot": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "detail": {
+          "type": "boolean"
+        }
+      }
+    },
+    "radialArrayNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "id",
+        "profile",
+        "center",
+        "radiusX",
+        "radiusY",
+        "count",
+        "startAngle",
+        "phase",
+        "mapping",
+        "variation",
+        "stream",
+        "detail"
+      ],
+      "properties": {
+        "op": {
+          "const": "array.radial"
+        },
+        "id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "profile": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "center": {
+          "$ref": "#/$defs/pointExpression"
+        },
+        "radiusX": {
+          "$ref": "#/$defs/numberExpression"
+        },
+        "radiusY": {
+          "$ref": "#/$defs/numberExpression"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "startAngle": {
+          "$ref": "#/$defs/numberExpression"
+        },
+        "phase": {
+          "$ref": "#/$defs/numberExpression"
+        },
+        "mapping": {
+          "$ref": "#/$defs/profileMapping"
+        },
+        "variation": {
+          "$ref": "#/$defs/radialVariation"
+        },
+        "stream": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "materialSlot": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "detail": {
+          "type": "boolean"
+        }
+      }
+    },
+    "geometryGroupNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "id",
+        "parts"
+      ],
+      "properties": {
+        "op": {
+          "const": "geometry.group"
+        },
+        "id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "parts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/nonEmptyString"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,8 +1,8 @@
 # Phase 11 — Data-driven model system
 
-> **Status:** In progress. PR 1 (architecture contract and source audit) is merged with passing PR and post-merge CI. PR 2 is designing the versioned external definition format. No runtime model loader, interpreter, generic geometry representation, or migrated model has been implemented yet.
+> **Status:** In progress. PR 1 (architecture contract) and PR 2 (model-definition format draft) are merged; PR and post-merge Linux / Release CI passed for both. PR 2b is implementing the versioned JSON Schema and typed Core definition records. No runtime catalog, evaluator, generic geometry pipeline, or migrated rose exists yet.
 >
-> **Original starting point:** `main` at `fc4e587166617d72d2be9679aadc5a160c79878e` (2026-11-09). PR 1 merged as `5e5e3952694f5ef5732483a01e8ec8b8fd203d8b`; current format-design branch: `phase-11/model-definition-format`.
+> **Original starting point:** `main` at `fc4e587166617d72d2be9679aadc5a160c79878e` (2026-11-09). Current `main` includes PR 1 merge `5e5e3952694f5ef5732483a01e8ec8b8fd203d8b` and PR 2 merge `41168813ce5fe9254179609c11b708efed7566a4`; implementation branch: `phase-11/model-definition-schema`.
 
 ## Goal
 
@@ -107,6 +107,19 @@ Core rules:
 - [x] Include a representative rose construction fragment in `docs/model-definition-format.md`; it is clearly labeled as a sketch, not a valid runtime model.
 - [ ] Convert the draft into a JSON Schema and a complete, schema-valid rose fixture.
 - [ ] Add format-level tests for valid documents, unsupported schema versions, missing/duplicate identifiers, malformed values, unknown fields/operators where relevant, and invalid references.
+- [x] Merge the provisional format design as PR [#58](https://github.com/Vraxo/Formloom/pull/58), commit `41168813ce5fe9254179609c11b708efed7566a4`; PR Linux / Release CI [42629742765](https://github.com/Vraxo/Formloom/actions/runs/42629742765) and post-merge CI [42629995928](https://github.com/Vraxo/Formloom/actions/runs/42629995928) both passed.
+
+**PR 2b — machine-checkable schema and typed Core representation.** Start the code contract without implementing file discovery or model evaluation:
+
+- [ ] Add `schemas/model-definition.v1.schema.json` using JSON Schema 2020-12, aligned with the actual typed C# representation.
+- [ ] Add typed Core records for model metadata, prompt descriptors, parameters, profiles, material variants, points, numeric expressions, and the first generic operation union.
+- [ ] Configure `System.Text.Json` polymorphic deserialization with explicit operation discriminators; unknown operation IDs must fail rather than silently fall back.
+- [ ] Keep all DTOs in Core and renderer-neutral. Do not introduce Skia types, file I/O, or object-specific C# classes.
+- [ ] Add focused round-trip/deserialization tests for each supported union member and representative model roots.
+- [ ] Add a complete rose fixture only after every required construction concept has a typed representation; do not bless the current incomplete fragment as executable.
+- [ ] Confirm the schema and serializer agree on required fields, enums, discriminators, and unknown-property behavior.
+
+**Acceptance gate:** A schema-valid definition can deserialize into a typed, renderer-neutral Core object graph; unsupported operations and malformed structure are rejected. This gate does not claim runtime discovery or geometry evaluation.
 - [x] Explicitly reject a general-purpose expression language, embedded scripts, and arbitrary plugins. The format draft allows only a small typed numeric expression tree if the vase-frame formulas prove it necessary; that limited proposal must be validated or removed during prototyping.
 
 **Acceptance gate:** The versioned format can describe the rose's static knowledge and intended construction declaratively. Its C# representation is typed; it is not a bag of untyped JSON values.
@@ -249,8 +262,9 @@ Core rules:
 | Unit | Scope | Status | Evidence |
 |---|---|---|---|
 | PR 1 | Architecture contract and source audit | Complete | [PR #57](https://github.com/Vraxo/Formloom/pull/57), merge `5e5e395`, PR CI `42628176874`, main CI `42628463314` |
-| PR 2 | Versioned model format and typed schema | In progress | `docs/model-definition-format.md` draft on `phase-11/model-definition-format` |
-| PR 3 | Model catalog and definition validation | Not started | — |
+| PR 2 | Model-definition format design draft | Complete | [PR #58](https://github.com/Vraxo/Formloom/pull/58), merge `4116881`, PR CI `42629742765`, main CI `42629995928` |
+| PR 2b | JSON Schema and typed Core definition records | In progress | [PR #59](https://github.com/Vraxo/Formloom/pull/59), head `9c5c23c`, Linux / Release CI run `42631302816` in progress |
+| PR 3 | Runtime model catalog and file diagnostics | Not started | — |
 | PR 4 | Generic geometry representation | Not started | — |
 | PR 5 | Reusable procedural operators | Not started | — |
 | PR 6 | Generic model interpreter | Not started | — |
@@ -276,4 +290,4 @@ Core rules:
 
 ## Handoff
 
-**Current status:** PR #57 merged the architecture contract and source audit; both PR and post-merge Linux / Release CI passed. The rose remains code-authored. PR 2 is now drafting the JSON definition format against the actual rose requirements. The next action is to turn the reviewed draft into a versioned JSON Schema, typed Core records, and a schema-valid rose fixture before building the runtime catalog or interpreter.
+**Current status:** PR #57 (architecture) and PR #58 (format draft) are merged with passing PR and post-merge CI. PR #59 adds the first JSON Schema and typed Core definition DTOs; its current-head Linux / Release build/test run is pending. This is a structural contract only: the runtime catalog, semantic validator, evaluator, geometry representation, and rose migration have not been implemented.

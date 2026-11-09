@@ -37,6 +37,8 @@ The proposed root fields are:
 
 IDs are stable across file renames, case-sensitive, namespaced, and unique in a catalog.
 
+The first structural contract is now represented by [`schemas/model-definition.v1.schema.json`](../schemas/model-definition.v1.schema.json) and the renderer-neutral records under `src/Formloom.Core/Models/Definitions/`. The schema and DTOs cover the initial metadata/profile/material-token/numeric-expression/node subset; they do not yet constitute a complete runnable rose format. Semantic reference checks and the final operator payloads remain implementation work.
+
 ## 3. Coordinates and attachment frames
 
 ### 3.1 Coordinate spaces
@@ -103,7 +105,7 @@ A radial array declares count, start angle, phase, source geometry/profile, and 
 
 ## 5. Materials and rendering
 
-Definitions describe appearance without SkiaSharp types. A material variant contains named color tokens (petal base/light/shadow/edge/fold, stem/leaf base/light/edge, etc.). Parts bind to named material slots.
+Definitions describe appearance without SkiaSharp types. A material variant contains named color tokens (petal base/light/shadow/edge/fold, stem/leaf base/light/edge, etc.). The first typed Core DTOs and schema represent these token maps. Renderer-neutral material slot/style definitions (fills, gradients, strokes, and detail bindings) still need to be finalized with the generic geometry output design. Parts will eventually bind to named material slots.
 
 The generic style vocabulary should begin with only what the rose needs: solid fill, linear/radial gradient with explicit stops, stroke, optional secondary detail paths, opacity, and supported blend/interpolation. Gradient endpoints may reference geometry landmarks such as a petal's \`root\` and \`tip\`; they must not be hard-coded scene coordinates.
 
@@ -111,7 +113,7 @@ Skia rendering converts the renderer-neutral style into backend paints and shade
 
 ## 6. Representative rose fragment
 
-This is a **format sketch**, not a valid shipped model or schema instance. It demonstrates which facts belong in data. The complete rose must additionally describe frame-derived dimensions, stem controls, two leaf attachments/profiles, veins/folds, material gradients, and final output ordering.
+This is a **conceptual format sketch**, not a valid shipped model or a schema-valid instance. It demonstrates which facts belong in data, but it predates the exact root/operation shape now represented by the initial v1 schema and typed DTOs. Use the schema and `ModelDefinitionJsonTests` as the current structural reference. The complete rose must additionally describe frame-derived dimensions, stem controls, two leaf attachments/profiles, veins/folds, material gradients, and final output ordering.
 
 \`\`\`json
 {
@@ -241,7 +243,7 @@ Reject a format or implementation that calls a rose helper behind a generic-look
 
 ## 9. Next implementation sequence
 
-1. Convert this draft into a versioned JSON Schema and typed Core definition records.
+1. Complete and test the versioned JSON Schema and typed Core definition records; their initial structural subset now exists but is not yet a complete rose contract.
 2. Add a loader/validator with structured file- and path-aware diagnostics and temporary-directory tests.
 3. Represent the full rose construction as a fixture and refine typed operation contracts to support it.
 4. Implement the generic interpreter and migrate the rose.
