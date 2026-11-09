@@ -1,3 +1,5 @@
+using Formloom.Desktop.PngExport;
+using Formloom.Desktop.Studio;
 using Microsoft.Extensions.DependencyInjection;
 using Photino.Blazor;
 using PhotinoX.App;
