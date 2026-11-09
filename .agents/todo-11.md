@@ -1,8 +1,8 @@
 # Phase 11 — Data-driven model system
 
-> **Status:** In progress. PRs 1–2b are merged. PR #60 (PR 3: external model catalog and semantic validation) is open against `main`; its latest head `6d1b799fc9b94c22efcae3d99a341071a35d4dc1` passed Linux / Release CI run [42641157403](https://github.com/Vraxo/Formloom/actions/runs/42641157403). The Release build and all 813 tests passed (708 Core, 105 Desktop). PR merge and post-merge `main` CI are pending. The runtime geometry representation, evaluator, complete executable rose definition, and migrated rose do not exist yet.
+> **Status:** In progress. PRs #57–#60 are merged. PR #61 (PR 4: renderer-neutral evaluated geometry contract) is open on `phase-11/generic-geometry`, head `584a7bc1d890719e4496c7fde9109373a21d8d78`. Linux / Release CI [run #273](https://github.com/Vraxo/Formloom/actions/runs/42675732224) passed: 716 Core + 105 Desktop tests (821 total). The permanent hybrid architecture decision is recorded in [ADR-0001](../docs/adr/0001-hybrid-procedural-engine.md). No model evaluator, executable rose definition, or rose migration exists yet.
 >
-> **Original starting point:** `main` at `fc4e587166617d72d2be9679aadc5a160c79878e` (2026-11-09). Current `main` includes PR 1 merge `5e5e3952694f5ef5732483a01e8ec8b8fd203d8b`, PR 2 merge `41168813ce5fe9254179609c11b708efed7566a4`, and PR 2b merge `b41233e6c0d44738c8bb29751e5d8961ac6a17ce`; current implementation branch: `phase-11/model-catalog`.
+> **Original starting point:** `main` at `fc4e587166617d72d2be9679aadc5a160c79878e` (2026-11-09). PRs #57–#60 are merged into `main`; PR #61 is the active geometry-contract change. Subsequent implementation work must branch from the latest merged `main` after each preceding milestone is accepted.
 
 ## Goal
 
@@ -47,6 +47,8 @@ The existing Phase 10 evidence is retained in `docs/rose-vase-handoff.md`, `.age
 The current feature-folder structure is useful and should remain. The problem is not folder organization: it is that adding a species requires production code changes across multiple layers.
 
 ## Architecture contract
+
+**Permanent guardrail:** [ADR-0001 — Keep Formloom a hybrid procedural engine](../docs/adr/0001-hybrid-procedural-engine.md) is accepted and governs this phase. Reusable algorithms belong in C#; model-specific facts and composition belong in external data. JSON is not a programming language, and a genuinely specialized model may remain code-authored when a data graph would be less clear or robust. Every operator/data-boundary decision must be reviewed against the ADR.
 
 The authoritative contract is [`docs/model-system.md`](../docs/model-system.md). Read it before changing the model architecture.
 
@@ -144,24 +146,26 @@ Core rules:
 
 ### 4. Generic geometry representation
 
-**PR 4 — model-independent evaluated geometry.**
+**PR 4 — renderer-neutral output representation.** This milestone defines the stable output contract between a future model interpreter and rendering backends. It does not evaluate model-definition nodes or change the existing Skia renderer.
 
-- [ ] Design a typed Core representation for the evaluator's output: normalized paths/curves/shapes, hierarchy or flattened ordered parts, transforms, bounds, and material bindings.
-- [ ] Represent fill, stroke, closure, path segments, and draw ordering in a renderer-neutral form.
-- [ ] Keep SkiaSharp, `SKPath`, `SKColor`, and other backend types out of Core and the model definition types.
-- [ ] Represent part identity generically so deterministic streams and diagnostics can refer to stable model/part/operator IDs.
-- [ ] Define whether the evaluator emits an immutable geometry document or a typed ordered operation result; document the choice and lifetime/ownership rules.
-- [ ] Add geometry validation for non-finite values, degenerate paths, unsupported transforms, invalid bounds, and invalid material references.
-- [ ] Test coordinate-space mapping, transform composition, path closure, bounds, and deterministic serialization/equality as appropriate.
-- [ ] Avoid species-specific records such as `RoseGeometryDocument` or `SunflowerGeometryDocument`.
+- [x] Define typed geometry-document and path records in Core, independent of SkiaSharp and species-specific types.
+- [x] Define the evaluated coordinate-space contract. For this first pipeline, all emitted path coordinates are scene-normalized (positive X right, positive Y down); local/profile coordinates must be resolved by the evaluator before emission.
+- [x] Preserve explicit path identity, source-node identity, ordered draw sequence, open/closed semantics, material-slot binding, and detail-pass metadata.
+- [x] Define conservative path bounds from cubic control hulls so validation and later render planning can safely reason about extents.
+- [x] Validate required IDs, unique path IDs, supported coordinate space, non-empty paths/segments, finite coordinates, segment continuity, and closed-path closure with structured diagnostics.
+- [x] Test multiple paths and their order, open/closed paths, invalid values/references, disconnected segments, and conservative bounds.
+- [x] Document why the output is flattened into an ordered path list: the definition graph retains grouping, while the first renderer contract needs explicit stable draw order rather than renderer-specific group objects.
+- [x] Verify all new geometry types remain in Core and reference only Core geometry primitives (CubicSegment and Vector2), with no Skia or scene/species types.
+- [x] Open PR 4 against main and pass full-solution Release build and Linux CI: PR [#61](https://github.com/Vraxo/Formloom/pull/61), head `584a7bc1d890719e4496c7fde9109373a21d8d78`, run [#273](https://github.com/Vraxo/Formloom/actions/runs/42675732224), 821/821 tests.
 
-**Acceptance gate:** Generic geometry can represent all structural output required by the rose without containing rose-specific types or Skia types.
+**Acceptance gate:** A renderer can receive one validated ModelGeometry value and draw its ordered paths without knowing the model ID or reading the source definition. This gate establishes the data contract only; no evaluator or renderer integration is claimed.
 
 ### 5. Extract and implement the minimum reusable operation vocabulary
 
 **PR 5 — generic operators, driven by the rose requirements.**
 
-- [ ] Decompose `RoseGeometry.Create` into model knowledge versus reusable mathematics before implementing operators.
+- [x] Record the permanent hybrid-architecture decision in `docs/adr/0001-hybrid-procedural-engine.md` and reference it from the model-system contract, format draft, and this checklist.
+- [ ] Decompose `RoseGeometry.Create` into model knowledge versus reusable mathematics before implementing operators. Keep the reusable algorithms in C# and move only the rose-specific profiles/counts/proportions/choices into data.
 - [ ] Identify the smallest operation set that can express the rose: likely path/template, transform, group, ordered layer, radial repetition, curve/taper, attachment/anchor, bounded seeded variation, and material binding.
 - [ ] Treat the list as provisional; add an operation only when a rose requirement or the data-only proof model needs it.
 - [ ] Give every operation a stable ID, typed inputs, explicit coordinate behavior, output contract, validation rules, and deterministic random-stream policy.
@@ -266,8 +270,8 @@ Core rules:
 | PR 1 | Architecture contract and source audit | Complete | [PR #57](https://github.com/Vraxo/Formloom/pull/57), merge `5e5e395`, PR CI `42628176874`, main CI `42628463314` |
 | PR 2 | Model-definition format design draft | Complete | [PR #58](https://github.com/Vraxo/Formloom/pull/58), merge `4116881`, PR CI `42629742765`, main CI `42629995928` |
 | PR 2b | Initial JSON Schema and typed Core definition records | Complete (initial structural subset) | [PR #59](https://github.com/Vraxo/Formloom/pull/59), merge `b41233e`, PR CI [42631769203](https://github.com/Vraxo/Formloom/actions/runs/42631769203), main CI [42632077052](https://github.com/Vraxo/Formloom/actions/runs/42632077052) |
-| PR 3 | Runtime model catalog and semantic file validation | PR CI passed; merge/main CI pending | [PR #60](https://github.com/Vraxo/Formloom/pull/60), head `6d1b799`, Linux / Release run [42641157403](https://github.com/Vraxo/Formloom/actions/runs/42641157403), 813/813 tests |
-| PR 4 | Generic geometry representation | Not started | — |
+| PR 3 | Runtime model catalog and semantic file validation | Merged | [PR #60](https://github.com/Vraxo/Formloom/pull/60), merged in main `d19283b`, post-merge Linux / Release run [42646802073](https://github.com/Vraxo/Formloom/actions/runs/42646802073) |
+| PR 4 | Renderer-neutral evaluated geometry output contract | PR CI passed; merge and post-merge CI pending | [PR #61](https://github.com/Vraxo/Formloom/pull/61), head `584a7bc1`, run [42675732224](https://github.com/Vraxo/Formloom/actions/runs/42675732224), 821/821 tests; artifacts: tests [13700650270](https://github.com/Vraxo/Formloom/actions/runs/42675732224/artifacts/13700650270), preview [13699219511](https://github.com/Vraxo/Formloom/actions/runs/42675732224/artifacts/13699219511), Phase 10 baseline [13699044732](https://github.com/Vraxo/Formloom/actions/runs/42675732224/artifacts/13699044732) |
 | PR 5 | Reusable procedural operators | Not started | — |
 | PR 6 | Generic model interpreter | Not started | — |
 | PR 7 | Rose definition migration | Not started | — |
@@ -292,4 +296,4 @@ Core rules:
 
 ## Handoff
 
-**Current status:** PRs #57, #58, and #59 are merged with passing PR and post-merge Linux / Release CI. PR #60 is open; its current head `6d1b799fc9b94c22efcae3d99a341071a35d4dc1` passed Linux / Release run [42641157403](https://github.com/Vraxo/Formloom/actions/runs/42641157403): Release build succeeded and all 813 tests passed (708 Core, 105 Desktop). Run artifacts: test results [13685681343](https://github.com/Vraxo/Formloom/actions/runs/42641157403/artifacts/13685681343), procedural preview [13685995955](https://github.com/Vraxo/Formloom/actions/runs/42641157403/artifacts/13685995955), and Phase 10 rose comparison bundle [13685691345](https://github.com/Vraxo/Formloom/actions/runs/42641157403/artifacts/13685691345). The catalog milestone is implemented and PR-tested; merge and post-merge `main` CI remain pending. No built-in executable model definition, generic geometry representation, interpreter, or rose migration exists yet. Do not call Level 2 complete until the data-only second-model proof passes.
+**Current status:** PRs #57–#60 are merged. PR #60's catalog milestone is present on `main` (`d19283b`), with post-merge Linux / Release CI [run #271](https://github.com/Vraxo/Formloom/actions/runs/42646802073) passing. PR #61 is open on `phase-11/generic-geometry` at `584a7bc1d890719e4496c7fde9109373a21d8d78`; Linux / Release CI [run #273](https://github.com/Vraxo/Formloom/actions/runs/42675732224) passed the Release build and all 821 tests (716 Core, 105 Desktop). Artifacts: test results [13700650270](https://github.com/Vraxo/Formloom/actions/runs/42675732224/artifacts/13700650270), procedural preview [13699219511](https://github.com/Vraxo/Formloom/actions/runs/42675732224/artifacts/13699219511), and inherited Phase 10 rose comparison bundle [13699044732](https://github.com/Vraxo/Formloom/actions/runs/42675732224/artifacts/13699044732). The generic geometry output contract is implemented but not yet merged. No evaluator, executable rose definition, migrated rose, or data-only second-model proof exists. ADR-0001 is a permanent architecture constraint; do not treat data-only implementation as a goal for models that do not fit the shared vocabulary.

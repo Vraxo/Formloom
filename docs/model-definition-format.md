@@ -4,6 +4,10 @@
 
 ## 1. Design goal
 
+**Architecture guardrail:** This format is a declarative description of model knowledge, not a replacement for the procedural engine. Reusable algorithms remain implemented in C#. Model files select profiles, counts, parameters, attachments, ordering, and appearance values and compose supported operations. Do not expand the format into a general-purpose language or encode an algorithm as a sprawling graph just to avoid C#.
+
+A genuinely specialized model may retain a code-authored construction path when the data representation would be materially less clear or robust. See [ADR-0001: Keep Formloom a hybrid procedural engine](adr/0001-hybrid-procedural-engine.md), which governs operator design and model migration.
+
 A model file describes how to construct an object by composing reusable engine operations. It must not be a bag of parameters passed into a species-specific C# generator.
 
 The existing rose is the reference fixture. The format must eventually describe its broad/curled petal and serrated-leaf profiles; 5/5/3 radial petal layers; curved stem; two curve-attached leaves; veins and petal folds; vase-frame-derived dimensions; red/pink material variants; generic gradients/strokes; and stable per-part and per-element variation.
@@ -103,7 +107,25 @@ If the rose can be expressed without this tree after prototyping, remove it. Non
 
 A radial array declares count, start angle, phase, source geometry/profile, and bounded perturbations per element (angle, length, width, tone, as justified). Each node and repeated element receives a stable stream derived from generation seed and stable model/node/element identifiers. Adding or reordering unrelated parts must not alter existing output. Definitions declare ranges; the interpreter owns the PRNG and stream derivation.
 
-## 5. Materials and rendering
+## 5. Evaluated geometry output contract
+
+The model-definition graph is an authoring/evaluation input; a renderer should not consume definition nodes directly. The interpreter emits a renderer-neutral ModelGeometry value containing:
+
+- the stable model ID and declared coordinate space;
+- an ordered immutable list of evaluated cubic paths;
+- a unique path ID and source definition-node ID for each path;
+- open/closed path semantics;
+- an optional material-slot key and a detail-pass flag.
+
+For the first implementation, emitted paths use **scene-normalized coordinates** (positive X right, positive Y down). Profile-local and part-local values are resolved by the evaluator before output. This deliberately gives the first renderer one unambiguous coordinate system; later local-transform support must be introduced as an explicit, versioned contract rather than inferred by the renderer.
+
+The output list is flattened in draw order. The definition graph may retain groups and reusable source nodes, but a rendering backend should not need to understand definition-graph structure or group node types. Each evaluated path is a drawable leaf. The array order is the draw order and must be preserved.
+
+Path bounds are conservative bounds of the cubic control hull, not a sampled estimate of the visible curve. They may be larger than the exact curve bounds, but they cannot exclude points on the cubic. Geometry validation rejects missing/duplicate IDs, empty paths, non-finite coordinates, disconnected adjacent segments, and closed paths whose final endpoint does not meet their first start. The validator does not impose a 0..1 bounds restriction: scene-normalized geometry may intentionally extend beyond the canvas and can be clipped by the scene/rendering layer.
+
+This is the output contract only. It does not yet interpret ModelNodeDefinition, evaluate expressions, construct a rose, or render any geometry.
+
+## 6. Materials and rendering
 
 Definitions describe appearance without SkiaSharp types. A material variant contains named color tokens (petal base/light/shadow/edge/fold, stem/leaf base/light/edge, etc.). The first typed Core DTOs and schema represent these token maps. Renderer-neutral material slot/style definitions (fills, gradients, strokes, and detail bindings) still need to be finalized with the generic geometry output design. Parts will eventually bind to named material slots.
 
@@ -243,9 +265,9 @@ Reject a format or implementation that calls a rose helper behind a generic-look
 
 ## 9. Next implementation sequence
 
-1. Complete and test the versioned JSON Schema and typed Core definition records; their initial structural subset now exists but is not yet a complete rose contract.
-2. External filesystem discovery and semantic validation are implemented in PR [#60](https://github.com/Vraxo/Formloom/pull/60), with temporary-directory, collision, reference, depth, and resource-limit tests. Linux / Release CI [run #269](https://github.com/Vraxo/Formloom/actions/runs/42641157403) passed all 813 tests. The PR is open; merge and post-merge CI remain pending.
-3. Design the renderer-neutral evaluated geometry representation, using the rose requirements to refine typed operation outputs and coordinate/landmark contracts.
-4. Implement the minimum reusable operations and generic evaluator, then express and migrate the rose through that path.
+1. The initial versioned schema and typed Core subset are merged in PRs [#58](https://github.com/Vraxo/Formloom/pull/58) and [#59](https://github.com/Vraxo/Formloom/pull/59). They are intentionally not yet a complete executable rose contract.
+2. Runtime filesystem discovery and semantic validation are merged in [PR #60](https://github.com/Vraxo/Formloom/pull/60); post-merge Linux / Release CI [run #271](https://github.com/Vraxo/Formloom/actions/runs/42646802073) passed.
+3. The renderer-neutral evaluated geometry output contract is implemented in [PR #61](https://github.com/Vraxo/Formloom/pull/61). Its latest PR head `584a7bc1d890719e4496c7fde9109373a21d8d78` passed Linux / Release CI [run #273](https://github.com/Vraxo/Formloom/actions/runs/42675732224), including 821/821 tests. Merge and post-merge CI remain pending.
+4. Before expanding operators, follow [ADR-0001](adr/0001-hybrid-procedural-engine.md): decompose the real rose into reusable C# algorithms versus model-specific declarative knowledge. Add only the small set of model-independent operations demonstrated by that audit. Then implement the evaluator and only afterward author the external rose definition.
 
 Do not ship the draft fragment as a runtime model until it validates against the committed schema and is evaluated by the real interpreter.

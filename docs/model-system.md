@@ -4,7 +4,7 @@
 
 **Phase:** 11 — Data-driven model system  
 **Contract version:** 0.1  
-**Implementation status:** Architecture contract only. The model-definition format, catalog, interpreter, and renderer integration are not implemented yet.
+**Implementation status:** Architecture contract plus versioned typed definitions, filesystem catalog, semantic validation, and renderer-neutral evaluated-geometry output contract. The generic evaluator, complete executable rose definition, and generic renderer integration remain unimplemented.
 
 This document defines the intended boundary between Formloom's procedural engine and the external model knowledge it consumes. It is deliberately a contract, not a premature specification of every JSON field or procedural operator. Those details must be designed against the existing rose implementation during the next milestones.
 
@@ -200,7 +200,25 @@ Level 2 is achieved only when all of the following are true:
 
 A JSON file that only supplies parameters to `RoseGeometry.Create()` does not satisfy these criteria. Nor does a generic renderer that still switches on model IDs.
 
-## 11. Explicit non-goals for this phase
+## 11. Hybrid architecture guardrail
+
+The authoritative decision is [ADR-0001: Keep Formloom a hybrid procedural engine](adr/0001-hybrid-procedural-engine.md). This is a permanent design constraint for Phase 11 and future model-system work.
+
+The distinction is intentional:
+
+| Concern | Primary owner |
+|---|---|
+| Reusable geometry algorithms, curve mathematics, transforms, repetition, seeded random generation, and material evaluation | C# engine |
+| Model profiles, proportions, counts, part composition/order, attachment choices, parameters, and appearance variants | External model data |
+| Loading, validation, authoring, and persistence | The chosen format/tooling (initially JSON) |
+
+JSON is a declarative model-description format, not a programming language. Do not translate a useful C# algorithm into a large graph of low-level JSON instructions just to claim that the model is data-driven. Add a shared C# capability only when it has a model-independent contract and solves a demonstrated requirement.
+
+A model that fits the existing engine vocabulary should be data-authored. A genuinely specialized model may retain a code-authored algorithm when forcing it into the data format would be less clear or more fragile. This is an explicit hybrid design choice, not a failure of the model system. Do not hide a species-specific method behind a generic-sounding operation. Keep legacy paths until automated and visual equivalence is established.
+
+Use the review questions in ADR-0001 before expanding the operation vocabulary or moving code into data.
+
+## 12. Explicit non-goals for this phase
 
 - A universal procedural modeling language or unrestricted expression evaluator.
 - User-authored C# plugins or runtime code loading.
@@ -229,10 +247,12 @@ The audit below is against `main` at `fc4e587166617d72d2be9679aadc5a160c79878e` 
 
 The repository currently has no external `models/` definition tree. The existing feature-folder organization is useful and should be retained; the model system should be introduced as a separate engine capability rather than moving species folders around again.
 
-## 13. Phase 11 decision log
+## 14. Phase 11 decision log
 
 - **Accepted direction:** object construction knowledge moves to external declarative model definitions; the engine provides reusable operations and interprets them.
 - **Initial format:** JSON + `System.Text.Json`, pending validation during the format-design milestone.
 - **Initial proof model:** migrate the rose, then add a sunflower using only the resulting operation vocabulary.
 - **Initial relationship boundary:** one generic model mounted in the existing vase relationship; general scene composition is deferred.
 - **Not frozen:** exact JSON field names, schema layout, C# type names, directory precedence, and final operator IDs. These require a focused design based on the rose requirements.
+
+- **Hybrid architecture guardrail:** accepted by [ADR-0001](adr/0001-hybrid-procedural-engine.md). C# remains the home of reusable algorithms; external data describes model-specific facts and composition. JSON is not a general-purpose programming language, and specialized code-authored models remain allowed when justified.
