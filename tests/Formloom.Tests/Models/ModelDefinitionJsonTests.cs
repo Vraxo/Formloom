@@ -104,8 +104,8 @@ public sealed class ModelDefinitionJsonTests
               "id": "leaf.left",
               "profile": "leaf.serrated",
               "origin": {
-                "x": { "kind": "reference", "path": "leaf.left.attachment.x" },
-                "y": { "kind": "reference", "path": "leaf.left.attachment.y" }
+                "x": { "kind": "reference", "path": "node:leaf.left.attachment:point:x" },
+                "y": { "kind": "reference", "path": "node:leaf.left.attachment:point:y" }
               },
               "angle": { "kind": "literal", "value": -1.43 },
               "mapping": {
