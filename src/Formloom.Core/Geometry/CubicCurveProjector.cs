@@ -29,7 +29,7 @@ public static class CubicCurveProjector
         }
 
         var bestProjection = default(CubicCurveProjection);
-        var bestDistance = float.PositiveInfinity;
+        var bestDistance = double.PositiveInfinity;
         for (var segmentIndex = 0; segmentIndex < segments.Length; segmentIndex++)
         {
             var segment = segments[segmentIndex] ??
@@ -42,11 +42,11 @@ public static class CubicCurveProjector
 
             var sampleStep = 1f / samplesPerSegment;
             var bestSample = 0f;
-            var bestSampleDistance = float.PositiveInfinity;
+            var bestSampleDistance = double.PositiveInfinity;
             for (var sample = 0; sample <= samplesPerSegment; sample++)
             {
                 var parameter = sample * sampleStep;
-                var distance = Vector2.DistanceSquared(segment.Evaluate(parameter), target);
+                var distance = DistanceSquared(segment, target, parameter);
                 if (distance < bestSampleDistance)
                 {
                     bestSampleDistance = distance;
@@ -58,7 +58,7 @@ public static class CubicCurveProjector
             var upper = MathF.Min(1, bestSample + sampleStep);
             var parameterResult = Refine(segment, target, lower, upper);
             var point = segment.Evaluate(parameterResult);
-            var distanceSquared = Vector2.DistanceSquared(point, target);
+            var distanceSquared = DistanceSquared(segment, target, parameterResult);
             if (distanceSquared >= bestDistance)
             {
                 continue;
@@ -70,7 +70,7 @@ public static class CubicCurveProjector
                 parameterResult,
                 point,
                 TangentAt(segment, parameterResult),
-                distanceSquared);
+                (float)distanceSquared);
         }
 
         return bestProjection;
@@ -107,8 +107,13 @@ public static class CubicCurveProjector
         return (lower + upper) / 2;
     }
 
-    private static float DistanceSquared(CubicSegment segment, Vector2 target, float parameter) =>
-        Vector2.DistanceSquared(segment.Evaluate(parameter), target);
+    private static double DistanceSquared(CubicSegment segment, Vector2 target, float parameter)
+    {
+        var point = segment.Evaluate(parameter);
+        var deltaX = (double)point.X - target.X;
+        var deltaY = (double)point.Y - target.Y;
+        return (deltaX * deltaX) + (deltaY * deltaY);
+    }
 
     private static Vector2 TangentAt(CubicSegment segment, float parameter)
     {
