@@ -6,7 +6,7 @@ namespace Formloom.Tests.Models;
 
 public sealed class ModelDefinitionJsonTests
 {
-    private const string RoseModel =
+    private const string DefinitionFixture =
         """
         {
           "format": "formloom.model",
@@ -189,7 +189,7 @@ public sealed class ModelDefinitionJsonTests
     [Fact]
     public void DeserializesModelAndEverySupportedOperationToTypedRecords()
     {
-        var model = Deserialize(RoseModel);
+        var model = Deserialize(DefinitionFixture);
 
         Assert.Equal("flowers.rose", model.Id);
         Assert.Equal(1, model.SchemaVersion);
@@ -197,7 +197,7 @@ public sealed class ModelDefinitionJsonTests
         Assert.Equal("color", model.Prompt.MaterialVariantParameter);
         Assert.Equal(ModelParameterType.Choice, model.Parameters["color"].Type);
         Assert.Equal(ModelProfileInterpolation.ClosedCubic, model.Profiles["petal.broad"].Interpolation);
-        Assert.Equal(new[] { "red", "pink" }, model.Prompt.Descriptors["color"]);
+        Assert.Equal(new[] { "red", "pink" }, model.Prompt.Descriptors["color"].ToArray());
 
         Assert.Collection(
             model.Nodes,
@@ -216,14 +216,14 @@ public sealed class ModelDefinitionJsonTests
     [Fact]
     public void SerializationRoundTripPreservesOperationDiscriminatorsAndExpressions()
     {
-        var original = Deserialize(RoseModel);
+        var original = Deserialize(DefinitionFixture);
         var serialized = JsonSerializer.Serialize(original, ModelDefinitionJson.CreateOptions());
         var roundTripped = Deserialize(serialized);
 
         Assert.Equal(original.Id, roundTripped.Id);
         Assert.Equal(original.SchemaVersion, roundTripped.SchemaVersion);
         Assert.Equal(original.Nodes.Length, roundTripped.Nodes.Length);
-        Assert.Equal(original.Outputs, roundTripped.Outputs);
+        Assert.Equal(original.Outputs.ToArray(), roundTripped.Outputs.ToArray());
         Assert.IsType<ModelRadialArrayNodeDefinition>(roundTripped.Nodes[3]);
         Assert.IsType<ModelReferenceExpression>(
             Assert.IsType<ModelPointExpression>(
@@ -233,7 +233,7 @@ public sealed class ModelDefinitionJsonTests
     [Fact]
     public void UnknownOperationDiscriminatorIsRejected()
     {
-        var unsupported = RoseModel.Replace(
+        var unsupported = DefinitionFixture.Replace(
             "\"op\": \"array.radial\"",
             "\"op\": \"flowers.rose\"",
             StringComparison.Ordinal);
@@ -244,7 +244,7 @@ public sealed class ModelDefinitionJsonTests
     [Fact]
     public void UnknownPropertiesAreRejected()
     {
-        var unsupported = RoseModel.Replace(
+        var unsupported = DefinitionFixture.Replace(
             "\"name\": \"Rose\"",
             "\"name\": \"Rose\", \"unknown\": true",
             StringComparison.Ordinal);
