@@ -1,6 +1,6 @@
 # Phase 10 — A Red or Pink Rose in a Ceramic Vase
 
-> **Status:** Implementation and automated verification are complete; Linux / Release CI passed on source/test head `c24070cac26ca0848f5535489f1f522c643051cc` in run `42588356956`, and the `procedural-preview` artifact was uploaded as `13660855029`. The sandbox cannot download the artifact because its redirect host is outside the outbound allowlist, so assistant-side visual review and timing transcription remain pending. PR [#55](https://github.com/Vraxo/Formloom/pull/55) is open; keep it open and do not merge. This is a narrow, standalone third-flower milestone built on the existing vase-content and renderer paths.
+> **Status:** Implementation, automated verification, and agent-side visual review are complete. Linux / Release CI passed on PR head `5b12a0f9c9e5df49ed144bf2f3ab33944da6a697` in run `42589085858`; preview artifact `13659909749` was uploaded. The canonical and robustness sheets, eight full-size renders, and four silhouettes were inspected from the user-provided attachments; no blocking visual issue was found. Timing transcription remains pending because the `.timing.json` sidecars were not attached and the artifact download redirects outside the sandbox outbound allowlist. PR [#55](https://github.com/Vraxo/Formloom/pull/55) is open; keep it open and do not merge.
 
 ## Goal
 
@@ -66,7 +66,7 @@ Those statements described the repository before PR #54. They are now reconciled
 - [x] Make rose contents mutually exclusive with tulip-only, daisy-only, tulip/daisy pair, bowl containment, and cup contents.
 - [x] Keep Core independent of SkiaSharp, pixel coordinates, bitmap/native resources, and Desktop/UI types.
 - [x] Avoid broad nullable flower records, arbitrary flower arrays, a general plant registry, a generic bouquet model, reflection dispatch, or a universal contents abstraction.
-- [x] Record the chosen typed model and exact invariants in the Phase 10 handoff; implementation verification is complete, while artifact review and timing transcription remain pending as recorded below.
+- [x] Record the chosen typed model and exact invariants in the Phase 10 handoff; implementation verification and visual review are complete, while timing transcription remains pending as recorded below.
 
 ### 2. Add exact rose prompt grammar and save identity
 
@@ -207,7 +207,7 @@ Expected subject tokens and default seed-42 save names:
 
 ### 8. Generate, map, and visually review the rose artifacts
 
-> CI generated and uploaded the preview in run `42588356956` (artifact `13660855029`, 8,551,859 bytes). `gh run download 42588356956 --name procedural-preview` failed with EOF after redirect to `productionresultssa17.blob.core.windows.net`, outside the sandbox outbound allowlist. The visual-inspection and timing-sidecar tasks below remain unchecked until the artifact is available for review.
+> CI generated and uploaded the preview in final recorded run `42589085858` (artifact `13659909749`, 8,551,836 bytes). The user supplied the two sheets, eight full-size render PNGs, and four silhouette PNGs; their visual review is recorded below. The `.timing.json` files were not attached, and a direct artifact download redirects to `productionresultssa17.blob.core.windows.net` outside the sandbox outbound allowlist, so timing transcription remains pending.
 
 - [x] Generate all four canonical prompt × vase combinations at seed 42 and variation 0.35.
 - [x] Generate a 2 × 2 canonical review sheet with 512 × 512 px cells so all four combinations can be compared at a useful size.
@@ -217,21 +217,21 @@ Expected subject tokens and default seed-42 save names:
 - [x] Generate timing/geometry sidecars for every retained sample and a sheet sidecar that maps every cell to prompt, color, glaze, seed, variation, filename, and dimensions.
 - [x] Keep generated files under the existing test-artifact output path so the established `procedural-preview` upload collects them.
 - [x] Do not commit generated PNGs, timing dumps, or temporary diagnostic files as source.
-- [ ] Inspect all four canonical sheet cells at 512 px and their corresponding individual 1024 px renders.
-- [ ] Inspect every robustness-sheet cell for the same shape and contact properties; do not treat successful PNG generation as visual review.
-- [ ] Confirm the rose reads as a rose immediately, with a layered cupped head and a clear inner whorl.
-- [ ] Confirm the outer, middle, and inner petal layers remain visible and do not merge into a flat red/pink mass.
-- [ ] Confirm red and pink variants are clearly distinct at both vase glazes.
-- [ ] Confirm the rose is neither a recoloured tulip nor a radial daisy.
-- [ ] Confirm both leaves remain visible and attached, and the bloom, calyx/sepals if present, stem, and vase mouth do not collide awkwardly.
-- [ ] Confirm the stem enters the vase continuously and disappears naturally behind the near lip at both 512 px review size and 1024 px full resolution.
-- [ ] Confirm the vase rim, mouth, body, glaze, foot, tabletop, lighting, and contact shadow have no regressions.
-- [ ] Review visual balance at normal desktop preview size; if a core rose feature disappears at that size, treat it as a defect rather than hiding it with an enlarged crop.
+- [x] Inspect all four canonical sheet cells at 512 px and their corresponding individual 1024 px renders.
+- [x] Inspect every robustness-sheet cell for the same shape and contact properties; do not treat successful PNG generation as visual review.
+- [x] Confirm the rose reads as a rose immediately, with a layered cupped head and a clear inner whorl.
+- [x] Confirm the outer, middle, and inner petal layers remain visible and do not merge into a flat red/pink mass.
+- [x] Confirm red and pink variants are clearly distinct at both vase glazes.
+- [x] Confirm the rose is neither a recoloured tulip nor a radial daisy.
+- [x] Confirm both leaves remain visible and attached, and the bloom, calyx/sepals if present, stem, and vase mouth do not collide awkwardly.
+- [x] Confirm the stem enters the vase continuously and disappears naturally behind the near lip at both 512 px review size and 1024 px full resolution.
+- [x] Confirm the vase rim, mouth, body, glaze, foot, tabletop, lighting, and contact shadow have no regressions.
+- [x] Review visual balance at normal desktop preview size; if a core rose feature disappears at that size, treat it as a defect rather than hiding it with an enlarged crop.
 - [ ] Read the timing sidecars and record only environment-specific observations. Do not claim a general performance improvement or per-flower cost from a single Stopwatch sample.
-- [ ] Record cosmetic observations separately from defects; do not expand the milestone to unrelated visual preferences.
+- [x] Record cosmetic observations separately from defects; do not expand the milestone to unrelated visual preferences.
 ### 9. Documentation, verification, and handoff
 
-> The handoff records the successful CI run and artifact, but actual visual review and timing transcription remain blocked by the storage-host redirect described in section 8. The PR is intentionally unmerged, so no post-merge run or merge commit exists.
+> Agent-side visual review is recorded in the handoff and README. Timing transcription remains blocked because no rose `.timing.json` sidecars were attached and direct artifact download is unavailable. The PR is intentionally unmerged, so no post-merge run or merge commit exists.
 
 - [x] Update the README current-capability section with standalone red/pink roses in blue/cream vases.
 - [x] Update the prompt grammar documentation with the exact four rose prompts and explicit exclusions.
@@ -239,7 +239,7 @@ Expected subject tokens and default seed-42 save names:
 - [x] Document the rose geometry decisions, fixed counts/layers, normalized vase-relative placement, named random streams, and material separation.
 - [x] Document the shared renderer draw order and continuous tangent-matched vase stem contact; do not duplicate outdated pre-PR-53 behavior.
 - [x] Document the four rose subject tokens and default filename forms.
-- [ ] Add `docs/rose-vase-handoff.md` with starting/ending commits, Phase 9 prerequisite evidence, model and geometry decisions, prompt grammar, rendering/occlusion, tests, artifacts, visual-review status, timing observations, and known limitations.
+- [ ] Add `docs/rose-vase-handoff.md` with starting/ending commits, Phase 9 prerequisite evidence, model and geometry decisions, prompt grammar, rendering/occlusion, tests, artifacts, visual-review status, timing observations, and known limitations. Timing observations remain unrecorded because the rose sidecars were not attached.
 - [x] Keep `.agents/todo-10.md` updated throughout implementation.
 - [x] Mark a checkbox `[x]` only after the work and its stated verification are complete.
 - [x] Leave blocked, unexecuted, or human-review tasks unchecked and explain the exact evidence or blocker beside them.
@@ -247,24 +247,24 @@ Expected subject tokens and default seed-42 save names:
 - [x] Confirm the PR source/test CI run passes the full solution build and test steps, and that the `procedural-preview` artifact was uploaded.
 - [ ] Confirm the merged build's post-merge Linux Release CI only after the PR is merged; do not describe a PR run as post-merge.
 - [x] Keep the existing single Linux Release workflow. Do not add a permanent Debug job, Windows runner, package, project, workflow job, or CI service for this milestone.
-- [x] Record the available evidence: PR #55, CI run `42588356956`, artifact `13660855029`, and this handoff. There is no merge commit because the PR remains open by instruction.
+- [x] Record the available evidence: PR #55, final recorded CI run `42589085858`, preview artifact `13659909749`, and this handoff. There is no merge commit because the PR remains open by instruction.
 - [x] Reconcile the checklist, README, handoff, tests, and changed-file list; identify anything authored but not executed.
 - [x] Do not claim native Photino/WebView2 dialogs, window lifecycle, resize, or accessibility behavior was tested from headless CI.
 - [x] Create focused PR #55 and leave it open for review; do not merge without explicit user approval.
-- [ ] Stop at the acceptance checkpoint below and report implementation decisions, test/CI evidence, artifact location, visual observations, timing limitations, and known exclusions.
+- [x] Stop at the acceptance checkpoint below and report implementation decisions, test/CI evidence, artifact location, visual observations, timing limitations, and known exclusions.
 
 ## Acceptance checklist
 
 - [x] The four exact red/pink rose × blue/cream vase prompts parse and generate through the existing desktop prompt-to-PNG path.
 - [x] A rose is represented as one typed vase content referring to the exact vase instance; the vase remains the only scene entry.
 - [x] The rose contains exactly one bloom, one continuous stem, and two attached leaves, with the documented fixed layered-petal structure.
-- [ ] The rose is recognisably distinct from both the tulip and daisy at normal viewing size.
-- [ ] Red and pink material variants remain clearly distinguishable and independent of vase glaze.
+- [x] The rose is recognisably distinct from both the tulip and daisy at normal viewing size.
+- [x] Red and pink material variants remain clearly distinguishable and independent of vase glaze.
 - [x] Rose geometry is normalized, deterministic, bounded, vase-profile-aware, and stable across supported sizes and variation values.
 - [x] The shared stem path crosses the far rim continuously, follows the correct interior tangent, and disappears behind the near lip without wall leakage.
 - [x] Existing fruit, ceramic, containment, beverage, standalone tulip, standalone daisy, and mixed tulip/daisy prompts and save paths remain supported.
 - [x] Automated Core/parser, geometry, renderer pixel, desktop pipeline, save-token, and full regression tests pass.
-- [ ] The canonical and robustness artifacts have been visually reviewed; README and handoff accurately document evidence and limitations.
+- [x] The canonical and robustness artifacts have been visually reviewed; README and handoff accurately document evidence and limitations.
 - [x] Linux Release CI passes on the Phase 10 PR head, the preview artifact is retained, and the agent stops before merge.
 
 ## Explicitly out of scope
