@@ -258,6 +258,28 @@ public sealed class ModelDefinitionJsonTests
     }
 
     [Fact]
+    public void NumericEnumValuesAreRejected()
+    {
+        var unsupported = DefinitionFixture.Replace(
+            "\"type\": \"number\"",
+            "\"type\": 0",
+            StringComparison.Ordinal);
+
+        Assert.Throws<JsonException>(() => Deserialize(unsupported));
+    }
+
+    [Fact]
+    public void PropertyNamesAreCaseSensitive()
+    {
+        var unsupported = DefinitionFixture.Replace(
+            "\"name\": \"Rose\"",
+            "\"Name\": \"Rose\"",
+            StringComparison.Ordinal);
+
+        Assert.Throws<JsonException>(() => Deserialize(unsupported));
+    }
+
+    [Fact]
     public void UnknownPropertiesAreRejected()
     {
         var unsupported = DefinitionFixture.Replace(
