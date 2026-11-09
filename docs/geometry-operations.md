@@ -52,7 +52,7 @@ This is a generic arrangement primitive. It does not know what an element repres
 
 `ProjectNearest(segments, target, samplesPerSegment)` finds an approximate nearest point across an ordered set of cubic Bézier segments and returns the winning segment index, local parameter, point, normalized tangent, and squared distance.
 
-The algorithm samples each segment to find a candidate interval, then performs a fixed number of golden-section refinement iterations inside that interval. It is deterministic and bounded by the supplied sample count. Ties preserve the earlier segment. The tangent is zero only when the curve derivative is degenerate at the projected point.
+The algorithm samples each segment to find a candidate interval, then performs a fixed number of golden-section refinement iterations inside that interval. Squared-distance comparisons use double precision so a large orthogonal offset does not erase small coordinate differences through float rounding. It is deterministic and bounded by the supplied sample count. Ties preserve the earlier segment. The tangent is zero only when the curve derivative is degenerate at the projected point.
 
 This is appropriate for deterministic geometric attachments such as the current leaf-to-stem projection. It is a numeric projection, not an analytic solution to every possible cubic distance polynomial.
 

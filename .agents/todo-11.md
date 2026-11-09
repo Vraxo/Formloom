@@ -1,6 +1,6 @@
 # Phase 11 — Data-driven model system
 
-> **Status:** In progress. PRs #57–#60 are merged. PR 4 is proposed in [PR #61](https://github.com/Vraxo/Formloom/pull/61); its latest head `cffdf942d3187bf54c52b001f992cac58da03272` passed Linux / Release run [#273](https://github.com/Vraxo/Formloom/actions/runs/42650621787), with 716/716 Core and 105/105 Desktop tests passing (821 total). PR 5 is being implemented on `phase-11/geometry-operations`, stacked on PR 4. ADR-0001 is accepted. The generic evaluator, executable rose definition, and rose migration do not exist yet.
+> **Status:** In progress. PRs #57–#60 are merged. PR 4 is proposed in [PR #61](https://github.com/Vraxo/Formloom/pull/61); its latest head passed Linux / Release run [#273](https://github.com/Vraxo/Formloom/actions/runs/42650621787), with 716/716 Core and 105/105 Desktop tests passing (821 total). PR 5 is proposed in [PR #62](https://github.com/Vraxo/Formloom/pull/62); Linux / Release run [#276](https://github.com/Vraxo/Formloom/actions/runs/42652452039) passed 727/727 Core and 105/105 Desktop tests (832 total). ADR-0001 is accepted. The generic evaluator, executable rose definition, and rose migration do not exist yet.
 >
 > **Original starting point:** `main` at `fc4e587166617d72d2be9679aadc5a160c79878e` (2026-11-09). Current `main` includes PR 1 merge `5e5e3952694f5ef5732483a01e8ec8b8fd203d8b`, PR 2 merge `41168813ce5fe9254179609c11b708efed7566a4`, and PR 2b merge `b41233e6c0d44738c8bb29751e5d8961ac6a17ce`; current implementation branch: `phase-11/model-catalog`.
 
