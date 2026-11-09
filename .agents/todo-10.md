@@ -1,6 +1,6 @@
 # Phase 10 — A Red or Pink Rose in a Ceramic Vase
 
-> **Status:** Implementation, automated verification, and agent-side visual review are complete. Linux / Release CI passed on PR head `5b12a0f9c9e5df49ed144bf2f3ab33944da6a697` in run `42589085858`; preview artifact `13659909749` was uploaded. The canonical and robustness sheets, eight full-size renders, and four silhouettes were inspected from the user-provided attachments; no blocking visual issue was found. Timing transcription remains pending because the `.timing.json` sidecars were not attached and the artifact download redirects outside the sandbox outbound allowlist. PR [#55](https://github.com/Vraxo/Formloom/pull/55) is open; keep it open and do not merge.
+> **Status:** Implementation, automated verification, and agent-side visual review are complete. Linux / Release CI passed on review-recording commit `1b771996cb223317ddf617047c6e3c09d50bb35b` in run `42590714896`; preview artifact `13660659546` was uploaded. The canonical and robustness sheets, eight full-size renders, and four silhouettes were inspected from the user-provided attachments; no blocking visual issue was found. Timing transcription remains pending because the `.timing.json` sidecars were not attached and the artifact download redirects outside the sandbox outbound allowlist. PR [#55](https://github.com/Vraxo/Formloom/pull/55) is open; keep it open and do not merge.
 
 ## Goal
 
@@ -207,7 +207,7 @@ Expected subject tokens and default seed-42 save names:
 
 ### 8. Generate, map, and visually review the rose artifacts
 
-> CI generated and uploaded the preview in final recorded run `42589085858` (artifact `13659909749`, 8,551,836 bytes). The user supplied the two sheets, eight full-size render PNGs, and four silhouette PNGs; their visual review is recorded below. The `.timing.json` files were not attached, and a direct artifact download redirects to `productionresultssa17.blob.core.windows.net` outside the sandbox outbound allowlist, so timing transcription remains pending.
+> CI generated and uploaded the preview in review-recording run `42590714896` (artifact `13660659546`, 8,551,852 bytes). The user supplied the two sheets, eight full-size render PNGs, and four silhouette PNGs; their visual review is recorded below. The `.timing.json` files were not attached, and a direct artifact download redirects to `productionresultssa17.blob.core.windows.net` outside the sandbox outbound allowlist, so timing transcription remains pending.
 
 - [x] Generate all four canonical prompt × vase combinations at seed 42 and variation 0.35.
 - [x] Generate a 2 × 2 canonical review sheet with 512 × 512 px cells so all four combinations can be compared at a useful size.
@@ -247,7 +247,7 @@ Expected subject tokens and default seed-42 save names:
 - [x] Confirm the PR source/test CI run passes the full solution build and test steps, and that the `procedural-preview` artifact was uploaded.
 - [ ] Confirm the merged build's post-merge Linux Release CI only after the PR is merged; do not describe a PR run as post-merge.
 - [x] Keep the existing single Linux Release workflow. Do not add a permanent Debug job, Windows runner, package, project, workflow job, or CI service for this milestone.
-- [x] Record the available evidence: PR #55, final recorded CI run `42589085858`, preview artifact `13659909749`, and this handoff. There is no merge commit because the PR remains open by instruction.
+- [x] Record the available evidence: PR #55, CI run `42590714896`, preview artifact `13660659546`, and this handoff. There is no merge commit because the PR remains open by instruction.
 - [x] Reconcile the checklist, README, handoff, tests, and changed-file list; identify anything authored but not executed.
 - [x] Do not claim native Photino/WebView2 dialogs, window lifecycle, resize, or accessibility behavior was tested from headless CI.
 - [x] Create focused PR #55 and leave it open for review; do not merge without explicit user approval.
