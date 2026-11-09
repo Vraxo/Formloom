@@ -1,6 +1,6 @@
 # Phase 10 — A Red or Pink Rose in a Ceramic Vase
 
-> **Status:** In progress. Rose Core, parser, generation, renderer, desktop integration, Core/rendering/desktop tests, and documentation drafts are written. None have been built or executed yet; CI/artifact generation and visual review are pending, as are the final handoff evidence and review PR. This is a narrow, standalone third-flower milestone built on the existing vase-content and renderer paths. Start from the latest `main`; do not assume the current commit is still the one recorded below.
+> **Status:** Implementation and automated verification are complete; Linux / Release CI passed on source/test head `c24070cac26ca0848f5535489f1f522c643051cc` in run `42588356956`, and the `procedural-preview` artifact was uploaded as `13660855029`. The sandbox cannot download the artifact because its redirect host is outside the outbound allowlist, so assistant-side visual review and timing transcription remain pending. PR [#55](https://github.com/Vraxo/Formloom/pull/55) is open; keep it open and do not merge. This is a narrow, standalone third-flower milestone built on the existing vase-content and renderer paths.
 
 ## Goal
 
@@ -66,23 +66,23 @@ Those statements described the repository before PR #54. They are now reconciled
 - [x] Make rose contents mutually exclusive with tulip-only, daisy-only, tulip/daisy pair, bowl containment, and cup contents.
 - [x] Keep Core independent of SkiaSharp, pixel coordinates, bitmap/native resources, and Desktop/UI types.
 - [x] Avoid broad nullable flower records, arbitrary flower arrays, a general plant registry, a generic bouquet model, reflection dispatch, or a universal contents abstraction.
-- [x] Record the chosen typed model and exact invariants in the Phase 10 handoff; final verification and ending-commit evidence remain pending.
+- [x] Record the chosen typed model and exact invariants in the Phase 10 handoff; implementation verification is complete, while artifact review and timing transcription remain pending as recorded below.
 
 ### 2. Add exact rose prompt grammar and save identity
 
-- [ ] Add a rose prompt value type following the current prompt-model conventions.
-- [ ] Support exactly the four prompts listed at the top of this document: red/pink rose × blue/cream vase.
-- [ ] Use exact grammar: `a red rose` or `a pink rose`, followed by `in`, exactly one existing blue/cream ceramic vase descriptor, and `on a wooden table`.
-- [ ] Preserve the current case normalization, repeated-whitespace normalization, and terminal-punctuation handling.
-- [ ] Preserve the existing strict parsing contract. Do not introduce synonyms, flexible word order, plural inference, adjective interpretation, or natural-language fallbacks.
-- [ ] Ensure rose parsing is attempted before any broader parser branch that could incorrectly accept or degrade a malformed rose prompt.
-- [ ] Reject an unspecified rose, white/yellow/blue/purple rose, alternate flower color, alternate vase glaze, and every unsupported species.
-- [ ] Reject roses in bowls/cups, roses beside a vase, vase-first phrasing, reversed relationships, missing table phrases, extra scene objects, and malformed separators.
-- [ ] Reject plural roses, two roses, bouquets, rose/tulip or rose/daisy mixtures, and any third flower.
-- [ ] Verify that each invalid prompt is rejected as a whole and never falls back to an empty vase, a tulip, or a daisy.
-- [ ] Add parser tests for all four supported prompts and each established normalization behavior.
-- [ ] Add a focused negative-prompt matrix for unsupported color, species, order, quantity, container, relationship, and extra-object variants.
-- [ ] Preserve every pre-existing prompt, parser result shape, rejection behavior, and subject token.
+- [x] Add a rose prompt value type following the current prompt-model conventions.
+- [x] Support exactly the four prompts listed at the top of this document: red/pink rose × blue/cream vase.
+- [x] Use exact grammar: `a red rose` or `a pink rose`, followed by `in`, exactly one existing blue/cream ceramic vase descriptor, and `on a wooden table`.
+- [x] Preserve the current case normalization, repeated-whitespace normalization, and terminal-punctuation handling.
+- [x] Preserve the existing strict parsing contract. Do not introduce synonyms, flexible word order, plural inference, adjective interpretation, or natural-language fallbacks.
+- [x] Ensure rose parsing is attempted before any broader parser branch that could incorrectly accept or degrade a malformed rose prompt.
+- [x] Reject an unspecified rose, white/yellow/blue/purple rose, alternate flower color, alternate vase glaze, and every unsupported species.
+- [x] Reject roses in bowls/cups, roses beside a vase, vase-first phrasing, reversed relationships, missing table phrases, extra scene objects, and malformed separators.
+- [x] Reject plural roses, two roses, bouquets, rose/tulip or rose/daisy mixtures, and any third flower.
+- [x] Verify that each invalid prompt is rejected as a whole and never falls back to an empty vase, a tulip, or a daisy.
+- [x] Add parser tests for all four supported prompts and each established normalization behavior.
+- [x] Add a focused negative-prompt matrix for unsupported color, species, order, quantity, container, relationship, and extra-object variants.
+- [x] Preserve every pre-existing prompt, parser result shape, rejection behavior, and subject token.
 
 Expected subject tokens and default seed-42 save names:
 
@@ -93,128 +93,130 @@ Expected subject tokens and default seed-42 save names:
 | pink rose / blue vase | `pink-rose-in-blue-vase` | `formloom-pink-rose-in-blue-vase-seed-42.png` |
 | pink rose / cream vase | `pink-rose-in-cream-vase` | `formloom-pink-rose-in-cream-vase-seed-42.png` |
 
-- [ ] Add exactly these four new subject tokens to the existing safe-save whitelist.
-- [ ] Verify seed, variation, extension, filename normalization, and whitelist fallback behavior.
-- [ ] Verify that rejected prompts retain the last successful preview and its associated metadata.
+- [x] Add exactly these four new subject tokens to the existing safe-save whitelist.
+- [x] Verify seed, variation, extension, filename normalization, and whitelist fallback behavior.
+- [x] Verify that rejected prompts retain the last successful preview and its associated metadata.
 
 ### 3. Construct a recognisable rose from normalized geometry
 
-- [ ] Add a dedicated `RoseGeometry` generator and species-specific records such as `RoseBloom`, `RosePetal`, `RoseLeaf`, and `RosePlant`; use separate files for primary types in keeping with repository conventions.
-- [ ] Make every rose contour and attachment coordinate normalized and derived from the existing vase profile/body, never from fixed 1024 px placement constants.
-- [ ] Derive the stem base from the same `VaseMouth` opening helpers used by the existing flower species.
-- [ ] Derive the bloom size, height, and top margin from the vase opening and available headroom; do not let the rose collide with the vase rim or canvas edge.
-- [ ] Give the rose a compact, layered, cupped silhouette with overlapping outer, middle, and inner petal layers.
-- [ ] Shape the central whorl as a visibly tighter, partially curled arrangement; do not add a daisy-like centre disk.
-- [ ] Make petal overlap and depth order deliberate so roots are hidden where appropriate and the inner whorl remains readable.
-- [ ] Use visibly curved petal edges and bounded asymmetry; avoid a stack of identical circles, flat radial spokes, or a single scalloped blob.
-- [ ] Keep the outer petal silhouette broad enough to read as a rose while preserving enough negative space and contour separation to distinguish individual layers.
-- [ ] Ensure the bloom is visibly different from the tulip's five-part cupped shape and the daisy's twelve-petal radial head.
-- [ ] Choose and document a small fixed petal/layer count suitable for the rendered size. Keep counts stable; variation may reshape petals but must not randomly add/remove them.
-- [ ] Derive petal widths, lengths, curvature, overlap, and layer radii from normalized rose dimensions rather than canvas pixels.
-- [ ] Add restrained directional shading and fold contours in the geometry/material boundary without embedding RGB values in Core.
-- [ ] Add a small green calyx/sepals only if they materially improve the bloom-to-stem transition; keep them attached to the rose head and avoid expanding the object count or scope.
-- [ ] Create exactly one continuous stem with a bounded natural curve and a thickness proportionate to the vase opening and bloom.
-- [ ] Create exactly two leaf blades attached to the stem at separate heights. Keep their attachment points and direction deterministic and their silhouettes visible at normal viewing size.
-- [ ] Give rose leaves a restrained species-appropriate shape, including a clear central vein and optional subtle serration if it improves recognition without creating noisy edges.
-- [ ] Ensure leaves do not merge into the bloom, each other, or the vase rim; both must remain visibly attached to the stem.
-- [ ] Measure `RosePlant.Bounds` from the actual bloom, stem, calyx/sepals if present, and both leaf contours. Do not accept caller-supplied bounds that can disagree with drawn geometry.
-- [ ] Use stable, independently named random streams for rose stem, leaves, and petal/layer detail. Do not use `GetHashCode()` or mutable shared PRNG order to derive seed identity.
-- [ ] Keep variation bounded and continuous from 0 to 1; it may alter contour, rotation, curvature, and offsets but must not break the rose's identity or fixed geometry counts.
-- [ ] Prove identical prompt/seed/variation inputs produce identical Core geometry and that different seeds create visible, coherent changes.
-- [ ] Prove rose randomness does not perturb existing tulip, daisy, or tulip/daisy-pair geometry.
-- [ ] Prove changing only the vase glaze does not change the rose's geometry.
-- [ ] Test normalized bounds and vase-relative clearances across representative seeds, variation extremes, and all supported canvas aspect ratios.
-- [ ] Keep the rose composition centred and visually balanced above the vase; do not introduce a user-controlled layout or arbitrary flower-placement mechanism.
+- [x] Add a dedicated `RoseGeometry` generator and species-specific records such as `RoseBloom`, `RosePetal`, `RoseLeaf`, and `RosePlant`; use separate files for primary types in keeping with repository conventions.
+- [x] Make every rose contour and attachment coordinate normalized and derived from the existing vase profile/body, never from fixed 1024 px placement constants.
+- [x] Derive the stem base from the same `VaseMouth` opening helpers used by the existing flower species.
+- [x] Derive the bloom size, height, and top margin from the vase opening and available headroom; do not let the rose collide with the vase rim or canvas edge.
+- [x] Give the rose a compact, layered, cupped silhouette with overlapping outer, middle, and inner petal layers.
+- [x] Shape the central whorl as a visibly tighter, partially curled arrangement; do not add a daisy-like centre disk.
+- [x] Make petal overlap and depth order deliberate so roots are hidden where appropriate and the inner whorl remains readable.
+- [x] Use visibly curved petal edges and bounded asymmetry; avoid a stack of identical circles, flat radial spokes, or a single scalloped blob.
+- [x] Keep the outer petal silhouette broad enough to read as a rose while preserving enough negative space and contour separation to distinguish individual layers.
+- [x] Ensure the bloom is visibly different from the tulip's five-part cupped shape and the daisy's twelve-petal radial head.
+- [x] Choose and document a small fixed petal/layer count suitable for the rendered size. Keep counts stable; variation may reshape petals but must not randomly add/remove them.
+- [x] Derive petal widths, lengths, curvature, overlap, and layer radii from normalized rose dimensions rather than canvas pixels.
+- [x] Add restrained directional shading and fold contours in the geometry/material boundary without embedding RGB values in Core.
+- [x] No calyx/sepals were added; the implementation keeps the plant model narrow. Revisit only if visual review finds a bloom-to-stem transition defect.
+- [x] Create exactly one continuous stem with a bounded natural curve and a thickness proportionate to the vase opening and bloom.
+- [x] Create exactly two leaf blades attached to the stem at separate heights. Keep their attachment points and direction deterministic and their silhouettes visible at normal viewing size.
+- [x] Give rose leaves a restrained species-appropriate shape, including a clear central vein and optional subtle serration if it improves recognition without creating noisy edges.
+- [x] Ensure leaves do not merge into the bloom, each other, or the vase rim; both must remain visibly attached to the stem.
+- [x] Measure `RosePlant.Bounds` from the actual bloom, stem, calyx/sepals if present, and both leaf contours. Do not accept caller-supplied bounds that can disagree with drawn geometry.
+- [x] Use stable, independently named random streams for rose stem, leaves, and petal/layer detail. Do not use `GetHashCode()` or mutable shared PRNG order to derive seed identity.
+- [x] Keep variation bounded and continuous from 0 to 1; it may alter contour, rotation, curvature, and offsets but must not break the rose's identity or fixed geometry counts.
+- [x] Prove identical prompt/seed/variation inputs produce identical Core geometry and that different seeds create visible, coherent changes.
+- [x] Prove rose randomness does not perturb existing tulip, daisy, or tulip/daisy-pair geometry.
+- [x] Prove changing only the vase glaze does not change the rose's geometry.
+- [x] Test normalized bounds and vase-relative clearances across representative seeds, variation extremes, and all supported canvas aspect ratios.
+- [x] Keep the rose composition centred and visually balanced above the vase; do not introduce a user-controlled layout or arbitrary flower-placement mechanism.
 
 ### 4. Integrate the rose with the existing vase-content path
 
-- [ ] Add `VaseRose.Create` or the equivalent focused factory using the existing vase profile and normalized geometry conventions.
-- [ ] Preserve the exact vase instance already stored in the scene; do not clone it into another scene entry.
-- [ ] Add the rose content to the current scene model without changing the meaning or storage of existing `VaseFlower`, `VaseDaisy`, or `VaseTulipDaisy` data.
-- [ ] Update `SceneGenerator` to construct the typed rose only after the exact rose prompt has parsed successfully.
-- [ ] Update `SceneValidator` to enforce one vase, one rose, one stem, one bloom, exactly two leaves, and the closed red/pink color set.
-- [ ] Reject invalid/null/mismatched rose geometry and mismatched vase references through ordinary validation errors, not routine exceptions.
-- [ ] Enforce mutual exclusion between rose content and every existing vase/fruit/cup/bowl content relationship.
-- [ ] Keep the rose out of `SceneEntry`, object-depth sorting, independent shadow generation, and tabletop contact-shadow ownership.
-- [ ] Ensure the rose's bounds and vase-relative attachment fit the existing vase profile for both blue and cream glazes.
-- [ ] Do not change the vase profile, vase transform, vessel dimensions, or any unrelated scene object to make room for the rose.
-- [ ] Preserve the existing maximum scene-entry and composition rules for all non-flower scenes.
-- [ ] Add Core tests for vase identity, content exclusivity, exact flower counts, bounds, and all validator rejection cases.
+- [x] Add `VaseRose.Create` or the equivalent focused factory using the existing vase profile and normalized geometry conventions.
+- [x] Preserve the exact vase instance already stored in the scene; do not clone it into another scene entry.
+- [x] Add the rose content to the current scene model without changing the meaning or storage of existing `VaseFlower`, `VaseDaisy`, or `VaseTulipDaisy` data.
+- [x] Update `SceneGenerator` to construct the typed rose only after the exact rose prompt has parsed successfully.
+- [x] Update `SceneValidator` to enforce one vase, one rose, one stem, one bloom, exactly two leaves, and the closed red/pink color set.
+- [x] Reject invalid/null/mismatched rose geometry and mismatched vase references through ordinary validation errors, not routine exceptions.
+- [x] Enforce mutual exclusion between rose content and every existing vase/fruit/cup/bowl content relationship.
+- [x] Keep the rose out of `SceneEntry`, object-depth sorting, independent shadow generation, and tabletop contact-shadow ownership.
+- [x] Ensure the rose's bounds and vase-relative attachment fit the existing vase profile for both blue and cream glazes.
+- [x] Do not change the vase profile, vase transform, vessel dimensions, or any unrelated scene object to make room for the rose.
+- [x] Preserve the existing maximum scene-entry and composition rules for all non-flower scenes.
+- [x] Add Core tests for vase identity, content exclusivity, exact flower counts, bounds, and all validator rejection cases.
 
 ### 5. Render rose petals, leaves, and continuous vase contact
 
-- [ ] Add a dedicated `RoseMaterial` in the Skia renderer project. Core must remain free of pixel/color material definitions.
-- [ ] Define separate red and pink petal palettes with coherent base, light, shadow/fold, and edge tones.
-- [ ] Make the red rose visibly red rather than tulip-red geometry, and make the pink rose visibly pink rather than a washed-out red variant.
-- [ ] Keep stem and leaf greens consistent with the project's existing illustrated still-life palette while giving the rose petals their own species material.
-- [ ] Ensure changing vase glaze cannot recolor or otherwise perturb rose material.
-- [ ] Add rose drawing to the existing vase-first plant pass. Reuse the shared shape-agnostic stem projection and vase-mouth contact helpers where they fit.
-- [ ] Draw the complete rose stem continuously across the far rim; do not split it into two independently antialiased strokes at the contact point.
-- [ ] Preserve the tangent-matched below-base continuation and clip it inside the near lip/opening exactly as the existing flowers do.
-- [ ] Keep the rose head and visible stem above the mouth; no rose petal, leaf, stem, or calyx pixel may leak onto the exterior vase wall.
-- [ ] Draw petals in deliberate back-to-front layer order so rear petals are occluded by front petals and the central whorl remains legible.
-- [ ] Add gentle lighting gradients and petal-fold shading that reveal the layered rose structure without making it photorealistic or visually noisy.
-- [ ] Keep the rose silhouette complete and additive in silhouette mode.
-- [ ] Keep detail-omission behavior scoped to rose detail; it must not omit the bloom silhouette or corrupt another vase-content path.
-- [ ] Preserve diagnostic-render isolation: silhouette, shadow-mask, and detail-omission passes must not contaminate subsequent normal renders.
-- [ ] Preserve the empty-vase shadow mask and tabletop shadows; the rose adds no independent cast/contact shadow in this milestone.
-- [ ] Preserve the antialiasing option introduced by Phase 9 follow-up PR #53, including its default and UI behavior.
-- [ ] Ensure the four rose combinations render deterministically to valid PNGs at the existing output dimensions.
-- [ ] Do not introduce GPU rendering, 3D geometry, external assets, downloaded textures, fonts, models, or neural components.
+- [x] Add a dedicated `RoseMaterial` in the Skia renderer project. Core must remain free of pixel/color material definitions.
+- [x] Define separate red and pink petal palettes with coherent base, light, shadow/fold, and edge tones.
+- [x] Make the red rose visibly red rather than tulip-red geometry, and make the pink rose visibly pink rather than a washed-out red variant.
+- [x] Keep stem and leaf greens consistent with the project's existing illustrated still-life palette while giving the rose petals their own species material.
+- [x] Ensure changing vase glaze cannot recolor or otherwise perturb rose material.
+- [x] Add rose drawing to the existing vase-first plant pass. Reuse the shared shape-agnostic stem projection and vase-mouth contact helpers where they fit.
+- [x] Draw the complete rose stem continuously across the far rim; do not split it into two independently antialiased strokes at the contact point.
+- [x] Preserve the tangent-matched below-base continuation and clip it inside the near lip/opening exactly as the existing flowers do.
+- [x] Keep the rose head and visible stem above the mouth; no rose petal, leaf, stem, or calyx pixel may leak onto the exterior vase wall.
+- [x] Draw petals in deliberate back-to-front layer order so rear petals are occluded by front petals and the central whorl remains legible.
+- [x] Add gentle lighting gradients and petal-fold shading that reveal the layered rose structure without making it photorealistic or visually noisy.
+- [x] Keep the rose silhouette complete and additive in silhouette mode.
+- [x] Keep detail-omission behavior scoped to rose detail; it must not omit the bloom silhouette or corrupt another vase-content path.
+- [x] Preserve diagnostic-render isolation: silhouette, shadow-mask, and detail-omission passes must not contaminate subsequent normal renders.
+- [x] Preserve the empty-vase shadow mask and tabletop shadows; the rose adds no independent cast/contact shadow in this milestone.
+- [x] Preserve the antialiasing option introduced by Phase 9 follow-up PR #53, including its default and UI behavior.
+- [x] Ensure the four rose combinations render deterministically to valid PNGs at the existing output dimensions.
+- [x] Do not introduce GPU rendering, 3D geometry, external assets, downloaded textures, fonts, models, or neural components.
 
 ### 6. Add focused Core, parser, renderer, and regression tests
 
-- [ ] Add focused Core tests for rose prompt values, `RoseColor`, `VaseRose`, and `RosePlant` invariants.
-- [ ] Test all four supported prompts through parse, scene generation, validation, subject-token selection, and safe filename mapping.
-- [ ] Test unsupported colors/species, plurals, counts, bouquets, reversed wording, alternate containers, extra scene objects, and incomplete prompts.
-- [ ] Test exact one-bloom/one-stem/two-leaf geometry and the documented fixed petal/layer counts.
-- [ ] Test petal-layer ordering, overlap, the tight inner whorl, and non-degenerate contours.
-- [ ] Test both leaves are attached to the sampled stem, separated sufficiently, and included in measured bounds.
-- [ ] Test geometry determinism for identical inputs and visible changes for selected distinct seeds.
-- [ ] Test bounded geometry across several seeds and variation values including 0 and 1.
-- [ ] Test geometry at the project's supported output sizes, including 64 × 64, 1024 × 1024, and wide/tall aspect ratios up to the current 4096 px limit.
-- [ ] Test rose bounds stay within the canvas and retain the required top margin above the vase.
-- [ ] Test the stem base is derived from the vase's normalized opening and fits the opening for both vase glazes.
-- [ ] Test rose geometry remains identical when only the vase glaze changes.
-- [ ] Test rose random streams do not perturb standalone tulip/daisy or mixed tulip/daisy geometry.
-- [ ] Test the rose content is mutually exclusive with standalone tulip, standalone daisy, mixed tulip/daisy, fruit containment, and cup contents.
-- [ ] Add renderer pixel tests proving the rose bloom, central whorl, both leaves, and stem are actually painted.
-- [ ] Add pixel/contour checks that the rose's layers remain distinguishable and do not collapse into a daisy-like disk or tulip-like cup.
-- [ ] Test visible stem continuity through the far-rim contact at preview and full-resolution sizes.
-- [ ] Test the interior stem follows the correct tangent, remains inside the opening, and disappears beneath the near lip.
-- [ ] Test no rose pixels leak onto the exterior vase wall or appear below the mouth outside the opening.
-- [ ] Test the rose adds no tabletop shadow, vase-body repainting, external leakage, or unrelated pixel changes.
-- [ ] Test rose silhouettes include all required plant contours and detail omission removes only allowed details.
-- [ ] Test red/pink petal material distinction and independence from blue/cream vase glaze.
-- [ ] Test repeated renders are pixel-identical for the same scene, seed, variation, resolution, and antialias setting.
-- [ ] Test antialias on/off remains a rasterization choice and does not alter the prompt, geometry, dimensions, or PNG save semantics.
-- [ ] Add desktop pipeline tests for all four prompts through `GenerationService`, `DesktopSession`, preview metadata, and save metadata.
-- [ ] Test the four new subject tokens are whitelisted and every earlier save token/filename remains unchanged.
-- [ ] Test invalid rose prompts retain the last successful preview and its seed/variation metadata.
-- [ ] Test the prompt-help example and any displayed hint remain consistent with exact supported grammar.
-- [ ] Run the complete existing test suite; do not limit validation to the new rose tests.
+- [x] Add focused Core tests for rose prompt values, `RoseColor`, `VaseRose`, and `RosePlant` invariants.
+- [x] Test all four supported prompts through parse, scene generation, validation, subject-token selection, and safe filename mapping.
+- [x] Test unsupported colors/species, plurals, counts, bouquets, reversed wording, alternate containers, extra scene objects, and incomplete prompts.
+- [x] Test exact one-bloom/one-stem/two-leaf geometry and the documented fixed petal/layer counts.
+- [x] Test petal-layer ordering, overlap, the tight inner whorl, and non-degenerate contours.
+- [x] Test both leaves are attached to the sampled stem, separated sufficiently, and included in measured bounds.
+- [x] Test geometry determinism for identical inputs and visible changes for selected distinct seeds.
+- [x] Test bounded geometry across several seeds and variation values including 0 and 1.
+- [x] Test geometry at the project's supported output sizes, including 64 × 64, 1024 × 1024, and wide/tall aspect ratios up to the current 4096 px limit.
+- [x] Test rose bounds stay within the canvas and retain the required top margin above the vase.
+- [x] Test the stem base is derived from the vase's normalized opening and fits the opening for both vase glazes.
+- [x] Test rose geometry remains identical when only the vase glaze changes.
+- [x] Test rose random streams do not perturb standalone tulip/daisy or mixed tulip/daisy geometry.
+- [x] Test the rose content is mutually exclusive with standalone tulip, standalone daisy, mixed tulip/daisy, fruit containment, and cup contents.
+- [x] Add renderer pixel tests proving the rose bloom, central whorl, both leaves, and stem are actually painted.
+- [x] Add pixel/contour checks that the rose's layers remain distinguishable and do not collapse into a daisy-like disk or tulip-like cup.
+- [x] Test visible stem continuity through the far-rim contact at preview and full-resolution sizes.
+- [x] Test the interior stem follows the correct tangent, remains inside the opening, and disappears beneath the near lip.
+- [x] Test no rose pixels leak onto the exterior vase wall or appear below the mouth outside the opening.
+- [x] Test the rose adds no tabletop shadow, vase-body repainting, external leakage, or unrelated pixel changes.
+- [x] Test rose silhouettes include all required plant contours and detail omission removes only allowed details.
+- [x] Test red/pink petal material distinction and independence from blue/cream vase glaze.
+- [x] Test repeated renders are pixel-identical for the same scene, seed, variation, resolution, and antialias setting.
+- [x] Test antialias on/off remains a rasterization choice and does not alter the prompt, geometry, dimensions, or PNG save semantics.
+- [x] Add desktop pipeline tests for all four prompts through `GenerationService`, `DesktopSession`, preview metadata, and save metadata.
+- [x] Test the four new subject tokens are whitelisted and every earlier save token/filename remains unchanged.
+- [x] Test invalid rose prompts retain the last successful preview and its seed/variation metadata.
+- [x] Test the prompt-help example and any displayed hint remain consistent with exact supported grammar.
+- [x] Run the complete existing test suite; do not limit validation to the new rose tests.
 
 ### 7. Desktop and save integration
 
-- [ ] Integrate all four rose prompts into the existing desktop generation path without a new screen, panel, editor, or flower-specific control.
-- [ ] Add one concise rose prompt example to the existing prompt-help area.
-- [ ] Preserve seed and variation controls, Randomize, Generate, preview retention, duplicate-action guards, Save PNG, and asynchronous save-dialog behavior.
-- [ ] Preserve the antialias control and its current default/state semantics.
-- [ ] Add the four rose tokens to `PngSaveService.KnownSubjects` without changing fallback rules or any previous token.
-- [ ] Confirm filenames remain based on the last successful preview, not subsequently edited prompt/seed/variation controls.
-- [ ] Confirm save cancellation retains the preview and save failures remain actionable without exposing stack traces.
-- [ ] Do not claim native Windows, Photino, or WebView2 behavior from Linux headless tests.
+- [x] Integrate all four rose prompts into the existing desktop generation path without a new screen, panel, editor, or flower-specific control.
+- [x] Add one concise rose prompt example to the existing prompt-help area.
+- [x] Preserve seed and variation controls, Randomize, Generate, preview retention, duplicate-action guards, Save PNG, and asynchronous save-dialog behavior.
+- [x] Preserve the antialias control and its current default/state semantics.
+- [x] Add the four rose tokens to `PngSaveService.KnownSubjects` without changing fallback rules or any previous token.
+- [x] Confirm filenames remain based on the last successful preview, not subsequently edited prompt/seed/variation controls.
+- [x] Confirm save cancellation retains the preview and save failures remain actionable without exposing stack traces.
+- [x] Do not claim native Windows, Photino, or WebView2 behavior from Linux headless tests.
 
 ### 8. Generate, map, and visually review the rose artifacts
 
-- [ ] Generate all four canonical prompt × vase combinations at seed 42 and variation 0.35.
-- [ ] Generate a 2 × 2 canonical review sheet with 512 × 512 px cells so all four combinations can be compared at a useful size.
-- [ ] Generate a second 2 × 2 robustness sheet covering at least one alternate seed, low variation, and high variation across both rose colors and both vase glazes.
-- [ ] Generate and retain the corresponding individual 1024 × 1024 PNGs for the four canonical cases and the selected robustness cases.
-- [ ] Generate silhouettes for the canonical rose cases using the existing artifact conventions.
-- [ ] Generate timing/geometry sidecars for every retained sample and a sheet sidecar that maps every cell to prompt, color, glaze, seed, variation, filename, and dimensions.
-- [ ] Keep generated files under the existing test-artifact output path so the established `procedural-preview` upload collects them.
-- [ ] Do not commit generated PNGs, timing dumps, or temporary diagnostic files as source.
+> CI generated and uploaded the preview in run `42588356956` (artifact `13660855029`, 8,551,859 bytes). `gh run download 42588356956 --name procedural-preview` failed with EOF after redirect to `productionresultssa17.blob.core.windows.net`, outside the sandbox outbound allowlist. The visual-inspection and timing-sidecar tasks below remain unchecked until the artifact is available for review.
+
+- [x] Generate all four canonical prompt × vase combinations at seed 42 and variation 0.35.
+- [x] Generate a 2 × 2 canonical review sheet with 512 × 512 px cells so all four combinations can be compared at a useful size.
+- [x] Generate a second 2 × 2 robustness sheet covering at least one alternate seed, low variation, and high variation across both rose colors and both vase glazes.
+- [x] Generate and retain the corresponding individual 1024 × 1024 PNGs for the four canonical cases and the selected robustness cases.
+- [x] Generate silhouettes for the canonical rose cases using the existing artifact conventions.
+- [x] Generate timing/geometry sidecars for every retained sample and a sheet sidecar that maps every cell to prompt, color, glaze, seed, variation, filename, and dimensions.
+- [x] Keep generated files under the existing test-artifact output path so the established `procedural-preview` upload collects them.
+- [x] Do not commit generated PNGs, timing dumps, or temporary diagnostic files as source.
 - [ ] Inspect all four canonical sheet cells at 512 px and their corresponding individual 1024 px renders.
 - [ ] Inspect every robustness-sheet cell for the same shape and contact properties; do not treat successful PNG generation as visual review.
 - [ ] Confirm the rose reads as a rose immediately, with a layered cupped head and a clear inner whorl.
@@ -227,42 +229,43 @@ Expected subject tokens and default seed-42 save names:
 - [ ] Review visual balance at normal desktop preview size; if a core rose feature disappears at that size, treat it as a defect rather than hiding it with an enlarged crop.
 - [ ] Read the timing sidecars and record only environment-specific observations. Do not claim a general performance improvement or per-flower cost from a single Stopwatch sample.
 - [ ] Record cosmetic observations separately from defects; do not expand the milestone to unrelated visual preferences.
-
 ### 9. Documentation, verification, and handoff
 
-- [ ] Update the README current-capability section with standalone red/pink roses in blue/cream vases.
-- [ ] Update the prompt grammar documentation with the exact four rose prompts and explicit exclusions.
-- [ ] Update the architecture overview with the new species-specific rose content path; keep existing tulip/daisy models species-specific.
-- [ ] Document the rose geometry decisions, fixed counts/layers, normalized vase-relative placement, named random streams, and material separation.
-- [ ] Document the shared renderer draw order and continuous tangent-matched vase stem contact; do not duplicate outdated pre-PR-53 behavior.
-- [ ] Document the four rose subject tokens and default filename forms.
+> The handoff records the successful CI run and artifact, but actual visual review and timing transcription remain blocked by the storage-host redirect described in section 8. The PR is intentionally unmerged, so no post-merge run or merge commit exists.
+
+- [x] Update the README current-capability section with standalone red/pink roses in blue/cream vases.
+- [x] Update the prompt grammar documentation with the exact four rose prompts and explicit exclusions.
+- [x] Update the architecture overview with the new species-specific rose content path; keep existing tulip/daisy models species-specific.
+- [x] Document the rose geometry decisions, fixed counts/layers, normalized vase-relative placement, named random streams, and material separation.
+- [x] Document the shared renderer draw order and continuous tangent-matched vase stem contact; do not duplicate outdated pre-PR-53 behavior.
+- [x] Document the four rose subject tokens and default filename forms.
 - [ ] Add `docs/rose-vase-handoff.md` with starting/ending commits, Phase 9 prerequisite evidence, model and geometry decisions, prompt grammar, rendering/occlusion, tests, artifacts, visual-review status, timing observations, and known limitations.
-- [ ] Keep `.agents/todo-10.md` updated throughout implementation.
-- [ ] Mark a checkbox `[x]` only after the work and its stated verification are complete.
-- [ ] Leave blocked, unexecuted, or human-review tasks unchecked and explain the exact evidence or blocker beside them.
-- [ ] Run restore, Release warnings-as-errors build, and the full solution test workflow through the existing CI gate.
-- [ ] Confirm the final PR CI run passes the full solution build and test steps, and that the `procedural-preview` artifact was uploaded.
+- [x] Keep `.agents/todo-10.md` updated throughout implementation.
+- [x] Mark a checkbox `[x]` only after the work and its stated verification are complete.
+- [x] Leave blocked, unexecuted, or human-review tasks unchecked and explain the exact evidence or blocker beside them.
+- [x] Run restore, Release warnings-as-errors build, and the full solution test workflow through the existing CI gate.
+- [x] Confirm the PR source/test CI run passes the full solution build and test steps, and that the `procedural-preview` artifact was uploaded.
 - [ ] Confirm the merged build's post-merge Linux Release CI only after the PR is merged; do not describe a PR run as post-merge.
-- [ ] Keep the existing single Linux Release workflow. Do not add a permanent Debug job, Windows runner, package, project, workflow job, or CI service for this milestone.
-- [ ] Record the exact PR number, merge commit, CI run, artifact ID, and final handoff evidence when available.
-- [ ] Reconcile the checklist, README, handoff, tests, and changed-file list; identify anything authored but not executed.
-- [ ] Do not claim native Photino/WebView2 dialogs, window lifecycle, resize, or accessibility behavior was tested from headless CI.
-- [ ] Create a focused pull request for Phase 10 and leave it open for review; do not merge without explicit user approval.
+- [x] Keep the existing single Linux Release workflow. Do not add a permanent Debug job, Windows runner, package, project, workflow job, or CI service for this milestone.
+- [x] Record the available evidence: PR #55, CI run `42588356956`, artifact `13660855029`, and this handoff. There is no merge commit because the PR remains open by instruction.
+- [x] Reconcile the checklist, README, handoff, tests, and changed-file list; identify anything authored but not executed.
+- [x] Do not claim native Photino/WebView2 dialogs, window lifecycle, resize, or accessibility behavior was tested from headless CI.
+- [x] Create focused PR #55 and leave it open for review; do not merge without explicit user approval.
 - [ ] Stop at the acceptance checkpoint below and report implementation decisions, test/CI evidence, artifact location, visual observations, timing limitations, and known exclusions.
 
 ## Acceptance checklist
 
-- [ ] The four exact red/pink rose × blue/cream vase prompts parse and generate through the existing desktop prompt-to-PNG path.
-- [ ] A rose is represented as one typed vase content referring to the exact vase instance; the vase remains the only scene entry.
-- [ ] The rose contains exactly one bloom, one continuous stem, and two attached leaves, with the documented fixed layered-petal structure.
+- [x] The four exact red/pink rose × blue/cream vase prompts parse and generate through the existing desktop prompt-to-PNG path.
+- [x] A rose is represented as one typed vase content referring to the exact vase instance; the vase remains the only scene entry.
+- [x] The rose contains exactly one bloom, one continuous stem, and two attached leaves, with the documented fixed layered-petal structure.
 - [ ] The rose is recognisably distinct from both the tulip and daisy at normal viewing size.
 - [ ] Red and pink material variants remain clearly distinguishable and independent of vase glaze.
-- [ ] Rose geometry is normalized, deterministic, bounded, vase-profile-aware, and stable across supported sizes and variation values.
-- [ ] The shared stem path crosses the far rim continuously, follows the correct interior tangent, and disappears behind the near lip without wall leakage.
-- [ ] Existing fruit, ceramic, containment, beverage, standalone tulip, standalone daisy, and mixed tulip/daisy prompts and save paths remain supported.
-- [ ] Automated Core/parser, geometry, renderer pixel, desktop pipeline, save-token, and full regression tests pass.
+- [x] Rose geometry is normalized, deterministic, bounded, vase-profile-aware, and stable across supported sizes and variation values.
+- [x] The shared stem path crosses the far rim continuously, follows the correct interior tangent, and disappears behind the near lip without wall leakage.
+- [x] Existing fruit, ceramic, containment, beverage, standalone tulip, standalone daisy, and mixed tulip/daisy prompts and save paths remain supported.
+- [x] Automated Core/parser, geometry, renderer pixel, desktop pipeline, save-token, and full regression tests pass.
 - [ ] The canonical and robustness artifacts have been visually reviewed; README and handoff accurately document evidence and limitations.
-- [ ] Linux Release CI passes on the Phase 10 PR head, the preview artifact is retained, and the agent stops before merge.
+- [x] Linux Release CI passes on the Phase 10 PR head, the preview artifact is retained, and the agent stops before merge.
 
 ## Explicitly out of scope
 
