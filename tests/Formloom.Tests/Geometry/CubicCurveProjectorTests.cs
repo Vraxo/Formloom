@@ -49,4 +49,41 @@ public sealed class CubicCurveProjectorTests
                 [new(Vector2.Zero, Vector2.Zero, Vector2.One, Vector2.One)],
                 new(float.NaN, 0)));
     }
+    [Fact]
+    public void ProjectsToTheNearestSampleOnTheRequestedYCoordinate()
+    {
+        var segment = new CubicSegment(Vector2.Zero, new(1f / 3, 1f / 3), new(2f / 3, 2f / 3), Vector2.One);
+        var result = CubicCurveProjector.ProjectNearestOnAxis([segment], CurveProjectionAxis.Y, 0.52f);
+        var expectedParameter = 33f / 64;
+        var expectedPoint = segment.Evaluate(expectedParameter);
+
+        Assert.Equal(0, result.SegmentIndex);
+        Assert.Equal(expectedParameter, result.Parameter);
+        Assert.Equal(expectedPoint, result.Point);
+        Assert.Equal(MathF.Abs(expectedPoint.Y - 0.52f), result.CoordinateDistance, 6);
+    }
+
+    [Fact]
+    public void SearchesAllSegmentsForTheNearestXCoordinate()
+    {
+        var segments = ImmutableArray.Create(
+            new CubicSegment(new(0, 0), new(0, 1f / 3), new(0, 2f / 3), new(0, 1)),
+            new CubicSegment(new(2, 0), new(2, 1f / 3), new(2, 2f / 3), new(2, 1)));
+        var result = CubicCurveProjector.ProjectNearestOnAxis(segments, CurveProjectionAxis.X, 1.8f);
+
+        Assert.Equal(1, result.SegmentIndex);
+        Assert.Equal(new Vector2(2, 0), result.Point);
+        Assert.Equal(0.2f, result.CoordinateDistance, 5);
+    }
+
+    [Fact]
+    public void RejectsInvalidAxisProjectionInputs()
+    {
+        var segment = new CubicSegment(Vector2.Zero, Vector2.Zero, Vector2.One, Vector2.One);
+        Assert.Throws<ArgumentException>(() => CubicCurveProjector.ProjectNearestOnAxis(ImmutableArray<CubicSegment>.Empty, CurveProjectionAxis.Y, 0));
+        Assert.Throws<ArgumentOutOfRangeException>(() => CubicCurveProjector.ProjectNearestOnAxis([segment], (CurveProjectionAxis)99, 0));
+        Assert.Throws<ArgumentOutOfRangeException>(() => CubicCurveProjector.ProjectNearestOnAxis([segment], CurveProjectionAxis.Y, float.NaN));
+        Assert.Throws<ArgumentOutOfRangeException>(() => CubicCurveProjector.ProjectNearestOnAxis([segment], CurveProjectionAxis.Y, 0, 0));
+    }
+
 }
