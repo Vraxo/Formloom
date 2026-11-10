@@ -291,6 +291,36 @@ public sealed class ModelDefinitionEvaluatorTests
     }
 
     [Fact]
+    public void EvaluatesCurveSampleLandmarksForLaterGeometryNodes()
+    {
+        var result = ModelDefinitionEvaluator.Evaluate(CreateDefinition(), CreateContext());
+
+        Assert.True(result.IsSuccess, string.Join(Environment.NewLine, result.Diagnostics.Select(item => item.Message)));
+        var geometry = Assert.IsType<ModelGeometry>(result.Geometry);
+        var leaf = Assert.Single(geometry.Paths, path => path.Id == "leaf.left");
+        var attachment = Assert.Single(leaf.Landmarks, item => item.Name == "attachment");
+        Assert.Equal(new Vector2(0.5f, 0.5f), attachment.Position);
+    }
+
+    [Fact]
+    public void RejectsCurveSampleParametersOutsideTheNormalizedRange()
+    {
+        var definition = CreateDefinition();
+        var sampleIndex = Enumerable.Range(0, definition.Nodes.Length)
+            .Single(index => definition.Nodes[index].Id == "leaf.sample");
+        var sample = Assert.IsType<ModelCurveSampleNodeDefinition>(definition.Nodes[sampleIndex]);
+        var invalidDefinition = definition with
+        {
+            Nodes = definition.Nodes.SetItem(sampleIndex, sample with { Parameter = Literal(1.01) }),
+        };
+
+        var result = ModelDefinitionEvaluator.Evaluate(invalidDefinition, CreateContext());
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Diagnostics, item => item.Code == "evaluation.curve-parameter-out-of-range");
+    }
+
+    [Fact]
     public void SamplesAcrossOrderedSegmentsUsingEqualParameterIntervals()
     {
         var segments = ImmutableArray.Create(
@@ -366,11 +396,15 @@ public sealed class ModelDefinitionEvaluatorTests
             "leaf.attachment",
             "stem.path",
             Point(Literal(0.5), Literal(0.65)));
+        var sample = new ModelCurveSampleNodeDefinition(
+            "leaf.sample",
+            "stem.path",
+            Literal(0.5));
         var leafMapping = Mapping(0.2, 0.08, reverse: true);
         var leaf = new ModelProfileMapNodeDefinition(
             "leaf.left",
             "leaf",
-            Point(Reference("node:leaf.attachment:point:x"), Reference("node:leaf.attachment:point:y")),
+            Point(Reference("node:leaf.sample:point:x"), Reference("node:leaf.sample:point:y")),
             Literal(0),
             leafMapping,
             "leaf",
@@ -411,7 +445,7 @@ public sealed class ModelDefinitionEvaluatorTests
                 .Add("color", choice),
             profiles,
             materials,
-            [stem, attachment, leaf, radial, group],
+            [stem, attachment, sample, leaf, radial, group],
             ["flower"]);
     }
 

@@ -467,16 +467,6 @@ public static class ModelDefinitionValidator
 
                     ValidatePointExpression(curveNode.Target, $"{path}.target", options, definition.Parameters, definition.Mounts, priorNodes, add);
                     break;
-                case ModelCurveSampleNodeDefinition sampleNode:
-                    if (string.IsNullOrWhiteSpace(sampleNode.Curve) ||
-                        !priorNodes.TryGetValue(sampleNode.Curve, out var sampledCurve) ||
-                        sampledCurve is not (ModelCubicPathNodeDefinition or ModelProfileMapNodeDefinition))
-                    {
-                        add("definition.curve-reference-not-found", $"{path}.curve", "curve.sample must reference an earlier path.cubic or profile.map node.");
-                    }
-
-                    ValidateExpression(sampleNode.Parameter, $"{path}.parameter", options, definition.Parameters, definition.Mounts, priorNodes, add);
-                    break;
                 case ModelProfileMapNodeDefinition profileNode:
                     if (string.IsNullOrWhiteSpace(profileNode.Profile) || !definition.Profiles.ContainsKey(profileNode.Profile))
                     {
@@ -649,18 +639,6 @@ public static class ModelDefinitionValidator
                 }
 
                 foreach (var dependency in GetPointDependencies(curve.Target))
-                {
-                    yield return dependency;
-                }
-
-                break;
-            case ModelCurveSampleNodeDefinition sample:
-                if (!string.IsNullOrWhiteSpace(sample.Curve))
-                {
-                    yield return sample.Curve;
-                }
-
-                foreach (var dependency in GetExpressionDependencies(sample.Parameter))
                 {
                     yield return dependency;
                 }
@@ -1193,7 +1171,7 @@ public static class ModelDefinitionValidator
 
             var validLandmark = node switch
             {
-                ModelCurveProjectNodeDefinition => nodeParts[2] is "point" or "tangent",
+                ModelCurveProjectNodeDefinition or ModelCurveSampleNodeDefinition => nodeParts[2] is "point" or "tangent",
                 ModelProfileMapNodeDefinition => nodeParts[2] is "root" or "tip" or "attachment",
                 _ => false,
             };
