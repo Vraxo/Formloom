@@ -1,4 +1,5 @@
 using System.Numerics;
+using Formloom.Core.Core;
 using Formloom.Core.Geometry;
 using Xunit;
 
@@ -49,4 +50,28 @@ public sealed class ProfileMapperTests
         Assert.Throws<ArgumentOutOfRangeException>(() => ProfileMapper.Map(
             profile, Vector2.Zero, Vector2.UnitX, options with { TransverseNormalization = 0 }));
     }
+    [Fact]
+    public void MapsCubicTemplateEndpointsAndControlsThroughTheSameTransform()
+    {
+        var segment = new CubicSegment(new(0.5f, 0), new(0.75f, 0.25f), new(0.75f, 0.75f), new(0.5f, 1));
+        var origin = new Vector2(0.2f, 0.3f);
+        var direction = Vector2.UnitY;
+        var options = new ProfileMappingOptions(1, 1, 0.4f, 0.2f, 0.03f, 0.05f, 0.5f, false);
+        var mapped = ProfileMapper.MapSegments([segment], origin, direction, options);
+        var expected = ProfileMapper.Map([segment.Start, segment.Control1, segment.Control2, segment.End], origin, direction, options);
+
+        var result = Assert.Single(mapped);
+        Assert.Equal(expected[0], result.Start);
+        Assert.Equal(expected[1], result.Control1);
+        Assert.Equal(expected[2], result.Control2);
+        Assert.Equal(expected[3], result.End);
+    }
+
+    [Fact]
+    public void RejectsEmptyCubicTemplates()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            ProfileMapper.MapSegments([], Vector2.Zero, Vector2.UnitX, new(1, 1, 1, 1, 0, 0, 0.5f, false)));
+    }
+
 }
