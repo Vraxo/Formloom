@@ -889,6 +889,7 @@ public static class ModelDefinitionValidator
         ValidateExpression(variation.Width, $"{path}.width", options, parameters, mounts, priorNodes, add);
         ValidateExpression(variation.Bend, $"{path}.bend", options, parameters, mounts, priorNodes, add);
     }
+
     private static void ValidateVariation(
         ModelRadialVariationDefinition? variation,
         string path,
