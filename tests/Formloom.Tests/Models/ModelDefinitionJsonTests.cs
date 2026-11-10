@@ -251,9 +251,11 @@ public sealed class ModelDefinitionJsonTests
         Assert.Equal(original.SchemaVersion, roundTripped.SchemaVersion);
         Assert.Equal(original.Nodes.Length, roundTripped.Nodes.Length);
         Assert.Equal(original.Outputs.ToArray(), roundTripped.Outputs.ToArray());
-        Assert.Equal(
-            original.Materials["red"].Gradients["petal.base"],
-            roundTripped.Materials["red"].Gradients["petal.base"]);
+        var originalGradient = original.Materials["red"].Gradients["petal.base"];
+        var roundTrippedGradient = roundTripped.Materials["red"].Gradients["petal.base"];
+        Assert.Equal(originalGradient.Start, roundTrippedGradient.Start);
+        Assert.Equal(originalGradient.End, roundTrippedGradient.End);
+        Assert.Equal(originalGradient.Stops.ToArray(), roundTrippedGradient.Stops.ToArray());
         Assert.IsType<ModelRadialArrayNodeDefinition>(roundTripped.Nodes[3]);
         Assert.IsType<ModelReferenceExpression>(
             Assert.IsType<ModelPointExpression>(
