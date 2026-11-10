@@ -103,6 +103,40 @@ public sealed class ModelGeometryRendererTests
     }
 
     [Fact]
+    public void AppliesHostOcclusionMaskWithoutChangingUnoccludedModelPixels()
+    {
+        var geometry = new ModelGeometry(
+            "models.host-occlusion-test",
+            ModelGeometryCoordinateSpace.SceneNormalized,
+            [Rectangle("surface", 0.1f, 0.1f, 0.9f, 0.9f, "surface")])
+        {
+            MaterialTokens = ImmutableDictionary<string, string>.Empty.Add("surface", "#168040"),
+        };
+
+        using var maskBuilder = new SKPathBuilder();
+        maskBuilder.MoveTo(0f, 0.5f);
+        maskBuilder.LineTo(1f, 0.5f);
+        maskBuilder.LineTo(1f, 1f);
+        maskBuilder.LineTo(0f, 1f);
+        maskBuilder.Close();
+        using var occlusionMask = maskBuilder.Detach();
+
+        var rendered = ModelGeometryRenderer.RenderWithOptions(
+            geometry,
+            128,
+            128,
+            new ModelGeometryRenderOptions(Antialiasing: false)
+            {
+                OcclusionMask = occlusionMask,
+            });
+
+        using var bitmap = Decode(rendered.PngBytes);
+        Assert.Equal(new SKColor(22, 128, 64), bitmap.GetPixel(64, 30));
+        Assert.Equal((byte)0, bitmap.GetPixel(64, 80).Alpha);
+        Assert.Equal((byte)0, bitmap.GetPixel(10, 80).Alpha);
+    }
+
+    [Fact]
     public void RendersPrimaryGeometryAsSilhouetteAndOmitsDetailPaths()
     {
         var geometry = new ModelGeometry(
