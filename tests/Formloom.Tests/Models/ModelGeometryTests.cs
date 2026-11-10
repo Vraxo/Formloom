@@ -86,6 +86,34 @@ public sealed class ModelGeometryTests
     }
 
     [Fact]
+    public void RejectsInvalidMaterialGradientEndpointsAndStops()
+    {
+        var geometry = new ModelGeometry(
+            "flowers.gradient-test",
+            ModelGeometryCoordinateSpace.SceneNormalized,
+            [Path("petal", "petal.node", true)])
+        {
+            MaterialTokens = ImmutableDictionary<string, string>.Empty
+                .Add("petal.base", "#B02232")
+                .Add("petal.light", "#ED5D67"),
+            MaterialGradients = ImmutableDictionary<string, ModelGeometryLinearGradient>.Empty.Add(
+                "petal.base",
+                new(
+                    new(0.5f, 0.5f),
+                    new(0.5f, 0.5f),
+                    [
+                        new(0.7f, "petal.light"),
+                        new(0.2f, "petal.base"),
+                    ])),
+        };
+
+        var diagnostics = ModelGeometryValidator.Validate(geometry);
+
+        Assert.Contains(diagnostics, item => item.Code == "geometry.material-gradient-endpoints-invalid");
+        Assert.Contains(diagnostics, item => item.Code == "geometry.material-gradient-stop-invalid");
+    }
+
+    [Fact]
     public void BoundsContainEveryCubicControlPoint()
     {
         var path = new ModelGeometryPath(

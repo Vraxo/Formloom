@@ -1,4 +1,6 @@
+using System.Collections.Immutable;
 using System.Text.Json;
+using Formloom.Core.Models.Catalog;
 using Formloom.Core.Models.Definitions;
 using Xunit;
 
@@ -54,12 +56,32 @@ public sealed class ModelDefinitionJsonTests
               "tokens": {
                 "petal.base": "#B02232",
                 "petal.light": "#ED5D67"
+              },
+              "gradients": {
+                "petal.base": {
+                  "start": { "x": 0.5, "y": 0.1 },
+                  "end": { "x": 0.5, "y": 0.42 },
+                  "stops": [
+                    { "offset": 0, "token": "petal.light" },
+                    { "offset": 1, "token": "petal.base" }
+                  ]
+                }
               }
             },
             "pink": {
               "tokens": {
                 "petal.base": "#D03A74",
                 "petal.light": "#FF91BE"
+              },
+              "gradients": {
+                "petal.base": {
+                  "start": { "x": 0.5, "y": 0.1 },
+                  "end": { "x": 0.5, "y": 0.42 },
+                  "stops": [
+                    { "offset": 0, "token": "petal.light" },
+                    { "offset": 1, "token": "petal.base" }
+                  ]
+                }
               }
             }
           },
@@ -199,6 +221,10 @@ public sealed class ModelDefinitionJsonTests
         Assert.Equal(ModelParameterType.Choice, model.Parameters["color"].Type);
         Assert.Equal(ModelProfileInterpolation.ClosedCubic, model.Profiles["petal.broad"].Interpolation);
         Assert.Equal(new[] { "red", "pink" }, model.Prompt.Descriptors["color"].ToArray());
+        var petalGradient = model.Materials["red"].Gradients["petal.base"];
+        Assert.Equal(new ModelPoint(0.5f, 0.1f), petalGradient.Start);
+        Assert.Equal(new ModelPoint(0.5f, 0.42f), petalGradient.End);
+        Assert.Equal(new[] { "petal.light", "petal.base" }, petalGradient.Stops.Select(stop => stop.Token));
 
         Assert.Collection(
             model.Nodes,
@@ -225,6 +251,9 @@ public sealed class ModelDefinitionJsonTests
         Assert.Equal(original.SchemaVersion, roundTripped.SchemaVersion);
         Assert.Equal(original.Nodes.Length, roundTripped.Nodes.Length);
         Assert.Equal(original.Outputs.ToArray(), roundTripped.Outputs.ToArray());
+        Assert.Equal(
+            original.Materials["red"].Gradients["petal.base"],
+            roundTripped.Materials["red"].Gradients["petal.base"]);
         Assert.IsType<ModelRadialArrayNodeDefinition>(roundTripped.Nodes[3]);
         Assert.IsType<ModelReferenceExpression>(
             Assert.IsType<ModelPointExpression>(
@@ -245,6 +274,33 @@ public sealed class ModelDefinitionJsonTests
         Assert.False(choice.TryGetProperty("minimum", out _));
         Assert.False(choice.TryGetProperty("maximum", out _));
         Assert.False(number.TryGetProperty("defaultChoice", out _));
+    }
+
+    [Fact]
+    public void RejectsGradientStopsThatUseUnknownTokensOrUnorderedOffsets()
+    {
+        var definition = Deserialize(DefinitionFixture);
+        var invalidGradient = new ModelLinearGradientDefinition(
+            new(0.5f, 0.1f),
+            new(0.5f, 0.8f),
+            [
+                new(0.7f, "missing.token"),
+                new(0.2f, "petal.base"),
+            ]);
+        var material = definition.Materials["red"] with
+        {
+            Gradients = ImmutableDictionary<string, ModelLinearGradientDefinition>.Empty
+                .Add("petal.base", invalidGradient),
+        };
+        var invalidDefinition = definition with
+        {
+            Materials = definition.Materials.SetItem("red", material),
+        };
+
+        var diagnostics = ModelDefinitionValidator.Validate(invalidDefinition, "<test>");
+
+        Assert.Contains(diagnostics, item => item.Code == "definition.invalid-gradient-stop-offset");
+        Assert.Contains(diagnostics, item => item.Code == "definition.invalid-gradient-stop-token");
     }
 
     [Fact]
