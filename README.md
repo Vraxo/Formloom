@@ -2,6 +2,8 @@
 
 A CPU-first, non-neural procedural still-life generator. Images are constructed from geometry, gradients, authored scene rules and seeded detail—not models, stock images or downloaded textures.
 
+Repository changes follow a deliberately incremental PR workflow. See [CONTRIBUTING.md](CONTRIBUTING.md); coding agents should also read [AGENTS.md](AGENTS.md).
+
 ## Current capability
 
 The desktop UI drives the Core scene generator and the Skia CPU renderer through one prompt-to-PNG path:
