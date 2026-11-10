@@ -454,12 +454,39 @@ public static class ModelDefinitionEvaluator
                         return false;
                     }
 
-                    var mappedPoints = MapProfile(
-                        profile,
-                        origin,
-                        new(MathF.Cos(angle), MathF.Sin(angle)),
-                        mapping);
+                    if (mapped.Variation is { } variation)
+                    {
+                        if (!TryNumber(variation.Angle, "variation.angle", out var profileAngleVariation) ||
+                            !TryNumber(variation.Length, "variation.length", out var profileLengthVariation) ||
+                            !TryNumber(variation.Width, "variation.width", out var profileWidthVariation) ||
+                            !TryNumber(variation.Bend, "variation.bend", out var profileBendVariation))
+                        {
+                            return false;
+                        }
+
+                        if (profileAngleVariation < 0 || profileLengthVariation is < 0 or > 1 ||
+                            profileWidthVariation is < 0 or > 1 || profileBendVariation < 0)
+                        {
+                            Add(
+                                "evaluation.invalid-profile-variation",
+                                $"{location}.variation",
+                                "Profile variation ranges must be non-negative; length and width ranges cannot exceed 1.",
+                                diagnostics);
+                            return false;
+                        }
+
+                        var random = Pcg32.ForStream(context.Seed, $"{definition.Id}/{mapped.Stream}");
+                        angle += Jitter(random, profileAngleVariation, context.VariationAmount);
+                        mapping = mapping with
+                        {
+                            Length = mapping.Length * (1 + Jitter(random, profileLengthVariation, context.VariationAmount)),
+                            Width = mapping.Width * (1 + Jitter(random, profileWidthVariation, context.VariationAmount)),
+                            Bend = mapping.Bend + Jitter(random, profileBendVariation, context.VariationAmount),
+                        };
+                    }
+
                     var mappedDirection = new Vector2(MathF.Cos(angle), MathF.Sin(angle));
+                    var mappedPoints = MapProfile(profile, origin, mappedDirection, mapping);
                     var mappedPath = CreateProfilePath(
                         mapped.Id,
                         mapped.Id,
@@ -572,6 +599,9 @@ public static class ModelDefinitionEvaluator
             return false;
         }
     }
+
+    private static float Jitter(Pcg32 random, float range, float amount) =>
+        (((float)random.NextDouble() * 2) - 1) * range * amount;
 
     private static ImmutableArray<Vector2> MapProfile(
         ModelProfileDefinition profile,
