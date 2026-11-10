@@ -59,6 +59,13 @@ public sealed class RoseModelFixtureTests
 
         var stemPath = FindPath("rose.stem");
         Assert.Equal(3, stemPath.Segments.Length);
+        var maximumLateralOffset = stemPath.Segments
+            .SelectMany(segment => Enumerable.Range(1, 8)
+                .Select(step => MathF.Abs(segment.Evaluate(step / 9f).X - 0.5f)))
+            .Max();
+        Assert.True(
+            maximumLateralOffset > 0.008f,
+            $"Expected a visibly bowed stem, but its maximum lateral offset was {maximumLateralOffset}.");
         var leftAttachment = Assert.Single(leftLeaf.Landmarks, item => item.Name == "attachment");
         var rightAttachment = Assert.Single(rightLeaf.Landmarks, item => item.Name == "attachment");
         Assert.NotEqual(leftAttachment.Position, rightAttachment.Position);
@@ -185,6 +192,9 @@ public sealed class RoseModelFixtureTests
         ModelGeometryPath Find(ImmutableArray<ModelGeometryPath> paths, string id) =>
             Assert.Single(paths.Where(path => path.Id == id));
 
+        var baselineStem = Find(baselinePaths, "rose.stem");
+        var variedStem = Find(variedPaths, "rose.stem");
+        Assert.NotEqual(baselineStem.Segments[1], variedStem.Segments[1]);
         var baselineLeft = Find(baselinePaths, "rose.leaf.left");
         var variedLeft = Find(variedPaths, "rose.leaf.left");
         var variedLeftVein = Find(variedPaths, "rose.leaf.left.vein");
@@ -218,6 +228,7 @@ public sealed class RoseModelFixtureTests
         Assert.True(changed.IsSuccess, string.Join(Environment.NewLine, changed.Diagnostics.Select(item => item.Message)));
         var changedPaths = Assert.IsType<ModelGeometry>(changed.Geometry).Paths;
         Assert.Equal(variedLeft.Segments, Find(changedPaths, "rose.leaf.left").Segments);
+        Assert.Equal(variedStem.Segments.ToArray(), Find(changedPaths, "rose.stem").Segments.ToArray());
         Assert.NotEqual(variedRight.Segments[0], Find(changedPaths, "rose.leaf.right").Segments[0]);
     }
 

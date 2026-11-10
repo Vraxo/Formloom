@@ -779,7 +779,7 @@
         },
         "bend": {
           "kind": "literal",
-          "value": 0
+          "value": 0.022
         },
         "transverseNormalization": {
           "kind": "literal",
@@ -788,7 +788,26 @@
         "reverseLongitudinal": false
       },
       "materialSlot": "stem.base",
-      "detail": false
+      "detail": false,
+      "stream": "rose.stem",
+      "variation": {
+        "angle": {
+          "kind": "literal",
+          "value": 0
+        },
+        "length": {
+          "kind": "literal",
+          "value": 0
+        },
+        "width": {
+          "kind": "literal",
+          "value": 0
+        },
+        "bend": {
+          "kind": "literal",
+          "value": 0.012
+        }
+      }
     },
     {
       "op": "curve.project",
