@@ -228,7 +228,7 @@ public sealed class RoseModelFixtureTests
         Assert.True(changed.IsSuccess, string.Join(Environment.NewLine, changed.Diagnostics.Select(item => item.Message)));
         var changedPaths = Assert.IsType<ModelGeometry>(changed.Geometry).Paths;
         Assert.Equal(variedLeft.Segments, Find(changedPaths, "rose.leaf.left").Segments);
-        Assert.Equal(variedStem.Segments, Find(changedPaths, "rose.stem").Segments);
+        Assert.Equal(variedStem.Segments.ToArray(), Find(changedPaths, "rose.stem").Segments.ToArray());
         Assert.NotEqual(variedRight.Segments[0], Find(changedPaths, "rose.leaf.right").Segments[0]);
     }
 
