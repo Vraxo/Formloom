@@ -412,6 +412,20 @@ public static class ModelDefinitionValidator
                     ValidatePointExpression(profileNode.Origin, $"{path}.origin", options, definition.Parameters, definition.Mounts, priorNodes, add);
                     ValidateExpression(profileNode.Angle, $"{path}.angle", options, definition.Parameters, definition.Mounts, priorNodes, add);
                     ValidateMapping(profileNode.Mapping, $"{path}.mapping", options, definition.Parameters, definition.Mounts, priorNodes, add);
+                    if (profileNode.Variation is { } profileVariation)
+                    {
+                        if (string.IsNullOrWhiteSpace(profileNode.Stream))
+                        {
+                            add("definition.profile-variation-stream-required", $"{path}.stream", "Profile variation requires a stable named random stream.");
+                        }
+
+                        ValidateProfileVariation(profileVariation, $"{path}.variation", options, definition.Parameters, definition.Mounts, priorNodes, add);
+                    }
+                    else if (profileNode.Stream is not null)
+                    {
+                        add("definition.profile-stream-without-variation", $"{path}.stream", "A profile random stream can only be declared when profile variation is enabled.");
+                    }
+
                     break;
                 case ModelRadialArrayNodeDefinition radialNode:
                     if (string.IsNullOrWhiteSpace(radialNode.Profile) || !definition.Profiles.ContainsKey(radialNode.Profile))
@@ -565,6 +579,29 @@ public static class ModelDefinitionValidator
                 foreach (var dependency in GetMappingDependencies(profile.Mapping))
                 {
                     yield return dependency;
+                }
+
+                if (profile.Variation is { } profileVariation)
+                {
+                    foreach (var dependency in GetExpressionDependencies(profileVariation.Angle))
+                    {
+                        yield return dependency;
+                    }
+
+                    foreach (var dependency in GetExpressionDependencies(profileVariation.Length))
+                    {
+                        yield return dependency;
+                    }
+
+                    foreach (var dependency in GetExpressionDependencies(profileVariation.Width))
+                    {
+                        yield return dependency;
+                    }
+
+                    foreach (var dependency in GetExpressionDependencies(profileVariation.Bend))
+                    {
+                        yield return dependency;
+                    }
                 }
 
                 break;
@@ -838,6 +875,20 @@ public static class ModelDefinitionValidator
         ValidateExpression(mapping.TransverseNormalization, $"{path}.transverseNormalization", options, parameters, mounts, priorNodes, add);
     }
 
+    private static void ValidateProfileVariation(
+        ModelProfileVariationDefinition variation,
+        string path,
+        ModelDefinitionCatalogOptions options,
+        ImmutableDictionary<string, ModelParameterDefinition>? parameters,
+        ImmutableArray<string> mounts,
+        IReadOnlyDictionary<string, ModelNodeDefinition> priorNodes,
+        Action<string, string, string> add)
+    {
+        ValidateExpression(variation.Angle, $"{path}.angle", options, parameters, mounts, priorNodes, add);
+        ValidateExpression(variation.Length, $"{path}.length", options, parameters, mounts, priorNodes, add);
+        ValidateExpression(variation.Width, $"{path}.width", options, parameters, mounts, priorNodes, add);
+        ValidateExpression(variation.Bend, $"{path}.bend", options, parameters, mounts, priorNodes, add);
+    }
     private static void ValidateVariation(
         ModelRadialVariationDefinition? variation,
         string path,

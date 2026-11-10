@@ -597,8 +597,40 @@
         },
         "detail": {
           "type": "boolean"
+        },
+        "variation": {
+          "$ref": "#/$defs/profileVariation"
+        },
+        "stream": {
+          "$ref": "#/$defs/nonEmptyString"
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "variation"
+            ]
+          },
+          "then": {
+            "required": [
+              "stream"
+            ]
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "stream"
+            ]
+          },
+          "then": {
+            "required": [
+              "variation"
+            ]
+          }
+        }
+      ]
     },
     "radialArrayNode": {
       "type": "object",
@@ -692,6 +724,30 @@
           "items": {
             "$ref": "#/$defs/nonEmptyString"
           }
+        }
+      }
+    },
+    "profileVariation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "angle",
+        "length",
+        "width",
+        "bend"
+      ],
+      "properties": {
+        "angle": {
+          "$ref": "#/$defs/numberExpression"
+        },
+        "length": {
+          "$ref": "#/$defs/numberExpression"
+        },
+        "width": {
+          "$ref": "#/$defs/numberExpression"
+        },
+        "bend": {
+          "$ref": "#/$defs/numberExpression"
         }
       }
     }
