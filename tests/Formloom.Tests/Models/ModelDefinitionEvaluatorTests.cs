@@ -130,11 +130,12 @@ public sealed class ModelDefinitionEvaluatorTests
     public void RejectsDivisionByZeroInAnEvaluatedExpression()
     {
         var definition = CreateDefinition();
-        var invalidNode = Assert.IsType<ModelRadialArrayNodeDefinition>(definition.Nodes[3]);
+        var radialIndex = Enumerable.Range(0, definition.Nodes.Length).Single(index => definition.Nodes[index].Id == "bloom.outer");
+        var invalidNode = Assert.IsType<ModelRadialArrayNodeDefinition>(definition.Nodes[radialIndex]);
         var invalidDefinition = definition with
         {
             Nodes = definition.Nodes.SetItem(
-                3,
+                radialIndex,
                 invalidNode with
                 {
                     RadiusX = new ModelArithmeticExpression(
@@ -181,7 +182,8 @@ public sealed class ModelDefinitionEvaluatorTests
     public void RejectsFiniteExpressionThatExceedsFloatCoordinateRange()
     {
         var definition = CreateDefinition();
-        var radial = Assert.IsType<ModelRadialArrayNodeDefinition>(definition.Nodes[3]);
+        var radialIndex = Enumerable.Range(0, definition.Nodes.Length).Single(index => definition.Nodes[index].Id == "bloom.outer");
+        var radial = Assert.IsType<ModelRadialArrayNodeDefinition>(definition.Nodes[radialIndex]);
         var invalidDefinition = definition with
         {
             Nodes = definition.Nodes.SetItem(
@@ -229,7 +231,7 @@ public sealed class ModelDefinitionEvaluatorTests
         var radial = Assert.IsType<ModelRadialArrayNodeDefinition>(definition.Nodes[3]);
         var invalidDefinition = definition with
         {
-            Nodes = definition.Nodes.SetItem(3, radial with { Tone = Literal(1.1) }),
+            Nodes = definition.Nodes.SetItem(radialIndex, radial with { Tone = Literal(1.1) }),
         };
 
         var result = ModelDefinitionEvaluator.Evaluate(invalidDefinition, CreateContext());
@@ -255,9 +257,9 @@ public sealed class ModelDefinitionEvaluatorTests
             Curve = "stem.profile",
             Target = Point(Literal(0.5), Literal(0.5)),
         };
-        var leaf = Assert.IsType<ModelProfileMapNodeDefinition>(definition.Nodes[2]);
-        var radial = Assert.IsType<ModelRadialArrayNodeDefinition>(definition.Nodes[3]);
-        var group = Assert.IsType<ModelGeometryGroupNodeDefinition>(definition.Nodes[4]) with
+        var leaf = Assert.IsType<ModelProfileMapNodeDefinition>(definition.Nodes.Single(node => node.Id == "leaf.left"));
+        var radial = Assert.IsType<ModelRadialArrayNodeDefinition>(definition.Nodes.Single(node => node.Id == "bloom.outer"));
+        var group = Assert.IsType<ModelGeometryGroupNodeDefinition>(definition.Nodes.Single(node => node.Id == "flower")) with
         {
             Parts = ["stem.profile", "leaf.left", "bloom.outer"],
         };
