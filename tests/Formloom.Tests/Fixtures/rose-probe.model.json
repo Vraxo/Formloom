@@ -722,7 +722,7 @@
       "gradients": {
         "petal.base": {
           "start": { "x": 0.5, "y": 0.1 },
-          "end": { "x": 0.5, "y": 0.42 },
+          "end": { "x": 0.5, "y": 0.28 },
           "stops": [
             { "offset": 0, "token": "petal.light" },
             { "offset": 1, "token": "petal.base" }
@@ -748,7 +748,7 @@
       "gradients": {
         "petal.base": {
           "start": { "x": 0.5, "y": 0.1 },
-          "end": { "x": 0.5, "y": 0.42 },
+          "end": { "x": 0.5, "y": 0.28 },
           "stops": [
             { "offset": 0, "token": "petal.light" },
             { "offset": 1, "token": "petal.base" }

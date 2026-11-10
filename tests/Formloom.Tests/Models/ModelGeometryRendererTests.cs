@@ -66,7 +66,11 @@ public sealed class ModelGeometryRendererTests
         using var bitmap = Decode(rendered.PngBytes);
         Assert.Equal(new SKColor(255, 0, 0), bitmap.GetPixel(64, 24));
         Assert.Equal(new SKColor(0, 0, 255), bitmap.GetPixel(64, 104));
-        Assert.Equal((byte)255, bitmap.GetPixel(64, 64).Alpha);
+        var midpoint = bitmap.GetPixel(64, 64);
+        Assert.InRange(midpoint.Red, (byte)126, (byte)129);
+        Assert.Equal((byte)0, midpoint.Green);
+        Assert.InRange(midpoint.Blue, (byte)126, (byte)129);
+        Assert.Equal((byte)255, midpoint.Alpha);
     }
 
     [Fact]
