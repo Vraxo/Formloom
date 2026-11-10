@@ -1,6 +1,6 @@
 using System.Collections.Immutable;
-using Formloom.Core.Models.Catalog;
 using Formloom.Core.Geometry;
+using Formloom.Core.Models.Catalog;
 using Formloom.Core.Models.Definitions;
 using Formloom.Core.Models.Evaluation;
 using Formloom.Core.Models.Geometry;
