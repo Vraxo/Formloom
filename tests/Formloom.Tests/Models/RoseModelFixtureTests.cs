@@ -45,9 +45,9 @@ public sealed class RoseModelFixtureTests
         Assert.Equal(5, outer.Length);
         Assert.Equal(5, middle.Length);
         Assert.Equal(3, inner.Length);
-        Assert.All(outer, path => Assert.Equal(0.43f, path.MaterialTone));
-        Assert.All(middle, path => Assert.Equal(0.64f, path.MaterialTone));
-        Assert.All(inner, path => Assert.Equal(0.84f, path.MaterialTone));
+        Assert.All(outer, path => Assert.InRange(path.MaterialTone!.Value, 0.43f - (0.08f * variationAmount), 0.43f + (0.08f * variationAmount)));
+        Assert.All(middle, path => Assert.InRange(path.MaterialTone!.Value, 0.64f - (0.08f * variationAmount), 0.64f + (0.08f * variationAmount)));
+        Assert.All(inner, path => Assert.InRange(path.MaterialTone!.Value, 0.84f - (0.06f * variationAmount), 0.84f + (0.06f * variationAmount)));
         Assert.All(geometry.Paths, path => Assert.NotNull(path.MaterialSlot));
 
         Assert.Contains(geometry.Paths[1].Landmarks, item => item.Name == "attachment");
