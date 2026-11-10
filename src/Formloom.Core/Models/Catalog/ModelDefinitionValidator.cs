@@ -396,9 +396,11 @@ public static class ModelDefinitionValidator
                     ValidateCubicPath(pathNode, path, options, definition.Parameters, definition.Mounts, priorNodes, add);
                     break;
                 case ModelCurveProjectNodeDefinition curveNode:
-                    if (string.IsNullOrWhiteSpace(curveNode.Curve) || !priorNodes.TryGetValue(curveNode.Curve, out var curve) || curve is not ModelCubicPathNodeDefinition)
+                    if (string.IsNullOrWhiteSpace(curveNode.Curve) ||
+                        !priorNodes.TryGetValue(curveNode.Curve, out var curve) ||
+                        curve is not (ModelCubicPathNodeDefinition or ModelProfileMapNodeDefinition))
                     {
-                        add("definition.curve-reference-not-found", $"{path}.curve", "curve.project must reference an earlier path.cubic node.");
+                        add("definition.curve-reference-not-found", $"{path}.curve", "curve.project must reference an earlier path.cubic or profile.map node.");
                     }
 
                     ValidatePointExpression(curveNode.Target, $"{path}.target", options, definition.Parameters, definition.Mounts, priorNodes, add);

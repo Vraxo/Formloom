@@ -500,7 +500,7 @@ public static class ModelDefinitionEvaluator
                         mapped.Detail);
                     output = new(
                         [mappedPath],
-                        [],
+                        mappedPath.Segments,
                         mappedPath.Landmarks.ToImmutableDictionary(item => item.Name, item => item.Position, StringComparer.Ordinal));
                     return true;
 
