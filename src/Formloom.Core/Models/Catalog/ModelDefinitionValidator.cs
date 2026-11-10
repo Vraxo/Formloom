@@ -445,6 +445,11 @@ public static class ModelDefinitionValidator
                     ValidateExpression(radialNode.Phase, $"{path}.phase", options, definition.Parameters, definition.Mounts, priorNodes, add);
                     ValidateMapping(radialNode.Mapping, $"{path}.mapping", options, definition.Parameters, definition.Mounts, priorNodes, add);
                     ValidateVariation(radialNode.Variation, $"{path}.variation", options, definition.Parameters, definition.Mounts, priorNodes, add);
+                    if (radialNode.Tone is not null)
+                    {
+                        ValidateExpression(radialNode.Tone, $"{path}.tone", options, definition.Parameters, definition.Mounts, priorNodes, add);
+                    }
+
                     break;
                 case ModelGeometryGroupNodeDefinition groupNode:
                     ValidateGroup(groupNode, path, priorNodes, add);
@@ -590,6 +595,11 @@ public static class ModelDefinitionValidator
                 }
 
                 foreach (var dependency in GetVariationDependencies(radial.Variation))
+                {
+                    yield return dependency;
+                }
+
+                foreach (var dependency in GetExpressionDependencies(radial.Tone))
                 {
                     yield return dependency;
                 }

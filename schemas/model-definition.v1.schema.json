@@ -647,6 +647,9 @@
         "phase": {
           "$ref": "#/$defs/numberExpression"
         },
+        "tone": {
+          "$ref": "#/$defs/numberExpression"
+        },
         "mapping": {
           "$ref": "#/$defs/profileMapping"
         },

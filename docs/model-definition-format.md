@@ -133,7 +133,7 @@ The generic style vocabulary should begin with only what the rose needs: solid f
 
 Skia rendering converts the renderer-neutral style into backend paints and shaders. Silhouette is a generic render pass over geometry. Detail omission filters generic detail parts/roles, not species-specific methods. Do not build a universal shading language.
 
-## 6. Representative rose fragment
+## 7. Representative rose fragment
 
 This is a **conceptual format sketch**, not a valid shipped model or a schema-valid instance. It demonstrates which facts belong in data, but it predates the exact root/operation shape now represented by the initial v1 schema and typed DTOs. Use the schema and `ModelDefinitionJsonTests` as the current structural reference. The complete rose must additionally describe frame-derived dimensions, stem controls, two leaf attachments/profiles, veins/folds, material gradients, and final output ordering.
 
@@ -245,7 +245,34 @@ This is a **conceptual format sketch**, not a valid shipped model or a schema-va
 
 The example intentionally shows the fixed layer counts, phases, profile choices, scales, offsets, and palettes in data. It is not sufficient for rendering yet and must not be placed in the runtime model directory before it validates and evaluates.
 
-## 7. Decisions to resolve in a runnable prototype
+## 8. Evaluated execution contract (initial implementation)
+
+The evaluator entry point is `ModelDefinitionEvaluator.Evaluate(definition, context, options)`. The definition is validated before evaluation. The typed context supplies:
+
+- a seed and a variation amount in 0..1;
+- optional numeric parameter overrides (defaults and declared ranges are resolved by Core);
+- optional choice/material-variant overrides;
+- named mount frames, keyed by the mount ID declared by the definition.
+
+The initial evaluator resolves the schema-v1 numeric expression types (literal, reference, arithmetic, clamp), including numeric parameters, mount-frame metrics, and prior-node landmarks. Numeric parameter defaults may depend on other numeric parameters; evaluation detects cycles and enforces the configured expression depth/node budgets. Overrides must target declared parameters of the correct type and remain within declared ranges.
+
+The five current operation nodes produce the following results:
+
+| Node | Evaluation |
+|---|---|
+| `path.cubic` | Explicit cubic segments and an open geometry path. |
+| `curve.project` | A nearest point and tangent landmark on an earlier cubic path. |
+| `profile.map` | A profile mapped into a directed/scaled basis and converted to cubic path geometry. |
+| `array.radial` | Deterministically varied profile instances, each with a stable path ID and optional material tone. |
+| `geometry.group` | Child paths flattened into the declared group-member order. |
+
+The final model outputs are flattened in output declaration order and passed through `ModelGeometryValidator`. The evaluator preserves path material-slot keys, optional 0..1 material tone, and named `attachment`/`root`/`tip` landmarks for profile maps. The radial `tone` field is optional in schema v1; when absent, its base is 0 so existing v1 files remain valid.
+
+Expected definition/context/operation failures are returned as structured diagnostics carrying the model ID and a location such as `nodes[3](bloom.outer).radiusX`. The evaluator is callable from Core tests and has no Skia or desktop dependency.
+
+This is an initial executable graph, not a claim of complete rose construction. It does not yet reproduce the full rose's frame-derived formulas, stem/leaf/petal detail paths, material gradients, or exact reviewed rendering.
+
+## 9. Decisions to resolve in a runnable prototype
 
 1. Flat ordered nodes versus nested child operations for radial repetition.
 2. Exact typed input unions/reference syntax for scalar, vector, path, profile, and geometry values.
@@ -259,17 +286,17 @@ The example intentionally shows the fixed layer counts, phases, profile choices,
 
 Settle these through a runnable rose prototype and focused tests, not by turning the format into a speculative universal language.
 
-## 8. Rejection criteria
+## 10. Rejection criteria
 
 Reject a format or implementation that calls a rose helper behind a generic-looking operation, requires a C# registry entry or model-ID branch, leaves counts/templates/assembly/palettes in production code, uses arbitrary scripts or network references, turns every value into an untyped dictionary, changes unrelated output when parts are added, couples Core to SkiaSharp, or requires a general scene-graph rewrite before another vase-mounted model can be added.
 
-## 10. Next implementation sequence
+## 11. Next implementation sequence
 
-1. The initial versioned schema and typed Core subset are merged in PRs [#58](https://github.com/Vraxo/Formloom/pull/58) and [#59](https://github.com/Vraxo/Formloom/pull/59); they are a structural subset, not a complete rose model.
-2. Runtime filesystem discovery and semantic validation are merged in [PR #60](https://github.com/Vraxo/Formloom/pull/60); post-merge Linux / Release CI [run #271](https://github.com/Vraxo/Formloom/actions/runs/42646802073) passed.
-3. The renderer-neutral geometry output contract is merged in [PR #61](https://github.com/Vraxo/Formloom/pull/61), merge `13fdc700`; post-merge Linux / Release CI [run #282](https://github.com/Vraxo/Formloom/actions/runs/42676443120) passed.
-4. The first three reusable C# geometry algorithms are proposed in [PR #62](https://github.com/Vraxo/Formloom/pull/62), with PR CI [run #277](https://github.com/Vraxo/Formloom/actions/runs/42652878775) passing 832/832 tests. Their contracts are documented in [geometry-operations.md](geometry-operations.md). These are C# algorithms, not a JSON programming language.
-5. An initial model-ID-agnostic evaluator for the five schema-v1 node types is proposed in [PR #63](https://github.com/Vraxo/Formloom/pull/63), stacked on PR #62; PR CI [run #279](https://github.com/Vraxo/Formloom/actions/runs/42656325294) passed 839/839 tests. It is not a complete rose implementation.
-6. Next: complete the rose-specific knowledge vs. reusable-algorithm inventory; verify the C# utilities against the legacy rose; then decide the smallest missing generic capabilities. Only after that author the complete rose definition. Preserve the legacy generator and renderer until automated and visual equivalence is reviewed.
+1. The initial versioned schema and typed Core subset are merged in PRs [#58](https://github.com/Vraxo/Formloom/pull/58) and [#59](https://github.com/Vraxo/Formloom/pull/59); they remain a structural subset, not a complete rose definition.
+2. Runtime filesystem discovery and semantic validation are merged in [PR #60](https://github.com/Vraxo/Formloom/pull/60).
+3. Renderer-neutral evaluated geometry is merged in [PR #61](https://github.com/Vraxo/Formloom/pull/61).
+4. The first reusable C# geometry algorithms are merged in [PR #62](https://github.com/Vraxo/Formloom/pull/62) and documented in [geometry-operations.md](geometry-operations.md). They are ordinary C# capabilities, not a declarative programming language.
+5. The generic schema-v1 evaluator is implemented in [PR #63](https://github.com/Vraxo/Formloom/pull/63). It executes cubic paths, curve projection, profile mapping, radial arrays, ordered groups, bounded expressions, mount-frame references, and generic path landmarks. Linux / Release CI [run #287](https://github.com/Vraxo/Formloom/actions/runs/42781659921) passed 844/844 tests (739 Core, 105 Desktop).
+6. Next: complete the rose-specific knowledge-versus-algorithm inventory; verify the C# utilities against actual rose contours and attachments; determine remaining generic material/style and geometry capabilities; then build a complete executable rose prototype. Preserve the legacy rose generator and renderer until automated and visual equivalence is reviewed.
 
 Do not ship the draft fragment as a runtime model until it validates against the committed schema and is evaluated by the real interpreter.

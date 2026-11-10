@@ -1,8 +1,8 @@
 # Phase 11 — Data-driven model system
 
-> **Status:** PRs #57–#61 are merged. PR #61 added the renderer-neutral geometry output contract and ADR-0001; post-merge Linux / Release CI [run #282](https://github.com/Vraxo/Formloom/actions/runs/42676443120) passed. PR #62 adds the first reusable C# geometry algorithms; head `3aa90f9b6c93e613bf5e957760a02dc9fbb78401` passed Linux / Release CI [run #277](https://github.com/Vraxo/Formloom/actions/runs/42652878775): 727 Core + 105 Desktop tests (832 total). PR #63 proposes the generic schema-v1 evaluator on top of PR #62; head `e474a27d5d73645d85bd8f3890feaf2b131fe987` passed Linux / Release CI [run #279](https://github.com/Vraxo/Formloom/actions/runs/42656325294): 734 Core + 105 Desktop tests (839 total). The executable rose definition, rose migration, and data-only second-model proof do not exist yet. ADR-0001 remains binding: this is a hybrid C# procedural engine, not a JSON programming language.
+> **Status:** PRs #57–#62 are merged. PR #62's reusable C# algorithms are on `main` at `895d672`; rebased-baseline Linux / Release CI [run #283](https://github.com/Vraxo/Formloom/actions/runs/42678839932) passed 832/832 tests. PR #63's generic schema-v1 evaluator is on `phase-11/model-evaluator` at `a1d6f3aeb862fcf509c5c46f488ae4e56767372e`; Linux / Release CI [run #287](https://github.com/Vraxo/Formloom/actions/runs/42781659921) passed 739 Core + 105 Desktop tests (844 total), including overflow and variation-extreme coverage. PR review and merge are pending. No complete rose definition, rose migration, material renderer, scene integration, or second-model proof exists yet. ADR-0001 remains binding.
 >
-> **Original starting point:** `main` at `fc4e587166617d72d2be9679aadc5a160c79878e` (2026-11-09). PRs #57–#60 are merged into `main`; PR #61 is the active geometry-contract change. Subsequent implementation work must branch from the latest merged `main` after each preceding milestone is accepted.
+> **Original starting point:** `main` at `fc4e587166617d72d2be9679aadc5a160c79878e` (2026-11-09). PRs #57–#62 are merged into `main`; PR #63 is the active evaluator change. Subsequent implementation work must branch from the latest merged `main` after each preceding milestone is accepted.
 
 ## Goal
 
@@ -195,27 +195,13 @@ Core rules:
 - [x] Keep evaluator Core-only, model-ID agnostic, renderer-independent, and free of JSON serialization dependencies.
 - [x] Add Core tests for multi-node composition, mounted frame values, anchor projection, material metadata, seeded repeatability, invalid choices/overrides, missing frame values, division by zero, and parameter cycles.
 - [x] Include model ID and node index/ID in structured evaluation diagnostics.
-- [ ] Add explicit tests for coordinate bounds/finite overflow and variation extremes through the evaluator; retain shared operator tests for stream-isolation behavior.
+- [x] Add evaluator tests for finite-coordinate range/overflow and variation extremes; retain shared operator tests for stream-isolation behavior.
 - [ ] Verify every output path and landmark against the actual rose geometry templates/attachment expectations; no legacy geometry has been replaced yet.
 - [ ] Decide whether future profile/path operations need additional model-independent behavior; do not expand the operator set without a concrete rose or second-model requirement.
-- [ ] Open PR 6 against PR 5 and pass full-solution Release build/Linux CI.
+- [x] Open PR 6 against PR 5 and pass full-solution Release build/Linux CI: PR [#63](https://github.com/Vraxo/Formloom/pull/63), head `a1d6f3a`, run [#287](https://github.com/Vraxo/Formloom/actions/runs/42781659921), 844/844 tests.
 
 **Acceptance gate:** A test can evaluate a validated definition using its typed context and inspect generic ordered geometry without calling a model-specific class. Rose equivalence, material rendering, and scene integration remain later milestones.
 
-
-**PR 6 — execute validated definitions.**
-
-- [ ] Implement a generic evaluator that accepts a validated definition, resolved parameters/variants, a seed, and variation amount.
-- [ ] Evaluate declared parts and operations into the generic geometry representation.
-- [ ] Resolve named anchors and attachments with explicit error handling for missing or invalid targets.
-- [ ] Apply material bindings and bounded parameter variation.
-- [ ] Keep evaluation deterministic for the same definition, parameters, seed, variation, and evaluator/schema version.
-- [ ] Ensure the evaluator does not branch on model IDs, species names, prompt strings, or material variant names.
-- [ ] Make the evaluator callable from Core tests without the desktop application or Skia renderer.
-- [ ] Add tests for valid composition, missing references, cycles, invalid operation inputs, bounds, seed stability, named-stream isolation, and variation extremes.
-- [ ] Include diagnostic context (model ID, part ID, operation ID, and definition path) in evaluation failures.
-
-**Acceptance gate:** A test can load a definition, evaluate it with a seed, and inspect generic geometry without calling a model-specific class.
 
 ### 7. Migrate rose construction and materials to external data
 
@@ -296,8 +282,8 @@ Core rules:
 | PR 2b | Initial JSON Schema and typed Core definition records | Complete (initial structural subset) | [PR #59](https://github.com/Vraxo/Formloom/pull/59), merge `b41233e`, PR CI [42631769203](https://github.com/Vraxo/Formloom/actions/runs/42631769203), main CI [42632077052](https://github.com/Vraxo/Formloom/actions/runs/42632077052) |
 | PR 3 | Runtime model catalog and semantic file validation | Merged | [PR #60](https://github.com/Vraxo/Formloom/pull/60), merged in main `d19283b`, post-merge Linux / Release run [42646802073](https://github.com/Vraxo/Formloom/actions/runs/42646802073) |
 | PR 4 | Renderer-neutral evaluated geometry output contract | Merged | [PR #61](https://github.com/Vraxo/Formloom/pull/61), merge `13fdc700`, post-merge Linux / Release run [42676443120](https://github.com/Vraxo/Formloom/actions/runs/42676443120) passed |
-| PR 5 | Reusable C# geometry algorithms | PR CI passed; merge pending | [PR #62](https://github.com/Vraxo/Formloom/pull/62), head `3aa90f9`, Linux / Release run [42652878775](https://github.com/Vraxo/Formloom/actions/runs/42652878775), 832/832 tests (727 Core, 105 Desktop) |
-| PR 6 | Generic schema-v1 model evaluator | PR CI passed; stacked on PR 5 | [PR #63](https://github.com/Vraxo/Formloom/pull/63), head `e474a27`, Linux / Release run [42656325294](https://github.com/Vraxo/Formloom/actions/runs/42656325294), 839/839 tests (734 Core, 105 Desktop) |
+| PR 5 | Reusable C# geometry algorithms | Merged | [PR #62](https://github.com/Vraxo/Formloom/pull/62), merge `895d672`, rebased Release CI [run #283](https://github.com/Vraxo/Formloom/actions/runs/42678839932), 832/832 tests (727 Core, 105 Desktop) |
+| PR 6 | Generic schema-v1 model evaluator | PR CI passed; merge pending | [PR #63](https://github.com/Vraxo/Formloom/pull/63), head `a1d6f3a`, Linux / Release run [42781659921](https://github.com/Vraxo/Formloom/actions/runs/42781659921), 844/844 tests (739 Core, 105 Desktop) |
 | PR 7 | Rose definition migration | Not started | — |
 | PR 8 | Generic scene/prompt/renderer integration | Not started | — |
 | PR 9 | Data-only second model proof | Not started | — |
@@ -320,4 +306,4 @@ Core rules:
 
 ## Handoff
 
-**Current status:** PRs #57–#61 are merged; PR #61's geometry contract is on `main` at `13fdc70`, and post-merge Linux / Release run [#282](https://github.com/Vraxo/Formloom/actions/runs/42676443120) passed. PR #62's reusable C# operations are implemented and PR-tested at `3aa90f9` (832/832 tests; run [#277](https://github.com/Vraxo/Formloom/actions/runs/42652878775)); PR #63's initial generic evaluator is PR-tested at `e474a27` (839/839 tests; run [#279](https://github.com/Vraxo/Formloom/actions/runs/42656325294)). PR #62 is being integrated with the merged geometry contract; PR #63 is stacked on PR #62. The evaluator handles the five current schema-v1 node types, but does not yet construct a complete rose or render it. The full rose data-vs-algorithm inventory, material/render style integration, visual equivalence, scene integration, and data-only second-model proof remain open. ADR-0001 is binding throughout.
+**Current status:** PRs #57–#62 are merged. PR #62's reusable geometry operations are on `main` at `895d672`, and rebased-baseline Linux / Release run [#283](https://github.com/Vraxo/Formloom/actions/runs/42678839932) passed 832/832 tests. PR #63's evaluator is open at `a1d6f3aeb862fcf509c5c46f488ae4e56767372e`; Linux / Release run [#287](https://github.com/Vraxo/Formloom/actions/runs/42781659921) passed the Release build and all 844 tests (739 Core, 105 Desktop). Test results: [artifact 13745973608](https://github.com/Vraxo/Formloom/actions/runs/42781659921/artifacts/13745973608); procedural preview: [13746092750](https://github.com/Vraxo/Formloom/actions/runs/42781659921/artifacts/13746092750); legacy Phase 10 rose-review baseline: [13746247925](https://github.com/Vraxo/Formloom/actions/runs/42781659921/artifacts/13746247925). The evaluator handles the five current schema-v1 node types and bounded evaluation; it is not a complete rose implementation or renderer. The full rose knowledge/algorithm inventory, generic material/style contract, visual equivalence, generic vase-scene integration, and data-only second-model proof remain open. ADR-0001 is binding throughout.
