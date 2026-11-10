@@ -1,3 +1,5 @@
+using SkiaSharp;
+
 namespace Formloom.Rendering.Skia.Models;
 
 /// <summary>Controls generic model-geometry detail and silhouette rendering.</summary>
@@ -7,4 +9,11 @@ namespace Formloom.Rendering.Skia.Models;
 public sealed record ModelGeometryRenderOptions(
     bool Antialiasing = true,
     bool IncludeDetails = true,
-    bool Silhouette = false);
+    bool Silhouette = false)
+{
+    /// <summary>
+    /// Gets an optional host-authored region to hide from the rendered model.
+    /// The path uses scene-normalized coordinates and remains owned by the caller.
+    /// </summary>
+    public SKPath? OcclusionMask { get; init; }
+}
