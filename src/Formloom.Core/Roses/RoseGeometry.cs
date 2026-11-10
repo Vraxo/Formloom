@@ -386,12 +386,42 @@ public static class RoseGeometry
             veinStart + ((veinMiddle - veinStart) * 1.4f),
             veinEnd - ((veinEnd - veinMiddle) * 1.4f),
             veinEnd);
+        var veins = ImmutableArray.CreateBuilder<CubicSegment>(7);
+        veins.Add(vein);
+        foreach (var t in new[] { 0.24f, 0.46f, 0.68f })
+        {
+            var spine = SpinePoint(attachment, direction, normal, length, bow, t);
+            var halfWidth = width * 0.5f * MathF.Sin(MathF.PI * t) * 0.9f;
+            veins.Add(CreateLateralVein(spine, direction, normal, length, halfWidth, -1f));
+            veins.Add(CreateLateralVein(spine, direction, normal, length, halfWidth, 1f));
+        }
+
         return new(
             attachment,
             SpinePoint(attachment, direction, normal, length, bow, 1f),
             width,
             CurveBuilder.ClosedCubic(points),
-            ImmutableArray.Create(vein));
+            veins.MoveToImmutable());
+    }
+
+    private static CubicSegment CreateLateralVein(
+        Vector2 spine,
+        Vector2 direction,
+        Vector2 normal,
+        float length,
+        float halfWidth,
+        float side)
+    {
+        var offset = normal * (halfWidth * 0.84f * side);
+        var advance = direction * (length * 0.07f);
+        var end = spine + offset + advance;
+        var control1 = spine +
+            (direction * (length * 0.022f)) +
+            (normal * (halfWidth * 0.42f * side));
+        var control2 = end -
+            (direction * (length * 0.015f)) -
+            (normal * (halfWidth * 0.12f * side));
+        return new(spine, control1, control2, end);
     }
 
     private static Vector2 MapLeaf(

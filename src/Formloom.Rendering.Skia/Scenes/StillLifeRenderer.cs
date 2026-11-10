@@ -929,7 +929,7 @@ public static class StillLifeRenderer
 
         foreach (var leaf in plant.Leaves)
         {
-            DrawRoseLeaf(canvas, leaf, material, silhouette, omitDetail, paint);
+            DrawRoseLeaf(canvas, scene, leaf, material, silhouette, omitDetail, paint);
         }
 
         foreach (var petal in plant.Bloom.Petals)
@@ -959,6 +959,7 @@ public static class StillLifeRenderer
 
     private static void DrawRoseLeaf(
         SKCanvas canvas,
+        StillLifeScene scene,
         RoseLeaf leaf,
         RoseMaterial material,
         bool silhouette,
@@ -973,28 +974,88 @@ public static class StillLifeRenderer
             return;
         }
 
-        using var shade = SKShader.CreateLinearGradient(
+        using (var shade = SKShader.CreateLinearGradient(
             new SKPoint(leaf.Attachment.X, leaf.Attachment.Y),
             new SKPoint(leaf.Tip.X, leaf.Tip.Y),
             [material.LeafLight, material.LeafBase, material.LeafEdge],
-            [0f, 0.55f, 1f], SKShaderTileMode.Clamp);
-        paint.Color = SKColors.White;
-        paint.Shader = shade;
-        canvas.DrawPath(blade, paint);
-        paint.Shader = null;
+            [0f, 0.55f, 1f], SKShaderTileMode.Clamp))
+        {
+            paint.Color = SKColors.White;
+            paint.Shader = shade;
+            canvas.DrawPath(blade, paint);
+            paint.Shader = null;
+        }
+
+        DrawRoseLeafCrossSection(canvas, scene, leaf, material, blade, paint);
         if (omitDetail)
         {
             return;
         }
 
-        using var vein = CreateOpenPath(leaf.Vein);
         paint.Style = SKPaintStyle.Stroke;
-        paint.StrokeWidth = MathF.Max(leaf.Width * 0.07f, 0.001f);
         paint.StrokeCap = SKStrokeCap.Round;
-        paint.Color = material.LeafEdge.WithAlpha(145);
-        canvas.DrawPath(vein, paint);
+        for (var index = 0; index < leaf.Vein.Length; index++)
+        {
+            using var vein = CreateOpenPath(ImmutableArray.Create(leaf.Vein[index]));
+            paint.StrokeWidth = MathF.Max(leaf.Width * (index == 0 ? 0.045f : 0.022f), 0.0006f);
+            paint.Color = material.LeafEdge.WithAlpha(index == 0 ? (byte)112 : (byte)76);
+            canvas.DrawPath(vein, paint);
+        }
+
         paint.Style = SKPaintStyle.Fill;
         paint.StrokeCap = SKStrokeCap.Butt;
+    }
+
+    private static void DrawRoseLeafCrossSection(
+        SKCanvas canvas,
+        StillLifeScene scene,
+        RoseLeaf leaf,
+        RoseMaterial material,
+        SKPath blade,
+        SKPaint paint)
+    {
+        var direction = leaf.Tip - leaf.Attachment;
+        if (direction.LengthSquared() < 0.000001f)
+        {
+            return;
+        }
+
+        direction = Vector2.Normalize(direction);
+        var normal = new Vector2(-direction.Y, direction.X);
+        var acrossScaled = new Vector2(normal.X * scene.Width, normal.Y * scene.Height);
+        if (acrossScaled.LengthSquared() < 0.000001f)
+        {
+            return;
+        }
+
+        var acrossPixels = Vector2.Normalize(acrossScaled);
+        var across = new Vector2(acrossPixels.X / scene.Width, acrossPixels.Y / scene.Height);
+        var halfWidthPixels = leaf.Width * 0.5f * acrossScaled.Length();
+        var middle = Vector2.Lerp(leaf.Attachment, leaf.Tip, 0.48f);
+        var lightPixels = new Vector2(
+            scene.LightDirection.X * scene.Width,
+            scene.LightDirection.Y * scene.Height);
+        var lightFacing = lightPixels.LengthSquared() > 0.000001f
+            ? Vector2.Dot(Vector2.Normalize(lightPixels), acrossPixels)
+            : 0f;
+        var ridge = Math.Clamp(0.5f + (lightFacing * 0.08f), 0.42f, 0.58f);
+
+        using var crossSection = SKShader.CreateLinearGradient(
+            middle - (across * halfWidthPixels),
+            middle + (across * halfWidthPixels),
+            [
+                material.LeafEdge.WithAlpha(42),
+                material.LeafBase.WithAlpha(0),
+                material.LeafLight.WithAlpha(66),
+                material.LeafBase.WithAlpha(0),
+                material.LeafEdge.WithAlpha(34),
+            ],
+            [0f, 0.27f, ridge, 0.73f, 1f],
+            SKShaderTileMode.Clamp);
+        paint.Color = SKColors.White;
+        paint.Shader = crossSection;
+        canvas.DrawPath(blade, paint);
+        paint.Shader = null;
     }
 
     private static void DrawRosePetal(
