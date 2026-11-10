@@ -14,4 +14,5 @@ public sealed record ModelRadialArrayNodeDefinition(
     ModelNumberExpression? Tone,
     string Stream,
     string? MaterialSlot,
-    bool Detail) : ModelNodeDefinition(Id);
+    bool Detail,
+    ModelNumberExpression? StrokeWidth = null) : ModelNodeDefinition(Id);

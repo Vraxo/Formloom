@@ -85,6 +85,68 @@ public sealed class ModelGeometryRendererTests
     }
 
     [Fact]
+    public void StrokesOpenPathsAtTheirDeclaredWidthWithRoundCaps()
+    {
+        var geometry = new ModelGeometry(
+            "models.stroke-test",
+            ModelGeometryCoordinateSpace.SceneNormalized,
+            [
+                new ModelGeometryPath(
+                    "stem",
+                    "stem",
+                    [Line(new(0.25f, 0.5f), new(0.75f, 0.5f))],
+                    false,
+                    "stem.base",
+                    false)
+                {
+                    StrokeWidth = 0.08f,
+                },
+            ])
+        {
+            MaterialTokens = ImmutableDictionary<string, string>.Empty.Add("stem.base", "#FF1428"),
+        };
+
+        var rendered = ModelGeometryRenderer.Render(geometry, 128, 128, new RenderOptions(Antialiasing: false));
+
+        using var bitmap = Decode(rendered.PngBytes);
+        Assert.Equal(new SKColor(255, 20, 40), bitmap.GetPixel(64, 64));
+        Assert.Equal(new SKColor(255, 20, 40), bitmap.GetPixel(28, 64));
+        Assert.Equal((byte)0, bitmap.GetPixel(20, 64).Alpha);
+        Assert.Equal((byte)0, bitmap.GetPixel(64, 54).Alpha);
+    }
+
+    [Fact]
+    public void RejectsInvalidStrokeWidthsAndStrokesWithoutMaterialSlots()
+    {
+        var invalidWidth = new ModelGeometry(
+            "models.invalid-stroke",
+            ModelGeometryCoordinateSpace.SceneNormalized,
+            [
+                new ModelGeometryPath(
+                    "stem",
+                    "stem",
+                    [Line(new(0.1f, 0.5f), new(0.9f, 0.5f))],
+                    false,
+                    "stem.base",
+                    false)
+                {
+                    StrokeWidth = 0,
+                },
+            ]);
+        var missingSlot = invalidWidth with
+        {
+            Paths = invalidWidth.Paths.SetItem(0, invalidWidth.Paths[0] with
+            {
+                MaterialSlot = null,
+                StrokeWidth = 0.01f,
+            }),
+        };
+
+        Assert.Contains(ModelGeometryValidator.Validate(invalidWidth), item => item.Code == "geometry.stroke-width-invalid");
+        Assert.Contains(ModelGeometryValidator.Validate(missingSlot), item => item.Code == "geometry.stroke-material-slot-required");
+    }
+
+    [Fact]
     public void RejectsClosedPathsWithUnresolvedMaterialSlots()
     {
         var geometry = new ModelGeometry(
@@ -105,6 +167,8 @@ public sealed class ModelGeometryRendererTests
 
         Assert.Equal("#B02232", red.MaterialTokens["petal.base"]);
         Assert.Equal("#D03A74", pink.MaterialTokens["petal.base"]);
+        AssertRoseStrokesAreAuthoredInTheFixture(red);
+        AssertRoseStrokesAreAuthoredInTheFixture(pink);
 
         var redPreview = ModelGeometryRenderer.Render(red, 512, 512);
         var pinkPreview = ModelGeometryRenderer.Render(pink, 512, 512);
@@ -117,11 +181,30 @@ public sealed class ModelGeometryRendererTests
         Assert.False(redBitmap.Bytes.SequenceEqual(pinkBitmap.Bytes));
 
         File.WriteAllBytes(
-            Path.Combine(AppContext.BaseDirectory, "formloom-model-rose-solid-fill-red.png"),
+            Path.Combine(AppContext.BaseDirectory, "formloom-model-rose-strokes-red.png"),
             redPreview.PngBytes);
         File.WriteAllBytes(
-            Path.Combine(AppContext.BaseDirectory, "formloom-model-rose-solid-fill-pink.png"),
+            Path.Combine(AppContext.BaseDirectory, "formloom-model-rose-strokes-pink.png"),
             pinkPreview.PngBytes);
+    }
+
+    private static void AssertRoseStrokesAreAuthoredInTheFixture(ModelGeometry geometry)
+    {
+        var stem = Assert.Single(geometry.Paths, path => path.Id == "rose.stem");
+        Assert.Equal(0.006f, stem.StrokeWidth);
+
+        var veins = geometry.Paths
+            .Where(path => path.Id is "rose.leaf.left.vein" or "rose.leaf.right.vein")
+            .ToArray();
+        Assert.Equal(2, veins.Length);
+        Assert.All(veins, path => Assert.Equal(0.0015f, path.StrokeWidth));
+
+        var folds = geometry.Paths
+            .Where(path => path.Id.StartsWith("rose.petals.", StringComparison.Ordinal) &&
+                           path.Id.Contains(".fold[", StringComparison.Ordinal))
+            .ToArray();
+        Assert.Equal(13, folds.Length);
+        Assert.All(folds, path => Assert.Equal(0.0018f, path.StrokeWidth));
     }
 
     private static ModelGeometry EvaluateRose(string color)

@@ -6,4 +6,5 @@ public sealed record ModelCubicPathNodeDefinition(
     string Id,
     ImmutableArray<ModelCubicSegmentDefinition> Segments,
     string? MaterialSlot,
-    bool Detail) : ModelNodeDefinition(Id);
+    bool Detail,
+    ModelNumberExpression? StrokeWidth = null) : ModelNodeDefinition(Id);

@@ -353,6 +353,33 @@ public static class ModelDefinitionEvaluator
             return true;
         }
 
+        bool TryOptionalStrokeWidth(ModelNumberExpression? expression, string property, out float? strokeWidth)
+        {
+            strokeWidth = null;
+            if (expression is null)
+            {
+                return true;
+            }
+
+            if (!TryNumber(expression, property, out var value))
+            {
+                return false;
+            }
+
+            if (value <= 0)
+            {
+                Add(
+                    "evaluation.invalid-stroke-width",
+                    $"{location}.{property}",
+                    "Stroke width must be greater than zero.",
+                    diagnostics);
+                return false;
+            }
+
+            strokeWidth = value;
+            return true;
+        }
+
         bool TryPoint(ModelPointExpression? expression, string property, out Vector2 point)
         {
             point = Vector2.Zero;
@@ -406,6 +433,11 @@ public static class ModelDefinitionEvaluator
             switch (node)
             {
                 case ModelCubicPathNodeDefinition cubic:
+                    if (!TryOptionalStrokeWidth(cubic.StrokeWidth, "strokeWidth", out var cubicStrokeWidth))
+                    {
+                        return false;
+                    }
+
                     var segments = ImmutableArray.CreateBuilder<CubicSegment>(cubic.Segments.Length);
                     for (var index = 0; index < cubic.Segments.Length; index++)
                     {
@@ -422,8 +454,12 @@ public static class ModelDefinitionEvaluator
                     }
 
                     var cubicSegments = segments.MoveToImmutable();
+                    var cubicPath = new ModelGeometryPath(cubic.Id, cubic.Id, cubicSegments, false, cubic.MaterialSlot, cubic.Detail)
+                    {
+                        StrokeWidth = cubicStrokeWidth,
+                    };
                     output = new(
-                        [new(cubic.Id, cubic.Id, cubicSegments, false, cubic.MaterialSlot, cubic.Detail)],
+                        [cubicPath],
                         cubicSegments,
                         ImmutableDictionary<string, Vector2>.Empty);
                     return true;
@@ -453,7 +489,8 @@ public static class ModelDefinitionEvaluator
                     if (!definition.Profiles.TryGetValue(mapped.Profile, out var profile) ||
                         !TryPoint(mapped.Origin, "origin", out var origin) ||
                         !TryNumber(mapped.Angle, "angle", out var angle) ||
-                        !TryMapping(mapped.Mapping, "mapping", out var mapping))
+                        !TryMapping(mapped.Mapping, "mapping", out var mapping) ||
+                        !TryOptionalStrokeWidth(mapped.StrokeWidth, "strokeWidth", out var mappedStrokeWidth))
                     {
                         return false;
                     }
@@ -501,7 +538,8 @@ public static class ModelDefinitionEvaluator
                         mapping,
                         mapped.MaterialSlot,
                         null,
-                        mapped.Detail);
+                        mapped.Detail,
+                        mappedStrokeWidth);
                     output = new(
                         [mappedPath],
                         mappedPath.Segments,
@@ -517,6 +555,7 @@ public static class ModelDefinitionEvaluator
                         !TryNumber(radial.Phase, "phase", out var phase) ||
                         !TryNumber(radial.Tone ?? new ModelLiteralExpression(0), "tone", out var baseTone) ||
                         !TryMapping(radial.Mapping, "mapping", out var radialMapping) ||
+                        !TryOptionalStrokeWidth(radial.StrokeWidth, "strokeWidth", out var radialStrokeWidth) ||
                         !TryNumber(radial.Variation.Angle, "variation.angle", out var angleVariation) ||
                         !TryNumber(radial.Variation.Length, "variation.length", out var lengthVariation) ||
                         !TryNumber(radial.Variation.Width, "variation.width", out var widthVariation) ||
@@ -564,7 +603,8 @@ public static class ModelDefinitionEvaluator
                             elementMapping,
                             radial.MaterialSlot,
                             tone,
-                            radial.Detail);
+                            radial.Detail,
+                            radialStrokeWidth);
                         radialPaths.Add(pathOutput);
                     }
 
@@ -628,7 +668,8 @@ public static class ModelDefinitionEvaluator
         ProfileMappingOptions mapping,
         string? materialSlot,
         float? materialTone,
-        bool detail)
+        bool detail,
+        float? strokeWidth)
     {
         var pathSegments = CreateProfileSegments(points, profile);
         var rootT = mapping.ReverseLongitudinal ? 1f : 0f;
@@ -642,6 +683,7 @@ public static class ModelDefinitionEvaluator
         return new ModelGeometryPath(id, sourceNodeId, pathSegments, profile.Closed, materialSlot, detail)
         {
             MaterialTone = materialTone,
+            StrokeWidth = strokeWidth,
             Landmarks = landmarks,
         };
     }

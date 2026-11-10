@@ -394,6 +394,11 @@ public static class ModelDefinitionValidator
             {
                 case ModelCubicPathNodeDefinition pathNode:
                     ValidateCubicPath(pathNode, path, options, definition.Parameters, definition.Mounts, priorNodes, add);
+                    if (pathNode.StrokeWidth is not null)
+                    {
+                        ValidateExpression(pathNode.StrokeWidth, $"{path}.strokeWidth", options, definition.Parameters, definition.Mounts, priorNodes, add);
+                    }
+
                     break;
                 case ModelCurveProjectNodeDefinition curveNode:
                     if (string.IsNullOrWhiteSpace(curveNode.Curve) ||
@@ -414,6 +419,11 @@ public static class ModelDefinitionValidator
                     ValidatePointExpression(profileNode.Origin, $"{path}.origin", options, definition.Parameters, definition.Mounts, priorNodes, add);
                     ValidateExpression(profileNode.Angle, $"{path}.angle", options, definition.Parameters, definition.Mounts, priorNodes, add);
                     ValidateMapping(profileNode.Mapping, $"{path}.mapping", options, definition.Parameters, definition.Mounts, priorNodes, add);
+                    if (profileNode.StrokeWidth is not null)
+                    {
+                        ValidateExpression(profileNode.StrokeWidth, $"{path}.strokeWidth", options, definition.Parameters, definition.Mounts, priorNodes, add);
+                    }
+
                     if (profileNode.Variation is { } profileVariation)
                     {
                         if (string.IsNullOrWhiteSpace(profileNode.Stream))
@@ -466,6 +476,11 @@ public static class ModelDefinitionValidator
                     ValidateExpression(radialNode.Phase, $"{path}.phase", options, definition.Parameters, definition.Mounts, priorNodes, add);
                     ValidateMapping(radialNode.Mapping, $"{path}.mapping", options, definition.Parameters, definition.Mounts, priorNodes, add);
                     ValidateVariation(radialNode.Variation, $"{path}.variation", options, definition.Parameters, definition.Mounts, priorNodes, add);
+                    if (radialNode.StrokeWidth is not null)
+                    {
+                        ValidateExpression(radialNode.StrokeWidth, $"{path}.strokeWidth", options, definition.Parameters, definition.Mounts, priorNodes, add);
+                    }
+
                     if (radialNode.Tone is not null)
                     {
                         ValidateExpression(radialNode.Tone, $"{path}.tone", options, definition.Parameters, definition.Mounts, priorNodes, add);
@@ -554,6 +569,11 @@ public static class ModelDefinitionValidator
                     }
                 }
 
+                foreach (var dependency in GetExpressionDependencies(path.StrokeWidth))
+                {
+                    yield return dependency;
+                }
+
                 break;
             case ModelCurveProjectNodeDefinition curve:
                 if (!string.IsNullOrWhiteSpace(curve.Curve))
@@ -579,6 +599,11 @@ public static class ModelDefinitionValidator
                 }
 
                 foreach (var dependency in GetMappingDependencies(profile.Mapping))
+                {
+                    yield return dependency;
+                }
+
+                foreach (var dependency in GetExpressionDependencies(profile.StrokeWidth))
                 {
                     yield return dependency;
                 }
@@ -644,6 +669,11 @@ public static class ModelDefinitionValidator
                 }
 
                 foreach (var dependency in GetExpressionDependencies(radial.Tone))
+                {
+                    yield return dependency;
+                }
+
+                foreach (var dependency in GetExpressionDependencies(radial.StrokeWidth))
                 {
                     yield return dependency;
                 }
