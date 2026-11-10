@@ -154,7 +154,7 @@ Automated tests should separately cover deterministic output, material/geometry 
 ## 7. Implementation sequence
 
 1. Keep this document as the art-direction authority while the model-system architecture continues to evolve.
-2. Establish fixed reference renders and document the current baseline before broad visual changes.
+2. Establish fixed reference renders and document the current baseline before broad visual changes. The initial user-captured apple and rose baselines, exact prompts, settings, and capture limitations are recorded in [the canonical render-baseline manifest](render-baselines.md) and [its machine-readable manifest](render-baselines.json).
 3. Choose one representative scene and prove a coherent shared lighting/material treatment on it. The rose in a blue vase is a useful first stress case; the apple/table scene must also be checked before claiming the treatment is general.
 4. Extract only the reusable rendering capabilities demonstrated by those outputs. Keep model-specific geometry and semantic material choices separate from the style implementation.
 5. Review the same treatment across the reference set before defining a runtime style-profile API or introducing additional styles.
