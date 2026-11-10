@@ -76,6 +76,74 @@ public static class CubicCurveProjector
         return bestProjection;
     }
 
+    /// <summary>Projects to the nearest sampled point on one selected coordinate.</summary>
+    public static CubicCurveAxisProjection ProjectNearestOnAxis(
+        ImmutableArray<CubicSegment> segments,
+        CurveProjectionAxis axis,
+        float coordinate,
+        int samplesPerSegment = 64)
+    {
+        if (segments.IsDefaultOrEmpty)
+        {
+            throw new ArgumentException("At least one curve segment is required.", nameof(segments));
+        }
+
+        if (!Enum.IsDefined(axis))
+        {
+            throw new ArgumentOutOfRangeException(nameof(axis), "The projection axis is not supported.");
+        }
+
+        if (!float.IsFinite(coordinate))
+        {
+            throw new ArgumentOutOfRangeException(nameof(coordinate), "The target coordinate must be finite.");
+        }
+
+        if (samplesPerSegment < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(samplesPerSegment), "At least one sample per segment is required.");
+        }
+
+        var bestProjection = default(CubicCurveAxisProjection);
+        var bestDistance = double.PositiveInfinity;
+        for (var segmentIndex = 0; segmentIndex < segments.Length; segmentIndex++)
+        {
+            var segment = segments[segmentIndex] ??
+                throw new ArgumentException("Curve segments cannot contain null entries.", nameof(segments));
+            if (!IsFinite(segment.Start) || !IsFinite(segment.Control1) ||
+                !IsFinite(segment.Control2) || !IsFinite(segment.End))
+            {
+                throw new ArgumentException("Curve coordinates must be finite.", nameof(segments));
+            }
+
+            for (var sample = 0; sample <= samplesPerSegment; sample++)
+            {
+                var parameter = sample / (float)samplesPerSegment;
+                var point = segment.Evaluate(parameter);
+                if (!IsFinite(point))
+                {
+                    throw new ArgumentException("Curve evaluation produced a non-finite coordinate.", nameof(segments));
+                }
+
+                var value = axis == CurveProjectionAxis.X ? point.X : point.Y;
+                var distance = Math.Abs((double)value - coordinate);
+                if (distance >= bestDistance)
+                {
+                    continue;
+                }
+
+                bestDistance = distance;
+                bestProjection = new(
+                    segmentIndex,
+                    parameter,
+                    point,
+                    TangentAt(segment, parameter),
+                    (float)Math.Min(distance, float.MaxValue));
+            }
+        }
+
+        return bestProjection;
+    }
+
     private static float Refine(CubicSegment segment, Vector2 target, float lower, float upper)
     {
         const float goldenRatio = 0.618033989f;
