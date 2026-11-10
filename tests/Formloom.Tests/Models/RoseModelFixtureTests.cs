@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using Formloom.Core.Models.Catalog;
+using Formloom.Core.Geometry;
 using Formloom.Core.Models.Definitions;
 using Formloom.Core.Models.Evaluation;
 using Formloom.Core.Models.Geometry;
@@ -21,6 +22,13 @@ public sealed class RoseModelFixtureTests
         Assert.True(catalog.IsSuccess, string.Join(Environment.NewLine, catalog.Diagnostics.Select(item => item.Message)));
         var definition = Assert.Single(catalog.Models).Value;
         Assert.Equal("flowers.rose-probe", definition.Id);
+
+        var stemNode = Assert.IsType<ModelProfileMapNodeDefinition>(
+            Assert.Single(definition.Nodes.Where(node => node.Id == "rose.stem")));
+        Assert.Equal("stem.centerline", stemNode.Profile);
+        var attachmentNodes = definition.Nodes.OfType<ModelCurveProjectNodeDefinition>().ToArray();
+        Assert.Equal(2, attachmentNodes.Length);
+        Assert.All(attachmentNodes, node => Assert.Equal("rose.stem", node.Curve));
 
         var context = ModelEvaluationContext.Empty(42, variationAmount) with
         {
@@ -48,6 +56,20 @@ public sealed class RoseModelFixtureTests
 
         var leftLeaf = FindPath("rose.leaf.left");
         var rightLeaf = FindPath("rose.leaf.right");
+
+        var stemPath = FindPath("rose.stem");
+        Assert.Equal(3, stemPath.Segments.Length);
+        var leftAttachment = Assert.Single(leftLeaf.Landmarks, item => item.Name == "attachment");
+        var rightAttachment = Assert.Single(rightLeaf.Landmarks, item => item.Name == "attachment");
+        Assert.NotEqual(leftAttachment.Position, rightAttachment.Position);
+        Assert.InRange(
+            CubicCurveProjector.ProjectNearest(stemPath.Segments, leftAttachment.Position).DistanceSquared,
+            0f,
+            0.00000001f);
+        Assert.InRange(
+            CubicCurveProjector.ProjectNearest(stemPath.Segments, rightAttachment.Position).DistanceSquared,
+            0f,
+            0.00000001f);
         var leftVein = FindPath("rose.leaf.left.vein");
         var rightVein = FindPath("rose.leaf.right.vein");
 
