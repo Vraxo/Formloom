@@ -187,7 +187,7 @@ public sealed class ModelDefinitionEvaluatorTests
         var invalidDefinition = definition with
         {
             Nodes = definition.Nodes.SetItem(
-                3,
+                radialIndex,
                 radial with { RadiusX = Literal((double)float.MaxValue * 2) }),
         };
 
@@ -201,11 +201,12 @@ public sealed class ModelDefinitionEvaluatorTests
     public void RejectsFiniteMappingInputsThatOverflowGeneratedGeometry()
     {
         var definition = CreateDefinition();
-        var radial = Assert.IsType<ModelRadialArrayNodeDefinition>(definition.Nodes[3]);
+        var radialIndex = Enumerable.Range(0, definition.Nodes.Length).Single(index => definition.Nodes[index].Id == "bloom.outer");
+        var radial = Assert.IsType<ModelRadialArrayNodeDefinition>(definition.Nodes[radialIndex]);
         var invalidDefinition = definition with
         {
             Nodes = definition.Nodes.SetItem(
-                3,
+                radialIndex,
                 radial with
                 {
                     Mapping = radial.Mapping with
@@ -258,7 +259,10 @@ public sealed class ModelDefinitionEvaluatorTests
             Curve = "stem.profile",
             Target = Point(Literal(0.5), Literal(0.5)),
         };
-        var leaf = Assert.IsType<ModelProfileMapNodeDefinition>(definition.Nodes.Single(node => node.Id == "leaf.left"));
+        var leaf = Assert.IsType<ModelProfileMapNodeDefinition>(definition.Nodes.Single(node => node.Id == "leaf.left")) with
+        {
+            Origin = Point(Reference("node:leaf.attachment:point:x"), Reference("node:leaf.attachment:point:y")),
+        };
         var radial = Assert.IsType<ModelRadialArrayNodeDefinition>(definition.Nodes.Single(node => node.Id == "bloom.outer"));
         var group = Assert.IsType<ModelGeometryGroupNodeDefinition>(definition.Nodes.Single(node => node.Id == "flower")) with
         {
