@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using Formloom.Core.Models.Catalog;
+using Formloom.Core.Models.Definitions;
 using Formloom.Core.Models.Evaluation;
 using Formloom.Core.Models.Geometry;
 using Xunit;
@@ -135,6 +136,86 @@ public sealed class RoseModelFixtureTests
                 Assert.True(float.IsFinite(segment.End.X));
                 Assert.True(float.IsFinite(segment.End.Y));
             });
+    }
+
+    [Fact]
+    public void VariesMappedLeavesWithIndependentStreamsAndKeepsVeinsAligned()
+    {
+        var catalog = ModelDefinitionCatalog.Load(Path.Combine(AppContext.BaseDirectory, "Fixtures"));
+        Assert.True(catalog.IsSuccess, string.Join(Environment.NewLine, catalog.Diagnostics.Select(item => item.Message)));
+        var definition = Assert.Single(catalog.Models).Value;
+        var frames = ImmutableDictionary<string, ModelMountFrameValues>.Empty.Add(
+            "vase-opening",
+            new(new(0.5f, 0.65f), 0.12f, 0.07f, 0.58f, 0.015f, 0.4f));
+
+        var baseline = ModelDefinitionEvaluator.Evaluate(
+            definition,
+            ModelEvaluationContext.Empty(42, 0f) with { Frames = frames });
+        var varied = ModelDefinitionEvaluator.Evaluate(
+            definition,
+            ModelEvaluationContext.Empty(42, 1f) with { Frames = frames });
+
+        Assert.True(baseline.IsSuccess, string.Join(Environment.NewLine, baseline.Diagnostics.Select(item => item.Message)));
+        Assert.True(varied.IsSuccess, string.Join(Environment.NewLine, varied.Diagnostics.Select(item => item.Message)));
+        var baselinePaths = Assert.IsType<ModelGeometry>(baseline.Geometry).Paths;
+        var variedPaths = Assert.IsType<ModelGeometry>(varied.Geometry).Paths;
+
+        ModelGeometryPath Find(ImmutableArray<ModelGeometryPath> paths, string id) =>
+            Assert.Single(paths.Where(path => path.Id == id));
+
+        var baselineLeft = Find(baselinePaths, "rose.leaf.left");
+        var variedLeft = Find(variedPaths, "rose.leaf.left");
+        var variedLeftVein = Find(variedPaths, "rose.leaf.left.vein");
+        var baselineRight = Find(baselinePaths, "rose.leaf.right");
+        var variedRight = Find(variedPaths, "rose.leaf.right");
+
+        Assert.NotEqual(baselineLeft.Segments[0], variedLeft.Segments[0]);
+        Assert.NotEqual(baselineRight.Segments[0], variedRight.Segments[0]);
+        Assert.Equal(
+            variedLeft.Landmarks.Select(item => item.Position),
+            variedLeftVein.Landmarks.Select(item => item.Position));
+
+        var rightLeafIndex = Enumerable.Range(0, definition.Nodes.Length)
+            .Single(index => definition.Nodes[index].Id == "rose.leaf.right");
+        var rightVeinIndex = Enumerable.Range(0, definition.Nodes.Length)
+            .Single(index => definition.Nodes[index].Id == "rose.leaf.right.vein");
+        var rightLeafNode = Assert.IsType<ModelProfileMapNodeDefinition>(definition.Nodes[rightLeafIndex]);
+        var rightVeinNode = Assert.IsType<ModelProfileMapNodeDefinition>(definition.Nodes[rightVeinIndex]);
+        const string alternateStream = "rose.leaves.right.alternate";
+        var changedDefinition = definition with
+        {
+            Nodes = definition.Nodes
+                .SetItem(rightLeafIndex, rightLeafNode with { Stream = alternateStream })
+                .SetItem(rightVeinIndex, rightVeinNode with { Stream = alternateStream }),
+        };
+
+        var changed = ModelDefinitionEvaluator.Evaluate(
+            changedDefinition,
+            ModelEvaluationContext.Empty(42, 1f) with { Frames = frames });
+
+        Assert.True(changed.IsSuccess, string.Join(Environment.NewLine, changed.Diagnostics.Select(item => item.Message)));
+        var changedPaths = Assert.IsType<ModelGeometry>(changed.Geometry).Paths;
+        Assert.Equal(variedLeft.Segments, Find(changedPaths, "rose.leaf.left").Segments);
+        Assert.NotEqual(variedRight.Segments[0], Find(changedPaths, "rose.leaf.right").Segments[0]);
+    }
+
+    [Fact]
+    public void RequiresAStableStreamWhenProfileVariationIsDeclared()
+    {
+        var catalog = ModelDefinitionCatalog.Load(Path.Combine(AppContext.BaseDirectory, "Fixtures"));
+        Assert.True(catalog.IsSuccess, string.Join(Environment.NewLine, catalog.Diagnostics.Select(item => item.Message)));
+        var definition = Assert.Single(catalog.Models).Value;
+        var nodeIndex = Enumerable.Range(0, definition.Nodes.Length)
+            .Single(index => definition.Nodes[index].Id == "rose.leaf.left");
+        var node = Assert.IsType<ModelProfileMapNodeDefinition>(definition.Nodes[nodeIndex]);
+        var invalidDefinition = definition with
+        {
+            Nodes = definition.Nodes.SetItem(nodeIndex, node with { Stream = null }),
+        };
+
+        var diagnostics = ModelDefinitionValidator.Validate(invalidDefinition, "<test>");
+
+        Assert.Contains(diagnostics, item => item.Code == "definition.profile-variation-stream-required");
     }
 
     [Fact]

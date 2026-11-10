@@ -73,6 +73,8 @@ The existing stem continuation into the vase should become generic mounted-stalk
 
 ### 3.3 Profile mapping
 
+Profile-map nodes may optionally declare bounded seeded variation for angle, length, width, and bend, together with a stable named stream. C# applies the ranges using the generation seed and variation amount. Related paths that must remain aligned (for example, a leaf outline and its vein) should use the same stream and identical variation ranges; independent parts should use distinct stream names.
+
 The rose's petal and leaf contours use related basis mappings. Start with one reusable \`profile.map\` operation rather than rose-petal and rose-leaf functions.
 
 Inputs should include profile, origin, oriented basis (direction/normal or angle), longitudinal/transverse scale, optional root offset, and optional bounded sinusoidal bend. It may expose named landmarks such as \`root\`, \`tip\`, and \`attachment\`. Mapping must transform contour points and curve controls consistently and preserve open/closed semantics.
