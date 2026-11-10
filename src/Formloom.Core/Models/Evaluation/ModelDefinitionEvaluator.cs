@@ -456,16 +456,16 @@ public static class ModelDefinitionEvaluator
 
                     if (mapped.Variation is { } variation)
                     {
-                        if (!TryNumber(variation.Angle, "variation.angle", out var angleVariation) ||
-                            !TryNumber(variation.Length, "variation.length", out var lengthVariation) ||
-                            !TryNumber(variation.Width, "variation.width", out var widthVariation) ||
-                            !TryNumber(variation.Bend, "variation.bend", out var bendVariation))
+                        if (!TryNumber(variation.Angle, "variation.angle", out var profileAngleVariation) ||
+                            !TryNumber(variation.Length, "variation.length", out var profileLengthVariation) ||
+                            !TryNumber(variation.Width, "variation.width", out var profileWidthVariation) ||
+                            !TryNumber(variation.Bend, "variation.bend", out var profileBendVariation))
                         {
                             return false;
                         }
 
-                        if (angleVariation < 0 || lengthVariation is < 0 or > 1 ||
-                            widthVariation is < 0 or > 1 || bendVariation < 0)
+                        if (profileAngleVariation < 0 || profileLengthVariation is < 0 or > 1 ||
+                            profileWidthVariation is < 0 or > 1 || profileBendVariation < 0)
                         {
                             Add(
                                 "evaluation.invalid-profile-variation",
@@ -476,12 +476,12 @@ public static class ModelDefinitionEvaluator
                         }
 
                         var random = Pcg32.ForStream(context.Seed, $"{definition.Id}/{mapped.Stream}");
-                        angle += Jitter(random, angleVariation, context.VariationAmount);
+                        angle += Jitter(random, profileAngleVariation, context.VariationAmount);
                         mapping = mapping with
                         {
-                            Length = mapping.Length * (1 + Jitter(random, lengthVariation, context.VariationAmount)),
-                            Width = mapping.Width * (1 + Jitter(random, widthVariation, context.VariationAmount)),
-                            Bend = mapping.Bend + Jitter(random, bendVariation, context.VariationAmount),
+                            Length = mapping.Length * (1 + Jitter(random, profileLengthVariation, context.VariationAmount)),
+                            Width = mapping.Width * (1 + Jitter(random, profileWidthVariation, context.VariationAmount)),
+                            Bend = mapping.Bend + Jitter(random, profileBendVariation, context.VariationAmount),
                         };
                     }
 

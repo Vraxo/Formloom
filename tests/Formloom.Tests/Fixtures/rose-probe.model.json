@@ -886,36 +886,7 @@
         "reverseLongitudinal": true
       },
       "materialSlot": "leaf.base",
-      "detail": false,
-      "stream": "rose.leaves.left",
-      "variation": {
-        "angle": {
-          "kind": "literal",
-          "value": 0.07
-        },
-        "length": {
-          "kind": "literal",
-          "value": 0.05
-        },
-        "width": {
-          "kind": "literal",
-          "value": 0.05
-        },
-        "bend": {
-          "kind": "arithmetic",
-          "operator": "multiply",
-          "operands": [
-            {
-              "kind": "reference",
-              "path": "parameters.leafLength"
-            },
-            {
-              "kind": "literal",
-              "value": 0.12
-            }
-          ]
-        }
-      }
+      "detail": false
     },
     {
       "op": "profile.map",
@@ -967,36 +938,7 @@
         "reverseLongitudinal": true
       },
       "materialSlot": "leaf.vein",
-      "detail": true,
-      "stream": "rose.leaves.left",
-      "variation": {
-        "angle": {
-          "kind": "literal",
-          "value": 0.07
-        },
-        "length": {
-          "kind": "literal",
-          "value": 0.05
-        },
-        "width": {
-          "kind": "literal",
-          "value": 0.05
-        },
-        "bend": {
-          "kind": "arithmetic",
-          "operator": "multiply",
-          "operands": [
-            {
-              "kind": "reference",
-              "path": "parameters.leafLength"
-            },
-            {
-              "kind": "literal",
-              "value": 0.12
-            }
-          ]
-        }
-      }
+      "detail": true
     },
     {
       "op": "profile.map",
@@ -1068,36 +1010,7 @@
         "reverseLongitudinal": true
       },
       "materialSlot": "leaf.base",
-      "detail": false,
-      "stream": "rose.leaves.right",
-      "variation": {
-        "angle": {
-          "kind": "literal",
-          "value": 0.07
-        },
-        "length": {
-          "kind": "literal",
-          "value": 0.05
-        },
-        "width": {
-          "kind": "literal",
-          "value": 0.05
-        },
-        "bend": {
-          "kind": "arithmetic",
-          "operator": "multiply",
-          "operands": [
-            {
-              "kind": "reference",
-              "path": "parameters.leafLength"
-            },
-            {
-              "kind": "literal",
-              "value": 0.11279999999999998
-            }
-          ]
-        }
-      }
+      "detail": false
     },
     {
       "op": "profile.map",
@@ -1169,36 +1082,7 @@
         "reverseLongitudinal": true
       },
       "materialSlot": "leaf.vein",
-      "detail": true,
-      "stream": "rose.leaves.right",
-      "variation": {
-        "angle": {
-          "kind": "literal",
-          "value": 0.07
-        },
-        "length": {
-          "kind": "literal",
-          "value": 0.05
-        },
-        "width": {
-          "kind": "literal",
-          "value": 0.05
-        },
-        "bend": {
-          "kind": "arithmetic",
-          "operator": "multiply",
-          "operands": [
-            {
-              "kind": "reference",
-              "path": "parameters.leafLength"
-            },
-            {
-              "kind": "literal",
-              "value": 0.11279999999999998
-            }
-          ]
-        }
-      }
+      "detail": true
     },
     {
       "op": "array.radial",

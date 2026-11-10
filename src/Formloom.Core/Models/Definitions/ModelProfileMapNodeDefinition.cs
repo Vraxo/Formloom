@@ -7,6 +7,4 @@ public sealed record ModelProfileMapNodeDefinition(
     ModelNumberExpression Angle,
     ModelProfileMappingDefinition Mapping,
     string? MaterialSlot,
-    bool Detail,
-    ModelProfileVariationDefinition? Variation = null,
-    string? Stream = null) : ModelNodeDefinition(Id);
+    bool Detail) : ModelNodeDefinition(Id);
