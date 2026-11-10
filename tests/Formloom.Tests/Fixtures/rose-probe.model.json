@@ -701,6 +701,50 @@
           "y": 1
         }
       ]
+    },
+    "leaf.vein.lateral.left": {
+      "closed": false,
+      "interpolation": "openCubic",
+      "points": [
+        {
+          "x": 0.5,
+          "y": 0
+        },
+        {
+          "x": 0.73,
+          "y": 0.28
+        },
+        {
+          "x": 0.9,
+          "y": 0.68
+        },
+        {
+          "x": 0.97,
+          "y": 1
+        }
+      ]
+    },
+    "leaf.vein.lateral.right": {
+      "closed": false,
+      "interpolation": "openCubic",
+      "points": [
+        {
+          "x": 0.5,
+          "y": 0
+        },
+        {
+          "x": 0.27,
+          "y": 0.28
+        },
+        {
+          "x": 0.1,
+          "y": 0.68
+        },
+        {
+          "x": 0.03,
+          "y": 1
+        }
+      ]
     }
   },
   "materials": {
@@ -721,11 +765,23 @@
       },
       "gradients": {
         "petal.base": {
-          "start": { "x": 0.5, "y": 0.1 },
-          "end": { "x": 0.5, "y": 0.28 },
+          "start": {
+            "x": 0.5,
+            "y": 0.1
+          },
+          "end": {
+            "x": 0.5,
+            "y": 0.28
+          },
           "stops": [
-            { "offset": 0, "token": "petal.light" },
-            { "offset": 1, "token": "petal.base" }
+            {
+              "offset": 0,
+              "token": "petal.light"
+            },
+            {
+              "offset": 1,
+              "token": "petal.base"
+            }
           ]
         }
       }
@@ -747,11 +803,23 @@
       },
       "gradients": {
         "petal.base": {
-          "start": { "x": 0.5, "y": 0.1 },
-          "end": { "x": 0.5, "y": 0.28 },
+          "start": {
+            "x": 0.5,
+            "y": 0.1
+          },
+          "end": {
+            "x": 0.5,
+            "y": 0.28
+          },
           "stops": [
-            { "offset": 0, "token": "petal.light" },
-            { "offset": 1, "token": "petal.base" }
+            {
+              "offset": 0,
+              "token": "petal.light"
+            },
+            {
+              "offset": 1,
+              "token": "petal.base"
+            }
           ]
         }
       }
@@ -1806,8 +1874,20 @@
         "rose.stem",
         "rose.leaf.left",
         "rose.leaf.left.vein",
+        "rose.leaf.left.vein.lateral.24.left",
+        "rose.leaf.left.vein.lateral.24.right",
+        "rose.leaf.left.vein.lateral.46.left",
+        "rose.leaf.left.vein.lateral.46.right",
+        "rose.leaf.left.vein.lateral.68.left",
+        "rose.leaf.left.vein.lateral.68.right",
         "rose.leaf.right",
         "rose.leaf.right.vein",
+        "rose.leaf.right.vein.lateral.24.left",
+        "rose.leaf.right.vein.lateral.24.right",
+        "rose.leaf.right.vein.lateral.46.left",
+        "rose.leaf.right.vein.lateral.46.right",
+        "rose.leaf.right.vein.lateral.68.left",
+        "rose.leaf.right.vein.lateral.68.right",
         "rose.petals.outer",
         "rose.petals.outer.fold",
         "rose.petals.middle",
@@ -1815,6 +1895,1440 @@
         "rose.petals.inner",
         "rose.petals.inner.fold"
       ]
+    },
+    {
+      "op": "curve.sample",
+      "id": "rose.leaf.left.vein.sample.24",
+      "curve": "rose.leaf.left.vein",
+      "parameter": {
+        "kind": "literal",
+        "value": 0.24
+      }
+    },
+    {
+      "op": "profile.map",
+      "id": "rose.leaf.left.vein.lateral.24.left",
+      "profile": "leaf.vein.lateral.left",
+      "origin": {
+        "x": {
+          "kind": "reference",
+          "path": "node:rose.leaf.left.vein.sample.24:point:x"
+        },
+        "y": {
+          "kind": "reference",
+          "path": "node:rose.leaf.left.vein.sample.24:point:y"
+        }
+      },
+      "angle": {
+        "kind": "literal",
+        "value": -2.98
+      },
+      "mapping": {
+        "scaleX": {
+          "kind": "literal",
+          "value": 1
+        },
+        "scaleY": {
+          "kind": "literal",
+          "value": 1
+        },
+        "length": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "reference",
+              "path": "parameters.leafLength"
+            },
+            {
+              "kind": "literal",
+              "value": 0.07
+            }
+          ]
+        },
+        "width": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "reference",
+              "path": "parameters.leafWidth"
+            },
+            {
+              "kind": "literal",
+              "value": 0.6160923953358197
+            }
+          ]
+        },
+        "rootOffset": {
+          "kind": "literal",
+          "value": 0
+        },
+        "bend": {
+          "kind": "literal",
+          "value": 0
+        },
+        "transverseNormalization": {
+          "kind": "literal",
+          "value": 0.47
+        },
+        "reverseLongitudinal": false
+      },
+      "materialSlot": "leaf.vein",
+      "detail": true,
+      "stream": "rose.leaves.left",
+      "variation": {
+        "angle": {
+          "kind": "literal",
+          "value": 0.07
+        },
+        "length": {
+          "kind": "literal",
+          "value": 0.05
+        },
+        "width": {
+          "kind": "literal",
+          "value": 0.05
+        },
+        "bend": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "reference",
+              "path": "parameters.leafLength"
+            },
+            {
+              "kind": "literal",
+              "value": 0.12
+            }
+          ]
+        }
+      },
+      "strokeWidth": {
+        "kind": "literal",
+        "value": 0.0015
+      }
+    },
+    {
+      "op": "profile.map",
+      "id": "rose.leaf.left.vein.lateral.24.right",
+      "profile": "leaf.vein.lateral.right",
+      "origin": {
+        "x": {
+          "kind": "reference",
+          "path": "node:rose.leaf.left.vein.sample.24:point:x"
+        },
+        "y": {
+          "kind": "reference",
+          "path": "node:rose.leaf.left.vein.sample.24:point:y"
+        }
+      },
+      "angle": {
+        "kind": "literal",
+        "value": -2.98
+      },
+      "mapping": {
+        "scaleX": {
+          "kind": "literal",
+          "value": 1
+        },
+        "scaleY": {
+          "kind": "literal",
+          "value": 1
+        },
+        "length": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "reference",
+              "path": "parameters.leafLength"
+            },
+            {
+              "kind": "literal",
+              "value": 0.07
+            }
+          ]
+        },
+        "width": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "reference",
+              "path": "parameters.leafWidth"
+            },
+            {
+              "kind": "literal",
+              "value": 0.6160923953358197
+            }
+          ]
+        },
+        "rootOffset": {
+          "kind": "literal",
+          "value": 0
+        },
+        "bend": {
+          "kind": "literal",
+          "value": 0
+        },
+        "transverseNormalization": {
+          "kind": "literal",
+          "value": 0.47
+        },
+        "reverseLongitudinal": false
+      },
+      "materialSlot": "leaf.vein",
+      "detail": true,
+      "stream": "rose.leaves.left",
+      "variation": {
+        "angle": {
+          "kind": "literal",
+          "value": 0.07
+        },
+        "length": {
+          "kind": "literal",
+          "value": 0.05
+        },
+        "width": {
+          "kind": "literal",
+          "value": 0.05
+        },
+        "bend": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "reference",
+              "path": "parameters.leafLength"
+            },
+            {
+              "kind": "literal",
+              "value": 0.12
+            }
+          ]
+        }
+      },
+      "strokeWidth": {
+        "kind": "literal",
+        "value": 0.0015
+      }
+    },
+    {
+      "op": "curve.sample",
+      "id": "rose.leaf.left.vein.sample.46",
+      "curve": "rose.leaf.left.vein",
+      "parameter": {
+        "kind": "literal",
+        "value": 0.46
+      }
+    },
+    {
+      "op": "profile.map",
+      "id": "rose.leaf.left.vein.lateral.46.left",
+      "profile": "leaf.vein.lateral.left",
+      "origin": {
+        "x": {
+          "kind": "reference",
+          "path": "node:rose.leaf.left.vein.sample.46:point:x"
+        },
+        "y": {
+          "kind": "reference",
+          "path": "node:rose.leaf.left.vein.sample.46:point:y"
+        }
+      },
+      "angle": {
+        "kind": "literal",
+        "value": -2.98
+      },
+      "mapping": {
+        "scaleX": {
+          "kind": "literal",
+          "value": 1
+        },
+        "scaleY": {
+          "kind": "literal",
+          "value": 1
+        },
+        "length": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "reference",
+              "path": "parameters.leafLength"
+            },
+            {
+              "kind": "literal",
+              "value": 0.07
+            }
+          ]
+        },
+        "width": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "reference",
+              "path": "parameters.leafWidth"
+            },
+            {
+              "kind": "literal",
+              "value": 0.89290323118303
+            }
+          ]
+        },
+        "rootOffset": {
+          "kind": "literal",
+          "value": 0
+        },
+        "bend": {
+          "kind": "literal",
+          "value": 0
+        },
+        "transverseNormalization": {
+          "kind": "literal",
+          "value": 0.47
+        },
+        "reverseLongitudinal": false
+      },
+      "materialSlot": "leaf.vein",
+      "detail": true,
+      "stream": "rose.leaves.left",
+      "variation": {
+        "angle": {
+          "kind": "literal",
+          "value": 0.07
+        },
+        "length": {
+          "kind": "literal",
+          "value": 0.05
+        },
+        "width": {
+          "kind": "literal",
+          "value": 0.05
+        },
+        "bend": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "reference",
+              "path": "parameters.leafLength"
+            },
+            {
+              "kind": "literal",
+              "value": 0.12
+            }
+          ]
+        }
+      },
+      "strokeWidth": {
+        "kind": "literal",
+        "value": 0.0015
+      }
+    },
+    {
+      "op": "profile.map",
+      "id": "rose.leaf.left.vein.lateral.46.right",
+      "profile": "leaf.vein.lateral.right",
+      "origin": {
+        "x": {
+          "kind": "reference",
+          "path": "node:rose.leaf.left.vein.sample.46:point:x"
+        },
+        "y": {
+          "kind": "reference",
+          "path": "node:rose.leaf.left.vein.sample.46:point:y"
+        }
+      },
+      "angle": {
+        "kind": "literal",
+        "value": -2.98
+      },
+      "mapping": {
+        "scaleX": {
+          "kind": "literal",
+          "value": 1
+        },
+        "scaleY": {
+          "kind": "literal",
+          "value": 1
+        },
+        "length": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "reference",
+              "path": "parameters.leafLength"
+            },
+            {
+              "kind": "literal",
+              "value": 0.07
+            }
+          ]
+        },
+        "width": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "reference",
+              "path": "parameters.leafWidth"
+            },
+            {
+              "kind": "literal",
+              "value": 0.89290323118303
+            }
+          ]
+        },
+        "rootOffset": {
+          "kind": "literal",
+          "value": 0
+        },
+        "bend": {
+          "kind": "literal",
+          "value": 0
+        },
+        "transverseNormalization": {
+          "kind": "literal",
+          "value": 0.47
+        },
+        "reverseLongitudinal": false
+      },
+      "materialSlot": "leaf.vein",
+      "detail": true,
+      "stream": "rose.leaves.left",
+      "variation": {
+        "angle": {
+          "kind": "literal",
+          "value": 0.07
+        },
+        "length": {
+          "kind": "literal",
+          "value": 0.05
+        },
+        "width": {
+          "kind": "literal",
+          "value": 0.05
+        },
+        "bend": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "reference",
+              "path": "parameters.leafLength"
+            },
+            {
+              "kind": "literal",
+              "value": 0.12
+            }
+          ]
+        }
+      },
+      "strokeWidth": {
+        "kind": "literal",
+        "value": 0.0015
+      }
+    },
+    {
+      "op": "curve.sample",
+      "id": "rose.leaf.left.vein.sample.68",
+      "curve": "rose.leaf.left.vein",
+      "parameter": {
+        "kind": "literal",
+        "value": 0.68
+      }
+    },
+    {
+      "op": "profile.map",
+      "id": "rose.leaf.left.vein.lateral.68.left",
+      "profile": "leaf.vein.lateral.left",
+      "origin": {
+        "x": {
+          "kind": "reference",
+          "path": "node:rose.leaf.left.vein.sample.68:point:x"
+        },
+        "y": {
+          "kind": "reference",
+          "path": "node:rose.leaf.left.vein.sample.68:point:y"
+        }
+      },
+      "angle": {
+        "kind": "literal",
+        "value": -2.98
+      },
+      "mapping": {
+        "scaleX": {
+          "kind": "literal",
+          "value": 1
+        },
+        "scaleY": {
+          "kind": "literal",
+          "value": 1
+        },
+        "length": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "reference",
+              "path": "parameters.leafLength"
+            },
+            {
+              "kind": "literal",
+              "value": 0.07
+            }
+          ]
+        },
+        "width": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "reference",
+              "path": "parameters.leafWidth"
+            },
+            {
+              "kind": "literal",
+              "value": 0.7598951329518134
+            }
+          ]
+        },
+        "rootOffset": {
+          "kind": "literal",
+          "value": 0
+        },
+        "bend": {
+          "kind": "literal",
+          "value": 0
+        },
+        "transverseNormalization": {
+          "kind": "literal",
+          "value": 0.47
+        },
+        "reverseLongitudinal": false
+      },
+      "materialSlot": "leaf.vein",
+      "detail": true,
+      "stream": "rose.leaves.left",
+      "variation": {
+        "angle": {
+          "kind": "literal",
+          "value": 0.07
+        },
+        "length": {
+          "kind": "literal",
+          "value": 0.05
+        },
+        "width": {
+          "kind": "literal",
+          "value": 0.05
+        },
+        "bend": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "reference",
+              "path": "parameters.leafLength"
+            },
+            {
+              "kind": "literal",
+              "value": 0.12
+            }
+          ]
+        }
+      },
+      "strokeWidth": {
+        "kind": "literal",
+        "value": 0.0015
+      }
+    },
+    {
+      "op": "profile.map",
+      "id": "rose.leaf.left.vein.lateral.68.right",
+      "profile": "leaf.vein.lateral.right",
+      "origin": {
+        "x": {
+          "kind": "reference",
+          "path": "node:rose.leaf.left.vein.sample.68:point:x"
+        },
+        "y": {
+          "kind": "reference",
+          "path": "node:rose.leaf.left.vein.sample.68:point:y"
+        }
+      },
+      "angle": {
+        "kind": "literal",
+        "value": -2.98
+      },
+      "mapping": {
+        "scaleX": {
+          "kind": "literal",
+          "value": 1
+        },
+        "scaleY": {
+          "kind": "literal",
+          "value": 1
+        },
+        "length": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "reference",
+              "path": "parameters.leafLength"
+            },
+            {
+              "kind": "literal",
+              "value": 0.07
+            }
+          ]
+        },
+        "width": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "reference",
+              "path": "parameters.leafWidth"
+            },
+            {
+              "kind": "literal",
+              "value": 0.7598951329518134
+            }
+          ]
+        },
+        "rootOffset": {
+          "kind": "literal",
+          "value": 0
+        },
+        "bend": {
+          "kind": "literal",
+          "value": 0
+        },
+        "transverseNormalization": {
+          "kind": "literal",
+          "value": 0.47
+        },
+        "reverseLongitudinal": false
+      },
+      "materialSlot": "leaf.vein",
+      "detail": true,
+      "stream": "rose.leaves.left",
+      "variation": {
+        "angle": {
+          "kind": "literal",
+          "value": 0.07
+        },
+        "length": {
+          "kind": "literal",
+          "value": 0.05
+        },
+        "width": {
+          "kind": "literal",
+          "value": 0.05
+        },
+        "bend": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "reference",
+              "path": "parameters.leafLength"
+            },
+            {
+              "kind": "literal",
+              "value": 0.12
+            }
+          ]
+        }
+      },
+      "strokeWidth": {
+        "kind": "literal",
+        "value": 0.0015
+      }
+    },
+    {
+      "op": "curve.sample",
+      "id": "rose.leaf.right.vein.sample.24",
+      "curve": "rose.leaf.right.vein",
+      "parameter": {
+        "kind": "literal",
+        "value": 0.24
+      }
+    },
+    {
+      "op": "profile.map",
+      "id": "rose.leaf.right.vein.lateral.24.left",
+      "profile": "leaf.vein.lateral.left",
+      "origin": {
+        "x": {
+          "kind": "reference",
+          "path": "node:rose.leaf.right.vein.sample.24:point:x"
+        },
+        "y": {
+          "kind": "reference",
+          "path": "node:rose.leaf.right.vein.sample.24:point:y"
+        }
+      },
+      "angle": {
+        "kind": "literal",
+        "value": -0.16
+      },
+      "mapping": {
+        "scaleX": {
+          "kind": "literal",
+          "value": 1
+        },
+        "scaleY": {
+          "kind": "literal",
+          "value": 1
+        },
+        "length": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "arithmetic",
+              "operator": "multiply",
+              "operands": [
+                {
+                  "kind": "reference",
+                  "path": "parameters.leafLength"
+                },
+                {
+                  "kind": "literal",
+                  "value": 0.94
+                }
+              ]
+            },
+            {
+              "kind": "literal",
+              "value": 0.07
+            }
+          ]
+        },
+        "width": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "arithmetic",
+              "operator": "multiply",
+              "operands": [
+                {
+                  "kind": "reference",
+                  "path": "parameters.leafWidth"
+                },
+                {
+                  "kind": "literal",
+                  "value": 0.94
+                }
+              ]
+            },
+            {
+              "kind": "literal",
+              "value": 0.6160923953358197
+            }
+          ]
+        },
+        "rootOffset": {
+          "kind": "literal",
+          "value": 0
+        },
+        "bend": {
+          "kind": "literal",
+          "value": 0
+        },
+        "transverseNormalization": {
+          "kind": "literal",
+          "value": 0.47
+        },
+        "reverseLongitudinal": false
+      },
+      "materialSlot": "leaf.vein",
+      "detail": true,
+      "stream": "rose.leaves.right",
+      "variation": {
+        "angle": {
+          "kind": "literal",
+          "value": 0.07
+        },
+        "length": {
+          "kind": "literal",
+          "value": 0.05
+        },
+        "width": {
+          "kind": "literal",
+          "value": 0.05
+        },
+        "bend": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "reference",
+              "path": "parameters.leafLength"
+            },
+            {
+              "kind": "literal",
+              "value": 0.12
+            }
+          ]
+        }
+      },
+      "strokeWidth": {
+        "kind": "literal",
+        "value": 0.0015
+      }
+    },
+    {
+      "op": "profile.map",
+      "id": "rose.leaf.right.vein.lateral.24.right",
+      "profile": "leaf.vein.lateral.right",
+      "origin": {
+        "x": {
+          "kind": "reference",
+          "path": "node:rose.leaf.right.vein.sample.24:point:x"
+        },
+        "y": {
+          "kind": "reference",
+          "path": "node:rose.leaf.right.vein.sample.24:point:y"
+        }
+      },
+      "angle": {
+        "kind": "literal",
+        "value": -0.16
+      },
+      "mapping": {
+        "scaleX": {
+          "kind": "literal",
+          "value": 1
+        },
+        "scaleY": {
+          "kind": "literal",
+          "value": 1
+        },
+        "length": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "arithmetic",
+              "operator": "multiply",
+              "operands": [
+                {
+                  "kind": "reference",
+                  "path": "parameters.leafLength"
+                },
+                {
+                  "kind": "literal",
+                  "value": 0.94
+                }
+              ]
+            },
+            {
+              "kind": "literal",
+              "value": 0.07
+            }
+          ]
+        },
+        "width": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "arithmetic",
+              "operator": "multiply",
+              "operands": [
+                {
+                  "kind": "reference",
+                  "path": "parameters.leafWidth"
+                },
+                {
+                  "kind": "literal",
+                  "value": 0.94
+                }
+              ]
+            },
+            {
+              "kind": "literal",
+              "value": 0.6160923953358197
+            }
+          ]
+        },
+        "rootOffset": {
+          "kind": "literal",
+          "value": 0
+        },
+        "bend": {
+          "kind": "literal",
+          "value": 0
+        },
+        "transverseNormalization": {
+          "kind": "literal",
+          "value": 0.47
+        },
+        "reverseLongitudinal": false
+      },
+      "materialSlot": "leaf.vein",
+      "detail": true,
+      "stream": "rose.leaves.right",
+      "variation": {
+        "angle": {
+          "kind": "literal",
+          "value": 0.07
+        },
+        "length": {
+          "kind": "literal",
+          "value": 0.05
+        },
+        "width": {
+          "kind": "literal",
+          "value": 0.05
+        },
+        "bend": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "reference",
+              "path": "parameters.leafLength"
+            },
+            {
+              "kind": "literal",
+              "value": 0.12
+            }
+          ]
+        }
+      },
+      "strokeWidth": {
+        "kind": "literal",
+        "value": 0.0015
+      }
+    },
+    {
+      "op": "curve.sample",
+      "id": "rose.leaf.right.vein.sample.46",
+      "curve": "rose.leaf.right.vein",
+      "parameter": {
+        "kind": "literal",
+        "value": 0.46
+      }
+    },
+    {
+      "op": "profile.map",
+      "id": "rose.leaf.right.vein.lateral.46.left",
+      "profile": "leaf.vein.lateral.left",
+      "origin": {
+        "x": {
+          "kind": "reference",
+          "path": "node:rose.leaf.right.vein.sample.46:point:x"
+        },
+        "y": {
+          "kind": "reference",
+          "path": "node:rose.leaf.right.vein.sample.46:point:y"
+        }
+      },
+      "angle": {
+        "kind": "literal",
+        "value": -0.16
+      },
+      "mapping": {
+        "scaleX": {
+          "kind": "literal",
+          "value": 1
+        },
+        "scaleY": {
+          "kind": "literal",
+          "value": 1
+        },
+        "length": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "arithmetic",
+              "operator": "multiply",
+              "operands": [
+                {
+                  "kind": "reference",
+                  "path": "parameters.leafLength"
+                },
+                {
+                  "kind": "literal",
+                  "value": 0.94
+                }
+              ]
+            },
+            {
+              "kind": "literal",
+              "value": 0.07
+            }
+          ]
+        },
+        "width": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "arithmetic",
+              "operator": "multiply",
+              "operands": [
+                {
+                  "kind": "reference",
+                  "path": "parameters.leafWidth"
+                },
+                {
+                  "kind": "literal",
+                  "value": 0.94
+                }
+              ]
+            },
+            {
+              "kind": "literal",
+              "value": 0.89290323118303
+            }
+          ]
+        },
+        "rootOffset": {
+          "kind": "literal",
+          "value": 0
+        },
+        "bend": {
+          "kind": "literal",
+          "value": 0
+        },
+        "transverseNormalization": {
+          "kind": "literal",
+          "value": 0.47
+        },
+        "reverseLongitudinal": false
+      },
+      "materialSlot": "leaf.vein",
+      "detail": true,
+      "stream": "rose.leaves.right",
+      "variation": {
+        "angle": {
+          "kind": "literal",
+          "value": 0.07
+        },
+        "length": {
+          "kind": "literal",
+          "value": 0.05
+        },
+        "width": {
+          "kind": "literal",
+          "value": 0.05
+        },
+        "bend": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "reference",
+              "path": "parameters.leafLength"
+            },
+            {
+              "kind": "literal",
+              "value": 0.12
+            }
+          ]
+        }
+      },
+      "strokeWidth": {
+        "kind": "literal",
+        "value": 0.0015
+      }
+    },
+    {
+      "op": "profile.map",
+      "id": "rose.leaf.right.vein.lateral.46.right",
+      "profile": "leaf.vein.lateral.right",
+      "origin": {
+        "x": {
+          "kind": "reference",
+          "path": "node:rose.leaf.right.vein.sample.46:point:x"
+        },
+        "y": {
+          "kind": "reference",
+          "path": "node:rose.leaf.right.vein.sample.46:point:y"
+        }
+      },
+      "angle": {
+        "kind": "literal",
+        "value": -0.16
+      },
+      "mapping": {
+        "scaleX": {
+          "kind": "literal",
+          "value": 1
+        },
+        "scaleY": {
+          "kind": "literal",
+          "value": 1
+        },
+        "length": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "arithmetic",
+              "operator": "multiply",
+              "operands": [
+                {
+                  "kind": "reference",
+                  "path": "parameters.leafLength"
+                },
+                {
+                  "kind": "literal",
+                  "value": 0.94
+                }
+              ]
+            },
+            {
+              "kind": "literal",
+              "value": 0.07
+            }
+          ]
+        },
+        "width": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "arithmetic",
+              "operator": "multiply",
+              "operands": [
+                {
+                  "kind": "reference",
+                  "path": "parameters.leafWidth"
+                },
+                {
+                  "kind": "literal",
+                  "value": 0.94
+                }
+              ]
+            },
+            {
+              "kind": "literal",
+              "value": 0.89290323118303
+            }
+          ]
+        },
+        "rootOffset": {
+          "kind": "literal",
+          "value": 0
+        },
+        "bend": {
+          "kind": "literal",
+          "value": 0
+        },
+        "transverseNormalization": {
+          "kind": "literal",
+          "value": 0.47
+        },
+        "reverseLongitudinal": false
+      },
+      "materialSlot": "leaf.vein",
+      "detail": true,
+      "stream": "rose.leaves.right",
+      "variation": {
+        "angle": {
+          "kind": "literal",
+          "value": 0.07
+        },
+        "length": {
+          "kind": "literal",
+          "value": 0.05
+        },
+        "width": {
+          "kind": "literal",
+          "value": 0.05
+        },
+        "bend": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "reference",
+              "path": "parameters.leafLength"
+            },
+            {
+              "kind": "literal",
+              "value": 0.12
+            }
+          ]
+        }
+      },
+      "strokeWidth": {
+        "kind": "literal",
+        "value": 0.0015
+      }
+    },
+    {
+      "op": "curve.sample",
+      "id": "rose.leaf.right.vein.sample.68",
+      "curve": "rose.leaf.right.vein",
+      "parameter": {
+        "kind": "literal",
+        "value": 0.68
+      }
+    },
+    {
+      "op": "profile.map",
+      "id": "rose.leaf.right.vein.lateral.68.left",
+      "profile": "leaf.vein.lateral.left",
+      "origin": {
+        "x": {
+          "kind": "reference",
+          "path": "node:rose.leaf.right.vein.sample.68:point:x"
+        },
+        "y": {
+          "kind": "reference",
+          "path": "node:rose.leaf.right.vein.sample.68:point:y"
+        }
+      },
+      "angle": {
+        "kind": "literal",
+        "value": -0.16
+      },
+      "mapping": {
+        "scaleX": {
+          "kind": "literal",
+          "value": 1
+        },
+        "scaleY": {
+          "kind": "literal",
+          "value": 1
+        },
+        "length": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "arithmetic",
+              "operator": "multiply",
+              "operands": [
+                {
+                  "kind": "reference",
+                  "path": "parameters.leafLength"
+                },
+                {
+                  "kind": "literal",
+                  "value": 0.94
+                }
+              ]
+            },
+            {
+              "kind": "literal",
+              "value": 0.07
+            }
+          ]
+        },
+        "width": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "arithmetic",
+              "operator": "multiply",
+              "operands": [
+                {
+                  "kind": "reference",
+                  "path": "parameters.leafWidth"
+                },
+                {
+                  "kind": "literal",
+                  "value": 0.94
+                }
+              ]
+            },
+            {
+              "kind": "literal",
+              "value": 0.7598951329518134
+            }
+          ]
+        },
+        "rootOffset": {
+          "kind": "literal",
+          "value": 0
+        },
+        "bend": {
+          "kind": "literal",
+          "value": 0
+        },
+        "transverseNormalization": {
+          "kind": "literal",
+          "value": 0.47
+        },
+        "reverseLongitudinal": false
+      },
+      "materialSlot": "leaf.vein",
+      "detail": true,
+      "stream": "rose.leaves.right",
+      "variation": {
+        "angle": {
+          "kind": "literal",
+          "value": 0.07
+        },
+        "length": {
+          "kind": "literal",
+          "value": 0.05
+        },
+        "width": {
+          "kind": "literal",
+          "value": 0.05
+        },
+        "bend": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "reference",
+              "path": "parameters.leafLength"
+            },
+            {
+              "kind": "literal",
+              "value": 0.12
+            }
+          ]
+        }
+      },
+      "strokeWidth": {
+        "kind": "literal",
+        "value": 0.0015
+      }
+    },
+    {
+      "op": "profile.map",
+      "id": "rose.leaf.right.vein.lateral.68.right",
+      "profile": "leaf.vein.lateral.right",
+      "origin": {
+        "x": {
+          "kind": "reference",
+          "path": "node:rose.leaf.right.vein.sample.68:point:x"
+        },
+        "y": {
+          "kind": "reference",
+          "path": "node:rose.leaf.right.vein.sample.68:point:y"
+        }
+      },
+      "angle": {
+        "kind": "literal",
+        "value": -0.16
+      },
+      "mapping": {
+        "scaleX": {
+          "kind": "literal",
+          "value": 1
+        },
+        "scaleY": {
+          "kind": "literal",
+          "value": 1
+        },
+        "length": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "arithmetic",
+              "operator": "multiply",
+              "operands": [
+                {
+                  "kind": "reference",
+                  "path": "parameters.leafLength"
+                },
+                {
+                  "kind": "literal",
+                  "value": 0.94
+                }
+              ]
+            },
+            {
+              "kind": "literal",
+              "value": 0.07
+            }
+          ]
+        },
+        "width": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "arithmetic",
+              "operator": "multiply",
+              "operands": [
+                {
+                  "kind": "reference",
+                  "path": "parameters.leafWidth"
+                },
+                {
+                  "kind": "literal",
+                  "value": 0.94
+                }
+              ]
+            },
+            {
+              "kind": "literal",
+              "value": 0.7598951329518134
+            }
+          ]
+        },
+        "rootOffset": {
+          "kind": "literal",
+          "value": 0
+        },
+        "bend": {
+          "kind": "literal",
+          "value": 0
+        },
+        "transverseNormalization": {
+          "kind": "literal",
+          "value": 0.47
+        },
+        "reverseLongitudinal": false
+      },
+      "materialSlot": "leaf.vein",
+      "detail": true,
+      "stream": "rose.leaves.right",
+      "variation": {
+        "angle": {
+          "kind": "literal",
+          "value": 0.07
+        },
+        "length": {
+          "kind": "literal",
+          "value": 0.05
+        },
+        "width": {
+          "kind": "literal",
+          "value": 0.05
+        },
+        "bend": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "reference",
+              "path": "parameters.leafLength"
+            },
+            {
+              "kind": "literal",
+              "value": 0.12
+            }
+          ]
+        }
+      },
+      "strokeWidth": {
+        "kind": "literal",
+        "value": 0.0015
+      }
     }
   ],
   "outputs": [

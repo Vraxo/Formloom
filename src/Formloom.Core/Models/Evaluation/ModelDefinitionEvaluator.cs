@@ -494,6 +494,33 @@ public static class ModelDefinitionEvaluator
                             .Add("tangent", projected.Tangent));
                     return true;
 
+                case ModelCurveSampleNodeDefinition sample:
+                    if (!priorNodes.TryGetValue(sample.Curve, out var sampledCurve) || sampledCurve.CurveSegments.IsDefaultOrEmpty)
+                    {
+                        Add("evaluation.curve-not-available", $"{location}.curve", $"Curve node '{sample.Curve}' has no evaluated cubic segments.", diagnostics);
+                        return false;
+                    }
+
+                    if (!TryNumber(sample.Parameter, "parameter", out var sampleParameter))
+                    {
+                        return false;
+                    }
+
+                    if (sampleParameter is < 0 or > 1)
+                    {
+                        Add("evaluation.curve-parameter-out-of-range", $"{location}.parameter", "A curve sample parameter must be in the normalized range 0..1.", diagnostics);
+                        return false;
+                    }
+
+                    var sampled = CubicCurveSampler.Sample(sampledCurve.CurveSegments, (float)sampleParameter);
+                    output = new(
+                        [],
+                        [],
+                        ImmutableDictionary<string, Vector2>.Empty
+                            .Add("point", sampled.Point)
+                            .Add("tangent", sampled.Tangent));
+                    return true;
+
                 case ModelProfileMapNodeDefinition mapped:
                     if (!definition.Profiles.TryGetValue(mapped.Profile, out var profile) ||
                         !TryPoint(mapped.Origin, "origin", out var origin) ||
