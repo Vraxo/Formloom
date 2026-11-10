@@ -43,6 +43,46 @@ public static class ProfileMapper
         return result.MoveToImmutable();
     }
 
+    /// <summary>
+    /// Maps authored cubic endpoints and controls using the profile transform. With nonlinear
+    /// bending this transforms the control polygon rather than exactly remapping the Bézier curve.
+    /// </summary>
+    public static ImmutableArray<CubicSegment> MapSegments(
+        IReadOnlyList<CubicSegment> segments,
+        Vector2 origin,
+        Vector2 direction,
+        ProfileMappingOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(segments);
+        ArgumentOutOfRangeException.ThrowIfZero(segments.Count);
+
+        var points = new Vector2[checked(segments.Count * 4)];
+        for (var index = 0; index < segments.Count; index++)
+        {
+            var segment = segments[index] ??
+                throw new ArgumentException("Cubic templates cannot contain null segments.", nameof(segments));
+            var offset = index * 4;
+            points[offset] = segment.Start;
+            points[offset + 1] = segment.Control1;
+            points[offset + 2] = segment.Control2;
+            points[offset + 3] = segment.End;
+        }
+
+        var mapped = Map(points, origin, direction, options);
+        var result = ImmutableArray.CreateBuilder<CubicSegment>(segments.Count);
+        for (var index = 0; index < segments.Count; index++)
+        {
+            var offset = index * 4;
+            result.Add(new(
+                mapped[offset],
+                mapped[offset + 1],
+                mapped[offset + 2],
+                mapped[offset + 3]));
+        }
+
+        return result.MoveToImmutable();
+    }
+
     private static void ValidateOptions(ProfileMappingOptions options)
     {
         if (!float.IsFinite(options.ScaleX) ||
