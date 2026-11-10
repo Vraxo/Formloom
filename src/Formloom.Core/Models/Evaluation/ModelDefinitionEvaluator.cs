@@ -82,10 +82,14 @@ public static class ModelDefinitionEvaluator
             }
         }
 
+        var materialVariant = choiceParameters[definition.Prompt.MaterialVariantParameter];
         var geometry = new ModelGeometry(
             definition.Id,
             ModelGeometryCoordinateSpace.SceneNormalized,
-            paths.ToImmutable());
+            paths.ToImmutable())
+        {
+            MaterialTokens = definition.Materials[materialVariant].Tokens,
+        };
         foreach (var diagnostic in ModelGeometryValidator.Validate(geometry))
         {
             diagnostics.Add(new(diagnostic.Code, diagnostic.PathId ?? "geometry", diagnostic.Message));
