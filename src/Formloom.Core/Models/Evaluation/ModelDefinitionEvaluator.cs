@@ -628,6 +628,11 @@ public static class ModelDefinitionEvaluator
             return CurveBuilder.ClosedCubic(points.ToArray());
         }
 
+        if (profile.Interpolation == ModelProfileInterpolation.OpenCubic)
+        {
+            return CurveBuilder.OpenCubic(points.ToArray());
+        }
+
         var segmentCount = profile.Closed ? points.Length : points.Length - 1;
         var segments = ImmutableArray.CreateBuilder<CubicSegment>(segmentCount);
         for (var index = 0; index < segmentCount; index++)

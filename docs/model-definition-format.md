@@ -54,7 +54,7 @@ Use positive X to the right and positive Y downward, matching current Core geome
 - **model-local:** the model's normalized construction frame;
 - **scene-normalized:** current Core 0..1 scene coordinates.
 
-Conversions are explicit operations. The renderer must never guess a point's coordinate space. A profile declares open/closed state, interpolation, and ordinary numeric point/control-point data. The rose needs closed-cubic interpolation for closed contours and explicit cubic segments for open paths.
+Conversions are explicit operations. The renderer must never guess a point's coordinate space. A profile declares open/closed state, interpolation, and ordinary numeric point/control-point data. The profile interpolation modes are `linear`, `closedCubic`, and `openCubic`. `closedCubic` smooths a closed perimeter; `openCubic` smooths an ordered open path with endpoint-safe tangents for details such as veins and folds. Open paths may also use `linear` interpolation when straight segments are intended. Explicit `path.cubic` nodes remain available when a model needs authored Bézier control points.
 
 ### 3.2 Generic mounting frames
 

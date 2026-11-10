@@ -28,6 +28,29 @@ public static class CurveBuilder
         return segments.MoveToImmutable();
     }
 
+    // Open Catmull-Rom smoothing for ordered paths such as veins and folds.
+    // Endpoint tangents use the adjacent chord so the curve does not wrap at either end.
+    public static ImmutableArray<CubicSegment> OpenCubic(Vector2[] points)
+    {
+        ArgumentNullException.ThrowIfNull(points);
+        if (points.Length < 2)
+        {
+            throw new ArgumentOutOfRangeException(nameof(points));
+        }
+
+        var segments = ImmutableArray.CreateBuilder<CubicSegment>(points.Length - 1);
+        for (var index = 0; index < points.Length - 1; index++)
+        {
+            var start = points[index];
+            var end = points[index + 1];
+            var previous = index == 0 ? start : points[index - 1];
+            var next = index + 2 < points.Length ? points[index + 2] : end;
+            segments.Add(new(start, start + ((end - previous) / 6), end - ((next - start) / 6), end));
+        }
+
+        return segments.MoveToImmutable();
+    }
+
     public static ProfileExtent Extent(ImmutableArray<CubicSegment> segments, int steps = 8)
     {
         var left = float.MaxValue;

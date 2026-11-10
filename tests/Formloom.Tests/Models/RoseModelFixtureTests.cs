@@ -58,6 +58,8 @@ public sealed class RoseModelFixtureTests
         Assert.True(rightVein.Detail);
         Assert.Equal("leaf.vein", leftVein.MaterialSlot);
         Assert.Equal("leaf.vein", rightVein.MaterialSlot);
+        Assert.Equal(3, leftVein.Segments.Length);
+        Assert.Equal(3, rightVein.Segments.Length);
         Assert.Equal(
             leftLeaf.Landmarks.Select(item => item.Position),
             leftVein.Landmarks.Select(item => item.Position));
@@ -94,6 +96,7 @@ public sealed class RoseModelFixtureTests
         {
             Assert.True(path.Detail);
             Assert.Equal("petal.fold", path.MaterialSlot);
+            Assert.Equal(3, path.Segments.Length);
         });
 
         for (var index = 0; index < outer.Length; index++)

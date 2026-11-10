@@ -616,7 +616,7 @@
     },
     "leaf.vein": {
       "closed": false,
-      "interpolation": "linear",
+      "interpolation": "openCubic",
       "points": [
         {
           "x": 0.5,
@@ -638,7 +638,7 @@
     },
     "petal.fold.broad": {
       "closed": false,
-      "interpolation": "linear",
+      "interpolation": "openCubic",
       "points": [
         {
           "x": 0.5,
@@ -660,7 +660,7 @@
     },
     "petal.fold.inner": {
       "closed": false,
-      "interpolation": "linear",
+      "interpolation": "openCubic",
       "points": [
         {
           "x": 0.5,
