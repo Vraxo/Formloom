@@ -30,6 +30,18 @@ public sealed class RoseModelFixtureTests
         Assert.Equal(2, attachmentNodes.Length);
         Assert.All(attachmentNodes, node => Assert.Equal("rose.stem", node.Curve));
 
+        var radialNodes = definition.Nodes.OfType<ModelRadialArrayNodeDefinition>().ToArray();
+        Assert.Equal(6, radialNodes.Length);
+        Assert.All(radialNodes, node =>
+        {
+            Assert.Equal(
+                "node:rose.stem:tip:x",
+                Assert.IsType<ModelReferenceExpression>(node.Center.X).Path);
+            Assert.Equal(
+                "node:rose.stem:tip:y",
+                Assert.IsType<ModelReferenceExpression>(node.Center.Y).Path);
+        });
+
         var context = ModelEvaluationContext.Empty(42, variationAmount) with
         {
             Frames = ImmutableDictionary<string, ModelMountFrameValues>.Empty.Add(
@@ -43,6 +55,7 @@ public sealed class RoseModelFixtureTests
         Assert.Equal("red", result.ChoiceParameters["color"]);
 
         var geometry = Assert.IsType<ModelGeometry>(result.Geometry);
+        AssertBloomFollowsStemTip(geometry);
         Assert.Equal(31, geometry.Paths.Length);
         Assert.Equal("rose.stem", geometry.Paths[0].Id);
 
@@ -195,6 +208,9 @@ public sealed class RoseModelFixtureTests
         var baselineStem = Find(baselinePaths, "rose.stem");
         var variedStem = Find(variedPaths, "rose.stem");
         Assert.NotEqual(baselineStem.Segments[1], variedStem.Segments[1]);
+        Assert.NotEqual(
+            Assert.Single(baselineStem.Landmarks, item => item.Name == "tip").Position,
+            Assert.Single(variedStem.Landmarks, item => item.Name == "tip").Position);
         var baselineLeft = Find(baselinePaths, "rose.leaf.left");
         var variedLeft = Find(variedPaths, "rose.leaf.left");
         var variedLeftVein = Find(variedPaths, "rose.leaf.left.vein");
@@ -230,6 +246,23 @@ public sealed class RoseModelFixtureTests
         Assert.Equal(variedLeft.Segments, Find(changedPaths, "rose.leaf.left").Segments);
         Assert.Equal(variedStem.Segments.ToArray(), Find(changedPaths, "rose.stem").Segments.ToArray());
         Assert.NotEqual(variedRight.Segments[0], Find(changedPaths, "rose.leaf.right").Segments[0]);
+    }
+
+    private static void AssertBloomFollowsStemTip(ModelGeometry geometry)
+    {
+        var stem = Assert.Single(geometry.Paths, path => path.Id == "rose.stem");
+        var stemTip = Assert.Single(stem.Landmarks, item => item.Name == "tip").Position;
+        Assert.Equal(stem.Segments[^1].End, stemTip);
+
+        var bloomPaths = geometry.Paths
+            .Where(path => path.Id.StartsWith("rose.petals.", StringComparison.Ordinal))
+            .ToArray();
+        Assert.Equal(26, bloomPaths.Length);
+        Assert.All(bloomPaths, path =>
+        {
+            var attachment = Assert.Single(path.Landmarks, item => item.Name == "attachment");
+            Assert.Equal(stemTip, attachment.Position);
+        });
     }
 
     [Fact]
@@ -269,8 +302,12 @@ public sealed class RoseModelFixtureTests
 
         Assert.True(first.IsSuccess, string.Join(Environment.NewLine, first.Diagnostics.Select(item => item.Message)));
         Assert.True(second.IsSuccess, string.Join(Environment.NewLine, second.Diagnostics.Select(item => item.Message)));
-        var firstPaths = Assert.IsType<ModelGeometry>(first.Geometry).Paths;
-        var secondPaths = Assert.IsType<ModelGeometry>(second.Geometry).Paths;
+        var firstGeometry = Assert.IsType<ModelGeometry>(first.Geometry);
+        var secondGeometry = Assert.IsType<ModelGeometry>(second.Geometry);
+        AssertBloomFollowsStemTip(firstGeometry);
+        AssertBloomFollowsStemTip(secondGeometry);
+        var firstPaths = firstGeometry.Paths;
+        var secondPaths = secondGeometry.Paths;
         Assert.Equal(firstPaths.Select(path => path.Id), secondPaths.Select(path => path.Id));
         Assert.Equal(firstPaths.SelectMany(path => path.Segments), secondPaths.SelectMany(path => path.Segments));
     }
