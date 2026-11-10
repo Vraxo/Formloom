@@ -39,7 +39,7 @@ These are capabilities, not rose data. They should have explicit, independently 
 | Map a normalized profile into a directed 2D basis with scale and offset | `MapPetal`, `MapLeaf` | Profile mapping exists in the reusable geometry layer and evaluator; confirm its transform semantics cover the legacy basis exactly |
 | Convert ordered profile points into closed cubic contours | Petal and leaf outline construction | Reusable profile-to-cubic conversion exists; compare its interpolation and closure behavior against the legacy `CurveBuilder.ClosedCubic` |
 | Construct and preserve cubic paths | Stem, folds, veins | Cubic path evaluation exists; reusable path utilities remain ordinary C# |
-| Evaluate a cubic at parameter (t), sample it, and find a nearest/projected point | Stem attachment placement and `DistanceToStem` | Curve projection exists; confirm it supports the intended attachment contract and deterministic tie behavior |
+| Evaluate a cubic at parameter (t), sample it, and find a nearest/projected point | Stem attachment placement, lateral leaf-vein origins, and `DistanceToStem` | `curve.project` and `curve.sample` are implemented; sampling exposes point and tangent with normalized parameter semantics |
 | Construct a stable orthonormal direction/tangent basis and transform vectors | Petal orientation and leaf orientation | Not yet an explicit evaluator operation; add only the smallest reusable capability required by the real rose fixture |
 | Apply bounded seeded variation using stable named streams | Stem sway, leaf placement, layer jitter, petal shape/tone | Radial evaluator variation exists; rose needs multiple independently scoped streams and per-part scalar ranges without stream coupling |
 | Compute conservative bounds and validate finite geometry | Rose plant bounds and scene validation | Generic geometry validation exists; mounted-model constraints and safe-frame checks are not yet generic |
@@ -97,6 +97,7 @@ The initial schema-v1 evaluator implements five node types:
 
 - `path.cubic`
 - `curve.project`
+- `curve.sample`
 - `profile.map`
 - `array.radial`
 - `geometry.group`
@@ -105,10 +106,10 @@ It can resolve bounded numeric expressions, parameters, mount-frame metrics, and
 
 This is a real execution foundation, but it is not yet enough to represent the complete legacy rose faithfully. The following gaps must be tested against a concrete rose fixture before adding operations:
 
-1. **Non-radial repeated/independent parts:** two leaves with distinct attachment points and directions, and three petal layers with different profiles and parameters.
+1. **Non-radial repeated/independent parts:** two leaves with distinct attachment points and directions, and three petal layers with different profiles and parameters. The fixture now expresses the two leaves, 5/5/3 petal layers, folds, central veins, and twelve lateral veins using the current operations.
 2. **General profile transforms/deformation:** exact basis mapping and the legacy sinusoidal curl/bow behavior, if those cannot be expressed with existing operations without contorting the definition.
 3. **Stable per-part variation streams:** independent stem, leaf, and per-layer variation matching legacy stream isolation.
-4. **Cubic attachment and landmarks:** reusable curve parameterization/projection with named attachment points and stable semantics.
+4. **Cubic attachment and landmarks:** curve projection and normalized curve sampling now exist, including point/tangent outputs. Remaining work is to verify exact attachment semantics and use them in a complete production-equivalent model.
 5. **Generic mounted constraints:** frame-relative opening fit, rim clearance, attachment, and safe bounds.
 6. **Material/style rendering:** generic fills, gradients/shading, strokes, opacity, material tone, and detail passes.
 7. **Host-vessel occlusion:** generic continuous stem rendering through the opening with the near rim occluding the lower continuation.
