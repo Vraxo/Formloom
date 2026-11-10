@@ -1,0 +1,62 @@
+{
+  "manifestVersion": 1,
+  "purpose": "Initial before-render baselines for Formloom's naturalistic still-life illustration work.",
+  "baselineCommit": "996b54e3b771293918dabbd9a396894a4d9e6910",
+  "rendererPath": "desktop legacy scene generator and Skia CPU renderer",
+  "images": [
+    {
+      "id": "apple-red-wooden-table",
+      "prompt": "a red apple on a wooden table",
+      "settings": {
+        "seed": 42,
+        "variationPercent": 35,
+        "width": 1024,
+        "height": 1024,
+        "antialiasing": true
+      },
+      "localOriginal": {
+        "savedByMaintainer": true,
+        "repositoryArchived": false,
+        "fileName": null,
+        "sha256": null
+      },
+      "reviewFocus": [
+        "organic fruit silhouette and volume",
+        "fruit-skin material response",
+        "surface detail",
+        "tabletop treatment",
+        "contact and cast shadows"
+      ]
+    },
+    {
+      "id": "rose-red-blue-vase-wooden-table",
+      "prompt": "a red rose in a blue ceramic vase on a wooden table",
+      "settings": {
+        "seed": 42,
+        "variationPercent": 35,
+        "width": 1024,
+        "height": 1024,
+        "antialiasing": true
+      },
+      "localOriginal": {
+        "savedByMaintainer": true,
+        "repositoryArchived": false,
+        "fileName": null,
+        "sha256": null
+      },
+      "reviewFocus": [
+        "layered petals",
+        "leaves and stem",
+        "blue glazed ceramic",
+        "consistent scene lighting",
+        "object contact and composition"
+      ]
+    }
+  ],
+  "notes": [
+    "The local PNG originals are not stored in this repository or available to CI.",
+    "Null filenames and checksums are deliberate; no local image metadata has been supplied.",
+    "These are before snapshots, not target artwork or pixel-golden test fixtures.",
+    "Use the exact prompts and settings for future manual before/after comparisons."
+  ]
+}
