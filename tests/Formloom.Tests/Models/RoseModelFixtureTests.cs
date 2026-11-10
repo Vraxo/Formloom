@@ -194,7 +194,7 @@ public sealed class RoseModelFixtureTests
 
         var baselineStem = Find(baselinePaths, "rose.stem");
         var variedStem = Find(variedPaths, "rose.stem");
-        Assert.NotEqual(baselineStem.Segments, variedStem.Segments);
+        Assert.NotEqual(baselineStem.Segments[1], variedStem.Segments[1]);
         var baselineLeft = Find(baselinePaths, "rose.leaf.left");
         var variedLeft = Find(variedPaths, "rose.leaf.left");
         var variedLeftVein = Find(variedPaths, "rose.leaf.left.vein");
