@@ -4,4 +4,5 @@ public enum ModelProfileInterpolation
 {
     Linear,
     ClosedCubic,
+    OpenCubic,
 }
