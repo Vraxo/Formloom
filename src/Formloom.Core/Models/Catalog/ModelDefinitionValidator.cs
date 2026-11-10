@@ -293,6 +293,11 @@ public static class ModelDefinitionValidator
                 add("definition.invalid-closed-profile", path, "Closed-cubic profiles must be closed and contain at least three points.");
             }
 
+            if (profile.Interpolation == ModelProfileInterpolation.OpenCubic && profile.Closed)
+            {
+                add("definition.invalid-open-profile", path, "Open-cubic profiles must be open.");
+            }
+
             for (var index = 0; index < profile.Points.Length; index++)
             {
                 var point = profile.Points[index];
