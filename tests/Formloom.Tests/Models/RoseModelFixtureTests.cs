@@ -34,26 +34,90 @@ public sealed class RoseModelFixtureTests
         Assert.Equal("red", result.ChoiceParameters["color"]);
 
         var geometry = Assert.IsType<ModelGeometry>(result.Geometry);
-        Assert.Equal(16, geometry.Paths.Length);
+        Assert.Equal(31, geometry.Paths.Length);
         Assert.Equal("rose.stem", geometry.Paths[0].Id);
-        Assert.Equal("rose.leaf.left", geometry.Paths[1].Id);
-        Assert.Equal("rose.leaf.right", geometry.Paths[2].Id);
 
-        var outer = geometry.Paths.Where(path => path.Id.StartsWith("rose.petals.outer[", StringComparison.Ordinal)).ToArray();
-        var middle = geometry.Paths.Where(path => path.Id.StartsWith("rose.petals.middle[", StringComparison.Ordinal)).ToArray();
-        var inner = geometry.Paths.Where(path => path.Id.StartsWith("rose.petals.inner[", StringComparison.Ordinal)).ToArray();
+        ModelGeometryPath FindPath(string id) =>
+            Assert.Single(geometry.Paths.Where(path => path.Id == id));
+
+        ModelGeometryPath[] FindRadial(string idPrefix) =>
+            geometry.Paths
+                .Where(path => path.Id.StartsWith(idPrefix + "[", StringComparison.Ordinal))
+                .ToArray();
+
+        var leftLeaf = FindPath("rose.leaf.left");
+        var rightLeaf = FindPath("rose.leaf.right");
+        var leftVein = FindPath("rose.leaf.left.vein");
+        var rightVein = FindPath("rose.leaf.right.vein");
+
+        Assert.True(leftLeaf.Closed);
+        Assert.True(rightLeaf.Closed);
+        Assert.False(leftVein.Closed);
+        Assert.False(rightVein.Closed);
+        Assert.True(leftVein.Detail);
+        Assert.True(rightVein.Detail);
+        Assert.Equal("leaf.vein", leftVein.MaterialSlot);
+        Assert.Equal("leaf.vein", rightVein.MaterialSlot);
+        Assert.Equal(
+            leftLeaf.Landmarks.Select(item => item.Position),
+            leftVein.Landmarks.Select(item => item.Position));
+        Assert.Equal(
+            rightLeaf.Landmarks.Select(item => item.Position),
+            rightVein.Landmarks.Select(item => item.Position));
+
+        var outer = FindRadial("rose.petals.outer");
+        var middle = FindRadial("rose.petals.middle");
+        var inner = FindRadial("rose.petals.inner");
+        var outerFolds = FindRadial("rose.petals.outer.fold");
+        var middleFolds = FindRadial("rose.petals.middle.fold");
+        var innerFolds = FindRadial("rose.petals.inner.fold");
+
         Assert.Equal(5, outer.Length);
         Assert.Equal(5, middle.Length);
         Assert.Equal(3, inner.Length);
+        Assert.Equal(5, outerFolds.Length);
+        Assert.Equal(5, middleFolds.Length);
+        Assert.Equal(3, innerFolds.Length);
+
         Assert.All(outer, path => Assert.InRange(path.MaterialTone!.Value, 0.43f - (0.08f * variationAmount), 0.43f + (0.08f * variationAmount)));
         Assert.All(middle, path => Assert.InRange(path.MaterialTone!.Value, 0.64f - (0.08f * variationAmount), 0.64f + (0.08f * variationAmount)));
         Assert.All(inner, path => Assert.InRange(path.MaterialTone!.Value, 0.84f - (0.06f * variationAmount), 0.84f + (0.06f * variationAmount)));
+
+        Assert.All(outer, path => Assert.True(path.Closed));
+        Assert.All(middle, path => Assert.True(path.Closed));
+        Assert.All(inner, path => Assert.True(path.Closed));
+        Assert.All(outerFolds, path => Assert.False(path.Closed));
+        Assert.All(middleFolds, path => Assert.False(path.Closed));
+        Assert.All(innerFolds, path => Assert.False(path.Closed));
+
+        Assert.All(outerFolds.Concat(middleFolds).Concat(innerFolds), path =>
+        {
+            Assert.True(path.Detail);
+            Assert.Equal("petal.fold", path.MaterialSlot);
+        });
+
+        for (var index = 0; index < outer.Length; index++)
+        {
+            Assert.Equal(
+                outer[index].Landmarks.Select(item => item.Position),
+                outerFolds[index].Landmarks.Select(item => item.Position));
+        }
+
+        for (var index = 0; index < middle.Length; index++)
+        {
+            Assert.Equal(
+                middle[index].Landmarks.Select(item => item.Position),
+                middleFolds[index].Landmarks.Select(item => item.Position));
+        }
+
+        for (var index = 0; index < inner.Length; index++)
+        {
+            Assert.Equal(
+                inner[index].Landmarks.Select(item => item.Position),
+                innerFolds[index].Landmarks.Select(item => item.Position));
+        }
+
         Assert.All(geometry.Paths, path => Assert.NotNull(path.MaterialSlot));
-
-        Assert.Contains(geometry.Paths[1].Landmarks, item => item.Name == "attachment");
-        Assert.Contains(geometry.Paths[1].Landmarks, item => item.Name == "root");
-        Assert.Contains(geometry.Paths[1].Landmarks, item => item.Name == "tip");
-
         Assert.Empty(ModelGeometryValidator.Validate(geometry));
         Assert.All(
             geometry.Paths.SelectMany(path => path.Segments),

@@ -613,6 +613,72 @@
           "y": 0.83
         }
       ]
+    },
+    "leaf.vein": {
+      "closed": false,
+      "interpolation": "linear",
+      "points": [
+        {
+          "x": 0.5,
+          "y": 1
+        },
+        {
+          "x": 0.52,
+          "y": 0.72
+        },
+        {
+          "x": 0.49,
+          "y": 0.42
+        },
+        {
+          "x": 0.5,
+          "y": 0.12
+        }
+      ]
+    },
+    "petal.fold.broad": {
+      "closed": false,
+      "interpolation": "linear",
+      "points": [
+        {
+          "x": 0.5,
+          "y": 0.16
+        },
+        {
+          "x": 0.53,
+          "y": 0.34
+        },
+        {
+          "x": 0.52,
+          "y": 0.58
+        },
+        {
+          "x": 0.5,
+          "y": 0.82
+        }
+      ]
+    },
+    "petal.fold.inner": {
+      "closed": false,
+      "interpolation": "linear",
+      "points": [
+        {
+          "x": 0.5,
+          "y": 0.16
+        },
+        {
+          "x": 0.53,
+          "y": 0.3
+        },
+        {
+          "x": 0.51,
+          "y": 0.47
+        },
+        {
+          "x": 0.5,
+          "y": 0.63
+        }
+      ]
     }
   },
   "materials": {
@@ -628,7 +694,8 @@
         "stem.edge": "#365020",
         "leaf.base": "#5E8034",
         "leaf.light": "#A2BA60",
-        "leaf.edge": "#305022"
+        "leaf.edge": "#305022",
+        "leaf.vein": "#305022"
       }
     },
     "pink": {
@@ -643,7 +710,8 @@
         "stem.edge": "#365020",
         "leaf.base": "#5E8034",
         "leaf.light": "#A2BA60",
-        "leaf.edge": "#305022"
+        "leaf.edge": "#305022",
+        "leaf.vein": "#305022"
       }
     }
   },
@@ -822,6 +890,58 @@
     },
     {
       "op": "profile.map",
+      "id": "rose.leaf.left.vein",
+      "profile": "leaf.vein",
+      "origin": {
+        "x": {
+          "kind": "reference",
+          "path": "node:rose.attach.left:point:x"
+        },
+        "y": {
+          "kind": "reference",
+          "path": "node:rose.attach.left:point:y"
+        }
+      },
+      "angle": {
+        "kind": "literal",
+        "value": -2.98
+      },
+      "mapping": {
+        "scaleX": {
+          "kind": "literal",
+          "value": 1
+        },
+        "scaleY": {
+          "kind": "literal",
+          "value": 1
+        },
+        "length": {
+          "kind": "reference",
+          "path": "parameters.leafLength"
+        },
+        "width": {
+          "kind": "reference",
+          "path": "parameters.leafWidth"
+        },
+        "rootOffset": {
+          "kind": "literal",
+          "value": 0
+        },
+        "bend": {
+          "kind": "literal",
+          "value": 0
+        },
+        "transverseNormalization": {
+          "kind": "literal",
+          "value": 0.47
+        },
+        "reverseLongitudinal": true
+      },
+      "materialSlot": "leaf.vein",
+      "detail": true
+    },
+    {
+      "op": "profile.map",
       "id": "rose.leaf.right",
       "profile": "leaf.serrated",
       "origin": {
@@ -891,6 +1011,78 @@
       },
       "materialSlot": "leaf.base",
       "detail": false
+    },
+    {
+      "op": "profile.map",
+      "id": "rose.leaf.right.vein",
+      "profile": "leaf.vein",
+      "origin": {
+        "x": {
+          "kind": "reference",
+          "path": "node:rose.attach.right:point:x"
+        },
+        "y": {
+          "kind": "reference",
+          "path": "node:rose.attach.right:point:y"
+        }
+      },
+      "angle": {
+        "kind": "literal",
+        "value": -0.16
+      },
+      "mapping": {
+        "scaleX": {
+          "kind": "literal",
+          "value": 1
+        },
+        "scaleY": {
+          "kind": "literal",
+          "value": 1
+        },
+        "length": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "reference",
+              "path": "parameters.leafLength"
+            },
+            {
+              "kind": "literal",
+              "value": 0.94
+            }
+          ]
+        },
+        "width": {
+          "kind": "arithmetic",
+          "operator": "multiply",
+          "operands": [
+            {
+              "kind": "reference",
+              "path": "parameters.leafWidth"
+            },
+            {
+              "kind": "literal",
+              "value": 0.94
+            }
+          ]
+        },
+        "rootOffset": {
+          "kind": "literal",
+          "value": 0
+        },
+        "bend": {
+          "kind": "literal",
+          "value": 0
+        },
+        "transverseNormalization": {
+          "kind": "literal",
+          "value": 0.47
+        },
+        "reverseLongitudinal": true
+      },
+      "materialSlot": "leaf.vein",
+      "detail": true
     },
     {
       "op": "array.radial",
@@ -986,6 +1178,98 @@
     },
     {
       "op": "array.radial",
+      "id": "rose.petals.outer.fold",
+      "profile": "petal.fold.broad",
+      "center": {
+        "x": {
+          "kind": "reference",
+          "path": "frame.vase-opening.openingCenter.x"
+        },
+        "y": {
+          "kind": "reference",
+          "path": "parameters.bloomCenterY"
+        }
+      },
+      "radiusX": {
+        "kind": "reference",
+        "path": "parameters.bloomRadiusX"
+      },
+      "radiusY": {
+        "kind": "reference",
+        "path": "parameters.bloomRadiusY"
+      },
+      "count": 5,
+      "startAngle": {
+        "kind": "literal",
+        "value": -1.5707963267948966
+      },
+      "phase": {
+        "kind": "literal",
+        "value": 0
+      },
+      "mapping": {
+        "scaleX": {
+          "kind": "literal",
+          "value": 1
+        },
+        "scaleY": {
+          "kind": "literal",
+          "value": 1
+        },
+        "length": {
+          "kind": "literal",
+          "value": 0.94
+        },
+        "width": {
+          "kind": "literal",
+          "value": 1.04
+        },
+        "rootOffset": {
+          "kind": "literal",
+          "value": 0.015
+        },
+        "bend": {
+          "kind": "literal",
+          "value": 0.025
+        },
+        "transverseNormalization": {
+          "kind": "literal",
+          "value": 0.5
+        },
+        "reverseLongitudinal": false
+      },
+      "variation": {
+        "angle": {
+          "kind": "literal",
+          "value": 0.06911503837897545
+        },
+        "length": {
+          "kind": "literal",
+          "value": 0.035
+        },
+        "width": {
+          "kind": "literal",
+          "value": 0.05
+        },
+        "bend": {
+          "kind": "literal",
+          "value": 0.055
+        },
+        "tone": {
+          "kind": "literal",
+          "value": 0.08
+        }
+      },
+      "tone": {
+        "kind": "literal",
+        "value": 0.43
+      },
+      "stream": "rose.petals.outer",
+      "materialSlot": "petal.fold",
+      "detail": true
+    },
+    {
+      "op": "array.radial",
       "id": "rose.petals.middle",
       "profile": "petal.broad",
       "center": {
@@ -1075,6 +1359,98 @@
       "stream": "rose.petals.middle",
       "materialSlot": "petal.base",
       "detail": false
+    },
+    {
+      "op": "array.radial",
+      "id": "rose.petals.middle.fold",
+      "profile": "petal.fold.broad",
+      "center": {
+        "x": {
+          "kind": "reference",
+          "path": "frame.vase-opening.openingCenter.x"
+        },
+        "y": {
+          "kind": "reference",
+          "path": "parameters.bloomCenterY"
+        }
+      },
+      "radiusX": {
+        "kind": "reference",
+        "path": "parameters.bloomRadiusX"
+      },
+      "radiusY": {
+        "kind": "reference",
+        "path": "parameters.bloomRadiusY"
+      },
+      "count": 5,
+      "startAngle": {
+        "kind": "literal",
+        "value": -1.5707963267948966
+      },
+      "phase": {
+        "kind": "literal",
+        "value": 0.5
+      },
+      "mapping": {
+        "scaleX": {
+          "kind": "literal",
+          "value": 1
+        },
+        "scaleY": {
+          "kind": "literal",
+          "value": 1
+        },
+        "length": {
+          "kind": "literal",
+          "value": 0.72
+        },
+        "width": {
+          "kind": "literal",
+          "value": 0.94
+        },
+        "rootOffset": {
+          "kind": "literal",
+          "value": 0.035
+        },
+        "bend": {
+          "kind": "literal",
+          "value": 0.055
+        },
+        "transverseNormalization": {
+          "kind": "literal",
+          "value": 0.5
+        },
+        "reverseLongitudinal": false
+      },
+      "variation": {
+        "angle": {
+          "kind": "literal",
+          "value": 0.06911503837897545
+        },
+        "length": {
+          "kind": "literal",
+          "value": 0.035
+        },
+        "width": {
+          "kind": "literal",
+          "value": 0.05
+        },
+        "bend": {
+          "kind": "literal",
+          "value": 0.055
+        },
+        "tone": {
+          "kind": "literal",
+          "value": 0.08
+        }
+      },
+      "tone": {
+        "kind": "literal",
+        "value": 0.64
+      },
+      "stream": "rose.petals.middle",
+      "materialSlot": "petal.fold",
+      "detail": true
     },
     {
       "op": "array.radial",
@@ -1169,15 +1545,112 @@
       "detail": false
     },
     {
+      "op": "array.radial",
+      "id": "rose.petals.inner.fold",
+      "profile": "petal.fold.inner",
+      "center": {
+        "x": {
+          "kind": "reference",
+          "path": "frame.vase-opening.openingCenter.x"
+        },
+        "y": {
+          "kind": "reference",
+          "path": "parameters.bloomCenterY"
+        }
+      },
+      "radiusX": {
+        "kind": "reference",
+        "path": "parameters.bloomRadiusX"
+      },
+      "radiusY": {
+        "kind": "reference",
+        "path": "parameters.bloomRadiusY"
+      },
+      "count": 3,
+      "startAngle": {
+        "kind": "literal",
+        "value": -1.5707963267948966
+      },
+      "phase": {
+        "kind": "literal",
+        "value": 0.18
+      },
+      "mapping": {
+        "scaleX": {
+          "kind": "literal",
+          "value": 1
+        },
+        "scaleY": {
+          "kind": "literal",
+          "value": 1
+        },
+        "length": {
+          "kind": "literal",
+          "value": 0.54
+        },
+        "width": {
+          "kind": "literal",
+          "value": 0.78
+        },
+        "rootOffset": {
+          "kind": "literal",
+          "value": 0.01
+        },
+        "bend": {
+          "kind": "literal",
+          "value": 0.12
+        },
+        "transverseNormalization": {
+          "kind": "literal",
+          "value": 0.5
+        },
+        "reverseLongitudinal": false
+      },
+      "variation": {
+        "angle": {
+          "kind": "literal",
+          "value": 0.11519173063162574
+        },
+        "length": {
+          "kind": "literal",
+          "value": 0.035
+        },
+        "width": {
+          "kind": "literal",
+          "value": 0.05
+        },
+        "bend": {
+          "kind": "literal",
+          "value": 0.055
+        },
+        "tone": {
+          "kind": "literal",
+          "value": 0.06
+        }
+      },
+      "tone": {
+        "kind": "literal",
+        "value": 0.84
+      },
+      "stream": "rose.petals.inner-whorl",
+      "materialSlot": "petal.fold",
+      "detail": true
+    },
+    {
       "op": "geometry.group",
       "id": "rose.assembled",
       "parts": [
         "rose.stem",
         "rose.leaf.left",
+        "rose.leaf.left.vein",
         "rose.leaf.right",
+        "rose.leaf.right.vein",
         "rose.petals.outer",
+        "rose.petals.outer.fold",
         "rose.petals.middle",
-        "rose.petals.inner"
+        "rose.petals.middle.fold",
+        "rose.petals.inner",
+        "rose.petals.inner.fold"
       ]
     }
   ],
