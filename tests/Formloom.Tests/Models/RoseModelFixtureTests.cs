@@ -252,7 +252,6 @@ public sealed class RoseModelFixtureTests
         Assert.NotEqual(variedRight.Segments[0], Find(changedPaths, "rose.leaf.right").Segments[0]);
     }
 
-
     [Fact]
     public void RepresentsSixLateralVeinsPerLeafUsingCurveSamplesAndProfileMaps()
     {

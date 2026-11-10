@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using System.Numerics;
 using Formloom.Core.Core;
+using Formloom.Core.Geometry;
 using Formloom.Core.Models.Definitions;
 using Formloom.Core.Models.Evaluation;
 using Formloom.Core.Models.Geometry;
@@ -288,7 +289,6 @@ public sealed class ModelDefinitionEvaluatorTests
         Assert.Equal(0.5f, attachmentLandmark.Position.X, 4);
         Assert.Equal(0.5f, attachmentLandmark.Position.Y, 4);
     }
-
 
     [Fact]
     public void SamplesAcrossOrderedSegmentsUsingEqualParameterIntervals()
