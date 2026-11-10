@@ -2,6 +2,8 @@
 
 A CPU-first, non-neural procedural still-life generator. Images are constructed from geometry, gradients, authored scene rules and seeded detail—not models, stock images or downloaded textures.
 
+The intended default visual direction is a naturalistic still-life illustration: dimensional and materially convincing, but deliberately illustrated rather than photorealistic. The current renderer has not fully realized that direction yet; see [the visual art direction](docs/art-direction.md).
+
 Repository changes follow a deliberately incremental PR workflow. See [CONTRIBUTING.md](CONTRIBUTING.md); coding agents should also read [AGENTS.md](AGENTS.md).
 
 ## Current capability
