@@ -249,7 +249,7 @@ public static class RoseGeometry
             radiusY,
             rootRadius: 0f,
             length: 0.57f,
-            width: 0.78f,
+            width: 0.90f,
             curl: 0.18f,
             innerRandom,
             amount);
@@ -278,10 +278,10 @@ public static class RoseGeometry
         {
             var startingAngle = -MathF.PI / 2;
             var layerAngle = (index + phase) * turn;
-            var angle = startingAngle + layerAngle + Jitter(random, turn * 0.08f, amount);
-            var petalLength = length * (1 + Jitter(random, 0.075f, amount));
-            var petalWidth = width * (1 + Jitter(random, 0.10f, amount));
-            var petalCurl = curl + Jitter(random, 0.075f, amount);
+            var angle = startingAngle + layerAngle + Jitter(random, turn * (0.045f + (amount * 0.055f)), 1f);
+            var petalLength = length * (1 + Jitter(random, 0.03f + (amount * 0.06f), 1f));
+            var petalWidth = width * (1 + Jitter(random, 0.05f + (amount * 0.09f), 1f));
+            var petalCurl = curl + Jitter(random, 0.045f + (amount * 0.06f), 1f);
             var tone = layer switch
             {
                 RosePetalLayer.Outer => 0.43f + Jitter(random, 0.08f, amount),
