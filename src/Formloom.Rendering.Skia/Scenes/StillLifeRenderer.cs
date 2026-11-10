@@ -925,6 +925,11 @@ public static class StillLifeRenderer
                 material.StemEdge,
                 silhouette,
                 paint);
+
+            if (!silhouette && !omitDetail)
+            {
+                DrawRoseStemRidge(canvas, scene, plant, stem, material, paint);
+            }
         }
 
         foreach (var leaf in plant.Leaves)
@@ -954,6 +959,47 @@ public static class StillLifeRenderer
             silhouette,
             paint,
             antialias);
+        canvas.Restore();
+    }
+
+    private static void DrawRoseStemRidge(
+        SKCanvas canvas,
+        StillLifeScene scene,
+        RosePlant plant,
+        SKPath stem,
+        RoseMaterial material,
+        SKPaint paint)
+    {
+        var segment = plant.Stem[0];
+        var tangent = segment.Evaluate(0.52f) - segment.Evaluate(0.48f);
+        if (tangent.LengthSquared() < 0.000001f)
+        {
+            return;
+        }
+
+        tangent = Vector2.Normalize(tangent);
+        var normal = new Vector2(-tangent.Y, tangent.X);
+        var light = scene.LightDirection;
+        if (light.LengthSquared() < 0.000001f)
+        {
+            return;
+        }
+
+        light = Vector2.Normalize(light);
+        if (Vector2.Dot(normal, light) < 0)
+        {
+            normal = -normal;
+        }
+
+        canvas.Save();
+        canvas.Translate(normal.X * plant.StemThickness * 0.2f, normal.Y * plant.StemThickness * 0.2f);
+        paint.Style = SKPaintStyle.Stroke;
+        paint.StrokeCap = SKStrokeCap.Round;
+        paint.StrokeWidth = MathF.Max(plant.StemThickness * 0.16f, 0.0005f);
+        paint.Color = material.StemLight.WithAlpha(78);
+        canvas.DrawPath(stem, paint);
+        paint.Style = SKPaintStyle.Fill;
+        paint.StrokeCap = SKStrokeCap.Butt;
         canvas.Restore();
     }
 
