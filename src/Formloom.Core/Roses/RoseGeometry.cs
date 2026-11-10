@@ -18,39 +18,45 @@ public static class RoseGeometry
     private const int StemSamples = 64;
     private const float LeafHalfWidth = 0.47f;
 
-    // A broad, rounded petal with a tapered root and gently curled shoulders. Its radial
-    // orientation is deliberately subordinate to the three overlapping rose layers.
+    // A softly asymmetric petal with a rounded, slightly off-centre lip and gently
+    // irregular shoulders. The profile is broad enough to overlap, but not a perfect oval.
     private static readonly Vector2[] BroadPetal =
     [
-        new(0.50f, 0.02f),
-        new(0.15f, 0.14f),
-        new(0.03f, 0.39f),
-        new(0.08f, 0.66f),
-        new(0.27f, 0.89f),
-        new(0.49f, 1.00f),
-        new(0.72f, 0.95f),
-        new(0.91f, 0.76f),
-        new(0.98f, 0.48f),
-        new(0.89f, 0.22f),
+        new(0.52f, 0.02f),
+        new(0.21f, 0.13f),
+        new(0.06f, 0.34f),
+        new(0.04f, 0.55f),
+        new(0.13f, 0.75f),
+        new(0.31f, 0.91f),
+        new(0.48f, 0.99f),
+        new(0.61f, 0.97f),
+        new(0.71f, 0.91f),
+        new(0.84f, 0.84f),
+        new(0.96f, 0.67f),
+        new(0.97f, 0.49f),
+        new(0.87f, 0.28f),
+        new(0.79f, 0.16f),
     ];
 
-    // The innermost petals turn back toward the centre, making a small curled whorl rather than
-    // a circular disk or another ring of open spokes.
+    // The innermost petals curl back across their own faces, but keep the returning
+    // edge close enough to overlap the neighbouring petals and form a compact central whorl.
     private static readonly Vector2[] CurledPetal =
     [
-        new(0.50f, 0.02f),
-        new(0.17f, 0.15f),
-        new(0.05f, 0.43f),
-        new(0.21f, 0.71f),
-        new(0.43f, 0.91f),
-        new(0.65f, 0.94f),
-        new(0.80f, 0.79f),
-        new(0.65f, 0.66f),
-        new(0.43f, 0.61f),
-        new(0.31f, 0.47f),
-        new(0.38f, 0.33f),
-        new(0.64f, 0.27f),
-        new(0.77f, 0.17f),
+        new(0.50f, 0.00f),
+        new(0.17f, 0.12f),
+        new(0.05f, 0.36f),
+        new(0.12f, 0.62f),
+        new(0.32f, 0.84f),
+        new(0.56f, 0.96f),
+        new(0.77f, 0.92f),
+        new(0.89f, 0.78f),
+        new(0.82f, 0.65f),
+        new(0.68f, 0.59f),
+        new(0.55f, 0.53f),
+        new(0.46f, 0.44f),
+        new(0.45f, 0.35f),
+        new(0.57f, 0.26f),
+        new(0.77f, 0.16f),
     ];
 
     // Rose leaves are wider than a tulip's lance and carry three shallow serrations on each
@@ -216,7 +222,7 @@ public static class RoseGeometry
             rootRadius: 0.015f,
             length: 0.94f,
             width: 1.04f,
-            curl: 0.025f,
+            curl: 0.065f,
             outerRandom,
             amount);
         AddLayer(
@@ -228,10 +234,10 @@ public static class RoseGeometry
             center,
             radiusX,
             radiusY,
-            rootRadius: 0.035f,
-            length: 0.72f,
+            rootRadius: 0.02f,
+            length: 0.74f,
             width: 0.94f,
-            curl: 0.055f,
+            curl: 0.115f,
             middleRandom,
             amount);
         AddLayer(
@@ -243,10 +249,10 @@ public static class RoseGeometry
             center,
             radiusX,
             radiusY,
-            rootRadius: 0.01f,
-            length: 0.54f,
-            width: 0.78f,
-            curl: 0.12f,
+            rootRadius: 0f,
+            length: 0.57f,
+            width: 0.90f,
+            curl: 0.18f,
             innerRandom,
             amount);
         return built.MoveToImmutable();
@@ -274,10 +280,10 @@ public static class RoseGeometry
         {
             var startingAngle = -MathF.PI / 2;
             var layerAngle = (index + phase) * turn;
-            var angle = startingAngle + layerAngle + Jitter(random, turn * 0.055f, amount);
-            var petalLength = length * (1 + Jitter(random, 0.035f, amount));
-            var petalWidth = width * (1 + Jitter(random, 0.05f, amount));
-            var petalCurl = curl + Jitter(random, 0.055f, amount);
+            var angle = startingAngle + layerAngle + Jitter(random, turn * (0.045f + (amount * 0.055f)), 1f);
+            var petalLength = length * (1 + Jitter(random, 0.03f + (amount * 0.06f), 1f));
+            var petalWidth = width * (1 + Jitter(random, 0.05f + (amount * 0.09f), 1f));
+            var petalCurl = curl + Jitter(random, 0.045f + (amount * 0.06f), 1f);
             var tone = layer switch
             {
                 RosePetalLayer.Outer => 0.43f + Jitter(random, 0.08f, amount),
