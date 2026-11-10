@@ -39,6 +39,41 @@ public sealed class ModelGeometryRendererTests
     }
 
     [Fact]
+    public void FillsClosedPathsWithAuthoredLinearGradients()
+    {
+        var geometry = new ModelGeometry(
+            "models.gradient-test",
+            ModelGeometryCoordinateSpace.SceneNormalized,
+            [Rectangle("surface", 0.1f, 0.1f, 0.9f, 0.9f, "surface")])
+        {
+            MaterialTokens = ImmutableDictionary<string, string>.Empty
+                .Add("surface", "#00FF00")
+                .Add("gradient.start", "#FF0000")
+                .Add("gradient.end", "#0000FF"),
+            MaterialGradients = ImmutableDictionary<string, ModelGeometryLinearGradient>.Empty.Add(
+                "surface",
+                new(
+                    new(0.5f, 0.25f),
+                    new(0.5f, 0.75f),
+                    [
+                        new(0f, "gradient.start"),
+                        new(1f, "gradient.end"),
+                    ])),
+        };
+
+        var rendered = ModelGeometryRenderer.Render(geometry, 128, 128, new RenderOptions(Antialiasing: false));
+
+        using var bitmap = Decode(rendered.PngBytes);
+        Assert.Equal(new SKColor(255, 0, 0), bitmap.GetPixel(64, 24));
+        Assert.Equal(new SKColor(0, 0, 255), bitmap.GetPixel(64, 104));
+        var midpoint = bitmap.GetPixel(64, 64);
+        Assert.InRange(midpoint.Red, (byte)126, (byte)129);
+        Assert.Equal((byte)0, midpoint.Green);
+        Assert.InRange(midpoint.Blue, (byte)126, (byte)129);
+        Assert.Equal((byte)255, midpoint.Alpha);
+    }
+
+    [Fact]
     public void AppliesAlphaFromEightDigitMaterialTokens()
     {
         var geometry = new ModelGeometry(
@@ -167,6 +202,12 @@ public sealed class ModelGeometryRendererTests
 
         Assert.Equal("#B02232", red.MaterialTokens["petal.base"]);
         Assert.Equal("#D03A74", pink.MaterialTokens["petal.base"]);
+        Assert.Equal(
+            new[] { "petal.light", "petal.base" },
+            red.MaterialGradients["petal.base"].Stops.Select(stop => stop.Token));
+        Assert.Equal(
+            new[] { "petal.light", "petal.base" },
+            pink.MaterialGradients["petal.base"].Stops.Select(stop => stop.Token));
         AssertRoseStrokesAreAuthoredInTheFixture(red);
         AssertRoseStrokesAreAuthoredInTheFixture(pink);
 
@@ -181,10 +222,10 @@ public sealed class ModelGeometryRendererTests
         Assert.False(redBitmap.Bytes.SequenceEqual(pinkBitmap.Bytes));
 
         File.WriteAllBytes(
-            Path.Combine(AppContext.BaseDirectory, "formloom-model-rose-strokes-red.png"),
+            Path.Combine(AppContext.BaseDirectory, "formloom-model-rose-gradients-red.png"),
             redPreview.PngBytes);
         File.WriteAllBytes(
-            Path.Combine(AppContext.BaseDirectory, "formloom-model-rose-strokes-pink.png"),
+            Path.Combine(AppContext.BaseDirectory, "formloom-model-rose-gradients-pink.png"),
             pinkPreview.PngBytes);
     }
 

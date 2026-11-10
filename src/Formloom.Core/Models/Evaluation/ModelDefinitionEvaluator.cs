@@ -89,6 +89,15 @@ public static class ModelDefinitionEvaluator
             paths.ToImmutable())
         {
             MaterialTokens = definition.Materials[materialVariant].Tokens,
+            MaterialGradients = definition.Materials[materialVariant].Gradients.ToImmutableDictionary(
+                pair => pair.Key,
+                pair => new ModelGeometryLinearGradient(
+                    new(pair.Value.Start.X, pair.Value.Start.Y),
+                    new(pair.Value.End.X, pair.Value.End.Y),
+                    pair.Value.Stops
+                        .Select(stop => new ModelGeometryGradientStop(stop.Offset, stop.Token))
+                        .ToImmutableArray()),
+                StringComparer.Ordinal),
         };
         foreach (var diagnostic in ModelGeometryValidator.Validate(geometry))
         {

@@ -21,6 +21,8 @@ public static class ModelGeometryValidator
             diagnostics.Add(new("geometry.coordinate-space-unsupported", null, "The coordinate space is unsupported."));
         }
 
+        ValidateMaterialGradients(geometry, diagnostics);
+
         if (geometry.Paths.IsDefaultOrEmpty)
         {
             diagnostics.Add(new("geometry.paths-required", null, "At least one geometry path is required."));
@@ -132,6 +134,56 @@ public static class ModelGeometryValidator
             Vector2.Distance(last.End, first.Start) > ContinuityTolerance)
         {
             diagnostics.Add(new("geometry.closed-path-open", path.Id, "A closed path's final endpoint must meet its first start point."));
+        }
+    }
+
+    private static void ValidateMaterialGradients(
+        ModelGeometry geometry,
+        ImmutableArray<ModelGeometryDiagnostic>.Builder diagnostics)
+    {
+        if (geometry.MaterialGradients is null)
+        {
+            diagnostics.Add(new("geometry.material-gradients-uninitialized", null, "Material gradients must be initialized."));
+            return;
+        }
+
+        foreach (var (slot, gradient) in geometry.MaterialGradients)
+        {
+            if (string.IsNullOrWhiteSpace(slot) || gradient is null)
+            {
+                diagnostics.Add(new("geometry.material-gradient-invalid", null, "A material gradient requires a material slot and gradient definition."));
+                continue;
+            }
+
+            if (!IsFinite(gradient.Start) || !IsFinite(gradient.End) ||
+                gradient.Start.X is < 0 or > 1 || gradient.Start.Y is < 0 or > 1 ||
+                gradient.End.X is < 0 or > 1 || gradient.End.Y is < 0 or > 1 ||
+                gradient.Start == gradient.End)
+            {
+                diagnostics.Add(new("geometry.material-gradient-endpoints-invalid", slot, "Gradient endpoints must be distinct finite coordinates in the normalized 0..1 range."));
+            }
+
+            if (gradient.Stops.IsDefaultOrEmpty || gradient.Stops.Length < 2)
+            {
+                diagnostics.Add(new("geometry.material-gradient-stops-invalid", slot, "A linear gradient requires at least two color stops."));
+                continue;
+            }
+
+            var previousOffset = -1f;
+            foreach (var stop in gradient.Stops)
+            {
+                if (stop is null || !float.IsFinite(stop.Offset) ||
+                    stop.Offset is < 0 or > 1 || stop.Offset <= previousOffset ||
+                    string.IsNullOrWhiteSpace(stop.Token) ||
+                    geometry.MaterialTokens is null ||
+                    !geometry.MaterialTokens.ContainsKey(stop.Token))
+                {
+                    diagnostics.Add(new("geometry.material-gradient-stop-invalid", slot, "Gradient stops require strictly increasing offsets in the normalized 0..1 range and existing material color tokens."));
+                    break;
+                }
+
+                previousOffset = stop.Offset;
+            }
         }
     }
 
