@@ -15,4 +15,4 @@ public sealed record ModelRadialArrayNodeDefinition(
     string Stream,
     string? MaterialSlot,
     bool Detail,
-    ModelNumberExpression? StrokeWidth = null) : ModelNodeDefinition(Id)
+    ModelNumberExpression? StrokeWidth = null) : ModelNodeDefinition(Id);
