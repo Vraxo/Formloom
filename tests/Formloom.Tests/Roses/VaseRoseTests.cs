@@ -203,7 +203,7 @@ public sealed class VaseRoseTests
                         Assert.True(leaf.Tip.Y < leaf.Attachment.Y);
                         Assert.True(leaf.Tip.Y > plant.Bloom.Bottom, "both leaves must clear the bottom of the bloom");
                         Assert.False(leaf.Outline.IsDefaultOrEmpty);
-                        Assert.Single(leaf.Vein);
+                        Assert.Equal(7, leaf.Vein.Length);
                     }
 
                     Assert.True(plant.Leaves[0].Tip.X < plant.Leaves[1].Tip.X);
