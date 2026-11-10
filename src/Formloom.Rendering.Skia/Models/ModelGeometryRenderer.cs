@@ -55,7 +55,7 @@ public static class ModelGeometryRenderer
 
         foreach (var path in geometry.Paths)
         {
-            if (path.MaterialSlot is null)
+            if (path.MaterialSlot is null || (!path.Closed && path.StrokeWidth is null))
             {
                 continue;
             }
