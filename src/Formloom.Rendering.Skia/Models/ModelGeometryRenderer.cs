@@ -25,7 +25,7 @@ public static class ModelGeometryRenderer
             height,
             new ModelGeometryRenderOptions(Antialiasing: options?.Antialiasing ?? true));
 
-    /// <summary>Renders model geometry with model-specific detail and silhouette options.</summary>
+    /// <summary>Renders model geometry with model-specific detail, silhouette, and host-occlusion options.</summary>
     public static RenderedImage RenderWithOptions(
         ModelGeometry geometry,
         int width,
@@ -68,6 +68,12 @@ public static class ModelGeometryRenderer
         canvas.Scale(width, height);
         canvas.Clear(SKColors.Transparent);
 
+        if (options.OcclusionMask is { } occlusionMask)
+        {
+            canvas.Save();
+            canvas.ClipPath(occlusionMask, SKClipOperation.Difference, antialias: antialias);
+        }
+
         foreach (var path in geometry.Paths)
         {
             if ((path.Detail && (!options.IncludeDetails || options.Silhouette)) ||
@@ -108,6 +114,11 @@ public static class ModelGeometryRenderer
                 };
                 canvas.DrawPath(outline, paint);
             }
+        }
+
+        if (options.OcclusionMask is not null)
+        {
+            canvas.Restore();
         }
 
         using var image = surface.Snapshot();
