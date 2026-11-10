@@ -5,6 +5,7 @@ using Formloom.Core.Ceramics;
 using Formloom.Core.Models.Catalog;
 using Formloom.Core.Models.Evaluation;
 using Formloom.Core.Models.Geometry;
+using Formloom.Rendering.Skia.Ceramics;
 using Formloom.Rendering.Skia.Models;
 using Formloom.Rendering.Skia.Scenes;
 using SkiaSharp;
