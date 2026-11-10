@@ -1868,35 +1868,6 @@
       }
     },
     {
-      "op": "geometry.group",
-      "id": "rose.assembled",
-      "parts": [
-        "rose.stem",
-        "rose.leaf.left",
-        "rose.leaf.left.vein",
-        "rose.leaf.left.vein.lateral.24.left",
-        "rose.leaf.left.vein.lateral.24.right",
-        "rose.leaf.left.vein.lateral.46.left",
-        "rose.leaf.left.vein.lateral.46.right",
-        "rose.leaf.left.vein.lateral.68.left",
-        "rose.leaf.left.vein.lateral.68.right",
-        "rose.leaf.right",
-        "rose.leaf.right.vein",
-        "rose.leaf.right.vein.lateral.24.left",
-        "rose.leaf.right.vein.lateral.24.right",
-        "rose.leaf.right.vein.lateral.46.left",
-        "rose.leaf.right.vein.lateral.46.right",
-        "rose.leaf.right.vein.lateral.68.left",
-        "rose.leaf.right.vein.lateral.68.right",
-        "rose.petals.outer",
-        "rose.petals.outer.fold",
-        "rose.petals.middle",
-        "rose.petals.middle.fold",
-        "rose.petals.inner",
-        "rose.petals.inner.fold"
-      ]
-    },
-    {
       "op": "curve.sample",
       "id": "rose.leaf.left.vein.sample.24",
       "curve": "rose.leaf.left.vein",
@@ -3329,6 +3300,35 @@
         "kind": "literal",
         "value": 0.0015
       }
+    },
+    {
+      "op": "geometry.group",
+      "id": "rose.assembled",
+      "parts": [
+        "rose.stem",
+        "rose.leaf.left",
+        "rose.leaf.left.vein",
+        "rose.leaf.left.vein.lateral.24.left",
+        "rose.leaf.left.vein.lateral.24.right",
+        "rose.leaf.left.vein.lateral.46.left",
+        "rose.leaf.left.vein.lateral.46.right",
+        "rose.leaf.left.vein.lateral.68.left",
+        "rose.leaf.left.vein.lateral.68.right",
+        "rose.leaf.right",
+        "rose.leaf.right.vein",
+        "rose.leaf.right.vein.lateral.24.left",
+        "rose.leaf.right.vein.lateral.24.right",
+        "rose.leaf.right.vein.lateral.46.left",
+        "rose.leaf.right.vein.lateral.46.right",
+        "rose.leaf.right.vein.lateral.68.left",
+        "rose.leaf.right.vein.lateral.68.right",
+        "rose.petals.outer",
+        "rose.petals.outer.fold",
+        "rose.petals.middle",
+        "rose.petals.middle.fold",
+        "rose.petals.inner",
+        "rose.petals.inner.fold"
+      ]
     }
   ],
   "outputs": [
