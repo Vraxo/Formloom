@@ -291,34 +291,30 @@ public sealed class ModelDefinitionEvaluatorTests
 
 
     [Fact]
-    public void SamplesAnEarlierCurveAtANormalizedParameterAndFeedsItsPointIntoLaterNodes()
+    public void SamplesAcrossOrderedSegmentsUsingEqualParameterIntervals()
     {
-        var result = ModelDefinitionEvaluator.Evaluate(CreateDefinition(), CreateContext());
+        var segments = ImmutableArray.Create(
+            new CubicSegment(
+                new(0, 0),
+                new(1f / 3f, 0),
+                new(2f / 3f, 0),
+                new(1, 0)),
+            new CubicSegment(
+                new(1, 0),
+                new(1 + (1f / 3f), 0),
+                new(1 + (2f / 3f), 0),
+                new(2, 0)));
 
-        Assert.True(result.IsSuccess, string.Join(Environment.NewLine, result.Diagnostics.Select(item => item.Message)));
-        var geometry = Assert.IsType<ModelGeometry>(result.Geometry);
-        var leaf = Assert.Single(geometry.Paths, path => path.Id == "leaf.left");
-        var attachment = Assert.Single(leaf.Landmarks, item => item.Name == "attachment");
-        Assert.Equal(0.5f, attachment.Position.X, 4);
-        Assert.Equal(0.5f, attachment.Position.Y, 4);
-    }
+        var sample = CubicCurveSampler.Sample(segments, 0.75f);
+        var end = CubicCurveSampler.Sample(segments, 1f);
 
-    [Fact]
-    public void RejectsCurveSampleParametersOutsideTheNormalizedRange()
-    {
-        var definition = CreateDefinition();
-        var sampleIndex = Enumerable.Range(0, definition.Nodes.Length)
-            .Single(index => definition.Nodes[index].Id == "leaf.sample");
-        var sample = Assert.IsType<ModelCurveSampleNodeDefinition>(definition.Nodes[sampleIndex]);
-        var invalidDefinition = definition with
-        {
-            Nodes = definition.Nodes.SetItem(sampleIndex, sample with { Parameter = Literal(1.01) }),
-        };
-
-        var result = ModelDefinitionEvaluator.Evaluate(invalidDefinition, CreateContext());
-
-        Assert.False(result.IsSuccess);
-        Assert.Contains(result.Diagnostics, item => item.Code == "evaluation.curve-parameter-out-of-range");
+        Assert.Equal(1, sample.SegmentIndex);
+        Assert.Equal(0.5f, sample.Parameter, 4);
+        Assert.Equal(new Vector2(1.5f, 0), sample.Point);
+        Assert.Equal(Vector2.UnitX, sample.Tangent);
+        Assert.Equal(1, end.SegmentIndex);
+        Assert.Equal(1f, end.Parameter);
+        Assert.Equal(new Vector2(2, 0), end.Point);
     }
 
     private static ModelDefinition CreateDefinition()
@@ -370,15 +366,11 @@ public sealed class ModelDefinitionEvaluatorTests
             "leaf.attachment",
             "stem.path",
             Point(Literal(0.5), Literal(0.65)));
-        var sample = new ModelCurveSampleNodeDefinition(
-            "leaf.sample",
-            "stem.path",
-            Literal(0.5));
         var leafMapping = Mapping(0.2, 0.08, reverse: true);
         var leaf = new ModelProfileMapNodeDefinition(
             "leaf.left",
             "leaf",
-            Point(Reference("node:leaf.sample:point:x"), Reference("node:leaf.sample:point:y")),
+            Point(Reference("node:leaf.attachment:point:x"), Reference("node:leaf.attachment:point:y")),
             Literal(0),
             leafMapping,
             "leaf",
@@ -419,7 +411,7 @@ public sealed class ModelDefinitionEvaluatorTests
                 .Add("color", choice),
             profiles,
             materials,
-            [stem, attachment, sample, leaf, radial, group],
+            [stem, attachment, leaf, radial, group],
             ["flower"]);
     }
 
