@@ -8,19 +8,32 @@ namespace Formloom.Rendering.Skia.Models;
 /// <summary>Renders renderer-neutral model geometry using its selected material-token palette.</summary>
 public static class ModelGeometryRenderer
 {
-    /// <summary>Renders closed paths as solid fills onto a transparent scene-normalized canvas.</summary>
+    /// <summary>Renders model geometry onto a transparent scene-normalized canvas.</summary>
     /// <param name="geometry">The evaluated model geometry and its selected material tokens.</param>
     /// <param name="width">The output width, in pixels.</param>
     /// <param name="height">The output height, in pixels.</param>
     /// <param name="options">Optional rasterization settings.</param>
-    /// <returns>A PNG containing the filled model paths.</returns>
+    /// <returns>A PNG containing the rendered model paths.</returns>
     public static RenderedImage Render(
         ModelGeometry geometry,
         int width = 1024,
         int height = 1024,
-        RenderOptions? options = null)
+        RenderOptions? options = null) =>
+        RenderWithOptions(
+            geometry,
+            width,
+            height,
+            new ModelGeometryRenderOptions(Antialiasing: options?.Antialiasing ?? true));
+
+    /// <summary>Renders model geometry with model-specific detail and silhouette options.</summary>
+    public static RenderedImage RenderWithOptions(
+        ModelGeometry geometry,
+        int width,
+        int height,
+        ModelGeometryRenderOptions options)
     {
         ArgumentNullException.ThrowIfNull(geometry);
+        ArgumentNullException.ThrowIfNull(options);
         if (width is < 64 or > 4096)
         {
             throw new ArgumentOutOfRangeException(nameof(width));
@@ -45,8 +58,10 @@ public static class ModelGeometryRenderer
             throw new ArgumentException(message, nameof(geometry));
         }
 
-        var colors = ResolvePathColors(geometry);
-        var antialias = options?.Antialiasing ?? true;
+        var colors = options.Silhouette
+            ? new Dictionary<string, SKColor>(StringComparer.Ordinal)
+            : ResolvePathColors(geometry);
+        var antialias = options.Antialiasing;
         var info = new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
         using var surface = SKSurface.Create(info) ?? throw new InvalidOperationException("Could not allocate raster surface.");
         var canvas = surface.Canvas;
@@ -55,16 +70,19 @@ public static class ModelGeometryRenderer
 
         foreach (var path in geometry.Paths)
         {
-            if (path.MaterialSlot is null || (!path.Closed && path.StrokeWidth is null))
+            if ((path.Detail && (!options.IncludeDetails || options.Silhouette)) ||
+                path.MaterialSlot is null ||
+                (!path.Closed && path.StrokeWidth is null))
             {
                 continue;
             }
 
-            var color = colors[path.MaterialSlot];
+            var color = options.Silhouette ? SKColors.Black : colors[path.MaterialSlot];
             if (path.Closed)
             {
                 using var shape = CreatePath(path, close: true);
-                using var shader = geometry.MaterialGradients.TryGetValue(path.MaterialSlot, out var gradient)
+                using var shader = !options.Silhouette &&
+                    geometry.MaterialGradients.TryGetValue(path.MaterialSlot, out var gradient)
                     ? CreateGradient(geometry, gradient)
                     : null;
                 using var paint = new SKPaint
