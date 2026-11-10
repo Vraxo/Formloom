@@ -9,4 +9,5 @@ public sealed record ModelProfileMapNodeDefinition(
     string? MaterialSlot,
     bool Detail,
     ModelProfileVariationDefinition? Variation = null,
-    string? Stream = null) : ModelNodeDefinition(Id);
+    string? Stream = null,
+    ModelNumberExpression? StrokeWidth = null) : ModelNodeDefinition(Id)

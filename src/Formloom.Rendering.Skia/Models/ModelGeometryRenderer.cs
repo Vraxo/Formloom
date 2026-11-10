@@ -55,19 +55,37 @@ public static class ModelGeometryRenderer
 
         foreach (var path in geometry.Paths)
         {
-            if (!path.Closed || path.MaterialSlot is null)
+            if (path.MaterialSlot is null)
             {
                 continue;
             }
 
-            using var shape = CreateClosedPath(path);
-            using var paint = new SKPaint
+            var color = colors[path.MaterialSlot];
+            if (path.Closed)
             {
-                Color = colors[path.MaterialSlot],
-                IsAntialias = antialias,
-                Style = SKPaintStyle.Fill,
-            };
-            canvas.DrawPath(shape, paint);
+                using var shape = CreatePath(path, close: true);
+                using var paint = new SKPaint
+                {
+                    Color = color,
+                    IsAntialias = antialias,
+                    Style = SKPaintStyle.Fill,
+                };
+                canvas.DrawPath(shape, paint);
+            }
+
+            if (path.StrokeWidth is { } strokeWidth)
+            {
+                using var outline = CreatePath(path, close: path.Closed);
+                using var paint = new SKPaint
+                {
+                    Color = color,
+                    IsAntialias = antialias,
+                    StrokeCap = SKStrokeCap.Round,
+                    StrokeWidth = strokeWidth,
+                    Style = SKPaintStyle.Stroke,
+                };
+                canvas.DrawPath(outline, paint);
+            }
         }
 
         using var image = surface.Snapshot();
@@ -80,7 +98,9 @@ public static class ModelGeometryRenderer
         var colors = new Dictionary<string, SKColor>(StringComparer.Ordinal);
         foreach (var path in geometry.Paths)
         {
-            if (!path.Closed || path.MaterialSlot is null || colors.ContainsKey(path.MaterialSlot))
+            if (path.MaterialSlot is null ||
+                (!path.Closed && path.StrokeWidth is null) ||
+                colors.ContainsKey(path.MaterialSlot))
             {
                 continue;
             }
@@ -125,7 +145,7 @@ public static class ModelGeometryRenderer
     private static byte ParseByte(ReadOnlySpan<char> value) =>
         byte.Parse(value, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
 
-    private static SKPath CreateClosedPath(ModelGeometryPath path)
+    private static SKPath CreatePath(ModelGeometryPath path, bool close)
     {
         using var builder = new SKPathBuilder();
         var first = path.Segments[0];
@@ -141,7 +161,11 @@ public static class ModelGeometryRenderer
                 segment.End.Y);
         }
 
-        builder.Close();
+        if (close)
+        {
+            builder.Close();
+        }
+
         return builder.Detach();
     }
 }

@@ -13,5 +13,8 @@ public sealed record ModelGeometryPath(
 {
     public float? MaterialTone { get; init; }
 
+    /// <summary>Gets the optional stroke width in scene-normalized coordinate units.</summary>
+    public float? StrokeWidth { get; init; }
+
     public ImmutableArray<ModelGeometryLandmark> Landmarks { get; init; } = [];
 }

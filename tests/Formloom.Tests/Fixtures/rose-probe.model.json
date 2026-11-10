@@ -807,6 +807,10 @@
           "kind": "literal",
           "value": 0.012
         }
+      },
+      "strokeWidth": {
+        "kind": "literal",
+        "value": 0.006
       }
     },
     {
@@ -999,6 +1003,10 @@
             }
           ]
         }
+      },
+      "strokeWidth": {
+        "kind": "literal",
+        "value": 0.0015
       }
     },
     {
@@ -1201,6 +1209,10 @@
             }
           ]
         }
+      },
+      "strokeWidth": {
+        "kind": "literal",
+        "value": 0.0015
       }
     },
     {
@@ -1385,7 +1397,11 @@
       },
       "stream": "rose.petals.outer",
       "materialSlot": "petal.fold",
-      "detail": true
+      "detail": true,
+      "strokeWidth": {
+        "kind": "literal",
+        "value": 0.0018
+      }
     },
     {
       "op": "array.radial",
@@ -1569,7 +1585,11 @@
       },
       "stream": "rose.petals.middle",
       "materialSlot": "petal.fold",
-      "detail": true
+      "detail": true,
+      "strokeWidth": {
+        "kind": "literal",
+        "value": 0.0018
+      }
     },
     {
       "op": "array.radial",
@@ -1753,7 +1773,11 @@
       },
       "stream": "rose.petals.inner-whorl",
       "materialSlot": "petal.fold",
-      "detail": true
+      "detail": true,
+      "strokeWidth": {
+        "kind": "literal",
+        "value": 0.0018
+      }
     },
     {
       "op": "geometry.group",

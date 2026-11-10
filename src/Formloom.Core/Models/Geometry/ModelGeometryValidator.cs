@@ -60,6 +60,19 @@ public static class ModelGeometryValidator
                 diagnostics.Add(new("geometry.material-tone-invalid", path.Id, "Material tone must be finite and in the range 0..1."));
             }
 
+            if (path.StrokeWidth is { } strokeWidth)
+            {
+                if (!float.IsFinite(strokeWidth) || strokeWidth <= 0)
+                {
+                    diagnostics.Add(new("geometry.stroke-width-invalid", path.Id, "Stroke width must be finite and greater than zero."));
+                }
+
+                if (string.IsNullOrWhiteSpace(path.MaterialSlot))
+                {
+                    diagnostics.Add(new("geometry.stroke-material-slot-required", path.Id, "A stroked path requires a material slot."));
+                }
+            }
+
             if (path.Landmarks.IsDefault)
             {
                 diagnostics.Add(new("geometry.landmarks-uninitialized", path.Id, "Path landmarks must be initialized."));
