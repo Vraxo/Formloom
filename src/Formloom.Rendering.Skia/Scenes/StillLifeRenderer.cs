@@ -937,6 +937,8 @@ public static class StillLifeRenderer
             DrawRoseLeaf(canvas, scene, leaf, material, silhouette, omitDetail, paint);
         }
 
+        DrawRoseSepals(canvas, plant, material, silhouette, paint);
+
         foreach (var petal in plant.Bloom.Petals)
         {
             DrawRosePetal(canvas, scene, plant.Bloom, petal, material, silhouette, omitDetail, paint);
@@ -960,6 +962,88 @@ public static class StillLifeRenderer
             paint,
             antialias);
         canvas.Restore();
+    }
+
+    // Five tapered sepals form the green calyx beneath the bloom. They sit behind the
+    // petals so only their naturally exposed tips and shoulders remain visible.
+    private static void DrawRoseSepals(
+        SKCanvas canvas,
+        RosePlant plant,
+        RoseMaterial material,
+        bool silhouette,
+        SKPaint paint)
+    {
+        var bloom = plant.Bloom;
+        var basePoint = new Vector2(bloom.Center.X, bloom.Center.Y + (bloom.RadiusY * 0.58f));
+        var length = bloom.RadiusX * 0.42f;
+        var halfWidth = bloom.RadiusX * 0.075f;
+
+        for (var index = 0; index < 5; index++)
+        {
+            var angle = (MathF.PI / 2) + ((index - 2) * 0.42f);
+            var direction = new Vector2(MathF.Cos(angle), MathF.Sin(angle));
+            var normal = new Vector2(-direction.Y, direction.X);
+            var tip = basePoint + (direction * length);
+            var rootLeft = basePoint - (normal * (halfWidth * 0.34f));
+            var rootRight = basePoint + (normal * (halfWidth * 0.34f));
+            var shoulderLeft = basePoint + (direction * (length * 0.48f)) - (normal * halfWidth);
+            var shoulderRight = basePoint + (direction * (length * 0.48f)) + (normal * halfWidth);
+            using var sepal = new SKPath();
+            sepal.MoveTo(rootLeft.X, rootLeft.Y);
+            sepal.CubicTo(
+                rootLeft.X + (direction.X * length * 0.28f) - (normal.X * halfWidth * 0.78f),
+                rootLeft.Y + (direction.Y * length * 0.28f) - (normal.Y * halfWidth * 0.78f),
+                shoulderLeft.X,
+                shoulderLeft.Y,
+                tip.X,
+                tip.Y);
+            sepal.CubicTo(
+                shoulderRight.X,
+                shoulderRight.Y,
+                rootRight.X + (direction.X * length * 0.28f) + (normal.X * halfWidth * 0.78f),
+                rootRight.Y + (direction.Y * length * 0.28f) + (normal.Y * halfWidth * 0.78f),
+                rootRight.X,
+                rootRight.Y);
+            sepal.Close();
+
+            if (silhouette)
+            {
+                paint.Color = SKColors.Black;
+                canvas.DrawPath(sepal, paint);
+                continue;
+            }
+
+            using var shade = SKShader.CreateLinearGradient(
+                new SKPoint(basePoint.X, basePoint.Y),
+                new SKPoint(tip.X, tip.Y),
+                [material.LeafLight, material.LeafBase, material.LeafEdge],
+                [0f, 0.58f, 1f],
+                SKShaderTileMode.Clamp);
+            paint.Color = SKColors.White;
+            paint.Shader = shade;
+            canvas.DrawPath(sepal, paint);
+            paint.Shader = null;
+
+            if (!omitDetail)
+            {
+                paint.Style = SKPaintStyle.Stroke;
+                paint.StrokeCap = SKStrokeCap.Round;
+                paint.StrokeWidth = MathF.Max(bloom.RadiusX * 0.009f, 0.0007f);
+                paint.Color = material.LeafEdge.WithAlpha(72);
+                using var ridge = new SKPath();
+                ridge.MoveTo(basePoint.X, basePoint.Y);
+                ridge.CubicTo(
+                    basePoint.X + (direction.X * length * 0.32f),
+                    basePoint.Y + (direction.Y * length * 0.32f),
+                    basePoint.X + (direction.X * length * 0.72f),
+                    basePoint.Y + (direction.Y * length * 0.72f),
+                    tip.X,
+                    tip.Y);
+                canvas.DrawPath(ridge, paint);
+                paint.Style = SKPaintStyle.Fill;
+                paint.StrokeCap = SKStrokeCap.Butt;
+            }
+        }
     }
 
     private static void DrawRoseStemRidge(
