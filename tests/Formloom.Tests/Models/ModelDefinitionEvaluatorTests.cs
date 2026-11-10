@@ -207,7 +207,7 @@ public sealed class ModelDefinitionEvaluatorTests
                 {
                     Mapping = radial.Mapping with
                     {
-                        ScaleY = Literal(2),
+                        ScaleY = Literal(100),
                         Length = Literal(float.MaxValue),
                     },
                 }),
