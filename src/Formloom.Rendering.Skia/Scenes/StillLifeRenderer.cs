@@ -1106,7 +1106,7 @@ public static class StillLifeRenderer
             RosePetalLayer.Inner => 0.78f,
             _ => 1f,
         };
-        var halfWidthPixels = acrossPerUnit.Length() * layerWidth * 0.52f;
+        var halfWidthPixels = acrossPerUnit.Length() * layerWidth * 0.58f;
         var across = new Vector2(
             acrossPixels.X / scene.Width,
             acrossPixels.Y / scene.Height);
@@ -1117,17 +1117,17 @@ public static class StillLifeRenderer
         var lightFacing = lightPixels.LengthSquared() > 0.000001f
             ? Vector2.Dot(Vector2.Normalize(lightPixels), acrossPixels)
             : 0f;
-        var ridge = Math.Clamp(0.5f + (lightFacing * 0.12f), 0.38f, 0.62f);
+        var ridge = Math.Clamp(0.5f + (lightFacing * 0.16f), 0.34f, 0.66f);
 
         using var crossSection = SKShader.CreateLinearGradient(
             middle - (across * halfWidthPixels),
             middle + (across * halfWidthPixels),
             [
-                material.PetalShadow.WithAlpha(46),
-                material.PetalShadow.WithAlpha(12),
-                material.PetalLight.WithAlpha(68),
-                material.PetalShadow.WithAlpha(12),
-                material.PetalShadow.WithAlpha(40),
+                material.PetalShadow.WithAlpha(78),
+                material.PetalShadow.WithAlpha(24),
+                material.PetalLight.WithAlpha(132),
+                material.PetalShadow.WithAlpha(24),
+                material.PetalShadow.WithAlpha(66),
             ],
             [0f, ridge - 0.2f, ridge, ridge + 0.2f, 1f],
             SKShaderTileMode.Clamp);
