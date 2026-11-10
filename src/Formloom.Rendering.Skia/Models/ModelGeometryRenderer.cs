@@ -64,10 +64,14 @@ public static class ModelGeometryRenderer
             if (path.Closed)
             {
                 using var shape = CreatePath(path, close: true);
+                using var shader = geometry.MaterialGradients.TryGetValue(path.MaterialSlot, out var gradient)
+                    ? CreateGradient(geometry, gradient)
+                    : null;
                 using var paint = new SKPaint
                 {
                     Color = color,
                     IsAntialias = antialias,
+                    Shader = shader,
                     Style = SKPaintStyle.Fill,
                 };
                 canvas.DrawPath(shape, paint);
@@ -126,6 +130,21 @@ public static class ModelGeometryRenderer
         }
 
         return colors;
+    }
+
+    private static SKShader CreateGradient(ModelGeometry geometry, ModelGeometryLinearGradient gradient)
+    {
+        var colors = gradient.Stops
+            .Select(stop => ParseColor(geometry.MaterialTokens[stop.Token]))
+            .ToArray();
+        var positions = gradient.Stops.Select(stop => stop.Offset).ToArray();
+        return SKShader.CreateLinearGradient(
+            new(gradient.Start.X, gradient.Start.Y),
+            new(gradient.End.X, gradient.End.Y),
+            colors,
+            positions,
+            SKShaderTileMode.Clamp) ??
+            throw new InvalidOperationException("Could not create the model material gradient.");
     }
 
     private static SKColor ParseColor(string value)

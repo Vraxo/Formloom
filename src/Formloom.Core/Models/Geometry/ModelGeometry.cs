@@ -13,4 +13,8 @@ public sealed record ModelGeometry(
     /// </summary>
     public ImmutableDictionary<string, string> MaterialTokens { get; init; } =
         ImmutableDictionary<string, string>.Empty;
+
+    /// <summary>Gets optional linear fill gradients keyed by material slot.</summary>
+    public ImmutableDictionary<string, ModelGeometryLinearGradient> MaterialGradients { get; init; } =
+        ImmutableDictionary<string, ModelGeometryLinearGradient>.Empty;
 }

@@ -342,6 +342,63 @@ public static class ModelDefinitionValidator
                         "Material colors must use #RRGGBB or #RRGGBBAA hexadecimal notation.");
                 }
             }
+
+            if (material.Gradients is null)
+            {
+                add("definition.invalid-material-gradients", $"{path}.gradients", "Material gradients must be initialized.");
+                continue;
+            }
+
+            foreach (var (slot, gradient) in material.Gradients)
+            {
+                var gradientPath = $"{path}.gradients.{slot}";
+                if (string.IsNullOrWhiteSpace(slot) || gradient is null)
+                {
+                    add("definition.invalid-material-gradient", gradientPath, "A gradient requires a material slot and definition.");
+                    continue;
+                }
+
+                if (!material.Tokens.ContainsKey(slot))
+                {
+                    add("definition.gradient-material-token-required", gradientPath, "A gradient's material slot must also have a solid color token for stroke rendering and fallback fills.");
+                }
+
+                var validStart = gradient.Start is { } startPoint &&
+                    float.IsFinite(startPoint.X) && float.IsFinite(startPoint.Y) &&
+                    startPoint.X is >= 0 and <= 1 && startPoint.Y is >= 0 and <= 1;
+                var validEnd = gradient.End is { } endPoint &&
+                    float.IsFinite(endPoint.X) && float.IsFinite(endPoint.Y) &&
+                    endPoint.X is >= 0 and <= 1 && endPoint.Y is >= 0 and <= 1;
+                if (!validStart || !validEnd || gradient.Start == gradient.End)
+                {
+                    add("definition.invalid-gradient-endpoints", $"{gradientPath}.start", "Gradient endpoints must be distinct finite coordinates in the normalized 0..1 range.");
+                }
+
+                if (gradient.Stops.IsDefaultOrEmpty || gradient.Stops.Length < 2)
+                {
+                    add("definition.invalid-gradient-stops", $"{gradientPath}.stops", "A linear gradient requires at least two color stops.");
+                    continue;
+                }
+
+                var previousOffset = -1f;
+                for (var index = 0; index < gradient.Stops.Length; index++)
+                {
+                    var stop = gradient.Stops[index];
+                    if (stop is null || !float.IsFinite(stop.Offset) ||
+                        stop.Offset is < 0 or > 1 || stop.Offset <= previousOffset)
+                    {
+                        add("definition.invalid-gradient-stop-offset", $"{gradientPath}.stops[{index}].offset", "Gradient stop offsets must be finite, within 0..1, and strictly increasing.");
+                        continue;
+                    }
+
+                    if (string.IsNullOrWhiteSpace(stop.Token) || !material.Tokens.ContainsKey(stop.Token))
+                    {
+                        add("definition.invalid-gradient-stop-token", $"{gradientPath}.stops[{index}].token", "Gradient stops must reference an existing material color token.");
+                    }
+
+                    previousOffset = stop.Offset;
+                }
+            }
         }
     }
 
