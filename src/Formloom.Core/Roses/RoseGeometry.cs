@@ -38,23 +38,25 @@ public static class RoseGeometry
         new(0.79f, 0.16f),
     ];
 
-    // The innermost petals turn back toward the centre, making a small curled whorl rather than
-    // a circular disk or another ring of open spokes.
+    // The innermost petals curl back across their own faces, but keep the returning
+    // edge close enough to overlap the neighbouring petals and form a compact central whorl.
     private static readonly Vector2[] CurledPetal =
     [
-        new(0.50f, 0.02f),
-        new(0.17f, 0.15f),
-        new(0.05f, 0.43f),
-        new(0.21f, 0.71f),
-        new(0.43f, 0.91f),
-        new(0.65f, 0.94f),
-        new(0.80f, 0.79f),
-        new(0.65f, 0.66f),
-        new(0.43f, 0.61f),
-        new(0.31f, 0.47f),
-        new(0.38f, 0.33f),
-        new(0.64f, 0.27f),
-        new(0.77f, 0.17f),
+        new(0.50f, 0.00f),
+        new(0.17f, 0.12f),
+        new(0.05f, 0.36f),
+        new(0.12f, 0.62f),
+        new(0.32f, 0.84f),
+        new(0.56f, 0.96f),
+        new(0.77f, 0.92f),
+        new(0.89f, 0.78f),
+        new(0.82f, 0.65f),
+        new(0.68f, 0.59f),
+        new(0.55f, 0.53f),
+        new(0.46f, 0.44f),
+        new(0.45f, 0.35f),
+        new(0.57f, 0.26f),
+        new(0.77f, 0.16f),
     ];
 
     // Rose leaves are wider than a tulip's lance and carry three shallow serrations on each
