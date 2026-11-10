@@ -679,6 +679,28 @@
           "y": 0.63
         }
       ]
+    },
+    "stem.centerline": {
+      "closed": false,
+      "interpolation": "openCubic",
+      "points": [
+        {
+          "x": 0.5,
+          "y": 0
+        },
+        {
+          "x": 0.5,
+          "y": 0.3333333333333333
+        },
+        {
+          "x": 0.5,
+          "y": 0.6666666666666666
+        },
+        {
+          "x": 0.5,
+          "y": 1
+        }
+      ]
     }
   },
   "materials": {
@@ -717,94 +739,56 @@
   },
   "nodes": [
     {
-      "op": "path.cubic",
+      "op": "profile.map",
       "id": "rose.stem",
-      "materialSlot": "stem.base",
-      "detail": false,
-      "segments": [
-        {
-          "start": {
-            "x": {
-              "kind": "reference",
-              "path": "frame.vase-opening.openingCenter.x"
-            },
-            "y": {
-              "kind": "reference",
-              "path": "parameters.stemBaseY"
-            }
-          },
-          "control1": {
-            "x": {
-              "kind": "reference",
-              "path": "frame.vase-opening.openingCenter.x"
-            },
-            "y": {
-              "kind": "arithmetic",
-              "operator": "subtract",
-              "operands": [
-                {
-                  "kind": "reference",
-                  "path": "parameters.stemBaseY"
-                },
-                {
-                  "kind": "arithmetic",
-                  "operator": "multiply",
-                  "operands": [
-                    {
-                      "kind": "reference",
-                      "path": "parameters.stemRise"
-                    },
-                    {
-                      "kind": "literal",
-                      "value": 0.31
-                    }
-                  ]
-                }
-              ]
-            }
-          },
-          "control2": {
-            "x": {
-              "kind": "reference",
-              "path": "frame.vase-opening.openingCenter.x"
-            },
-            "y": {
-              "kind": "arithmetic",
-              "operator": "add",
-              "operands": [
-                {
-                  "kind": "reference",
-                  "path": "parameters.stemTopY"
-                },
-                {
-                  "kind": "arithmetic",
-                  "operator": "multiply",
-                  "operands": [
-                    {
-                      "kind": "reference",
-                      "path": "parameters.stemRise"
-                    },
-                    {
-                      "kind": "literal",
-                      "value": 0.35
-                    }
-                  ]
-                }
-              ]
-            }
-          },
-          "end": {
-            "x": {
-              "kind": "reference",
-              "path": "frame.vase-opening.openingCenter.x"
-            },
-            "y": {
-              "kind": "reference",
-              "path": "parameters.stemTopY"
-            }
-          }
+      "profile": "stem.centerline",
+      "origin": {
+        "x": {
+          "kind": "reference",
+          "path": "frame.vase-opening.openingCenter.x"
+        },
+        "y": {
+          "kind": "reference",
+          "path": "parameters.stemBaseY"
         }
-      ]
+      },
+      "angle": {
+        "kind": "literal",
+        "value": -1.5707963267948966
+      },
+      "mapping": {
+        "scaleX": {
+          "kind": "literal",
+          "value": 1
+        },
+        "scaleY": {
+          "kind": "literal",
+          "value": 1
+        },
+        "length": {
+          "kind": "reference",
+          "path": "parameters.stemRise"
+        },
+        "width": {
+          "kind": "literal",
+          "value": 0
+        },
+        "rootOffset": {
+          "kind": "literal",
+          "value": 0
+        },
+        "bend": {
+          "kind": "literal",
+          "value": 0
+        },
+        "transverseNormalization": {
+          "kind": "literal",
+          "value": 0.5
+        },
+        "reverseLongitudinal": false
+      },
+      "materialSlot": "stem.base",
+      "detail": false
     },
     {
       "op": "curve.project",
