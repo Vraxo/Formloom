@@ -10,4 +10,7 @@
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
   </ItemGroup>
+  <ItemGroup>
+    <None Update="Fixtures/**/*.model.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>
