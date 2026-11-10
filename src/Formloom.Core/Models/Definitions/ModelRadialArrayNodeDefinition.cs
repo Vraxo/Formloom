@@ -11,6 +11,7 @@ public sealed record ModelRadialArrayNodeDefinition(
     ModelNumberExpression Phase,
     ModelProfileMappingDefinition Mapping,
     ModelRadialVariationDefinition Variation,
+    ModelNumberExpression? Tone,
     string Stream,
     string? MaterialSlot,
     bool Detail) : ModelNodeDefinition(Id);

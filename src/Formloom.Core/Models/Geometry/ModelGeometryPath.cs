@@ -9,4 +9,9 @@ public sealed record ModelGeometryPath(
     ImmutableArray<CubicSegment> Segments,
     bool Closed,
     string? MaterialSlot,
-    bool Detail);
+    bool Detail)
+{
+    public float? MaterialTone { get; init; }
+
+    public ImmutableArray<ModelGeometryLandmark> Landmarks { get; init; } = [];
+}

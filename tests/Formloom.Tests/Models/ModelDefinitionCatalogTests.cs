@@ -76,6 +76,7 @@ public sealed class ModelDefinitionCatalogTests
               "count": 5,
               "startAngle": { "kind": "literal", "value": -1.5707963 },
               "phase": { "kind": "literal", "value": 0 },
+              "tone": { "kind": "literal", "value": 0.43 },
               "mapping": {
                 "scaleX": { "kind": "literal", "value": 1 },
                 "scaleY": { "kind": "literal", "value": 1 },

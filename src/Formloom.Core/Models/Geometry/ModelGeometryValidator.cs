@@ -55,6 +55,28 @@ public static class ModelGeometryValidator
                 diagnostics.Add(new("geometry.material-slot-invalid", path.Id, "A material slot must be null or non-empty."));
             }
 
+            if (path.MaterialTone is { } tone && (!float.IsFinite(tone) || tone is < 0 or > 1))
+            {
+                diagnostics.Add(new("geometry.material-tone-invalid", path.Id, "Material tone must be finite and in the range 0..1."));
+            }
+
+            if (path.Landmarks.IsDefault)
+            {
+                diagnostics.Add(new("geometry.landmarks-uninitialized", path.Id, "Path landmarks must be initialized."));
+            }
+            else
+            {
+                var landmarkNames = new HashSet<string>(StringComparer.Ordinal);
+                foreach (var landmark in path.Landmarks)
+                {
+                    if (landmark is null || string.IsNullOrWhiteSpace(landmark.Name) ||
+                        !landmarkNames.Add(landmark.Name) || !IsFinite(landmark.Position))
+                    {
+                        diagnostics.Add(new("geometry.landmark-invalid", path.Id, "Landmarks must have unique non-empty names and finite coordinates."));
+                    }
+                }
+            }
+
             if (path.Segments.IsDefaultOrEmpty)
             {
                 diagnostics.Add(new("geometry.segments-required", path.Id, "A path must contain at least one cubic segment."));
