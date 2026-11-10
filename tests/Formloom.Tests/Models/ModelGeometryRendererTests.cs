@@ -74,6 +74,77 @@ public sealed class ModelGeometryRendererTests
     }
 
     [Fact]
+    public void OmitsDetailPathsWhenDetailRenderingIsDisabled()
+    {
+        var geometry = new ModelGeometry(
+            "models.detail-test",
+            ModelGeometryCoordinateSpace.SceneNormalized,
+            [
+                Rectangle("surface", 0.1f, 0.1f, 0.9f, 0.9f, "surface"),
+                Rectangle("detail", 0.4f, 0.4f, 0.6f, 0.6f, "detail") with { Detail = true },
+            ])
+        {
+            MaterialTokens = ImmutableDictionary<string, string>.Empty
+                .Add("surface", "#168040")
+                .Add("detail", "#E02040"),
+        };
+
+        var detailed = ModelGeometryRenderer.Render(geometry, 128, 128, new RenderOptions(Antialiasing: false));
+        var simplified = ModelGeometryRenderer.RenderWithOptions(
+            geometry,
+            128,
+            128,
+            new ModelGeometryRenderOptions(Antialiasing: false, IncludeDetails: false));
+
+        using var detailedBitmap = Decode(detailed.PngBytes);
+        using var simplifiedBitmap = Decode(simplified.PngBytes);
+        Assert.Equal(new SKColor(224, 32, 64), detailedBitmap.GetPixel(64, 64));
+        Assert.Equal(new SKColor(22, 128, 64), simplifiedBitmap.GetPixel(64, 64));
+    }
+
+    [Fact]
+    public void RendersPrimaryGeometryAsSilhouetteAndOmitsDetailPaths()
+    {
+        var geometry = new ModelGeometry(
+            "models.silhouette-test",
+            ModelGeometryCoordinateSpace.SceneNormalized,
+            [
+                Rectangle("surface", 0.1f, 0.1f, 0.5f, 0.5f, "surface"),
+                Rectangle("detail", 0.6f, 0.6f, 0.9f, 0.9f, "detail") with { Detail = true },
+                new ModelGeometryPath(
+                    "stem",
+                    "stem",
+                    [Line(new(0.1f, 0.75f), new(0.5f, 0.75f))],
+                    false,
+                    "stem",
+                    false)
+                {
+                    StrokeWidth = 0.04f,
+                },
+            ])
+        {
+            MaterialTokens = ImmutableDictionary<string, string>.Empty
+                .Add("surface", "#E02040")
+                .Add("detail", "#20A0E0")
+                .Add("stem", "#168040"),
+            MaterialGradients = ImmutableDictionary<string, ModelGeometryLinearGradient>.Empty.Add(
+                "surface",
+                new(new(0.1f, 0.1f), new(0.5f, 0.5f), [new(0f, "surface"), new(1f, "detail")])),
+        };
+
+        var rendered = ModelGeometryRenderer.RenderWithOptions(
+            geometry,
+            128,
+            128,
+            new ModelGeometryRenderOptions(Antialiasing: false, Silhouette: true));
+
+        using var bitmap = Decode(rendered.PngBytes);
+        Assert.Equal(SKColors.Black, bitmap.GetPixel(30, 30));
+        Assert.Equal(SKColors.Black, bitmap.GetPixel(38, 96));
+        Assert.Equal((byte)0, bitmap.GetPixel(96, 96).Alpha);
+    }
+
+    [Fact]
     public void AppliesAlphaFromEightDigitMaterialTokens()
     {
         var geometry = new ModelGeometry(
@@ -213,6 +284,14 @@ public sealed class ModelGeometryRendererTests
 
         var redPreview = ModelGeometryRenderer.Render(red, 512, 512);
         var pinkPreview = ModelGeometryRenderer.Render(pink, 512, 512);
+        var redSimplePreview = ModelGeometryRenderer.RenderWithOptions(
+            red, 512, 512, new ModelGeometryRenderOptions(IncludeDetails: false));
+        var pinkSimplePreview = ModelGeometryRenderer.RenderWithOptions(
+            pink, 512, 512, new ModelGeometryRenderOptions(IncludeDetails: false));
+        var redSilhouettePreview = ModelGeometryRenderer.RenderWithOptions(
+            red, 512, 512, new ModelGeometryRenderOptions(Silhouette: true));
+        var pinkSilhouettePreview = ModelGeometryRenderer.RenderWithOptions(
+            pink, 512, 512, new ModelGeometryRenderOptions(Silhouette: true));
         using var redBitmap = Decode(redPreview.PngBytes);
         using var pinkBitmap = Decode(pinkPreview.PngBytes);
 
@@ -220,6 +299,8 @@ public sealed class ModelGeometryRendererTests
         Assert.True(CountFilledPixels(redBitmap) > 1000);
         Assert.True(CountFilledPixels(pinkBitmap) > 1000);
         Assert.False(redBitmap.Bytes.SequenceEqual(pinkBitmap.Bytes));
+        Assert.False(redPreview.PngBytes.SequenceEqual(redSimplePreview.PngBytes));
+        Assert.False(redSimplePreview.PngBytes.SequenceEqual(redSilhouettePreview.PngBytes));
 
         File.WriteAllBytes(
             Path.Combine(AppContext.BaseDirectory, "formloom-model-rose-gradients-red.png"),
@@ -227,6 +308,18 @@ public sealed class ModelGeometryRendererTests
         File.WriteAllBytes(
             Path.Combine(AppContext.BaseDirectory, "formloom-model-rose-gradients-pink.png"),
             pinkPreview.PngBytes);
+        File.WriteAllBytes(
+            Path.Combine(AppContext.BaseDirectory, "formloom-model-rose-details-omitted-red.png"),
+            redSimplePreview.PngBytes);
+        File.WriteAllBytes(
+            Path.Combine(AppContext.BaseDirectory, "formloom-model-rose-details-omitted-pink.png"),
+            pinkSimplePreview.PngBytes);
+        File.WriteAllBytes(
+            Path.Combine(AppContext.BaseDirectory, "formloom-model-rose-silhouette-red.png"),
+            redSilhouettePreview.PngBytes);
+        File.WriteAllBytes(
+            Path.Combine(AppContext.BaseDirectory, "formloom-model-rose-silhouette-pink.png"),
+            pinkSilhouettePreview.PngBytes);
     }
 
     private static void AssertRoseStrokesAreAuthoredInTheFixture(ModelGeometry geometry)

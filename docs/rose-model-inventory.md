@@ -60,11 +60,11 @@ The current rose renderer does more than fill each outline. The replacement need
 | Stem rendered as a continuous, multi-pass stroke | `DrawVaseRose`, shared stem drawing helpers | Generic stroked cubic path with supported layered stroke/material treatment |
 | Vase painted before the complete plant; the stem crosses the far rim continuously | `DrawObject`, `DrawVaseRose` | Generic mounted-content draw ordering |
 | Lower stem continuation drawn inside the vase opening and occluded by the near rim | `DrawStemExtensionInsideOpening` call from `DrawVaseRose` | Generic mount-frame clipping/occlusion behavior tied to the vessel opening; do not encode a rose-specific renderer branch |
-| Silhouette mode renders full geometry as a solid mask | `DrawRoseLeaf`, `DrawRosePetal` | Generic silhouette pass over geometry |
-| Detail omission removes folds/veins/edges without deleting the main silhouette | Rose draw helpers | Generic per-path/per-role detail classification |
+| Silhouette mode renders primary geometry as a solid mask | `DrawRoseLeaf`, `DrawRosePetal` | Generic silhouette pass is now supported for model paths; detail paths are omitted |
+| Detail omission removes folds/veins/edges without deleting the main silhouette | Rose draw helpers | Generic per-path detail omission is now supported by the model renderer |
 | Rose itself has no independent tabletop shadow or scene depth entry | `VaseRose`, `StillLifeScene` | Generic mounted model remains content of its host object rather than becoming a separate scene object |
 
-The current `ModelGeometryPath` already carries ordered path identity, material-slot key, detail flag, optional material tone, and landmarks. It does **not** yet define a complete material/style system, stroke semantics, renderer passes, or host-vessel occlusion. Do not treat material-slot strings as a substitute for those contracts.
+The current `ModelGeometryPath` carries ordered path identity, material-slot key, detail flag, optional material tone, optional stroke width, and landmarks. The generic Skia path renderer now supports detail omission and a primary-geometry silhouette pass in addition to solid/gradient fills and authored strokes. A complete material/style system and host-vessel occlusion are still absent. Do not treat material-slot strings as a substitute for those contracts.
 
 ## 4. Rose-specific validation that should become declarative constraints plus generic validators
 
