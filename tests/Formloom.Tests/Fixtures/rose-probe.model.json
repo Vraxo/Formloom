@@ -793,7 +793,7 @@
       "variation": {
         "angle": {
           "kind": "literal",
-          "value": 0
+          "value": 0.035
         },
         "length": {
           "kind": "literal",
@@ -1210,11 +1210,11 @@
       "center": {
         "x": {
           "kind": "reference",
-          "path": "frame.vase-opening.openingCenter.x"
+          "path": "node:rose.stem:tip:x"
         },
         "y": {
           "kind": "reference",
-          "path": "parameters.bloomCenterY"
+          "path": "node:rose.stem:tip:y"
         }
       },
       "radiusX": {
@@ -1302,11 +1302,11 @@
       "center": {
         "x": {
           "kind": "reference",
-          "path": "frame.vase-opening.openingCenter.x"
+          "path": "node:rose.stem:tip:x"
         },
         "y": {
           "kind": "reference",
-          "path": "parameters.bloomCenterY"
+          "path": "node:rose.stem:tip:y"
         }
       },
       "radiusX": {
@@ -1394,11 +1394,11 @@
       "center": {
         "x": {
           "kind": "reference",
-          "path": "frame.vase-opening.openingCenter.x"
+          "path": "node:rose.stem:tip:x"
         },
         "y": {
           "kind": "reference",
-          "path": "parameters.bloomCenterY"
+          "path": "node:rose.stem:tip:y"
         }
       },
       "radiusX": {
@@ -1486,11 +1486,11 @@
       "center": {
         "x": {
           "kind": "reference",
-          "path": "frame.vase-opening.openingCenter.x"
+          "path": "node:rose.stem:tip:x"
         },
         "y": {
           "kind": "reference",
-          "path": "parameters.bloomCenterY"
+          "path": "node:rose.stem:tip:y"
         }
       },
       "radiusX": {
@@ -1578,11 +1578,11 @@
       "center": {
         "x": {
           "kind": "reference",
-          "path": "frame.vase-opening.openingCenter.x"
+          "path": "node:rose.stem:tip:x"
         },
         "y": {
           "kind": "reference",
-          "path": "parameters.bloomCenterY"
+          "path": "node:rose.stem:tip:y"
         }
       },
       "radiusX": {
@@ -1670,11 +1670,11 @@
       "center": {
         "x": {
           "kind": "reference",
-          "path": "frame.vase-opening.openingCenter.x"
+          "path": "node:rose.stem:tip:x"
         },
         "y": {
           "kind": "reference",
-          "path": "parameters.bloomCenterY"
+          "path": "node:rose.stem:tip:y"
         }
       },
       "radiusX": {
