@@ -1060,6 +1060,8 @@ public static class StillLifeRenderer
             paint.Shader = null;
         }
 
+        DrawRosePetalCrossSection(canvas, scene, bloom, petal, material, shape, paint);
+
         if (omitDetail)
         {
             return;
@@ -1073,6 +1075,65 @@ public static class StillLifeRenderer
         canvas.DrawPath(fold, paint);
         paint.Style = SKPaintStyle.Fill;
         paint.StrokeCap = SKStrokeCap.Butt;
+    }
+
+    private static void DrawRosePetalCrossSection(
+        SKCanvas canvas,
+        StillLifeScene scene,
+        RoseBloom bloom,
+        RosePetal petal,
+        RoseMaterial material,
+        SKPath shape,
+        SKPaint paint)
+    {
+        var pixelDirection = new Vector2(
+            (petal.Tip.X - petal.Root.X) * scene.Width,
+            (petal.Tip.Y - petal.Root.Y) * scene.Height);
+        if (pixelDirection.LengthSquared() < 0.000001f)
+        {
+            return;
+        }
+
+        var acrossPixels = Vector2.Normalize(new Vector2(-pixelDirection.Y, pixelDirection.X));
+        var acrossPerUnit = new Vector2(
+            -MathF.Sin(petal.Angle) * bloom.RadiusX * scene.Width,
+            MathF.Cos(petal.Angle) * bloom.RadiusY * scene.Height);
+        var layerWidth = petal.Layer switch
+        {
+            RosePetalLayer.Outer => 1.04f,
+            RosePetalLayer.Middle => 0.94f,
+            RosePetalLayer.Inner => 0.78f,
+            _ => 1f,
+        };
+        var halfWidthPixels = acrossPerUnit.Length() * layerWidth * 0.52f;
+        var across = new Vector2(
+            acrossPixels.X / scene.Width,
+            acrossPixels.Y / scene.Height);
+        var middle = Vector2.Lerp(petal.Root, petal.Tip, 0.5f);
+        var lightPixels = new Vector2(
+            scene.LightDirection.X * scene.Width,
+            scene.LightDirection.Y * scene.Height);
+        var lightFacing = lightPixels.LengthSquared() > 0.000001f
+            ? Vector2.Dot(Vector2.Normalize(lightPixels), acrossPixels)
+            : 0f;
+        var ridge = Math.Clamp(0.5f + (lightFacing * 0.12f), 0.38f, 0.62f);
+
+        using var crossSection = SKShader.CreateLinearGradient(
+            middle - (across * halfWidthPixels),
+            middle + (across * halfWidthPixels),
+            [
+                material.PetalShadow.WithAlpha(46),
+                material.PetalShadow.WithAlpha(12),
+                material.PetalLight.WithAlpha(68),
+                material.PetalShadow.WithAlpha(12),
+                material.PetalShadow.WithAlpha(40),
+            ],
+            [0f, ridge - 0.2f, ridge, ridge + 0.2f, 1f],
+            SKShaderTileMode.Clamp);
+        paint.Color = SKColors.White;
+        paint.Shader = crossSection;
+        canvas.DrawPath(shape, paint);
+        paint.Shader = null;
     }
 
     private static void DrawDaisyLeaf(
