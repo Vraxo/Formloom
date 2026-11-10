@@ -228,7 +228,8 @@ public sealed class ModelDefinitionEvaluatorTests
     public void RejectsMaterialToneOutsideNormalizedRange()
     {
         var definition = CreateDefinition();
-        var radial = Assert.IsType<ModelRadialArrayNodeDefinition>(definition.Nodes[3]);
+        var radialIndex = Enumerable.Range(0, definition.Nodes.Length).Single(index => definition.Nodes[index].Id == "bloom.outer");
+        var radial = Assert.IsType<ModelRadialArrayNodeDefinition>(definition.Nodes[radialIndex]);
         var invalidDefinition = definition with
         {
             Nodes = definition.Nodes.SetItem(radialIndex, radial with { Tone = Literal(1.1) }),
