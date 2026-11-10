@@ -1018,6 +1018,31 @@ public static class StillLifeRenderer
         var shadow = Blend(material.PetalShadow, material.PetalBase, 0.22f + (tone * 0.38f));
         var baseColor = Blend(material.PetalBase, material.PetalLight, tone * 0.38f);
         var light = Blend(baseColor, material.PetalLight, 0.48f);
+
+        // Each petal casts a small, soft shadow in the direction opposite the scene light.
+        // Drawing it before the next petal lets later layers partially cover it, creating
+        // overlap depth without outlining every petal as an isolated cut-out.
+        using (var overlapShadow = SKMaskFilter.CreateBlur(
+            SKBlurStyle.Normal,
+            MathF.Max(bloom.RadiusX * 0.045f, 0.0008f)))
+        {
+            canvas.Save();
+            canvas.Translate(
+                -scene.LightDirection.X * bloom.RadiusX * 0.035f,
+                -scene.LightDirection.Y * bloom.RadiusY * 0.035f);
+            paint.Color = material.PetalShadow.WithAlpha(petal.Layer switch
+            {
+                RosePetalLayer.Outer => (byte)34,
+                RosePetalLayer.Middle => (byte)44,
+                RosePetalLayer.Inner => (byte)54,
+                _ => (byte)34,
+            });
+            paint.MaskFilter = overlapShadow;
+            canvas.DrawPath(shape, paint);
+            paint.MaskFilter = null;
+            canvas.Restore();
+        }
+
         using (var shade = SKShader.CreateLinearGradient(
             new SKPoint(
                 petal.Root.X + (scene.LightDirection.X * bloom.RadiusX * 0.12f),
@@ -1040,15 +1065,11 @@ public static class StillLifeRenderer
             return;
         }
 
-        paint.Style = SKPaintStyle.Stroke;
-        paint.StrokeWidth = MathF.Max(bloom.RadiusX * 0.024f, 0.001f);
-        paint.Color = material.PetalEdge.WithAlpha(petal.Layer == RosePetalLayer.Outer ? (byte)92 : (byte)120);
-        canvas.DrawPath(shape, paint);
-
         using var fold = CreateOpenPath(petal.Fold);
-        paint.StrokeWidth = MathF.Max(bloom.RadiusX * 0.017f, 0.0009f);
+        paint.Style = SKPaintStyle.Stroke;
+        paint.StrokeWidth = MathF.Max(bloom.RadiusX * 0.012f, 0.0008f);
         paint.StrokeCap = SKStrokeCap.Round;
-        paint.Color = material.PetalFold.WithAlpha(petal.Layer == RosePetalLayer.Inner ? (byte)150 : (byte)92);
+        paint.Color = material.PetalFold.WithAlpha(petal.Layer == RosePetalLayer.Inner ? (byte)124 : (byte)82);
         canvas.DrawPath(fold, paint);
         paint.Style = SKPaintStyle.Fill;
         paint.StrokeCap = SKStrokeCap.Butt;
