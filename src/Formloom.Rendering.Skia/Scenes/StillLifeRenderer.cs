@@ -937,7 +937,7 @@ public static class StillLifeRenderer
             DrawRoseLeaf(canvas, scene, leaf, material, silhouette, omitDetail, paint);
         }
 
-        DrawRoseSepals(canvas, plant, material, silhouette, paint);
+        DrawRoseSepals(canvas, plant, material, silhouette, omitDetail, paint);
 
         foreach (var petal in plant.Bloom.Petals)
         {
@@ -971,6 +971,7 @@ public static class StillLifeRenderer
         RosePlant plant,
         RoseMaterial material,
         bool silhouette,
+        bool omitDetail,
         SKPaint paint)
     {
         var bloom = plant.Bloom;
@@ -988,23 +989,24 @@ public static class StillLifeRenderer
             var rootRight = basePoint + (normal * (halfWidth * 0.34f));
             var shoulderLeft = basePoint + (direction * (length * 0.48f)) - (normal * halfWidth);
             var shoulderRight = basePoint + (direction * (length * 0.48f)) + (normal * halfWidth);
-            using var sepal = new SKPath();
-            sepal.MoveTo(rootLeft.X, rootLeft.Y);
-            sepal.CubicTo(
+            using var sepalBuilder = new SKPathBuilder();
+            sepalBuilder.MoveTo(rootLeft.X, rootLeft.Y);
+            sepalBuilder.CubicTo(
                 rootLeft.X + (direction.X * length * 0.28f) - (normal.X * halfWidth * 0.78f),
                 rootLeft.Y + (direction.Y * length * 0.28f) - (normal.Y * halfWidth * 0.78f),
                 shoulderLeft.X,
                 shoulderLeft.Y,
                 tip.X,
                 tip.Y);
-            sepal.CubicTo(
+            sepalBuilder.CubicTo(
                 shoulderRight.X,
                 shoulderRight.Y,
                 rootRight.X + (direction.X * length * 0.28f) + (normal.X * halfWidth * 0.78f),
                 rootRight.Y + (direction.Y * length * 0.28f) + (normal.Y * halfWidth * 0.78f),
                 rootRight.X,
                 rootRight.Y);
-            sepal.Close();
+            sepalBuilder.Close();
+            using var sepal = sepalBuilder.Detach();
 
             if (silhouette)
             {
@@ -1030,15 +1032,16 @@ public static class StillLifeRenderer
                 paint.StrokeCap = SKStrokeCap.Round;
                 paint.StrokeWidth = MathF.Max(bloom.RadiusX * 0.009f, 0.0007f);
                 paint.Color = material.LeafEdge.WithAlpha(72);
-                using var ridge = new SKPath();
-                ridge.MoveTo(basePoint.X, basePoint.Y);
-                ridge.CubicTo(
+                using var ridgeBuilder = new SKPathBuilder();
+                ridgeBuilder.MoveTo(basePoint.X, basePoint.Y);
+                ridgeBuilder.CubicTo(
                     basePoint.X + (direction.X * length * 0.32f),
                     basePoint.Y + (direction.Y * length * 0.32f),
                     basePoint.X + (direction.X * length * 0.72f),
                     basePoint.Y + (direction.Y * length * 0.72f),
                     tip.X,
                     tip.Y);
+                using var ridge = ridgeBuilder.Detach();
                 canvas.DrawPath(ridge, paint);
                 paint.Style = SKPaintStyle.Fill;
                 paint.StrokeCap = SKStrokeCap.Butt;
