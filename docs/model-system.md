@@ -4,7 +4,7 @@
 
 **Phase:** 11 — Data-driven model system  
 **Contract version:** 0.1  
-**Implementation status:** Architecture contract, versioned typed definitions, filesystem catalog, semantic validation, renderer-neutral evaluated-geometry output contract, and the initial reusable C# geometry algorithms are implemented. A generic schema-v1 evaluator is under review in PR #63. The complete rose definition, generic material/style representation, and generic renderer/scene integration remain unimplemented.
+**Implementation status:** Architecture contract, versioned typed definitions, filesystem catalog, semantic validation, renderer-neutral evaluated geometry, reusable C# geometry algorithms, and the generic schema-v1 evaluator are implemented. Evaluated geometry now carries the selected material-token palette, and the first standalone Skia renderer slice fills closed paths with solid colors. The complete rose definition, strokes, gradients, richer material effects, and scene integration remain unimplemented.
 
 This document defines the intended boundary between Formloom's procedural engine and the external model knowledge it consumes. It is deliberately a contract, not a premature specification of every JSON field or procedural operator. Those details must be designed against the existing rose implementation during the next milestones.
 
@@ -145,7 +145,7 @@ The interpreter must produce a model-independent representation. The representat
 
 Geometry uses a documented normalized coordinate system before instance placement. Local, parent-relative, and scene-relative coordinates must be distinguishable; units and transform order must be unambiguous. Non-finite values, degenerate geometry, invalid bounds, and unsupported operations must be rejected before rendering.
 
-Model definitions own material choices and model-specific palette values. The Core representation must not contain `SKColor` or other SkiaSharp types. The renderer owns the conversion from generic material data to backend paint/shader resources. If an effect cannot be expressed through generic material/render operations, that is an engine capability gap to address deliberately—not a reason to retain a per-model renderer method.
+Model definitions own material choices and model-specific palette values. Evaluated geometry carries the selected variant's color-token dictionary, keyed by material slot and represented as renderer-neutral hexadecimal strings. The Core representation must not contain `SKColor` or other SkiaSharp types. The renderer owns the conversion from generic material data to backend paint/shader resources. The initial Skia model-path renderer resolves these tokens for closed-path solid fills; strokes, gradients, clipping, and richer effects remain separate capabilities. If an effect cannot be expressed through generic material/render operations, that is an engine capability gap to address deliberately—not a reason to retain a per-model renderer method.
 
 ## 7. Determinism and variation
 
