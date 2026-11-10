@@ -30,6 +30,10 @@ public sealed class RoseModelFixtureTests
         Assert.Equal(2, attachmentNodes.Length);
         Assert.All(attachmentNodes, node => Assert.Equal("rose.stem", node.Curve));
 
+        var curveSampleNodes = definition.Nodes.OfType<ModelCurveSampleNodeDefinition>().ToArray();
+        Assert.Equal(6, curveSampleNodes.Length);
+        Assert.All(curveSampleNodes, node => Assert.Contains("rose.leaf.", node.Curve));
+
         var radialNodes = definition.Nodes.OfType<ModelRadialArrayNodeDefinition>().ToArray();
         Assert.Equal(6, radialNodes.Length);
         Assert.All(radialNodes, node =>
@@ -56,7 +60,7 @@ public sealed class RoseModelFixtureTests
 
         var geometry = Assert.IsType<ModelGeometry>(result.Geometry);
         AssertBloomFollowsStemTip(geometry);
-        Assert.Equal(31, geometry.Paths.Length);
+        Assert.Equal(43, geometry.Paths.Length);
         Assert.Equal("rose.stem", geometry.Paths[0].Id);
 
         ModelGeometryPath FindPath(string id) =>
@@ -246,6 +250,56 @@ public sealed class RoseModelFixtureTests
         Assert.Equal(variedLeft.Segments, Find(changedPaths, "rose.leaf.left").Segments);
         Assert.Equal(variedStem.Segments.ToArray(), Find(changedPaths, "rose.stem").Segments.ToArray());
         Assert.NotEqual(variedRight.Segments[0], Find(changedPaths, "rose.leaf.right").Segments[0]);
+    }
+
+    [Fact]
+    public void RepresentsSixLateralVeinsPerLeafUsingCurveSamplesAndProfileMaps()
+    {
+        var catalog = ModelDefinitionCatalog.Load(Path.Combine(AppContext.BaseDirectory, "Fixtures"));
+        Assert.True(catalog.IsSuccess, string.Join(Environment.NewLine, catalog.Diagnostics.Select(item => item.Message)));
+        var definition = Assert.Single(catalog.Models).Value;
+        var context = ModelEvaluationContext.Empty(42, 0.35f) with
+        {
+            Frames = ImmutableDictionary<string, ModelMountFrameValues>.Empty.Add(
+                "vase-opening",
+                new(new(0.5f, 0.65f), 0.12f, 0.07f, 0.58f, 0.015f, 0.4f)),
+        };
+
+        var result = ModelDefinitionEvaluator.Evaluate(definition, context);
+
+        Assert.True(result.IsSuccess, string.Join(Environment.NewLine, result.Diagnostics.Select(item => item.Message)));
+        var paths = Assert.IsType<ModelGeometry>(result.Geometry).Paths;
+
+        foreach (var side in new[] { "left", "right" })
+        {
+            var centralVein = Assert.Single(paths, path => path.Id == $"rose.leaf.{side}.vein");
+            var direction = centralVein.Segments[^1].End - centralVein.Segments[0].Start;
+            foreach (var label in new[] { "24", "46", "68" })
+            {
+                var left = Assert.Single(paths, path => path.Id == $"rose.leaf.{side}.vein.lateral.{label}.left");
+                var right = Assert.Single(paths, path => path.Id == $"rose.leaf.{side}.vein.lateral.{label}.right");
+
+                Assert.Equal(left.Segments[0].Start, right.Segments[0].Start);
+                Assert.Equal(3, left.Segments.Length);
+                Assert.Equal(3, right.Segments.Length);
+                Assert.True(left.Detail);
+                Assert.True(right.Detail);
+                Assert.Equal("leaf.vein", left.MaterialSlot);
+                Assert.Equal("leaf.vein", right.MaterialSlot);
+                Assert.Equal(0.0015f, left.StrokeWidth);
+                Assert.Equal(0.0015f, right.StrokeWidth);
+
+                var leftDelta = left.Segments[^1].End - left.Segments[0].Start;
+                var rightDelta = right.Segments[^1].End - right.Segments[0].Start;
+                var leftCross = (direction.X * leftDelta.Y) - (direction.Y * leftDelta.X);
+                var rightCross = (direction.X * rightDelta.Y) - (direction.Y * rightDelta.X);
+                Assert.True(
+                    leftCross * rightCross < 0,
+                    $"Expected opposite lateral branches at {side}/{label}, got cross products {leftCross} and {rightCross}.");
+            }
+        }
+
+        Assert.Empty(ModelGeometryValidator.Validate(Assert.IsType<ModelGeometry>(result.Geometry)));
     }
 
     private static void AssertBloomFollowsStemTip(ModelGeometry geometry)

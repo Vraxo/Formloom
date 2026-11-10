@@ -490,6 +490,9 @@
           "$ref": "#/$defs/curveProjectNode"
         },
         {
+          "$ref": "#/$defs/curveSampleNode"
+        },
+        {
           "$ref": "#/$defs/profileMapNode"
         },
         {
@@ -555,6 +558,30 @@
         },
         "target": {
           "$ref": "#/$defs/pointExpression"
+        }
+      }
+    },
+    "curveSampleNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "id",
+        "curve",
+        "parameter"
+      ],
+      "properties": {
+        "op": {
+          "const": "curve.sample"
+        },
+        "id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "curve": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "parameter": {
+          "$ref": "#/$defs/numberExpression"
         }
       }
     },

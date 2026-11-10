@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using System.Numerics;
 using Formloom.Core.Core;
+using Formloom.Core.Geometry;
 using Formloom.Core.Models.Definitions;
 using Formloom.Core.Models.Evaluation;
 using Formloom.Core.Models.Geometry;
@@ -129,11 +130,12 @@ public sealed class ModelDefinitionEvaluatorTests
     public void RejectsDivisionByZeroInAnEvaluatedExpression()
     {
         var definition = CreateDefinition();
-        var invalidNode = Assert.IsType<ModelRadialArrayNodeDefinition>(definition.Nodes[3]);
+        var radialIndex = Enumerable.Range(0, definition.Nodes.Length).Single(index => definition.Nodes[index].Id == "bloom.outer");
+        var invalidNode = Assert.IsType<ModelRadialArrayNodeDefinition>(definition.Nodes[radialIndex]);
         var invalidDefinition = definition with
         {
             Nodes = definition.Nodes.SetItem(
-                3,
+                radialIndex,
                 invalidNode with
                 {
                     RadiusX = new ModelArithmeticExpression(
@@ -180,11 +182,12 @@ public sealed class ModelDefinitionEvaluatorTests
     public void RejectsFiniteExpressionThatExceedsFloatCoordinateRange()
     {
         var definition = CreateDefinition();
-        var radial = Assert.IsType<ModelRadialArrayNodeDefinition>(definition.Nodes[3]);
+        var radialIndex = Enumerable.Range(0, definition.Nodes.Length).Single(index => definition.Nodes[index].Id == "bloom.outer");
+        var radial = Assert.IsType<ModelRadialArrayNodeDefinition>(definition.Nodes[radialIndex]);
         var invalidDefinition = definition with
         {
             Nodes = definition.Nodes.SetItem(
-                3,
+                radialIndex,
                 radial with { RadiusX = Literal((double)float.MaxValue * 2) }),
         };
 
@@ -198,11 +201,12 @@ public sealed class ModelDefinitionEvaluatorTests
     public void RejectsFiniteMappingInputsThatOverflowGeneratedGeometry()
     {
         var definition = CreateDefinition();
-        var radial = Assert.IsType<ModelRadialArrayNodeDefinition>(definition.Nodes[3]);
+        var radialIndex = Enumerable.Range(0, definition.Nodes.Length).Single(index => definition.Nodes[index].Id == "bloom.outer");
+        var radial = Assert.IsType<ModelRadialArrayNodeDefinition>(definition.Nodes[radialIndex]);
         var invalidDefinition = definition with
         {
             Nodes = definition.Nodes.SetItem(
-                3,
+                radialIndex,
                 radial with
                 {
                     Mapping = radial.Mapping with
@@ -225,10 +229,11 @@ public sealed class ModelDefinitionEvaluatorTests
     public void RejectsMaterialToneOutsideNormalizedRange()
     {
         var definition = CreateDefinition();
-        var radial = Assert.IsType<ModelRadialArrayNodeDefinition>(definition.Nodes[3]);
+        var radialIndex = Enumerable.Range(0, definition.Nodes.Length).Single(index => definition.Nodes[index].Id == "bloom.outer");
+        var radial = Assert.IsType<ModelRadialArrayNodeDefinition>(definition.Nodes[radialIndex]);
         var invalidDefinition = definition with
         {
-            Nodes = definition.Nodes.SetItem(3, radial with { Tone = Literal(1.1) }),
+            Nodes = definition.Nodes.SetItem(radialIndex, radial with { Tone = Literal(1.1) }),
         };
 
         var result = ModelDefinitionEvaluator.Evaluate(invalidDefinition, CreateContext());
@@ -254,9 +259,12 @@ public sealed class ModelDefinitionEvaluatorTests
             Curve = "stem.profile",
             Target = Point(Literal(0.5), Literal(0.5)),
         };
-        var leaf = Assert.IsType<ModelProfileMapNodeDefinition>(definition.Nodes[2]);
-        var radial = Assert.IsType<ModelRadialArrayNodeDefinition>(definition.Nodes[3]);
-        var group = Assert.IsType<ModelGeometryGroupNodeDefinition>(definition.Nodes[4]) with
+        var leaf = Assert.IsType<ModelProfileMapNodeDefinition>(definition.Nodes.Single(node => node.Id == "leaf.left")) with
+        {
+            Origin = Point(Reference("node:leaf.attachment:point:x"), Reference("node:leaf.attachment:point:y")),
+        };
+        var radial = Assert.IsType<ModelRadialArrayNodeDefinition>(definition.Nodes.Single(node => node.Id == "bloom.outer"));
+        var group = Assert.IsType<ModelGeometryGroupNodeDefinition>(definition.Nodes.Single(node => node.Id == "flower")) with
         {
             Parts = ["stem.profile", "leaf.left", "bloom.outer"],
         };
@@ -287,6 +295,63 @@ public sealed class ModelDefinitionEvaluatorTests
         var attachmentLandmark = Assert.Single(leafPath.Landmarks, item => item.Name == "attachment");
         Assert.Equal(0.5f, attachmentLandmark.Position.X, 4);
         Assert.Equal(0.5f, attachmentLandmark.Position.Y, 4);
+    }
+
+    [Fact]
+    public void EvaluatesCurveSampleLandmarksForLaterGeometryNodes()
+    {
+        var result = ModelDefinitionEvaluator.Evaluate(CreateDefinition(), CreateContext());
+
+        Assert.True(result.IsSuccess, string.Join(Environment.NewLine, result.Diagnostics.Select(item => item.Message)));
+        var geometry = Assert.IsType<ModelGeometry>(result.Geometry);
+        var leaf = Assert.Single(geometry.Paths, path => path.Id == "leaf.left");
+        var attachment = Assert.Single(leaf.Landmarks, item => item.Name == "attachment");
+        Assert.Equal(new Vector2(0.5f, 0.5f), attachment.Position);
+    }
+
+    [Fact]
+    public void RejectsCurveSampleParametersOutsideTheNormalizedRange()
+    {
+        var definition = CreateDefinition();
+        var sampleIndex = Enumerable.Range(0, definition.Nodes.Length)
+            .Single(index => definition.Nodes[index].Id == "leaf.sample");
+        var sample = Assert.IsType<ModelCurveSampleNodeDefinition>(definition.Nodes[sampleIndex]);
+        var invalidDefinition = definition with
+        {
+            Nodes = definition.Nodes.SetItem(sampleIndex, sample with { Parameter = Literal(1.01) }),
+        };
+
+        var result = ModelDefinitionEvaluator.Evaluate(invalidDefinition, CreateContext());
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Diagnostics, item => item.Code == "evaluation.curve-parameter-out-of-range");
+    }
+
+    [Fact]
+    public void SamplesAcrossOrderedSegmentsUsingEqualParameterIntervals()
+    {
+        var segments = ImmutableArray.Create(
+            new CubicSegment(
+                new(0, 0),
+                new(1f / 3f, 0),
+                new(2f / 3f, 0),
+                new(1, 0)),
+            new CubicSegment(
+                new(1, 0),
+                new(1 + (1f / 3f), 0),
+                new(1 + (2f / 3f), 0),
+                new(2, 0)));
+
+        var sample = CubicCurveSampler.Sample(segments, 0.75f);
+        var end = CubicCurveSampler.Sample(segments, 1f);
+
+        Assert.Equal(1, sample.SegmentIndex);
+        Assert.Equal(0.5f, sample.Parameter, 4);
+        Assert.Equal(new Vector2(1.5f, 0), sample.Point);
+        Assert.Equal(Vector2.UnitX, sample.Tangent);
+        Assert.Equal(1, end.SegmentIndex);
+        Assert.Equal(1f, end.Parameter);
+        Assert.Equal(new Vector2(2, 0), end.Point);
     }
 
     private static ModelDefinition CreateDefinition()
@@ -338,11 +403,15 @@ public sealed class ModelDefinitionEvaluatorTests
             "leaf.attachment",
             "stem.path",
             Point(Literal(0.5), Literal(0.65)));
+        var sample = new ModelCurveSampleNodeDefinition(
+            "leaf.sample",
+            "stem.path",
+            Literal(0.5));
         var leafMapping = Mapping(0.2, 0.08, reverse: true);
         var leaf = new ModelProfileMapNodeDefinition(
             "leaf.left",
             "leaf",
-            Point(Reference("node:leaf.attachment:point:x"), Reference("node:leaf.attachment:point:y")),
+            Point(Reference("node:leaf.sample:point:x"), Reference("node:leaf.sample:point:y")),
             Literal(0),
             leafMapping,
             "leaf",
@@ -383,7 +452,7 @@ public sealed class ModelDefinitionEvaluatorTests
                 .Add("color", choice),
             profiles,
             materials,
-            [stem, attachment, leaf, radial, group],
+            [stem, attachment, sample, leaf, radial, group],
             ["flower"]);
     }
 

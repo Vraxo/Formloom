@@ -56,6 +56,14 @@ The algorithm samples each segment to find a candidate interval, then performs a
 
 This is appropriate for deterministic geometric attachments such as the current leaf-to-stem projection. It is a numeric projection, not an analytic solution to every possible cubic distance polynomial.
 
+## Cubic curve sampling
+
+**Implementation:** `Formloom.Core.Geometry.CubicCurveSampler`
+
+`Sample(segments, parameter)` evaluates a point and normalized tangent on an ordered sequence of cubic Bézier segments. The parameter is normalized to 0..1 and divided into equal parameter intervals per segment: for three segments, 0..1/3 selects the first segment, 1/3..2/3 the second, and 2/3..1 the third. The exact value 1 selects the final segment endpoint.
+
+This is parameter-space sampling, not arc-length sampling. It is useful when a profile-derived curve has ordered segments and a model needs stable locations along that sequence, such as the lateral-vein attachment positions in the rose probe. The returned tangent is zero only at a degenerate derivative. Invalid segment collections and parameters outside 0..1 are rejected.
+
 ## Existing primitives reused
 
 - `CubicSegment` is the existing cubic Bézier representation and point evaluator.
