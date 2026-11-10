@@ -148,7 +148,6 @@ public sealed class ModelDefinitionEvaluatorTests
         Assert.Contains(result.Diagnostics, item => item.Code == "evaluation.expression-failed");
     }
 
-
     [Theory]
     [InlineData(0f)]
     [InlineData(1f)]
