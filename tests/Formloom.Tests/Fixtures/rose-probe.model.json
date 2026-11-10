@@ -20,6 +20,400 @@
     "vase-opening"
   ],
   "parameters": {
+    "bloomRadiusX": {
+      "type": "number",
+      "defaultValue": {
+        "kind": "arithmetic",
+        "operator": "minimum",
+        "operands": [
+          {
+            "kind": "arithmetic",
+            "operator": "multiply",
+            "operands": [
+              {
+                "kind": "reference",
+                "path": "frame.vase-opening.radiusX"
+              },
+              {
+                "kind": "literal",
+                "value": 1.14
+              }
+            ]
+          },
+          {
+            "kind": "arithmetic",
+            "operator": "multiply",
+            "operands": [
+              {
+                "kind": "reference",
+                "path": "frame.vase-opening.headroom"
+              },
+              {
+                "kind": "literal",
+                "value": 0.35
+              }
+            ]
+          }
+        ]
+      },
+      "minimum": {
+        "kind": "literal",
+        "value": 0
+      },
+      "maximum": {
+        "kind": "literal",
+        "value": 1
+      },
+      "values": []
+    },
+    "bloomRadiusY": {
+      "type": "number",
+      "defaultValue": {
+        "kind": "arithmetic",
+        "operator": "minimum",
+        "operands": [
+          {
+            "kind": "arithmetic",
+            "operator": "multiply",
+            "operands": [
+              {
+                "kind": "reference",
+                "path": "frame.vase-opening.radiusX"
+              },
+              {
+                "kind": "literal",
+                "value": 0.76
+              }
+            ]
+          },
+          {
+            "kind": "arithmetic",
+            "operator": "multiply",
+            "operands": [
+              {
+                "kind": "reference",
+                "path": "frame.vase-opening.headroom"
+              },
+              {
+                "kind": "literal",
+                "value": 0.25
+              }
+            ]
+          }
+        ]
+      },
+      "minimum": {
+        "kind": "literal",
+        "value": 0
+      },
+      "maximum": {
+        "kind": "literal",
+        "value": 1
+      },
+      "values": []
+    },
+    "bloomCenterY": {
+      "type": "number",
+      "defaultValue": {
+        "kind": "arithmetic",
+        "operator": "add",
+        "operands": [
+          {
+            "kind": "literal",
+            "value": 0.036
+          },
+          {
+            "kind": "arithmetic",
+            "operator": "multiply",
+            "operands": [
+              {
+                "kind": "reference",
+                "path": "frame.vase-opening.headroom"
+              },
+              {
+                "kind": "literal",
+                "value": 0.08
+              }
+            ]
+          },
+          {
+            "kind": "reference",
+            "path": "parameters.bloomRadiusY"
+          }
+        ]
+      },
+      "minimum": {
+        "kind": "literal",
+        "value": 0
+      },
+      "maximum": {
+        "kind": "literal",
+        "value": 1
+      },
+      "values": []
+    },
+    "stemBaseY": {
+      "type": "number",
+      "defaultValue": {
+        "kind": "arithmetic",
+        "operator": "add",
+        "operands": [
+          {
+            "kind": "reference",
+            "path": "frame.vase-opening.openingCenter.y"
+          },
+          {
+            "kind": "arithmetic",
+            "operator": "multiply",
+            "operands": [
+              {
+                "kind": "reference",
+                "path": "frame.vase-opening.radiusY"
+              },
+              {
+                "kind": "literal",
+                "value": 0.35
+              }
+            ]
+          }
+        ]
+      },
+      "minimum": {
+        "kind": "literal",
+        "value": 0
+      },
+      "maximum": {
+        "kind": "literal",
+        "value": 1
+      },
+      "values": []
+    },
+    "stemTopY": {
+      "type": "number",
+      "defaultValue": {
+        "kind": "arithmetic",
+        "operator": "add",
+        "operands": [
+          {
+            "kind": "reference",
+            "path": "parameters.bloomCenterY"
+          },
+          {
+            "kind": "arithmetic",
+            "operator": "multiply",
+            "operands": [
+              {
+                "kind": "reference",
+                "path": "parameters.bloomRadiusY"
+              },
+              {
+                "kind": "literal",
+                "value": 0.42
+              }
+            ]
+          }
+        ]
+      },
+      "minimum": {
+        "kind": "literal",
+        "value": 0
+      },
+      "maximum": {
+        "kind": "literal",
+        "value": 1
+      },
+      "values": []
+    },
+    "stemRise": {
+      "type": "number",
+      "defaultValue": {
+        "kind": "arithmetic",
+        "operator": "subtract",
+        "operands": [
+          {
+            "kind": "reference",
+            "path": "parameters.stemBaseY"
+          },
+          {
+            "kind": "reference",
+            "path": "parameters.stemTopY"
+          }
+        ]
+      },
+      "minimum": {
+        "kind": "literal",
+        "value": 0
+      },
+      "maximum": {
+        "kind": "literal",
+        "value": 1
+      },
+      "values": []
+    },
+    "leafLength": {
+      "type": "number",
+      "defaultValue": {
+        "kind": "arithmetic",
+        "operator": "minimum",
+        "operands": [
+          {
+            "kind": "arithmetic",
+            "operator": "multiply",
+            "operands": [
+              {
+                "kind": "reference",
+                "path": "frame.vase-opening.radiusX"
+              },
+              {
+                "kind": "literal",
+                "value": 1.38
+              }
+            ]
+          },
+          {
+            "kind": "arithmetic",
+            "operator": "multiply",
+            "operands": [
+              {
+                "kind": "reference",
+                "path": "parameters.bloomRadiusX"
+              },
+              {
+                "kind": "literal",
+                "value": 1.28
+              }
+            ]
+          }
+        ]
+      },
+      "minimum": {
+        "kind": "literal",
+        "value": 0
+      },
+      "maximum": {
+        "kind": "literal",
+        "value": 1
+      },
+      "values": []
+    },
+    "leafWidth": {
+      "type": "number",
+      "defaultValue": {
+        "kind": "arithmetic",
+        "operator": "multiply",
+        "operands": [
+          {
+            "kind": "reference",
+            "path": "parameters.leafLength"
+          },
+          {
+            "kind": "literal",
+            "value": 0.35
+          }
+        ]
+      },
+      "minimum": {
+        "kind": "literal",
+        "value": 0
+      },
+      "maximum": {
+        "kind": "literal",
+        "value": 1
+      },
+      "values": []
+    },
+    "leftAttachmentY": {
+      "type": "number",
+      "defaultValue": {
+        "kind": "arithmetic",
+        "operator": "subtract",
+        "operands": [
+          {
+            "kind": "reference",
+            "path": "frame.vase-opening.mouthTop"
+          },
+          {
+            "kind": "arithmetic",
+            "operator": "multiply",
+            "operands": [
+              {
+                "kind": "arithmetic",
+                "operator": "subtract",
+                "operands": [
+                  {
+                    "kind": "reference",
+                    "path": "frame.vase-opening.mouthTop"
+                  },
+                  {
+                    "kind": "reference",
+                    "path": "parameters.stemTopY"
+                  }
+                ]
+              },
+              {
+                "kind": "literal",
+                "value": 0.25
+              }
+            ]
+          }
+        ]
+      },
+      "minimum": {
+        "kind": "literal",
+        "value": 0
+      },
+      "maximum": {
+        "kind": "literal",
+        "value": 1
+      },
+      "values": []
+    },
+    "rightAttachmentY": {
+      "type": "number",
+      "defaultValue": {
+        "kind": "arithmetic",
+        "operator": "subtract",
+        "operands": [
+          {
+            "kind": "reference",
+            "path": "frame.vase-opening.mouthTop"
+          },
+          {
+            "kind": "arithmetic",
+            "operator": "multiply",
+            "operands": [
+              {
+                "kind": "arithmetic",
+                "operator": "subtract",
+                "operands": [
+                  {
+                    "kind": "reference",
+                    "path": "frame.vase-opening.mouthTop"
+                  },
+                  {
+                    "kind": "reference",
+                    "path": "parameters.stemTopY"
+                  }
+                ]
+              },
+              {
+                "kind": "literal",
+                "value": 0.52
+              }
+            ]
+          }
+        ]
+      },
+      "minimum": {
+        "kind": "literal",
+        "value": 0
+      },
+      "maximum": {
+        "kind": "literal",
+        "value": 1
+      },
+      "values": []
+    },
     "color": {
       "type": "choice",
       "defaultChoice": "red",
@@ -267,28 +661,8 @@
               "path": "frame.vase-opening.openingCenter.x"
             },
             "y": {
-              "kind": "arithmetic",
-              "operator": "add",
-              "operands": [
-                {
-                  "kind": "reference",
-                  "path": "frame.vase-opening.openingCenter.y"
-                },
-                {
-                  "kind": "arithmetic",
-                  "operator": "multiply",
-                  "operands": [
-                    {
-                      "kind": "reference",
-                      "path": "frame.vase-opening.radiusY"
-                    },
-                    {
-                      "kind": "literal",
-                      "value": 0.35
-                    }
-                  ]
-                }
-              ]
+              "kind": "reference",
+              "path": "parameters.stemBaseY"
             }
           },
           "control1": {
@@ -301,170 +675,16 @@
               "operator": "subtract",
               "operands": [
                 {
-                  "kind": "arithmetic",
-                  "operator": "add",
-                  "operands": [
-                    {
-                      "kind": "reference",
-                      "path": "frame.vase-opening.openingCenter.y"
-                    },
-                    {
-                      "kind": "arithmetic",
-                      "operator": "multiply",
-                      "operands": [
-                        {
-                          "kind": "reference",
-                          "path": "frame.vase-opening.radiusY"
-                        },
-                        {
-                          "kind": "literal",
-                          "value": 0.35
-                        }
-                      ]
-                    }
-                  ]
+                  "kind": "reference",
+                  "path": "parameters.stemBaseY"
                 },
                 {
                   "kind": "arithmetic",
                   "operator": "multiply",
                   "operands": [
                     {
-                      "kind": "arithmetic",
-                      "operator": "subtract",
-                      "operands": [
-                        {
-                          "kind": "arithmetic",
-                          "operator": "add",
-                          "operands": [
-                            {
-                              "kind": "reference",
-                              "path": "frame.vase-opening.openingCenter.y"
-                            },
-                            {
-                              "kind": "arithmetic",
-                              "operator": "multiply",
-                              "operands": [
-                                {
-                                  "kind": "reference",
-                                  "path": "frame.vase-opening.radiusY"
-                                },
-                                {
-                                  "kind": "literal",
-                                  "value": 0.35
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "kind": "arithmetic",
-                          "operator": "add",
-                          "operands": [
-                            {
-                              "kind": "arithmetic",
-                              "operator": "add",
-                              "operands": [
-                                {
-                                  "kind": "literal",
-                                  "value": 0.036
-                                },
-                                {
-                                  "kind": "arithmetic",
-                                  "operator": "multiply",
-                                  "operands": [
-                                    {
-                                      "kind": "reference",
-                                      "path": "frame.vase-opening.headroom"
-                                    },
-                                    {
-                                      "kind": "literal",
-                                      "value": 0.08
-                                    }
-                                  ]
-                                },
-                                {
-                                  "kind": "arithmetic",
-                                  "operator": "minimum",
-                                  "operands": [
-                                    {
-                                      "kind": "arithmetic",
-                                      "operator": "multiply",
-                                      "operands": [
-                                        {
-                                          "kind": "reference",
-                                          "path": "frame.vase-opening.radiusX"
-                                        },
-                                        {
-                                          "kind": "literal",
-                                          "value": 0.76
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "kind": "arithmetic",
-                                      "operator": "multiply",
-                                      "operands": [
-                                        {
-                                          "kind": "reference",
-                                          "path": "frame.vase-opening.headroom"
-                                        },
-                                        {
-                                          "kind": "literal",
-                                          "value": 0.25
-                                        }
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "kind": "arithmetic",
-                              "operator": "multiply",
-                              "operands": [
-                                {
-                                  "kind": "arithmetic",
-                                  "operator": "minimum",
-                                  "operands": [
-                                    {
-                                      "kind": "arithmetic",
-                                      "operator": "multiply",
-                                      "operands": [
-                                        {
-                                          "kind": "reference",
-                                          "path": "frame.vase-opening.radiusX"
-                                        },
-                                        {
-                                          "kind": "literal",
-                                          "value": 0.76
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "kind": "arithmetic",
-                                      "operator": "multiply",
-                                      "operands": [
-                                        {
-                                          "kind": "reference",
-                                          "path": "frame.vase-opening.headroom"
-                                        },
-                                        {
-                                          "kind": "literal",
-                                          "value": 0.25
-                                        }
-                                      ]
-                                    }
-                                  ]
-                                },
-                                {
-                                  "kind": "literal",
-                                  "value": 0.42
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
+                      "kind": "reference",
+                      "path": "parameters.stemRise"
                     },
                     {
                       "kind": "literal",
@@ -485,254 +705,16 @@
               "operator": "add",
               "operands": [
                 {
-                  "kind": "arithmetic",
-                  "operator": "add",
-                  "operands": [
-                    {
-                      "kind": "arithmetic",
-                      "operator": "add",
-                      "operands": [
-                        {
-                          "kind": "literal",
-                          "value": 0.036
-                        },
-                        {
-                          "kind": "arithmetic",
-                          "operator": "multiply",
-                          "operands": [
-                            {
-                              "kind": "reference",
-                              "path": "frame.vase-opening.headroom"
-                            },
-                            {
-                              "kind": "literal",
-                              "value": 0.08
-                            }
-                          ]
-                        },
-                        {
-                          "kind": "arithmetic",
-                          "operator": "minimum",
-                          "operands": [
-                            {
-                              "kind": "arithmetic",
-                              "operator": "multiply",
-                              "operands": [
-                                {
-                                  "kind": "reference",
-                                  "path": "frame.vase-opening.radiusX"
-                                },
-                                {
-                                  "kind": "literal",
-                                  "value": 0.76
-                                }
-                              ]
-                            },
-                            {
-                              "kind": "arithmetic",
-                              "operator": "multiply",
-                              "operands": [
-                                {
-                                  "kind": "reference",
-                                  "path": "frame.vase-opening.headroom"
-                                },
-                                {
-                                  "kind": "literal",
-                                  "value": 0.25
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "kind": "arithmetic",
-                      "operator": "multiply",
-                      "operands": [
-                        {
-                          "kind": "arithmetic",
-                          "operator": "minimum",
-                          "operands": [
-                            {
-                              "kind": "arithmetic",
-                              "operator": "multiply",
-                              "operands": [
-                                {
-                                  "kind": "reference",
-                                  "path": "frame.vase-opening.radiusX"
-                                },
-                                {
-                                  "kind": "literal",
-                                  "value": 0.76
-                                }
-                              ]
-                            },
-                            {
-                              "kind": "arithmetic",
-                              "operator": "multiply",
-                              "operands": [
-                                {
-                                  "kind": "reference",
-                                  "path": "frame.vase-opening.headroom"
-                                },
-                                {
-                                  "kind": "literal",
-                                  "value": 0.25
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "kind": "literal",
-                          "value": 0.42
-                        }
-                      ]
-                    }
-                  ]
+                  "kind": "reference",
+                  "path": "parameters.stemTopY"
                 },
                 {
                   "kind": "arithmetic",
                   "operator": "multiply",
                   "operands": [
                     {
-                      "kind": "arithmetic",
-                      "operator": "subtract",
-                      "operands": [
-                        {
-                          "kind": "arithmetic",
-                          "operator": "add",
-                          "operands": [
-                            {
-                              "kind": "reference",
-                              "path": "frame.vase-opening.openingCenter.y"
-                            },
-                            {
-                              "kind": "arithmetic",
-                              "operator": "multiply",
-                              "operands": [
-                                {
-                                  "kind": "reference",
-                                  "path": "frame.vase-opening.radiusY"
-                                },
-                                {
-                                  "kind": "literal",
-                                  "value": 0.35
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "kind": "arithmetic",
-                          "operator": "add",
-                          "operands": [
-                            {
-                              "kind": "arithmetic",
-                              "operator": "add",
-                              "operands": [
-                                {
-                                  "kind": "literal",
-                                  "value": 0.036
-                                },
-                                {
-                                  "kind": "arithmetic",
-                                  "operator": "multiply",
-                                  "operands": [
-                                    {
-                                      "kind": "reference",
-                                      "path": "frame.vase-opening.headroom"
-                                    },
-                                    {
-                                      "kind": "literal",
-                                      "value": 0.08
-                                    }
-                                  ]
-                                },
-                                {
-                                  "kind": "arithmetic",
-                                  "operator": "minimum",
-                                  "operands": [
-                                    {
-                                      "kind": "arithmetic",
-                                      "operator": "multiply",
-                                      "operands": [
-                                        {
-                                          "kind": "reference",
-                                          "path": "frame.vase-opening.radiusX"
-                                        },
-                                        {
-                                          "kind": "literal",
-                                          "value": 0.76
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "kind": "arithmetic",
-                                      "operator": "multiply",
-                                      "operands": [
-                                        {
-                                          "kind": "reference",
-                                          "path": "frame.vase-opening.headroom"
-                                        },
-                                        {
-                                          "kind": "literal",
-                                          "value": 0.25
-                                        }
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "kind": "arithmetic",
-                              "operator": "multiply",
-                              "operands": [
-                                {
-                                  "kind": "arithmetic",
-                                  "operator": "minimum",
-                                  "operands": [
-                                    {
-                                      "kind": "arithmetic",
-                                      "operator": "multiply",
-                                      "operands": [
-                                        {
-                                          "kind": "reference",
-                                          "path": "frame.vase-opening.radiusX"
-                                        },
-                                        {
-                                          "kind": "literal",
-                                          "value": 0.76
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "kind": "arithmetic",
-                                      "operator": "multiply",
-                                      "operands": [
-                                        {
-                                          "kind": "reference",
-                                          "path": "frame.vase-opening.headroom"
-                                        },
-                                        {
-                                          "kind": "literal",
-                                          "value": 0.25
-                                        }
-                                      ]
-                                    }
-                                  ]
-                                },
-                                {
-                                  "kind": "literal",
-                                  "value": 0.42
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
+                      "kind": "reference",
+                      "path": "parameters.stemRise"
                     },
                     {
                       "kind": "literal",
@@ -749,112 +731,8 @@
               "path": "frame.vase-opening.openingCenter.x"
             },
             "y": {
-              "kind": "arithmetic",
-              "operator": "add",
-              "operands": [
-                {
-                  "kind": "arithmetic",
-                  "operator": "add",
-                  "operands": [
-                    {
-                      "kind": "literal",
-                      "value": 0.036
-                    },
-                    {
-                      "kind": "arithmetic",
-                      "operator": "multiply",
-                      "operands": [
-                        {
-                          "kind": "reference",
-                          "path": "frame.vase-opening.headroom"
-                        },
-                        {
-                          "kind": "literal",
-                          "value": 0.08
-                        }
-                      ]
-                    },
-                    {
-                      "kind": "arithmetic",
-                      "operator": "minimum",
-                      "operands": [
-                        {
-                          "kind": "arithmetic",
-                          "operator": "multiply",
-                          "operands": [
-                            {
-                              "kind": "reference",
-                              "path": "frame.vase-opening.radiusX"
-                            },
-                            {
-                              "kind": "literal",
-                              "value": 0.76
-                            }
-                          ]
-                        },
-                        {
-                          "kind": "arithmetic",
-                          "operator": "multiply",
-                          "operands": [
-                            {
-                              "kind": "reference",
-                              "path": "frame.vase-opening.headroom"
-                            },
-                            {
-                              "kind": "literal",
-                              "value": 0.25
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "kind": "arithmetic",
-                  "operator": "multiply",
-                  "operands": [
-                    {
-                      "kind": "arithmetic",
-                      "operator": "minimum",
-                      "operands": [
-                        {
-                          "kind": "arithmetic",
-                          "operator": "multiply",
-                          "operands": [
-                            {
-                              "kind": "reference",
-                              "path": "frame.vase-opening.radiusX"
-                            },
-                            {
-                              "kind": "literal",
-                              "value": 0.76
-                            }
-                          ]
-                        },
-                        {
-                          "kind": "arithmetic",
-                          "operator": "multiply",
-                          "operands": [
-                            {
-                              "kind": "reference",
-                              "path": "frame.vase-opening.headroom"
-                            },
-                            {
-                              "kind": "literal",
-                              "value": 0.25
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "kind": "literal",
-                      "value": 0.42
-                    }
-                  ]
-                }
-              ]
+              "kind": "reference",
+              "path": "parameters.stemTopY"
             }
           }
         }
@@ -870,142 +748,8 @@
           "path": "frame.vase-opening.openingCenter.x"
         },
         "y": {
-          "kind": "arithmetic",
-          "operator": "subtract",
-          "operands": [
-            {
-              "kind": "reference",
-              "path": "frame.vase-opening.mouthTop"
-            },
-            {
-              "kind": "arithmetic",
-              "operator": "multiply",
-              "operands": [
-                {
-                  "kind": "arithmetic",
-                  "operator": "subtract",
-                  "operands": [
-                    {
-                      "kind": "reference",
-                      "path": "frame.vase-opening.mouthTop"
-                    },
-                    {
-                      "kind": "arithmetic",
-                      "operator": "add",
-                      "operands": [
-                        {
-                          "kind": "arithmetic",
-                          "operator": "add",
-                          "operands": [
-                            {
-                              "kind": "literal",
-                              "value": 0.036
-                            },
-                            {
-                              "kind": "arithmetic",
-                              "operator": "multiply",
-                              "operands": [
-                                {
-                                  "kind": "reference",
-                                  "path": "frame.vase-opening.headroom"
-                                },
-                                {
-                                  "kind": "literal",
-                                  "value": 0.08
-                                }
-                              ]
-                            },
-                            {
-                              "kind": "arithmetic",
-                              "operator": "minimum",
-                              "operands": [
-                                {
-                                  "kind": "arithmetic",
-                                  "operator": "multiply",
-                                  "operands": [
-                                    {
-                                      "kind": "reference",
-                                      "path": "frame.vase-opening.radiusX"
-                                    },
-                                    {
-                                      "kind": "literal",
-                                      "value": 0.76
-                                    }
-                                  ]
-                                },
-                                {
-                                  "kind": "arithmetic",
-                                  "operator": "multiply",
-                                  "operands": [
-                                    {
-                                      "kind": "reference",
-                                      "path": "frame.vase-opening.headroom"
-                                    },
-                                    {
-                                      "kind": "literal",
-                                      "value": 0.25
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "kind": "arithmetic",
-                          "operator": "multiply",
-                          "operands": [
-                            {
-                              "kind": "arithmetic",
-                              "operator": "minimum",
-                              "operands": [
-                                {
-                                  "kind": "arithmetic",
-                                  "operator": "multiply",
-                                  "operands": [
-                                    {
-                                      "kind": "reference",
-                                      "path": "frame.vase-opening.radiusX"
-                                    },
-                                    {
-                                      "kind": "literal",
-                                      "value": 0.76
-                                    }
-                                  ]
-                                },
-                                {
-                                  "kind": "arithmetic",
-                                  "operator": "multiply",
-                                  "operands": [
-                                    {
-                                      "kind": "reference",
-                                      "path": "frame.vase-opening.headroom"
-                                    },
-                                    {
-                                      "kind": "literal",
-                                      "value": 0.25
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "kind": "literal",
-                              "value": 0.42
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "kind": "literal",
-                  "value": 0.25
-                }
-              ]
-            }
-          ]
+          "kind": "reference",
+          "path": "parameters.leftAttachmentY"
         }
       }
     },
@@ -1019,142 +763,8 @@
           "path": "frame.vase-opening.openingCenter.x"
         },
         "y": {
-          "kind": "arithmetic",
-          "operator": "subtract",
-          "operands": [
-            {
-              "kind": "reference",
-              "path": "frame.vase-opening.mouthTop"
-            },
-            {
-              "kind": "arithmetic",
-              "operator": "multiply",
-              "operands": [
-                {
-                  "kind": "arithmetic",
-                  "operator": "subtract",
-                  "operands": [
-                    {
-                      "kind": "reference",
-                      "path": "frame.vase-opening.mouthTop"
-                    },
-                    {
-                      "kind": "arithmetic",
-                      "operator": "add",
-                      "operands": [
-                        {
-                          "kind": "arithmetic",
-                          "operator": "add",
-                          "operands": [
-                            {
-                              "kind": "literal",
-                              "value": 0.036
-                            },
-                            {
-                              "kind": "arithmetic",
-                              "operator": "multiply",
-                              "operands": [
-                                {
-                                  "kind": "reference",
-                                  "path": "frame.vase-opening.headroom"
-                                },
-                                {
-                                  "kind": "literal",
-                                  "value": 0.08
-                                }
-                              ]
-                            },
-                            {
-                              "kind": "arithmetic",
-                              "operator": "minimum",
-                              "operands": [
-                                {
-                                  "kind": "arithmetic",
-                                  "operator": "multiply",
-                                  "operands": [
-                                    {
-                                      "kind": "reference",
-                                      "path": "frame.vase-opening.radiusX"
-                                    },
-                                    {
-                                      "kind": "literal",
-                                      "value": 0.76
-                                    }
-                                  ]
-                                },
-                                {
-                                  "kind": "arithmetic",
-                                  "operator": "multiply",
-                                  "operands": [
-                                    {
-                                      "kind": "reference",
-                                      "path": "frame.vase-opening.headroom"
-                                    },
-                                    {
-                                      "kind": "literal",
-                                      "value": 0.25
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "kind": "arithmetic",
-                          "operator": "multiply",
-                          "operands": [
-                            {
-                              "kind": "arithmetic",
-                              "operator": "minimum",
-                              "operands": [
-                                {
-                                  "kind": "arithmetic",
-                                  "operator": "multiply",
-                                  "operands": [
-                                    {
-                                      "kind": "reference",
-                                      "path": "frame.vase-opening.radiusX"
-                                    },
-                                    {
-                                      "kind": "literal",
-                                      "value": 0.76
-                                    }
-                                  ]
-                                },
-                                {
-                                  "kind": "arithmetic",
-                                  "operator": "multiply",
-                                  "operands": [
-                                    {
-                                      "kind": "reference",
-                                      "path": "frame.vase-opening.headroom"
-                                    },
-                                    {
-                                      "kind": "literal",
-                                      "value": 0.25
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "kind": "literal",
-                              "value": 0.42
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "kind": "literal",
-                  "value": 0.52
-                }
-              ]
-            }
-          ]
+          "kind": "reference",
+          "path": "parameters.rightAttachmentY"
         }
       }
     },
@@ -1186,142 +796,12 @@
           "value": 1
         },
         "length": {
-          "kind": "arithmetic",
-          "operator": "minimum",
-          "operands": [
-            {
-              "kind": "arithmetic",
-              "operator": "multiply",
-              "operands": [
-                {
-                  "kind": "reference",
-                  "path": "frame.vase-opening.radiusX"
-                },
-                {
-                  "kind": "literal",
-                  "value": 1.38
-                }
-              ]
-            },
-            {
-              "kind": "arithmetic",
-              "operator": "multiply",
-              "operands": [
-                {
-                  "kind": "arithmetic",
-                  "operator": "minimum",
-                  "operands": [
-                    {
-                      "kind": "arithmetic",
-                      "operator": "multiply",
-                      "operands": [
-                        {
-                          "kind": "reference",
-                          "path": "frame.vase-opening.radiusX"
-                        },
-                        {
-                          "kind": "literal",
-                          "value": 1.14
-                        }
-                      ]
-                    },
-                    {
-                      "kind": "arithmetic",
-                      "operator": "multiply",
-                      "operands": [
-                        {
-                          "kind": "reference",
-                          "path": "frame.vase-opening.headroom"
-                        },
-                        {
-                          "kind": "literal",
-                          "value": 0.35
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "kind": "literal",
-                  "value": 1.28
-                }
-              ]
-            }
-          ]
+          "kind": "reference",
+          "path": "parameters.leafLength"
         },
         "width": {
-          "kind": "arithmetic",
-          "operator": "multiply",
-          "operands": [
-            {
-              "kind": "arithmetic",
-              "operator": "minimum",
-              "operands": [
-                {
-                  "kind": "arithmetic",
-                  "operator": "multiply",
-                  "operands": [
-                    {
-                      "kind": "reference",
-                      "path": "frame.vase-opening.radiusX"
-                    },
-                    {
-                      "kind": "literal",
-                      "value": 1.38
-                    }
-                  ]
-                },
-                {
-                  "kind": "arithmetic",
-                  "operator": "multiply",
-                  "operands": [
-                    {
-                      "kind": "arithmetic",
-                      "operator": "minimum",
-                      "operands": [
-                        {
-                          "kind": "arithmetic",
-                          "operator": "multiply",
-                          "operands": [
-                            {
-                              "kind": "reference",
-                              "path": "frame.vase-opening.radiusX"
-                            },
-                            {
-                              "kind": "literal",
-                              "value": 1.14
-                            }
-                          ]
-                        },
-                        {
-                          "kind": "arithmetic",
-                          "operator": "multiply",
-                          "operands": [
-                            {
-                              "kind": "reference",
-                              "path": "frame.vase-opening.headroom"
-                            },
-                            {
-                              "kind": "literal",
-                              "value": 0.35
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "kind": "literal",
-                      "value": 1.28
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "kind": "literal",
-              "value": 0.35
-            }
-          ]
+          "kind": "reference",
+          "path": "parameters.leafWidth"
         },
         "rootOffset": {
           "kind": "literal",
@@ -1372,68 +852,8 @@
           "operator": "multiply",
           "operands": [
             {
-              "kind": "arithmetic",
-              "operator": "minimum",
-              "operands": [
-                {
-                  "kind": "arithmetic",
-                  "operator": "multiply",
-                  "operands": [
-                    {
-                      "kind": "reference",
-                      "path": "frame.vase-opening.radiusX"
-                    },
-                    {
-                      "kind": "literal",
-                      "value": 1.38
-                    }
-                  ]
-                },
-                {
-                  "kind": "arithmetic",
-                  "operator": "multiply",
-                  "operands": [
-                    {
-                      "kind": "arithmetic",
-                      "operator": "minimum",
-                      "operands": [
-                        {
-                          "kind": "arithmetic",
-                          "operator": "multiply",
-                          "operands": [
-                            {
-                              "kind": "reference",
-                              "path": "frame.vase-opening.radiusX"
-                            },
-                            {
-                              "kind": "literal",
-                              "value": 1.14
-                            }
-                          ]
-                        },
-                        {
-                          "kind": "arithmetic",
-                          "operator": "multiply",
-                          "operands": [
-                            {
-                              "kind": "reference",
-                              "path": "frame.vase-opening.headroom"
-                            },
-                            {
-                              "kind": "literal",
-                              "value": 0.35
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "kind": "literal",
-                      "value": 1.28
-                    }
-                  ]
-                }
-              ]
+              "kind": "reference",
+              "path": "parameters.leafLength"
             },
             {
               "kind": "literal",
@@ -1446,78 +866,8 @@
           "operator": "multiply",
           "operands": [
             {
-              "kind": "arithmetic",
-              "operator": "multiply",
-              "operands": [
-                {
-                  "kind": "arithmetic",
-                  "operator": "minimum",
-                  "operands": [
-                    {
-                      "kind": "arithmetic",
-                      "operator": "multiply",
-                      "operands": [
-                        {
-                          "kind": "reference",
-                          "path": "frame.vase-opening.radiusX"
-                        },
-                        {
-                          "kind": "literal",
-                          "value": 1.38
-                        }
-                      ]
-                    },
-                    {
-                      "kind": "arithmetic",
-                      "operator": "multiply",
-                      "operands": [
-                        {
-                          "kind": "arithmetic",
-                          "operator": "minimum",
-                          "operands": [
-                            {
-                              "kind": "arithmetic",
-                              "operator": "multiply",
-                              "operands": [
-                                {
-                                  "kind": "reference",
-                                  "path": "frame.vase-opening.radiusX"
-                                },
-                                {
-                                  "kind": "literal",
-                                  "value": 1.14
-                                }
-                              ]
-                            },
-                            {
-                              "kind": "arithmetic",
-                              "operator": "multiply",
-                              "operands": [
-                                {
-                                  "kind": "reference",
-                                  "path": "frame.vase-opening.headroom"
-                                },
-                                {
-                                  "kind": "literal",
-                                  "value": 0.35
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "kind": "literal",
-                          "value": 1.28
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "kind": "literal",
-                  "value": 0.35
-                }
-              ]
+              "kind": "reference",
+              "path": "parameters.leafWidth"
             },
             {
               "kind": "literal",
@@ -1552,131 +902,17 @@
           "path": "frame.vase-opening.openingCenter.x"
         },
         "y": {
-          "kind": "arithmetic",
-          "operator": "add",
-          "operands": [
-            {
-              "kind": "literal",
-              "value": 0.036
-            },
-            {
-              "kind": "arithmetic",
-              "operator": "multiply",
-              "operands": [
-                {
-                  "kind": "reference",
-                  "path": "frame.vase-opening.headroom"
-                },
-                {
-                  "kind": "literal",
-                  "value": 0.08
-                }
-              ]
-            },
-            {
-              "kind": "arithmetic",
-              "operator": "minimum",
-              "operands": [
-                {
-                  "kind": "arithmetic",
-                  "operator": "multiply",
-                  "operands": [
-                    {
-                      "kind": "reference",
-                      "path": "frame.vase-opening.radiusX"
-                    },
-                    {
-                      "kind": "literal",
-                      "value": 0.76
-                    }
-                  ]
-                },
-                {
-                  "kind": "arithmetic",
-                  "operator": "multiply",
-                  "operands": [
-                    {
-                      "kind": "reference",
-                      "path": "frame.vase-opening.headroom"
-                    },
-                    {
-                      "kind": "literal",
-                      "value": 0.25
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
+          "kind": "reference",
+          "path": "parameters.bloomCenterY"
         }
       },
       "radiusX": {
-        "kind": "arithmetic",
-        "operator": "minimum",
-        "operands": [
-          {
-            "kind": "arithmetic",
-            "operator": "multiply",
-            "operands": [
-              {
-                "kind": "reference",
-                "path": "frame.vase-opening.radiusX"
-              },
-              {
-                "kind": "literal",
-                "value": 1.14
-              }
-            ]
-          },
-          {
-            "kind": "arithmetic",
-            "operator": "multiply",
-            "operands": [
-              {
-                "kind": "reference",
-                "path": "frame.vase-opening.headroom"
-              },
-              {
-                "kind": "literal",
-                "value": 0.35
-              }
-            ]
-          }
-        ]
+        "kind": "reference",
+        "path": "parameters.bloomRadiusX"
       },
       "radiusY": {
-        "kind": "arithmetic",
-        "operator": "minimum",
-        "operands": [
-          {
-            "kind": "arithmetic",
-            "operator": "multiply",
-            "operands": [
-              {
-                "kind": "reference",
-                "path": "frame.vase-opening.radiusX"
-              },
-              {
-                "kind": "literal",
-                "value": 0.76
-              }
-            ]
-          },
-          {
-            "kind": "arithmetic",
-            "operator": "multiply",
-            "operands": [
-              {
-                "kind": "reference",
-                "path": "frame.vase-opening.headroom"
-              },
-              {
-                "kind": "literal",
-                "value": 0.25
-              }
-            ]
-          }
-        ]
+        "kind": "reference",
+        "path": "parameters.bloomRadiusY"
       },
       "count": 5,
       "startAngle": {
@@ -1758,131 +994,17 @@
           "path": "frame.vase-opening.openingCenter.x"
         },
         "y": {
-          "kind": "arithmetic",
-          "operator": "add",
-          "operands": [
-            {
-              "kind": "literal",
-              "value": 0.036
-            },
-            {
-              "kind": "arithmetic",
-              "operator": "multiply",
-              "operands": [
-                {
-                  "kind": "reference",
-                  "path": "frame.vase-opening.headroom"
-                },
-                {
-                  "kind": "literal",
-                  "value": 0.08
-                }
-              ]
-            },
-            {
-              "kind": "arithmetic",
-              "operator": "minimum",
-              "operands": [
-                {
-                  "kind": "arithmetic",
-                  "operator": "multiply",
-                  "operands": [
-                    {
-                      "kind": "reference",
-                      "path": "frame.vase-opening.radiusX"
-                    },
-                    {
-                      "kind": "literal",
-                      "value": 0.76
-                    }
-                  ]
-                },
-                {
-                  "kind": "arithmetic",
-                  "operator": "multiply",
-                  "operands": [
-                    {
-                      "kind": "reference",
-                      "path": "frame.vase-opening.headroom"
-                    },
-                    {
-                      "kind": "literal",
-                      "value": 0.25
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
+          "kind": "reference",
+          "path": "parameters.bloomCenterY"
         }
       },
       "radiusX": {
-        "kind": "arithmetic",
-        "operator": "minimum",
-        "operands": [
-          {
-            "kind": "arithmetic",
-            "operator": "multiply",
-            "operands": [
-              {
-                "kind": "reference",
-                "path": "frame.vase-opening.radiusX"
-              },
-              {
-                "kind": "literal",
-                "value": 1.14
-              }
-            ]
-          },
-          {
-            "kind": "arithmetic",
-            "operator": "multiply",
-            "operands": [
-              {
-                "kind": "reference",
-                "path": "frame.vase-opening.headroom"
-              },
-              {
-                "kind": "literal",
-                "value": 0.35
-              }
-            ]
-          }
-        ]
+        "kind": "reference",
+        "path": "parameters.bloomRadiusX"
       },
       "radiusY": {
-        "kind": "arithmetic",
-        "operator": "minimum",
-        "operands": [
-          {
-            "kind": "arithmetic",
-            "operator": "multiply",
-            "operands": [
-              {
-                "kind": "reference",
-                "path": "frame.vase-opening.radiusX"
-              },
-              {
-                "kind": "literal",
-                "value": 0.76
-              }
-            ]
-          },
-          {
-            "kind": "arithmetic",
-            "operator": "multiply",
-            "operands": [
-              {
-                "kind": "reference",
-                "path": "frame.vase-opening.headroom"
-              },
-              {
-                "kind": "literal",
-                "value": 0.25
-              }
-            ]
-          }
-        ]
+        "kind": "reference",
+        "path": "parameters.bloomRadiusY"
       },
       "count": 5,
       "startAngle": {
@@ -1964,131 +1086,17 @@
           "path": "frame.vase-opening.openingCenter.x"
         },
         "y": {
-          "kind": "arithmetic",
-          "operator": "add",
-          "operands": [
-            {
-              "kind": "literal",
-              "value": 0.036
-            },
-            {
-              "kind": "arithmetic",
-              "operator": "multiply",
-              "operands": [
-                {
-                  "kind": "reference",
-                  "path": "frame.vase-opening.headroom"
-                },
-                {
-                  "kind": "literal",
-                  "value": 0.08
-                }
-              ]
-            },
-            {
-              "kind": "arithmetic",
-              "operator": "minimum",
-              "operands": [
-                {
-                  "kind": "arithmetic",
-                  "operator": "multiply",
-                  "operands": [
-                    {
-                      "kind": "reference",
-                      "path": "frame.vase-opening.radiusX"
-                    },
-                    {
-                      "kind": "literal",
-                      "value": 0.76
-                    }
-                  ]
-                },
-                {
-                  "kind": "arithmetic",
-                  "operator": "multiply",
-                  "operands": [
-                    {
-                      "kind": "reference",
-                      "path": "frame.vase-opening.headroom"
-                    },
-                    {
-                      "kind": "literal",
-                      "value": 0.25
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
+          "kind": "reference",
+          "path": "parameters.bloomCenterY"
         }
       },
       "radiusX": {
-        "kind": "arithmetic",
-        "operator": "minimum",
-        "operands": [
-          {
-            "kind": "arithmetic",
-            "operator": "multiply",
-            "operands": [
-              {
-                "kind": "reference",
-                "path": "frame.vase-opening.radiusX"
-              },
-              {
-                "kind": "literal",
-                "value": 1.14
-              }
-            ]
-          },
-          {
-            "kind": "arithmetic",
-            "operator": "multiply",
-            "operands": [
-              {
-                "kind": "reference",
-                "path": "frame.vase-opening.headroom"
-              },
-              {
-                "kind": "literal",
-                "value": 0.35
-              }
-            ]
-          }
-        ]
+        "kind": "reference",
+        "path": "parameters.bloomRadiusX"
       },
       "radiusY": {
-        "kind": "arithmetic",
-        "operator": "minimum",
-        "operands": [
-          {
-            "kind": "arithmetic",
-            "operator": "multiply",
-            "operands": [
-              {
-                "kind": "reference",
-                "path": "frame.vase-opening.radiusX"
-              },
-              {
-                "kind": "literal",
-                "value": 0.76
-              }
-            ]
-          },
-          {
-            "kind": "arithmetic",
-            "operator": "multiply",
-            "operands": [
-              {
-                "kind": "reference",
-                "path": "frame.vase-opening.headroom"
-              },
-              {
-                "kind": "literal",
-                "value": 0.25
-              }
-            ]
-          }
-        ]
+        "kind": "reference",
+        "path": "parameters.bloomRadiusY"
       },
       "count": 3,
       "startAngle": {
