@@ -237,6 +237,58 @@ public sealed class ModelDefinitionEvaluatorTests
         Assert.Contains(result.Diagnostics, item => item.Code == "evaluation.material-tone-out-of-range");
     }
 
+    [Fact]
+    public void ProjectsOntoAnEarlierProfileMappedPath()
+    {
+        var definition = CreateDefinition();
+        var mappedStem = new ModelProfileMapNodeDefinition(
+            "stem.profile",
+            "stem",
+            Point(Literal(0.5), Literal(0.8)),
+            Literal(-Math.PI / 2),
+            Mapping(0.6, 0.08, reverse: false) with { Bend = Literal(0) },
+            "stem",
+            false);
+        var attachment = Assert.IsType<ModelCurveProjectNodeDefinition>(definition.Nodes[1]) with
+        {
+            Curve = "stem.profile",
+            Target = Point(Literal(0.5), Literal(0.5)),
+        };
+        var leaf = Assert.IsType<ModelProfileMapNodeDefinition>(definition.Nodes[2]);
+        var radial = Assert.IsType<ModelRadialArrayNodeDefinition>(definition.Nodes[3]);
+        var group = Assert.IsType<ModelGeometryGroupNodeDefinition>(definition.Nodes[4]) with
+        {
+            Parts = ["stem.profile", "leaf.left", "bloom.outer"],
+        };
+
+        definition = definition with
+        {
+            Profiles = definition.Profiles.Add(
+                "stem",
+                new(
+                    false,
+                    ModelProfileInterpolation.OpenCubic,
+                    [
+                        new(0.5f, 0f),
+                        new(0.5f, 1f / 3f),
+                        new(0.5f, 2f / 3f),
+                        new(0.5f, 1f),
+                    ])),
+            Nodes = [mappedStem, attachment, leaf, radial, group],
+        };
+
+        var result = ModelDefinitionEvaluator.Evaluate(definition, CreateContext());
+
+        Assert.True(result.IsSuccess, string.Join(Environment.NewLine, result.Diagnostics.Select(item => item.Message)));
+        var geometry = Assert.IsType<ModelGeometry>(result.Geometry);
+        var stemPath = Assert.Single(geometry.Paths, path => path.Id == "stem.profile");
+        Assert.NotEmpty(stemPath.Segments);
+        var leafPath = Assert.Single(geometry.Paths, path => path.Id == "leaf.left");
+        var attachmentLandmark = Assert.Single(leafPath.Landmarks, item => item.Name == "attachment");
+        Assert.Equal(0.5f, attachmentLandmark.Position.X, 4);
+        Assert.Equal(0.5f, attachmentLandmark.Position.Y, 4);
+    }
+
     private static ModelDefinition CreateDefinition()
     {
         var number = new ModelParameterDefinition(

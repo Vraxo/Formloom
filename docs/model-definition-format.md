@@ -263,7 +263,7 @@ The five current operation nodes produce the following results:
 | Node | Evaluation |
 |---|---|
 | `path.cubic` | Explicit cubic segments and an open geometry path. |
-| `curve.project` | A nearest point and tangent landmark on an earlier cubic path. |
+| `curve.project` | A nearest point and tangent landmark on an earlier cubic path from `path.cubic` or `profile.map`. |
 | `profile.map` | A profile mapped into a directed/scaled basis and converted to cubic path geometry. |
 | `array.radial` | Deterministically varied profile instances, each with a stable path ID and optional material tone. |
 | `geometry.group` | Child paths flattened into the declared group-member order. |
