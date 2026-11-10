@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using System.Numerics;
 using Formloom.Core.Core;
+using Formloom.Core.Ceramics;
 using Formloom.Core.Models.Catalog;
 using Formloom.Core.Models.Evaluation;
 using Formloom.Core.Models.Geometry;
@@ -134,6 +135,43 @@ public sealed class ModelGeometryRendererTests
         Assert.Equal(new SKColor(22, 128, 64), bitmap.GetPixel(64, 30));
         Assert.Equal((byte)0, bitmap.GetPixel(64, 80).Alpha);
         Assert.Equal((byte)0, bitmap.GetPixel(10, 80).Alpha);
+    }
+
+    [Fact]
+    public void VaseNearRimOcclusionKeepsTheModelInsideTheOpeningAndHidesItsLowerContinuation()
+    {
+        var scene = SceneGenerator.Generate(
+            new("a red rose in a blue ceramic vase on a wooden table", Width: 256, Height: 256)).Scene!;
+        var vase = Assert.Single(scene.Ceramics);
+        using var mask = CeramicOcclusionMask.BelowVaseNearRim(vase);
+        var profile = CeramicForms.For(vase.Kind);
+        var centerX = vase.Body.Center.X - (vase.Body.Size.X / 2) + (profile.MouthCenter.X * vase.Body.Size.X);
+        var centerY = vase.Body.Center.Y - (vase.Body.Size.Y / 2) + (profile.MouthCenter.Y * vase.Body.Size.Y);
+        var nearRimY = centerY + ((profile.MouthRadius.Y + (profile.RimThickness * 1.1f)) * vase.Body.Size.Y);
+
+        var geometry = new ModelGeometry(
+            "models.vase-mounted-test",
+            ModelGeometryCoordinateSpace.SceneNormalized,
+            [Rectangle("stem", centerX - 0.04f, centerY - 0.04f, centerX + 0.04f, nearRimY + 0.08f, "stem")])
+        {
+            MaterialTokens = ImmutableDictionary<string, string>.Empty.Add("stem", "#168040"),
+        };
+
+        var rendered = ModelGeometryRenderer.RenderWithOptions(
+            geometry,
+            256,
+            256,
+            new ModelGeometryRenderOptions(Antialiasing: false)
+            {
+                OcclusionMask = mask,
+            });
+
+        using var bitmap = Decode(rendered.PngBytes);
+        var x = Math.Clamp((int)(centerX * 256), 0, 255);
+        var visibleY = Math.Clamp((int)((centerY + (profile.MouthRadius.Y * vase.Body.Size.Y * 0.5f)) * 256), 0, 255);
+        var hiddenY = Math.Clamp((int)((nearRimY + 0.025f) * 256), 0, 255);
+        Assert.Equal(new SKColor(22, 128, 64), bitmap.GetPixel(x, visibleY));
+        Assert.Equal((byte)0, bitmap.GetPixel(x, hiddenY).Alpha);
     }
 
     [Fact]
