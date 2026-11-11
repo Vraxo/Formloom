@@ -4,6 +4,8 @@
 - **Date:** 2026-11-10
 - **Scope:** Default rendering direction and future style architecture
 
+> Implementation-direction update: the style and model/scene/style/backend separation in this ADR remain binding. Its original 2D-first implementation sequence is superseded by [ADR-0003](0003-explore-a-3d-first-rendering-path.md), which makes 3D the leading path for new rendering research while preserving Skia as the current production and reference path.
+
 ## Context
 
 Formloom has accumulated useful rendering techniques—organic contours, gradients, highlights, procedural surface detail, strokes, and shadows—but they are implemented unevenly across object families. The result has no sufficiently coherent visual identity. It can read as an unfinished middle ground between flat vector graphics and realistic illustration.
@@ -54,7 +56,7 @@ A clean vector style may be considered as a later, deliberately distinct alterna
 
 ### Trade-offs
 
-- A coherent style will require coordinated changes across existing object-specific renderers before the generic model pipeline is fully integrated.
+- A coherent style requires coordinated rendering work; the leading implementation research path is now 3D, as recorded in ADR-0003, rather than broadening the existing object-specific Skia renderer first.
 - The first implementation may improve one representative scene before being generalized.
 - The document intentionally leaves the runtime style API open until real rendered output establishes what it needs.
 
