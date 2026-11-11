@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>Formloom.BlenderCube</AssemblyName>
+    <RootNamespace>Formloom.BlenderCube</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Update="render_cube.py" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
