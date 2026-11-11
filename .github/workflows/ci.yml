@@ -149,8 +149,8 @@ jobs:
         run: |
           set -euo pipefail
           version="4.5.16"
-          archive="blender-\${version}-linux-x64.tar.xz"
-          checksum="blender-\${version}.sha256"
+          archive="blender-${version}-linux-x64.tar.xz"
+          checksum="blender-${version}.sha256"
           release_url="https://download.blender.org/release/Blender4.5"
           sudo apt-get update
           sudo apt-get install --no-install-recommends -y \
@@ -160,8 +160,8 @@ jobs:
           curl --fail --location --retry 3 --output "$RUNNER_TEMP/$checksum" "$release_url/$checksum"
           grep -F "$archive" "$RUNNER_TEMP/$checksum" | (cd "$RUNNER_TEMP" && sha256sum --check --strict -)
           tar -xJf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP"
-          echo "$RUNNER_TEMP/blender-\${version}-linux-x64" >> "$GITHUB_PATH"
-          "$RUNNER_TEMP/blender-\${version}-linux-x64/blender" --version
+          echo "$RUNNER_TEMP/blender-${version}-linux-x64" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/blender-${version}-linux-x64/blender" --version
 
       - name: Render procedural geometry and quality comparisons
         run: |
