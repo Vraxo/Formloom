@@ -260,6 +260,93 @@ def create_ground(treatment="baseline"):
     return ground
 
 
+def create_illustrated_tabletop():
+    # A shallow bevelled slab gives the composition a visible front edge and
+    # real contact shadows instead of an infinite studio-floor treatment.
+    bpy.ops.mesh.primitive_cube_add(size=1.0, location=(0.0, -0.8, STUDIO_FLOOR_HEIGHT - 0.12))
+    tabletop = bpy.context.object
+    tabletop.name = "IllustratedOakTabletop"
+    tabletop.dimensions = (14.0, 11.0, 0.24)
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    bevel = tabletop.modifiers.new("SoftTableEdge", "BEVEL")
+    bevel.width = 0.075
+    bevel.segments = 4
+    bevel.harden_normals = True
+    tabletop.modifiers.new("WeightedTableNormals", "WEIGHTED_NORMAL")
+
+    material = bpy.data.materials.new("WarmIllustratedOak")
+    shader = principled_node(material)
+    shader.inputs["Roughness"].default_value = 0.76
+    coordinates = material.node_tree.nodes.new("ShaderNodeTexCoord")
+    mapping = material.node_tree.nodes.new("ShaderNodeMapping")
+    mapping.inputs["Scale"].default_value = (0.7, 18.0, 4.0)
+    wave = material.node_tree.nodes.new("ShaderNodeTexWave")
+    wave.wave_type = "BANDS"
+    wave.bands_direction = "Y"
+    wave.inputs["Scale"].default_value = 2.6
+    wave.inputs["Distortion"].default_value = 5.0
+    wave.inputs["Detail"].default_value = 3.0
+    noise = material.node_tree.nodes.new("ShaderNodeTexNoise")
+    noise.inputs["Scale"].default_value = 8.0
+    noise.inputs["Detail"].default_value = 2.0
+    ramp = material.node_tree.nodes.new("ShaderNodeValToRGB")
+    ramp.color_ramp.elements[0].position = 0.18
+    ramp.color_ramp.elements[0].color = (0.075, 0.027, 0.009, 1.0)
+    ramp.color_ramp.elements[1].position = 0.82
+    ramp.color_ramp.elements[1].color = (0.34, 0.15, 0.052, 1.0)
+    bump = material.node_tree.nodes.new("ShaderNodeBump")
+    bump.inputs["Strength"].default_value = 0.045
+    bump.inputs["Distance"].default_value = 0.012
+    links = material.node_tree.links
+    links.new(coordinates.outputs["Generated"], mapping.inputs["Vector"])
+    links.new(mapping.outputs["Vector"], wave.inputs["Vector"])
+    links.new(wave.outputs["Color"], ramp.inputs["Fac"])
+    links.new(coordinates.outputs["Generated"], noise.inputs["Vector"])
+    links.new(ramp.outputs["Color"], shader.inputs["Base Color"])
+    links.new(noise.outputs["Fac"], bump.inputs["Height"])
+    links.new(bump.outputs["Normal"], shader.inputs["Normal"])
+    tabletop.data.materials.append(material)
+    return tabletop
+
+
+def create_illustrated_backdrop():
+    # A softly textured vertical wall replaces the seamless studio sweep.
+    vertices = [
+        (-12.0, 4.55, STUDIO_FLOOR_HEIGHT - 0.01),
+        (12.0, 4.55, STUDIO_FLOOR_HEIGHT - 0.01),
+        (12.0, 4.55, 9.0),
+        (-12.0, 4.55, 9.0),
+    ]
+    mesh = bpy.data.meshes.new("WarmPlasterBackdropMesh")
+    mesh.from_pydata(vertices, [], [(0, 1, 2, 3)])
+    mesh.update()
+    wall = bpy.data.objects.new("WarmPlasterBackdrop", mesh)
+    bpy.context.collection.objects.link(wall)
+
+    material = bpy.data.materials.new("WarmPlasterBackdropMaterial")
+    shader = principled_node(material)
+    shader.inputs["Base Color"].default_value = (0.38, 0.31, 0.235, 1.0)
+    shader.inputs["Roughness"].default_value = 0.96
+    coordinates = material.node_tree.nodes.new("ShaderNodeTexCoord")
+    noise = material.node_tree.nodes.new("ShaderNodeTexNoise")
+    noise.inputs["Scale"].default_value = 5.0
+    noise.inputs["Detail"].default_value = 2.0
+    ramp = material.node_tree.nodes.new("ShaderNodeValToRGB")
+    ramp.color_ramp.elements[0].color = (0.31, 0.255, 0.195, 1.0)
+    ramp.color_ramp.elements[1].color = (0.42, 0.345, 0.265, 1.0)
+    bump = material.node_tree.nodes.new("ShaderNodeBump")
+    bump.inputs["Strength"].default_value = 0.018
+    bump.inputs["Distance"].default_value = 0.008
+    links = material.node_tree.links
+    links.new(coordinates.outputs["Generated"], noise.inputs["Vector"])
+    links.new(noise.outputs["Fac"], ramp.inputs["Fac"])
+    links.new(ramp.outputs["Color"], shader.inputs["Base Color"])
+    links.new(noise.outputs["Fac"], bump.inputs["Height"])
+    links.new(bump.outputs["Normal"], shader.inputs["Normal"])
+    wall.data.materials.append(material)
+    return wall
+
+
 def create_camera(location, resolution):
     data = bpy.data.cameras.new("ExperimentCamera")
     camera = bpy.data.objects.new("ExperimentCamera", data)
@@ -601,7 +688,8 @@ def render_illustrated_still_life(output_dir, resolution):
     apple_material = create_material("IllustratedAppleSkin", "apple", "illustrated")
     assign_material(vase, vase_material)
     assign_material(apple, apple_material)
-    create_ground("illustrated")
+    create_illustrated_tabletop()
+    create_illustrated_backdrop()
     create_lighting("illustrated")
 
     filename = "still-life-illustrated-treatment.png"
@@ -613,6 +701,7 @@ def render_illustrated_still_life(output_dir, resolution):
         "scene": "still-life-art-direction-study",
         "treatment": "illustrated",
         "geometry": "same lathed vase and grounded apple as baseline",
+        "environment": "bevelled procedural oak tabletop and subtly textured warm plaster wall",
         "camera": list(camera_location),
         "render_seconds": round(time.perf_counter() - started, 3),
     }
@@ -810,7 +899,7 @@ def main():
     manifest["art_direction_study"] = {
         "baseline": "still-life-vase-and-apple.png",
         "illustrated": illustrated_render["file"],
-        "comparison": "same geometry, composition, camera, resolution, sample count, and denoising; material and studio treatment differ",
+        "comparison": "same object geometry, object placement, camera, resolution, sample count, and denoising; illustrated materials, tabletop, backdrop, and lighting differ",
         "samples": arguments.samples,
         "denoising": arguments.denoise,
     }
