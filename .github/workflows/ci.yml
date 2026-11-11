@@ -130,3 +130,37 @@ jobs:
           name: phase10-rose-review
           path: artifacts/phase10-rose-review/
           if-no-files-found: error
+
+  blender-cube-prototype:
+    name: Blender / Procedural cube renders
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Set up .NET 10 SDK
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install Blender
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y blender
+
+      - name: Render procedural cube variations
+        run: |
+          dotnet run --project experiments/Formloom.BlenderCube/Formloom.BlenderCube.csproj --configuration Release -- \
+            --blender blender \
+            --output-dir artifacts/blender-cube \
+            --resolution 384 \
+            --samples 12
+
+      - name: Upload Blender cube review renders
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: blender-cube-review
+          path: artifacts/blender-cube/
+          if-no-files-found: error
