@@ -726,41 +726,40 @@ def create_photorealistic_wood_material():
     mapping = material.node_tree.nodes.new("ShaderNodeMapping")
     mapping.inputs["Scale"].default_value = (1.0, 3.0, 12.0)
 
-    # Broad bands establish the long grain direction; low distortion bends
-    # them naturally without the turbulent, high-contrast pattern of the
-    # previous shader.
+    # Fine, softly wandering grain. Keep the wave contribution subtle so it
+    # reads as oak fibre rather than broad decorative stripes.
     grain = material.node_tree.nodes.new("ShaderNodeTexWave")
     grain.wave_type = "BANDS"
     grain.bands_direction = "X"
-    grain.inputs["Scale"].default_value = 3.0
-    grain.inputs["Distortion"].default_value = 0.55
+    grain.inputs["Scale"].default_value = 9.0
+    grain.inputs["Distortion"].default_value = 0.22
     grain.inputs["Detail"].default_value = 2.0
-    grain.inputs["Detail Scale"].default_value = 1.2
+    grain.inputs["Detail Scale"].default_value = 1.1
 
     grain_noise = material.node_tree.nodes.new("ShaderNodeTexNoise")
-    grain_noise.inputs["Scale"].default_value = 4.0
+    grain_noise.inputs["Scale"].default_value = 5.0
     grain_noise.inputs["Detail"].default_value = 2.0
     grain_noise.inputs["Roughness"].default_value = 0.58
-    grain_noise.inputs["Distortion"].default_value = 0.12
+    grain_noise.inputs["Distortion"].default_value = 0.08
 
     grain_mix = material.node_tree.nodes.new("ShaderNodeMixRGB")
     grain_mix.blend_type = "MULTIPLY"
-    grain_mix.inputs["Fac"].default_value = 0.18
+    grain_mix.inputs["Fac"].default_value = 0.08
 
     color_ramp = material.node_tree.nodes.new("ShaderNodeValToRGB")
-    color_ramp.color_ramp.elements[0].position = 0.12
-    color_ramp.color_ramp.elements[0].color = (0.15, 0.062, 0.025, 1.0)
-    color_ramp.color_ramp.elements[1].position = 0.88
-    color_ramp.color_ramp.elements[1].color = (0.29, 0.15, 0.063, 1.0)
+    color_ramp.color_ramp.elements[0].position = 0.18
+    color_ramp.color_ramp.elements[0].color = (0.185, 0.083, 0.035, 1.0)
+    color_ramp.color_ramp.elements[1].position = 0.82
+    color_ramp.color_ramp.elements[1].color = (0.245, 0.125, 0.054, 1.0)
 
     pore_noise = material.node_tree.nodes.new("ShaderNodeTexNoise")
-    pore_noise.inputs["Scale"].default_value = 42.0
+    pore_noise.inputs["Scale"].default_value = 48.0
     pore_noise.inputs["Detail"].default_value = 2.0
     pore_noise.inputs["Roughness"].default_value = 0.62
 
     bump = material.node_tree.nodes.new("ShaderNodeBump")
-    bump.inputs["Strength"].default_value = 0.035
-    bump.inputs["Distance"].default_value = 0.004
+    bump.inputs["Strength"].default_value = 0.022
+    bump.inputs["Distance"].default_value = 0.0025
 
     links = material.node_tree.links
     generated = coordinates.outputs["Generated"]
