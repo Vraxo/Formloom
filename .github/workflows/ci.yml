@@ -157,6 +157,16 @@ jobs:
             --resolution 384 \
             --samples 12
 
+      - name: Verify Blender experiment outputs
+        run: |
+          set -euo pipefail
+          test -s artifacts/blender-cube/manifest.json
+          count="$(find artifacts/blender-cube -maxdepth 1 -type f -name '*.png' | wc -l)"
+          if [[ "$count" -ne 16 ]]; then
+            echo "Expected 16 Blender renders, found $count" >&2
+            exit 1
+          fi
+
       - name: Upload Blender cube review renders
         if: always()
         uses: actions/upload-artifact@v4

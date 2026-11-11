@@ -11,6 +11,10 @@ internal static class Program
         var outputDirectory = Path.GetFullPath(options.GetValueOrDefault("output-dir", "artifacts/blender-cube"));
         var resolution = ParsePositiveInteger(options, "resolution", 512);
         var samples = ParsePositiveInteger(options, "samples", 32);
+        if (samples > 256)
+        {
+            throw new ArgumentException("Option --samples must be between 1 and 256.");
+        }
         var scriptPath = Path.Combine(AppContext.BaseDirectory, "render_cube.py");
 
         if (!File.Exists(scriptPath))
