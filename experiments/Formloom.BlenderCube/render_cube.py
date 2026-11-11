@@ -720,49 +720,53 @@ def render_illustrated_still_life(output_dir, resolution):
 def create_photorealistic_wood_material():
     material = bpy.data.materials.new("PhotorealisticNaturalOak")
     shader = principled_node(material)
-    shader.inputs["Roughness"].default_value = 0.58
+    shader.inputs["Roughness"].default_value = 0.68
+
     coordinates = material.node_tree.nodes.new("ShaderNodeTexCoord")
-    mapping = material.node_tree.nodes.new("ShaderNodeMapping")
-    mapping.inputs["Scale"].default_value = (1.0, 3.0, 12.0)
-    wave = material.node_tree.nodes.new("ShaderNodeTexWave")
-    wave.wave_type = "BANDS"
-    wave.bands_direction = "X"
-    wave.inputs["Scale"].default_value = 3.2
-    wave.inputs["Distortion"].default_value = 7.0
-    wave.inputs["Detail"].default_value = 4.0
-    wave.inputs["Detail Scale"].default_value = 1.8
+
+    # Stretch broad noise across the board so the grain follows its long axis.
+    # Low distortion and a narrow colour range keep the pattern organic rather
+    # than turning it into high-contrast waves or mottled camouflage.
+    grain_mapping = material.node_tree.nodes.new("ShaderNodeMapping")
+    grain_mapping.inputs["Scale"].default_value = (1.0, 4.5, 1.0)
     grain_noise = material.node_tree.nodes.new("ShaderNodeTexNoise")
-    grain_noise.inputs["Scale"].default_value = 5.0
-    grain_noise.inputs["Detail"].default_value = 4.0
-    grain_noise.inputs["Roughness"].default_value = 0.72
-    grain_noise.inputs["Distortion"].default_value = 1.4
-    grain_ramp = material.node_tree.nodes.new("ShaderNodeValToRGB")
-    grain_ramp.color_ramp.elements[0].position = 0.18
-    grain_ramp.color_ramp.elements[0].color = (0.045, 0.014, 0.004, 1.0)
-    grain_ramp.color_ramp.elements[1].position = 0.82
-    grain_ramp.color_ramp.elements[1].color = (0.34, 0.17, 0.065, 1.0)
-    fine_noise = material.node_tree.nodes.new("ShaderNodeTexNoise")
-    fine_noise.inputs["Scale"].default_value = 48.0
-    fine_noise.inputs["Detail"].default_value = 2.0
+    grain_noise.inputs["Scale"].default_value = 2.4
+    grain_noise.inputs["Detail"].default_value = 2.2
+    grain_noise.inputs["Roughness"].default_value = 0.58
+    grain_noise.inputs["Distortion"].default_value = 0.18
+
+    color_ramp = material.node_tree.nodes.new("ShaderNodeValToRGB")
+    color_ramp.color_ramp.elements[0].position = 0.22
+    color_ramp.color_ramp.elements[0].color = (0.16, 0.068, 0.027, 1.0)
+    middle = color_ramp.color_ramp.elements.new(0.52)
+    middle.color = (0.235, 0.115, 0.047, 1.0)
+    color_ramp.color_ramp.elements[1].position = 0.80
+    color_ramp.color_ramp.elements[1].color = (0.32, 0.175, 0.078, 1.0)
+
+    # Fine, directionally stretched noise adds restrained wood pores without
+    # making the tabletop look rough or deeply embossed.
+    pore_mapping = material.node_tree.nodes.new("ShaderNodeMapping")
+    pore_mapping.inputs["Scale"].default_value = (1.0, 34.0, 1.0)
+    pore_noise = material.node_tree.nodes.new("ShaderNodeTexNoise")
+    pore_noise.inputs["Scale"].default_value = 2.0
+    pore_noise.inputs["Detail"].default_value = 2.0
+    pore_noise.inputs["Roughness"].default_value = 0.62
+
     bump = material.node_tree.nodes.new("ShaderNodeBump")
-    bump.inputs["Strength"].default_value = 0.11
-    bump.inputs["Distance"].default_value = 0.018
+    bump.inputs["Strength"].default_value = 0.028
+    bump.inputs["Distance"].default_value = 0.003
+
     links = material.node_tree.links
-    links.new(coordinates.outputs["Generated"], mapping.inputs["Vector"])
-    links.new(mapping.outputs["Vector"], wave.inputs["Vector"])
-    distortion = material.node_tree.nodes.new("ShaderNodeMath")
-    distortion.operation = "MULTIPLY"
-    distortion.inputs[1].default_value = 8.0
-    links.new(mapping.outputs["Vector"], grain_noise.inputs["Vector"])
-    links.new(grain_noise.outputs["Fac"], distortion.inputs[0])
-    links.new(distortion.outputs["Value"], wave.inputs["Distortion"])
-    links.new(wave.outputs["Color"], grain_ramp.inputs["Fac"])
-    links.new(grain_ramp.outputs["Color"], shader.inputs["Base Color"])
-    links.new(mapping.outputs["Vector"], fine_noise.inputs["Vector"])
-    links.new(fine_noise.outputs["Fac"], bump.inputs["Height"])
+    generated = coordinates.outputs["Generated"]
+    links.new(generated, grain_mapping.inputs["Vector"])
+    links.new(grain_mapping.outputs["Vector"], grain_noise.inputs["Vector"])
+    links.new(grain_noise.outputs["Fac"], color_ramp.inputs["Fac"])
+    links.new(color_ramp.outputs["Color"], shader.inputs["Base Color"])
+    links.new(generated, pore_mapping.inputs["Vector"])
+    links.new(pore_mapping.outputs["Vector"], pore_noise.inputs["Vector"])
+    links.new(pore_noise.outputs["Fac"], bump.inputs["Height"])
     links.new(bump.outputs["Normal"], shader.inputs["Normal"])
     return material
-
 
 def create_photorealistic_plaster_material():
     material = bpy.data.materials.new("PhotorealisticWarmPlaster")
