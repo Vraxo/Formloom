@@ -9,9 +9,11 @@ A deliberately isolated proof of concept for evaluating Blender as a procedural 
 - Four independently assigned materials: matte clay, glazed ceramic, metallic, and procedural wood.
 - Three camera positions using the same geometry: three-quarter, elevated, and low.
 - A shared three-light studio setup, world fill, ground plane, and Cycles rendering.
+- A geometry gallery with an explicitly authored cube, parametric UV sphere, and parametric cylinder.
+- A first still-life silhouette study combining a rotationally lathed vase and a gently deformed apple-like sphere.
 - A C#/.NET launcher that invokes Blender as a separate background process.
 
-The output is twelve PNGs (four materials × three views) plus a JSON manifest recording the render settings.
+The output includes twelve cube material/view combinations, three geometry-gallery views, and one initial still-life composition, plus a JSON manifest recording the render settings.
 
 ## Requirements
 
@@ -39,6 +41,8 @@ Optional settings:
 ```sh
 dotnet run --project experiments/Formloom.BlenderCube -- --resolution 768 --samples 64 --output-dir artifacts/blender-cube
 ```
+
+`--samples` accepts any integer from **1 to 256**; it is not a choice between fixed quality presets. The default is 32. Lower values make quick, noisy previews, while higher values progressively reduce Monte Carlo noise at the cost of render time. The CI run deliberately stays at 12 samples to keep its review artifact fast. Resolution is configurable from 64 to 2048 pixels.
 
 The prototype deliberately uses Cycles on the CPU so the experiment runs on machines without a supported GPU. GPU configuration and performance comparison are deferred until the basic scene construction and visual output have been reviewed.
 

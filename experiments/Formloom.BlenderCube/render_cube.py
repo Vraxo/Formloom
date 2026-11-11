@@ -1,4 +1,4 @@
-"""Procedural cube scene used to evaluate Blender as a Formloom rendering backend."""
+"""Procedural geometry and still-life scenes for the Formloom Blender experiment."""
 
 import argparse
 import json
@@ -15,7 +15,12 @@ def parse_arguments():
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--resolution", type=int, default=512)
     parser.add_argument("--samples", type=int, default=32)
-    return parser.parse_args(arguments)
+    parsed = parser.parse_args(arguments)
+    if not 1 <= parsed.samples <= 256:
+        parser.error("--samples must be between 1 and 256")
+    if not 64 <= parsed.resolution <= 2048:
+        parser.error("--resolution must be between 64 and 2048")
+    return parsed
 
 
 def clear_scene():
@@ -187,6 +192,124 @@ def configure_render(resolution, samples):
     scene.render.image_settings.compression = 15
 
 
+
+def create_parametric_sphere(name, location, scale=(1.0, 1.0, 1.0), segments=48, rings=24, apple_shape=False):
+    vertices = []
+    faces = []
+    for ring in range(rings + 1):
+        latitude = -0.5 * 3.141592653589793 + 3.141592653589793 * ring / rings
+        z = __import__("math").sin(latitude)
+        radius = __import__("math").cos(latitude)
+        for segment in range(segments):
+            angle = 2.0 * 3.141592653589793 * segment / segments
+            x = radius * __import__("math").cos(angle)
+            y = radius * __import__("math").sin(angle)
+            if apple_shape:
+                # A gently lobed shoulder and shallow top dimple make this read as fruit.
+                lobe = 1.0 + 0.035 * __import__("math").cos(5.0 * angle) * max(0.0, z)
+                x *= lobe
+                y *= lobe
+                z_adjusted = z - 0.10 * max(0.0, z) ** 8
+            else:
+                z_adjusted = z
+            vertices.append((x * scale[0], y * scale[1], z_adjusted * scale[2]))
+    for ring in range(rings):
+        for segment in range(segments):
+            a = ring * segments + segment
+            b = ring * segments + (segment + 1) % segments
+            c = (ring + 1) * segments + (segment + 1) % segments
+            d = (ring + 1) * segments + segment
+            faces.append((a, b, c, d))
+    mesh = bpy.data.meshes.new(name + "Mesh")
+    mesh.from_pydata(vertices, [], faces)
+    mesh.update()
+    obj = bpy.data.objects.new(name, mesh)
+    bpy.context.collection.objects.link(obj)
+    for polygon in mesh.polygons:
+        polygon.use_smooth = True
+    obj.location = location
+    return obj
+
+
+def create_parametric_cylinder(name, location, radius=0.72, depth=2.0, segments=48):
+    vertices = []
+    faces = []
+    for z in (-depth * 0.5, depth * 0.5):
+        for segment in range(segments):
+            angle = 2.0 * 3.141592653589793 * segment / segments
+            vertices.append((radius * __import__("math").cos(angle), radius * __import__("math").sin(angle), z))
+    faces.append(tuple(range(segments - 1, -1, -1)))
+    faces.append(tuple(range(segments, segments * 2)))
+    for segment in range(segments):
+        next_segment = (segment + 1) % segments
+        faces.append((segment, next_segment, segments + next_segment, segments + segment))
+    mesh = bpy.data.meshes.new(name + "Mesh")
+    mesh.from_pydata(vertices, [], faces)
+    mesh.update()
+    obj = bpy.data.objects.new(name, mesh)
+    bpy.context.collection.objects.link(obj)
+    bevel = obj.modifiers.new("SoftenedEdges", "BEVEL")
+    bevel.width = 0.045
+    bevel.segments = 3
+    bevel.harden_normals = True
+    obj.location = location
+    return obj
+
+
+def create_lathed_vase(name, location):
+    # A rotational profile gives us a controllable hollow vessel silhouette.
+    import math
+    profile = [
+        (0.00, 0.72), (0.08, 0.78), (0.18, 0.82), (0.42, 0.76),
+        (0.78, 0.58), (1.10, 0.43), (1.42, 0.40), (1.68, 0.47),
+        (1.92, 0.62), (2.12, 0.68), (2.18, 0.66), (2.18, 0.55),
+        (2.06, 0.54), (1.88, 0.51), (1.64, 0.37), (1.40, 0.31),
+        (1.10, 0.34), (0.78, 0.48), (0.42, 0.64), (0.18, 0.68),
+    ]
+    segments = 64
+    vertices = []
+    faces = []
+    for z, radius in profile:
+        for segment in range(segments):
+            angle = 2.0 * math.pi * segment / segments
+            vertices.append((radius * math.cos(angle), radius * math.sin(angle), z))
+    for ring in range(len(profile) - 1):
+        for segment in range(segments):
+            a = ring * segments + segment
+            b = ring * segments + (segment + 1) % segments
+            c = (ring + 1) * segments + (segment + 1) % segments
+            d = (ring + 1) * segments + segment
+            faces.append((a, b, c, d))
+    mesh = bpy.data.meshes.new(name + "Mesh")
+    mesh.from_pydata(vertices, [], faces)
+    mesh.update()
+    vase = bpy.data.objects.new(name, mesh)
+    bpy.context.collection.objects.link(vase)
+    vase.location = location
+    for polygon in mesh.polygons:
+        polygon.use_smooth = True
+    return vase
+
+
+def assign_material(obj, material):
+    obj.data.materials.clear()
+    obj.data.materials.append(material)
+
+
+def render_view(output_dir, filename, camera_location, resolution):
+    camera = create_camera(camera_location, resolution)
+    path = os.path.join(output_dir, filename)
+    bpy.context.scene.render.filepath = path
+    bpy.ops.render.render(write_still=True)
+    if not os.path.isfile(path) or os.path.getsize(path) == 0:
+        raise RuntimeError("Render output was not created: " + path)
+    camera_data = camera.data
+    bpy.context.scene.camera = None
+    bpy.data.objects.remove(camera, do_unlink=True)
+    bpy.data.cameras.remove(camera_data)
+    return filename
+
+
 def main():
     arguments = parse_arguments()
     os.makedirs(arguments.output_dir, exist_ok=True)
@@ -239,6 +362,60 @@ def main():
             bpy.context.scene.camera = None
             bpy.data.objects.remove(camera, do_unlink=True)
             bpy.data.cameras.remove(camera_data)
+
+
+
+    # Geometry gallery: the same camera/light/material pipeline now handles
+    # curved surfaces and rotational geometry as well as the original cube.
+    clear_scene()
+    gallery_cube = create_cube()
+    gallery_sphere = create_parametric_sphere("GallerySphere", (-2.15, 0.0, -0.205), scale=(0.88, 0.88, 0.88))
+    gallery_cylinder = create_parametric_cylinder("GalleryCylinder", (2.15, 0.0, -0.16), radius=0.72, depth=1.85)
+    gallery_material = create_material("GalleryClay", "clay")
+    for obj in (gallery_cube, gallery_sphere, gallery_cylinder):
+        assign_material(obj, gallery_material)
+    create_ground()
+    create_lighting()
+    gallery_views = {
+        "three-quarter": (5.0, -8.0, 4.0),
+        "elevated": (5.0, -8.0, 7.0),
+        "low": (6.0, -9.0, 1.8),
+    }
+    for view_name, location in gallery_views.items():
+        filename = "geometry-gallery-" + view_name + ".png"
+        render_view(arguments.output_dir, filename, location, arguments.resolution)
+        manifest["renders"].append({
+            "file": filename,
+            "material": "clay",
+            "view": view_name,
+            "scene": "geometry-gallery",
+            "geometry": ["explicit cube mesh", "parametric UV sphere", "parametric cylinder"],
+        })
+
+    # First small still-life composition: a turned vase and an apple-like
+    # parametric form. This is deliberately a silhouette/material test, not
+    # an attempt at final botanical or ceramic detail.
+    clear_scene()
+    vase = create_lathed_vase("StillLifeVase", (-0.95, 0.45, -1.08))
+    apple = create_parametric_sphere(
+        "StillLifeApple", (1.0, -0.35, -0.22),
+        scale=(0.82, 0.78, 0.88), segments=64, rings=32, apple_shape=True,
+    )
+    vase_material = create_material("StillLifeGlazedCeramic", "ceramic")
+    apple_material = create_material("StillLifeFruit", "clay")
+    assign_material(vase, vase_material)
+    assign_material(apple, apple_material)
+    create_ground()
+    create_lighting()
+    filename = "still-life-vase-and-apple.png"
+    render_view(arguments.output_dir, filename, (4.6, -8.5, 4.0), arguments.resolution)
+    manifest["renders"].append({
+        "file": filename,
+        "material": "glazed ceramic and matte fruit",
+        "view": "three-quarter",
+        "scene": "still-life",
+        "geometry": ["lathed vase profile", "deformed parametric sphere"],
+    })
 
     manifest_path = os.path.join(arguments.output_dir, "manifest.json")
     with open(manifest_path, "w", encoding="utf-8") as manifest_file:
