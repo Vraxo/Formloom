@@ -339,11 +339,14 @@ def create_apple(name, location, scale=(0.82, 0.78, 0.92), segments=96):
     # The narrow center caps form shallow blossom and stem wells; the broad
     # shoulders and five radial lobes establish an unmistakable fruit silhouette.
     profile = [
-        (-0.90, 0.015), (-0.92, 0.055), (-0.87, 0.14),
-        (-0.75, 0.29), (-0.59, 0.44), (-0.39, 0.59),
-        (-0.16, 0.72), (0.08, 0.80), (0.30, 0.78),
-        (0.48, 0.69), (0.61, 0.55), (0.68, 0.40),
-        (0.65, 0.28), (0.61, 0.17), (0.59, 0.07), (0.58, 0.02),
+        # A shallow blossom dimple gives way almost immediately to a broad,
+        # rounded base. The lower body stays full instead of collapsing to a
+        # strawberry-like point.
+        (-0.62, 0.015), (-0.64, 0.075), (-0.61, 0.18),
+        (-0.56, 0.32), (-0.48, 0.46), (-0.37, 0.59),
+        (-0.22, 0.70), (-0.04, 0.78), (0.16, 0.80),
+        (0.34, 0.76), (0.48, 0.66), (0.54, 0.51),
+        (0.55, 0.36), (0.51, 0.22), (0.48, 0.10), (0.47, 0.02),
     ]
     sampled_profile = interpolate_apple_profile(profile)
     vertices = []
@@ -351,7 +354,7 @@ def create_apple(name, location, scale=(0.82, 0.78, 0.92), segments=96):
 
     for height, base_radius in sampled_profile:
         upper_lobing = max(0.0, min(1.0, (height - 0.22) / 0.46))
-        lower_lobing = max(0.0, min(1.0, (-height - 0.35) / 0.48))
+        lower_lobing = max(0.0, min(1.0, (-height - 0.42) / 0.20))
         lobe_strength = max(upper_lobing, lower_lobing)
         for segment in range(segments):
             angle = 2.0 * math.pi * segment / segments
