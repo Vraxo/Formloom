@@ -342,11 +342,11 @@ def create_apple(name, location, scale=(0.82, 0.78, 0.92), segments=96):
         # A shallow blossom dimple gives way almost immediately to a broad,
         # rounded base. The lower body stays full instead of collapsing to a
         # strawberry-like point.
-        (-0.78, 0.015), (-0.79, 0.055), (-0.75, 0.13),
-        (-0.68, 0.25), (-0.58, 0.39), (-0.45, 0.53),
-        (-0.28, 0.66), (-0.08, 0.76), (0.14, 0.80),
-        (0.33, 0.77), (0.48, 0.68), (0.56, 0.53),
-        (0.56, 0.38), (0.52, 0.24), (0.49, 0.11), (0.48, 0.02),
+        (-0.62, 0.015), (-0.64, 0.075), (-0.61, 0.18),
+        (-0.56, 0.32), (-0.48, 0.46), (-0.37, 0.59),
+        (-0.22, 0.70), (-0.04, 0.78), (0.16, 0.80),
+        (0.34, 0.76), (0.48, 0.66), (0.54, 0.51),
+        (0.55, 0.36), (0.51, 0.22), (0.48, 0.10), (0.47, 0.02),
     ]
     sampled_profile = interpolate_apple_profile(profile)
     vertices = []
@@ -354,7 +354,7 @@ def create_apple(name, location, scale=(0.82, 0.78, 0.92), segments=96):
 
     for height, base_radius in sampled_profile:
         upper_lobing = max(0.0, min(1.0, (height - 0.22) / 0.46))
-        lower_lobing = max(0.0, min(1.0, (-height - 0.52) / 0.22))
+        lower_lobing = max(0.0, min(1.0, (-height - 0.42) / 0.20))
         lobe_strength = max(upper_lobing, lower_lobing)
         for segment in range(segments):
             angle = 2.0 * math.pi * segment / segments
