@@ -716,6 +716,171 @@ def render_illustrated_still_life(output_dir, resolution):
     }
 
 
+
+def create_photorealistic_wood_material():
+    material = bpy.data.materials.new("PhotorealisticNaturalOak")
+    shader = principled_node(material)
+    shader.inputs["Roughness"].default_value = 0.58
+    coordinates = material.node_tree.nodes.new("ShaderNodeTexCoord")
+    mapping = material.node_tree.nodes.new("ShaderNodeMapping")
+    mapping.inputs["Scale"].default_value = (1.0, 3.0, 12.0)
+    wave = material.node_tree.nodes.new("ShaderNodeTexWave")
+    wave.wave_type = "BANDS"
+    wave.bands_direction = "X"
+    wave.inputs["Scale"].default_value = 3.2
+    wave.inputs["Distortion"].default_value = 7.0
+    wave.inputs["Detail"].default_value = 4.0
+    wave.inputs["Detail Scale"].default_value = 1.8
+    grain_noise = material.node_tree.nodes.new("ShaderNodeTexNoise")
+    grain_noise.inputs["Scale"].default_value = 5.0
+    grain_noise.inputs["Detail"].default_value = 4.0
+    grain_noise.inputs["Roughness"].default_value = 0.72
+    grain_noise.inputs["Distortion"].default_value = 1.4
+    grain_ramp = material.node_tree.nodes.new("ShaderNodeValToRGB")
+    grain_ramp.color_ramp.elements[0].position = 0.18
+    grain_ramp.color_ramp.elements[0].color = (0.045, 0.014, 0.004, 1.0)
+    grain_ramp.color_ramp.elements[1].position = 0.82
+    grain_ramp.color_ramp.elements[1].color = (0.34, 0.17, 0.065, 1.0)
+    fine_noise = material.node_tree.nodes.new("ShaderNodeTexNoise")
+    fine_noise.inputs["Scale"].default_value = 48.0
+    fine_noise.inputs["Detail"].default_value = 2.0
+    bump = material.node_tree.nodes.new("ShaderNodeBump")
+    bump.inputs["Strength"].default_value = 0.11
+    bump.inputs["Distance"].default_value = 0.018
+    links = material.node_tree.links
+    links.new(coordinates.outputs["Generated"], mapping.inputs["Vector"])
+    links.new(mapping.outputs["Vector"], wave.inputs["Vector"])
+    distortion = material.node_tree.nodes.new("ShaderNodeMath")
+    distortion.operation = "MULTIPLY"
+    distortion.inputs[1].default_value = 8.0
+    links.new(mapping.outputs["Vector"], grain_noise.inputs["Vector"])
+    links.new(grain_noise.outputs["Fac"], distortion.inputs[0])
+    links.new(distortion.outputs["Value"], wave.inputs["Distortion"])
+    links.new(wave.outputs["Color"], grain_ramp.inputs["Fac"])
+    links.new(grain_ramp.outputs["Color"], shader.inputs["Base Color"])
+    links.new(mapping.outputs["Vector"], fine_noise.inputs["Vector"])
+    links.new(fine_noise.outputs["Fac"], bump.inputs["Height"])
+    links.new(bump.outputs["Normal"], shader.inputs["Normal"])
+    return material
+
+
+def create_photorealistic_plaster_material():
+    material = bpy.data.materials.new("PhotorealisticWarmPlaster")
+    shader = principled_node(material)
+    shader.inputs["Base Color"].default_value = (0.34, 0.285, 0.22, 1.0)
+    shader.inputs["Roughness"].default_value = 0.92
+    coordinates = material.node_tree.nodes.new("ShaderNodeTexCoord")
+    broad_noise = material.node_tree.nodes.new("ShaderNodeTexNoise")
+    broad_noise.inputs["Scale"].default_value = 7.0
+    broad_noise.inputs["Detail"].default_value = 3.0
+    broad_noise.inputs["Roughness"].default_value = 0.78
+    color_ramp = material.node_tree.nodes.new("ShaderNodeValToRGB")
+    color_ramp.color_ramp.elements[0].color = (0.27, 0.225, 0.17, 1.0)
+    color_ramp.color_ramp.elements[1].color = (0.39, 0.33, 0.255, 1.0)
+    fine_noise = material.node_tree.nodes.new("ShaderNodeTexNoise")
+    fine_noise.inputs["Scale"].default_value = 75.0
+    fine_noise.inputs["Detail"].default_value = 2.0
+    bump = material.node_tree.nodes.new("ShaderNodeBump")
+    bump.inputs["Strength"].default_value = 0.10
+    bump.inputs["Distance"].default_value = 0.009
+    links = material.node_tree.links
+    links.new(coordinates.outputs["Generated"], broad_noise.inputs["Vector"])
+    links.new(broad_noise.outputs["Fac"], color_ramp.inputs["Fac"])
+    links.new(color_ramp.outputs["Color"], shader.inputs["Base Color"])
+    links.new(coordinates.outputs["Generated"], fine_noise.inputs["Vector"])
+    links.new(fine_noise.outputs["Fac"], bump.inputs["Height"])
+    links.new(bump.outputs["Normal"], shader.inputs["Normal"])
+    return material
+
+
+def create_photorealistic_lighting():
+    world = bpy.context.scene.world
+    world.use_nodes = True
+    world.node_tree.nodes["Background"].inputs["Color"].default_value = (0.32, 0.36, 0.42, 1.0)
+    world.node_tree.nodes["Background"].inputs["Strength"].default_value = 0.24
+    lights = [
+        ("LargeWindowKey", (-3.8, -4.5, 6.0), 1150.0, 4.8, (1.0, 0.91, 0.80)),
+        ("SoftSkyFill", (4.0, -1.0, 3.0), 210.0, 5.5, (0.78, 0.86, 1.0)),
+        ("WarmBackRim", (1.0, 4.0, 4.5), 420.0, 3.8, (1.0, 0.88, 0.72)),
+    ]
+    for name, location, power, size, color in lights:
+        data = bpy.data.lights.new(name, "AREA")
+        data.energy = power
+        data.color = color
+        data.shape = "DISK"
+        data.size = size
+        light = bpy.data.objects.new(name, data)
+        bpy.context.collection.objects.link(light)
+        light.location = location
+        light.rotation_euler = (Vector((0.0, 0.0, 0.0)) - light.location).to_track_quat("-Z", "Y").to_euler()
+
+
+def render_photorealistic_still_life(output_dir, resolution):
+    # Preserve the reviewed geometry and framing while replacing the stylized
+    # environment/material treatment with physically based surface detail and
+    # a broad, directional studio-window lighting arrangement.
+    clear_scene()
+    vase = create_lathed_vase("PhotorealisticStillLifeVase", (-0.95, 0.45, -1.08))
+    apple = create_grounded_apple("PhotorealisticStillLifeApple", 1.0, -0.35)
+    vase_material = create_material("PhotorealisticCeramicGlaze", "ceramic")
+    vase_shader = vase_material.node_tree.nodes.get("Principled BSDF")
+    vase_shader.inputs["Roughness"].default_value = 0.22
+    coat = vase_shader.inputs.get("Coat Weight") or vase_shader.inputs.get("Clearcoat")
+    if coat is not None:
+        coat.default_value = 0.28
+    vase_noise = vase_material.node_tree.nodes.new("ShaderNodeTexNoise")
+    vase_noise.inputs["Scale"].default_value = 68.0
+    vase_noise.inputs["Detail"].default_value = 2.0
+    vase_bump = vase_material.node_tree.nodes.new("ShaderNodeBump")
+    vase_bump.inputs["Strength"].default_value = 0.035
+    vase_bump.inputs["Distance"].default_value = 0.002
+    vase_coordinates = vase_material.node_tree.nodes.new("ShaderNodeTexCoord")
+    vase_links = vase_material.node_tree.links
+    vase_links.new(vase_coordinates.outputs["Generated"], vase_noise.inputs["Vector"])
+    vase_links.new(vase_noise.outputs["Fac"], vase_bump.inputs["Height"])
+    vase_links.new(vase_bump.outputs["Normal"], vase_shader.inputs["Normal"])
+
+    apple_material = create_material("PhotorealisticAppleSkin", "apple")
+    apple_shader = apple_material.node_tree.nodes.get("Principled BSDF")
+    apple_shader.inputs["Roughness"].default_value = 0.30
+    apple_coat = apple_shader.inputs.get("Coat Weight") or apple_shader.inputs.get("Clearcoat")
+    if apple_coat is not None:
+        apple_coat.default_value = 0.16
+    micro_noise = apple_material.node_tree.nodes.new("ShaderNodeTexNoise")
+    micro_noise.inputs["Scale"].default_value = 115.0
+    micro_noise.inputs["Detail"].default_value = 2.0
+    micro_bump = apple_material.node_tree.nodes.new("ShaderNodeBump")
+    micro_bump.inputs["Strength"].default_value = 0.12
+    micro_bump.inputs["Distance"].default_value = 0.0018
+    apple_coordinates = apple_material.node_tree.nodes.new("ShaderNodeTexCoord")
+    apple_links = apple_material.node_tree.links
+    apple_links.new(apple_coordinates.outputs["Generated"], micro_noise.inputs["Vector"])
+    apple_links.new(micro_noise.outputs["Fac"], micro_bump.inputs["Height"])
+    apple_links.new(micro_bump.outputs["Normal"], apple_shader.inputs["Normal"])
+    assign_material(vase, vase_material)
+    assign_material(apple, apple_material)
+
+    tabletop = create_illustrated_tabletop()
+    assign_material(tabletop, create_photorealistic_wood_material())
+    backdrop = create_illustrated_backdrop()
+    assign_material(backdrop, create_photorealistic_plaster_material())
+    create_photorealistic_lighting()
+
+    filename = "still-life-photorealistic-treatment.png"
+    camera_location = (4.6, -8.5, 4.0)
+    started = time.perf_counter()
+    render_view(output_dir, filename, camera_location, resolution)
+    return {
+        "file": filename,
+        "scene": "still-life-photorealism-study",
+        "treatment": "photorealistic",
+        "geometry": "same lathed vase and grounded apple as the baseline and illustrated comparison",
+        "environment": "procedural natural oak tabletop and fine-textured warm plaster wall",
+        "lighting": "large warm key, cool soft fill, restrained warm rim, and low neutral world fill",
+        "camera": list(camera_location),
+        "render_seconds": round(time.perf_counter() - started, 3),
+    }
+
 def render_quality_variant(output_dir, sample_count, denoise, resolution):
     scene = bpy.context.scene
     scene.cycles.samples = sample_count
@@ -908,7 +1073,17 @@ def main():
     manifest["art_direction_study"] = {
         "baseline": "still-life-vase-and-apple.png",
         "illustrated": illustrated_render["file"],
-        "comparison": "same object geometry, object placement, camera, resolution, sample count, and denoising; illustrated materials, tabletop, backdrop, and lighting differ",
+        "comparison": "historical comparison; same object geometry, object placement, camera, resolution, sample count, and denoising",
+        "samples": arguments.samples,
+        "denoising": arguments.denoise,
+    }
+
+    photorealistic_render = render_photorealistic_still_life(arguments.output_dir, arguments.resolution)
+    manifest["renders"].append(photorealistic_render)
+    manifest["photorealism_study"] = {
+        "baseline": "still-life-vase-and-apple.png",
+        "photorealistic": photorealistic_render["file"],
+        "comparison": "same vase/apple geometry, object placement, camera, resolution, sample count, and denoising; physically based surface detail, natural oak, plaster, and photographic lighting differ",
         "samples": arguments.samples,
         "denoising": arguments.denoise,
     }
