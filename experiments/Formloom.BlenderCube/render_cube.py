@@ -263,10 +263,19 @@ def create_ground(treatment="baseline"):
 def create_illustrated_tabletop():
     # A shallow bevelled slab gives the composition a visible front edge and
     # real contact shadows instead of an infinite studio-floor treatment.
-    bpy.ops.mesh.primitive_cube_add(size=1.0, location=(0.0, -0.8, STUDIO_FLOOR_HEIGHT - 0.12))
+    # Keep the near edge at the same position, but extend the slab well past
+    # the camera's left, right, and far framing. The backdrop hides the far
+    # extension; no cyclorama surface can peek through at the image corners.
+    tabletop_front_edge = -6.3
+    tabletop_depth = 20.0
+    tabletop_center_y = tabletop_front_edge + tabletop_depth * 0.5
+    bpy.ops.mesh.primitive_cube_add(
+        size=1.0,
+        location=(0.0, tabletop_center_y, STUDIO_FLOOR_HEIGHT - 0.12),
+    )
     tabletop = bpy.context.object
     tabletop.name = "IllustratedOakTabletop"
-    tabletop.dimensions = (14.0, 11.0, 0.24)
+    tabletop.dimensions = (30.0, tabletop_depth, 0.24)
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     bevel = tabletop.modifiers.new("SoftTableEdge", "BEVEL")
     bevel.width = 0.075
