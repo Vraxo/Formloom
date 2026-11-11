@@ -11,6 +11,11 @@ import bpy
 from mathutils import Vector
 
 
+STUDIO_FLOOR_HEIGHT = -1.085
+APPLE_LOWEST_PROFILE_HEIGHT = -0.64
+APPLE_DEFAULT_SCALE = (0.82, 0.78, 0.92)
+
+
 def parse_arguments():
     arguments = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     parser = argparse.ArgumentParser()
@@ -158,7 +163,7 @@ def create_material(name, kind):
 def create_ground():
     # A 360-degree cyclorama replaces the finite floor plane. The raised,
     # rounded perimeter keeps distant studio horizons out of low camera views.
-    floor_height = -1.085
+    floor_height = STUDIO_FLOOR_HEIGHT
     profile = [
         (14.0, floor_height),
         (14.7, floor_height + 0.01),
@@ -397,9 +402,10 @@ def create_apple(name, location, scale=(0.82, 0.78, 0.92), segments=96):
         # A shallow blossom dimple gives way almost immediately to a broad,
         # rounded base. The lower body stays full instead of collapsing to a
         # strawberry-like point.
-        (-0.62, 0.015), (-0.64, 0.075), (-0.61, 0.18),
-        (-0.56, 0.32), (-0.48, 0.46), (-0.37, 0.59),
-        (-0.22, 0.70), (-0.04, 0.78), (0.16, 0.80),
+        (-0.50, 0.015), (-0.56, 0.07), (-0.62, 0.18),
+        (-0.64, 0.28), (-0.64, 0.36), (-0.61, 0.45),
+        (-0.55, 0.52), (-0.43, 0.62), (-0.26, 0.71),
+        (-0.06, 0.78), (0.16, 0.80),
         (0.34, 0.76), (0.48, 0.66), (0.54, 0.51),
         (0.55, 0.36), (0.51, 0.22), (0.48, 0.10), (0.47, 0.02),
     ]
@@ -450,6 +456,13 @@ def create_apple(name, location, scale=(0.82, 0.78, 0.92), segments=96):
 
     create_apple_stem(name, location, scale)
     return apple
+
+
+def create_grounded_apple(name, x, y):
+    # The blossom end is recessed above a broad low ring; position that ring
+    # against the studio floor instead of leaving the fruit hovering.
+    location_z = STUDIO_FLOOR_HEIGHT - APPLE_LOWEST_PROFILE_HEIGHT * APPLE_DEFAULT_SCALE[2]
+    return create_apple(name, (x, y, location_z), scale=APPLE_DEFAULT_SCALE)
 
 
 def create_parametric_cylinder(name, location, radius=0.72, depth=2.0, segments=48):
@@ -643,8 +656,7 @@ def main():
     # Inspect the fruit model on its own first, from angles that expose the
     # shoulder lobes, recessed stem well, and overall silhouette.
     clear_scene()
-    apple_location = (0.0, 0.0, -0.22)
-    apple = create_apple("AppleShapeStudy", apple_location)
+    apple = create_grounded_apple("AppleShapeStudy", 0.0, 0.0)
     apple_material = create_material("AppleSkin", "apple")
     assign_material(apple, apple_material)
     create_ground()
@@ -681,12 +693,13 @@ def main():
             False,
             arguments.resolution,
         ))
-    quality_study.append(render_quality_variant(
-        arguments.output_dir,
-        64,
-        True,
-        arguments.resolution,
-    ))
+    if arguments.denoise:
+        quality_study.append(render_quality_variant(
+            arguments.output_dir,
+            64,
+            True,
+            arguments.resolution,
+        ))
     manifest["quality_study"] = quality_study
     manifest["renders"].extend(quality_study)
 
@@ -695,7 +708,7 @@ def main():
     # Reuse the same fruit mesh in a minimal still-life composition.
     clear_scene()
     vase = create_lathed_vase("StillLifeVase", (-0.95, 0.45, -1.08))
-    apple = create_apple("StillLifeApple", (1.0, -0.35, -0.22))
+    apple = create_grounded_apple("StillLifeApple", 1.0, -0.35)
     vase_material = create_material("StillLifeGlazedCeramic", "ceramic")
     apple_material = create_material("StillLifeFruit", "apple")
     assign_material(vase, vase_material)
