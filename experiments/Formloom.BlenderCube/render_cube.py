@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import math
 import os
 import sys
 
@@ -88,6 +89,31 @@ def create_material(name, kind):
         coat = shader.inputs.get("Coat Weight") or shader.inputs.get("Clearcoat")
         if coat is not None:
             coat.default_value = 0.28
+    elif kind == "apple":
+        shader.inputs["Roughness"].default_value = 0.3
+        coat = shader.inputs.get("Coat Weight") or shader.inputs.get("Clearcoat")
+        if coat is not None:
+            coat.default_value = 0.2
+
+        coordinates = material.node_tree.nodes.new("ShaderNodeTexCoord")
+        noise = material.node_tree.nodes.new("ShaderNodeTexNoise")
+        noise.inputs["Scale"].default_value = 2.8
+        noise.inputs["Detail"].default_value = 2.0
+        ramp = material.node_tree.nodes.new("ShaderNodeValToRGB")
+        ramp.color_ramp.elements[0].position = 0.24
+        ramp.color_ramp.elements[0].color = (0.25, 0.006, 0.012, 1.0)
+        ramp.color_ramp.elements[1].position = 0.76
+        ramp.color_ramp.elements[1].color = (0.62, 0.045, 0.018, 1.0)
+        bump = material.node_tree.nodes.new("ShaderNodeBump")
+        bump.inputs["Strength"].default_value = 0.035
+        bump.inputs["Distance"].default_value = 0.012
+
+        links = material.node_tree.links
+        links.new(coordinates.outputs["Generated"], noise.inputs["Vector"])
+        links.new(noise.outputs["Fac"], ramp.inputs["Fac"])
+        links.new(ramp.outputs["Color"], shader.inputs["Base Color"])
+        links.new(noise.outputs["Fac"], bump.inputs["Height"])
+        links.new(bump.outputs["Normal"], shader.inputs["Normal"])
     elif kind == "metal":
         shader.inputs["Base Color"].default_value = (0.48, 0.52, 0.58, 1.0)
         shader.inputs["Metallic"].default_value = 0.88
@@ -193,26 +219,20 @@ def configure_render(resolution, samples):
 
 
 
-def create_parametric_sphere(name, location, scale=(1.0, 1.0, 1.0), segments=48, rings=24, apple_shape=False):
+def create_parametric_sphere(name, location, scale=(1.0, 1.0, 1.0), segments=48, rings=24):
     vertices = []
     faces = []
     for ring in range(rings + 1):
-        latitude = -0.5 * 3.141592653589793 + 3.141592653589793 * ring / rings
-        z = __import__("math").sin(latitude)
-        radius = __import__("math").cos(latitude)
+        latitude = -0.5 * math.pi + math.pi * ring / rings
+        z = math.sin(latitude)
+        radius = math.cos(latitude)
         for segment in range(segments):
-            angle = 2.0 * 3.141592653589793 * segment / segments
-            x = radius * __import__("math").cos(angle)
-            y = radius * __import__("math").sin(angle)
-            if apple_shape:
-                # A gently lobed shoulder and shallow top dimple make this read as fruit.
-                lobe = 1.0 + 0.035 * __import__("math").cos(5.0 * angle) * max(0.0, z)
-                x *= lobe
-                y *= lobe
-                z_adjusted = z - 0.10 * max(0.0, z) ** 8
-            else:
-                z_adjusted = z
-            vertices.append((x * scale[0], y * scale[1], z_adjusted * scale[2]))
+            angle = 2.0 * math.pi * segment / segments
+            vertices.append((
+                radius * math.cos(angle) * scale[0],
+                radius * math.sin(angle) * scale[1],
+                z * scale[2],
+            ))
     for ring in range(rings):
         for segment in range(segments):
             a = ring * segments + segment
@@ -229,6 +249,149 @@ def create_parametric_sphere(name, location, scale=(1.0, 1.0, 1.0), segments=48,
         polygon.use_smooth = True
     obj.location = location
     return obj
+
+
+def catmull_rom_component(p0, p1, p2, p3, amount):
+    amount_squared = amount * amount
+    amount_cubed = amount_squared * amount
+    return 0.5 * (
+        (2.0 * p1)
+        + (-p0 + p2) * amount
+        + (2.0 * p0 - 5.0 * p1 + 4.0 * p2 - p3) * amount_squared
+        + (-p0 + 3.0 * p1 - 3.0 * p2 + p3) * amount_cubed
+    )
+
+
+def interpolate_apple_profile(profile, subdivisions=8):
+    samples = []
+    for index in range(len(profile) - 1):
+        p0 = profile[max(0, index - 1)]
+        p1 = profile[index]
+        p2 = profile[index + 1]
+        p3 = profile[min(len(profile) - 1, index + 2)]
+        for step in range(subdivisions):
+            amount = step / subdivisions
+            height = catmull_rom_component(p0[0], p1[0], p2[0], p3[0], amount)
+            radius = catmull_rom_component(p0[1], p1[1], p2[1], p3[1], amount)
+            samples.append((height, max(0.008, radius)))
+    samples.append(profile[-1])
+    return samples
+
+
+def create_apple_stem(name, location, scale):
+    cavity_location = (
+        location[0],
+        location[1],
+        location[2] + 0.585 * scale[2],
+    )
+    bpy.ops.mesh.primitive_uv_sphere_add(
+        segments=24,
+        ring_count=12,
+        radius=0.055,
+        location=cavity_location,
+    )
+    cavity = bpy.context.object
+    cavity.name = name + "StemWell"
+    cavity.scale = (1.0, 1.0, 0.22)
+    for polygon in cavity.data.polygons:
+        polygon.use_smooth = True
+
+    cavity_material = bpy.data.materials.new(name + "StemWellMaterial")
+    cavity_shader = principled_node(cavity_material)
+    cavity_shader.inputs["Base Color"].default_value = (0.075, 0.022, 0.012, 1.0)
+    cavity_shader.inputs["Roughness"].default_value = 0.78
+    cavity.data.materials.append(cavity_material)
+
+    stem_curve = bpy.data.curves.new(name + "StemCurve", "CURVE")
+    stem_curve.dimensions = "3D"
+    stem_curve.resolution_u = 16
+    stem_curve.bevel_depth = 0.025
+    stem_curve.bevel_resolution = 4
+    spline = stem_curve.splines.new("BEZIER")
+    spline.bezier_points.add(2)
+    stem_points = (
+        (0.0, 0.0, 0.575 * scale[2]),
+        (0.018 * scale[0], 0.004 * scale[1], 0.72 * scale[2]),
+        (0.065 * scale[0], 0.018 * scale[1], 0.88 * scale[2]),
+    )
+    for point, coordinate, radius in zip(
+        spline.bezier_points,
+        stem_points,
+        (1.0, 0.78, 0.52),
+    ):
+        point.co = coordinate
+        point.radius = radius
+        point.handle_left_type = "AUTO"
+        point.handle_right_type = "AUTO"
+
+    stem = bpy.data.objects.new(name + "Stem", stem_curve)
+    bpy.context.collection.objects.link(stem)
+    stem.location = location
+    stem_material = bpy.data.materials.new(name + "StemMaterial")
+    stem_shader = principled_node(stem_material)
+    stem_shader.inputs["Base Color"].default_value = (0.16, 0.055, 0.018, 1.0)
+    stem_shader.inputs["Roughness"].default_value = 0.68
+    stem.data.materials.append(stem_material)
+
+
+def create_apple(name, location, scale=(0.82, 0.78, 0.92), segments=96):
+    # A hand-authored rotational profile replaces the earlier deformed sphere.
+    # The narrow center caps form shallow blossom and stem wells; the broad
+    # shoulders and five radial lobes establish an unmistakable fruit silhouette.
+    profile = [
+        (-0.90, 0.015), (-0.92, 0.055), (-0.87, 0.14),
+        (-0.75, 0.29), (-0.59, 0.44), (-0.39, 0.59),
+        (-0.16, 0.72), (0.08, 0.80), (0.30, 0.78),
+        (0.48, 0.69), (0.61, 0.55), (0.68, 0.40),
+        (0.65, 0.28), (0.61, 0.17), (0.59, 0.07), (0.58, 0.02),
+    ]
+    sampled_profile = interpolate_apple_profile(profile)
+    vertices = []
+    faces = []
+
+    for height, base_radius in sampled_profile:
+        upper_lobing = max(0.0, min(1.0, (height - 0.22) / 0.46))
+        lower_lobing = max(0.0, min(1.0, (-height - 0.35) / 0.48))
+        lobe_strength = max(upper_lobing, lower_lobing)
+        for segment in range(segments):
+            angle = 2.0 * math.pi * segment / segments
+            five_lobes = math.cos(5.0 * angle + 0.35)
+            subtle_irregularity = math.cos(3.0 * angle - 0.8)
+            radial_variation = (
+                0.032 * five_lobes + 0.008 * subtle_irregularity
+            ) * lobe_strength
+            vertical_variation = 0.012 * five_lobes * lobe_strength
+            radius = base_radius * (1.0 + radial_variation)
+            vertices.append((
+                radius * math.cos(angle) * scale[0],
+                radius * math.sin(angle) * scale[1],
+                (height + vertical_variation) * scale[2],
+            ))
+
+    for ring in range(len(sampled_profile) - 1):
+        for segment in range(segments):
+            a = ring * segments + segment
+            b = ring * segments + (segment + 1) % segments
+            c = (ring + 1) * segments + (segment + 1) % segments
+            d = (ring + 1) * segments + segment
+            faces.append((a, b, c, d))
+
+    # Close the tiny profile ends with caps rather than leaving open mesh rings.
+    faces.append(tuple(reversed(range(segments))))
+    top_start = (len(sampled_profile) - 1) * segments
+    faces.append(tuple(top_start + segment for segment in range(segments)))
+
+    mesh = bpy.data.meshes.new(name + "Mesh")
+    mesh.from_pydata(vertices, [], faces)
+    mesh.update()
+    apple = bpy.data.objects.new(name, mesh)
+    bpy.context.collection.objects.link(apple)
+    apple.location = location
+    for polygon in mesh.polygons:
+        polygon.use_smooth = True
+
+    create_apple_stem(name, location, scale)
+    return apple
 
 
 def create_parametric_cylinder(name, location, radius=0.72, depth=2.0, segments=48):
@@ -392,17 +555,42 @@ def main():
             "geometry": ["explicit cube mesh", "parametric UV sphere", "parametric cylinder"],
         })
 
-    # First small still-life composition: a turned vase and an apple-like
-    # parametric form. This is deliberately a silhouette/material test, not
-    # an attempt at final botanical or ceramic detail.
+    # Inspect the fruit model on its own first, from angles that expose the
+    # shoulder lobes, recessed stem well, and overall silhouette.
+    clear_scene()
+    apple_location = (0.0, 0.0, -0.22)
+    apple = create_apple("AppleShapeStudy", apple_location)
+    apple_material = create_material("AppleSkin", "apple")
+    assign_material(apple, apple_material)
+    create_ground()
+    create_lighting()
+    apple_views = {
+        "front": (0.0, -6.5, 1.8),
+        "three-quarter": (3.8, -6.4, 2.2),
+        "elevated": (3.8, -6.0, 4.8),
+    }
+    for view_name, camera_location in apple_views.items():
+        filename = "apple-shape-" + view_name + ".png"
+        render_view(arguments.output_dir, filename, camera_location, arguments.resolution)
+        manifest["renders"].append({
+            "file": filename,
+            "material": "red apple skin",
+            "view": view_name,
+            "scene": "apple-shape-study",
+            "geometry": [
+                "interpolated rotational profile",
+                "five-lobed shoulders and base",
+                "recessed stem well",
+                "curved tapered stem",
+            ],
+        })
+
+    # Reuse the same fruit mesh in a minimal still-life composition.
     clear_scene()
     vase = create_lathed_vase("StillLifeVase", (-0.95, 0.45, -1.08))
-    apple = create_parametric_sphere(
-        "StillLifeApple", (1.0, -0.35, -0.22),
-        scale=(0.82, 0.78, 0.88), segments=64, rings=32, apple_shape=True,
-    )
+    apple = create_apple("StillLifeApple", (1.0, -0.35, -0.22))
     vase_material = create_material("StillLifeGlazedCeramic", "ceramic")
-    apple_material = create_material("StillLifeFruit", "clay")
+    apple_material = create_material("StillLifeFruit", "apple")
     assign_material(vase, vase_material)
     assign_material(apple, apple_material)
     create_ground()
@@ -411,10 +599,15 @@ def main():
     render_view(arguments.output_dir, filename, (4.6, -8.5, 4.0), arguments.resolution)
     manifest["renders"].append({
         "file": filename,
-        "material": "glazed ceramic and matte fruit",
+        "material": "glazed ceramic and red apple skin",
         "view": "three-quarter",
         "scene": "still-life",
-        "geometry": ["lathed vase profile", "deformed parametric sphere"],
+        "geometry": [
+            "lathed vase profile",
+            "custom interpolated apple profile",
+            "five-lobed silhouette and recessed stem well",
+            "curved tapered stem",
+        ],
     })
 
     manifest_path = os.path.join(arguments.output_dir, "manifest.json")
