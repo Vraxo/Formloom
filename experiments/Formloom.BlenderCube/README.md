@@ -8,13 +8,15 @@ A deliberately isolated proof of concept for evaluating Blender as a procedural 
 - A five-segment bevel modifier and weighted corner normals.
 - Four independently assigned materials: matte clay, glazed ceramic, metallic, and procedural wood.
 - Three camera positions using the same geometry: three-quarter, elevated, and low.
-- A shared three-light studio setup, world fill, ground plane, and Cycles rendering.
+- A three-light studio setup, world fill, 360-degree curved cyclorama, and Cycles rendering.
+- Adjustable Cycles denoising using OpenImageDenoise.
+- An apple quality study comparing 12, 32, 64, and 128 raw samples; when denoising is enabled, it also includes a 64-sample denoised comparison. Per-render times are included in the manifest.
 - A geometry gallery with an explicitly authored cube, parametric UV sphere, and parametric cylinder.
 - An authored apple mesh with a smoothed rotational profile, broad rounded lower body, shallow blossom dimple, and five-lobed shoulders/base, a recessed stem well, and a curved tapered stem.
 - Three dedicated apple views plus a still-life composition reusing the same fruit mesh.
 - A C#/.NET launcher that invokes Blender as a separate background process.
 
-The output includes twelve cube material/view combinations, three geometry-gallery views, three apple-shape study views, and one still-life composition, plus a JSON manifest recording the render settings.
+With denoising enabled (as in CI), the output includes twelve cube material/view combinations, three geometry-gallery views, three apple-shape study views, five apple quality comparisons, and one still-life composition (24 PNGs total). With denoising disabled, the denoised comparison is omitted (23 PNGs). Both configurations include a JSON manifest recording render settings and quality-study timings.
 
 ## Requirements
 
@@ -40,12 +42,12 @@ dotnet run --project experiments/Formloom.BlenderCube -- --blender "C:\Program F
 Optional settings:
 
 ```sh
-dotnet run --project experiments/Formloom.BlenderCube -- --resolution 768 --samples 64 --output-dir artifacts/blender-cube
+dotnet run --project experiments/Formloom.BlenderCube -- --resolution 768 --samples 64 --denoise true --output-dir artifacts/blender-cube
 ```
 
-`--samples` accepts any integer from **1 to 256**; it is not a choice between fixed quality presets. The default is 32. Lower values make quick, noisy previews, while higher values progressively reduce Monte Carlo noise at the cost of render time. The CI run deliberately stays at 12 samples to keep its review artifact fast. Resolution is configurable from 64 to 2048 pixels.
+`--samples` accepts any integer from **1 to 256**; it is not a choice between fixed quality presets. The default is 32. Lower values make quick, noisy previews, while higher values progressively reduce Monte Carlo noise at the cost of render time. The CI run deliberately stays at 12 samples to keep its review artifact fast. Resolution is configurable from 64 to 2048 pixels. `--denoise true` enables OpenImageDenoise; it is off by default so the experiment remains usable with Blender builds that omit the denoiser. CI uses the official Blender 4.5.16 distribution, which includes the CPU denoiser.
 
-The prototype deliberately uses Cycles on the CPU so the experiment runs on machines without a supported GPU. GPU configuration and performance comparison are deferred until the basic scene construction and visual output have been reviewed.
+The prototype deliberately uses Cycles on the CPU so the experiment runs on machines without a supported GPU. The quality study uses one fixed apple/camera/light setup so sample count and denoising are the only variables in that comparison. GPU configuration and performance comparison are deferred until the basic scene construction and visual output have been reviewed.
 
 ## Inspecting the scene
 

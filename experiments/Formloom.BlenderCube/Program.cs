@@ -11,6 +11,7 @@ internal static class Program
         var outputDirectory = Path.GetFullPath(options.GetValueOrDefault("output-dir", "artifacts/blender-cube"));
         var resolution = ParsePositiveInteger(options, "resolution", 512);
         var samples = ParsePositiveInteger(options, "samples", 32);
+        var denoise = ParseBoolean(options, "denoise", false);
         if (samples > 256)
         {
             throw new ArgumentException("Option --samples must be between 1 and 256.");
@@ -43,10 +44,12 @@ internal static class Program
         startInfo.ArgumentList.Add(resolution.ToString());
         startInfo.ArgumentList.Add("--samples");
         startInfo.ArgumentList.Add(samples.ToString());
+        startInfo.ArgumentList.Add("--denoise");
+        startInfo.ArgumentList.Add(denoise ? "true" : "false");
 
         Console.WriteLine($"Blender executable: {blender}");
         Console.WriteLine($"Output directory: {outputDirectory}");
-        Console.WriteLine($"Resolution: {resolution} × {resolution}; Cycles CPU samples: {samples}");
+        Console.WriteLine($"Resolution: {resolution} × {resolution}; Cycles CPU samples: {samples}; denoising: {(denoise ? "on" : "off")}");
 
         using var process = Process.Start(startInfo);
         if (process is null)
@@ -88,6 +91,21 @@ internal static class Program
         }
 
         return options;
+    }
+
+    private static bool ParseBoolean(IReadOnlyDictionary<string, string> options, string name, bool defaultValue)
+    {
+        if (!options.TryGetValue(name, out var value))
+        {
+            return defaultValue;
+        }
+
+        if (!bool.TryParse(value, out var parsed))
+        {
+            throw new ArgumentException($"Option --{name} must be true or false.");
+        }
+
+        return parsed;
     }
 
     private static int ParsePositiveInteger(IReadOnlyDictionary<string, string> options, string name, int defaultValue)
