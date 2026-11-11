@@ -302,7 +302,6 @@ def create_illustrated_tabletop():
     links.new(mapping.outputs["Vector"], wave.inputs["Vector"])
     links.new(wave.outputs["Color"], ramp.inputs["Fac"])
     links.new(coordinates.outputs["Generated"], noise.inputs["Vector"])
-    links.new(noise.outputs["Fac"], ramp.inputs["Fac"])
     links.new(ramp.outputs["Color"], shader.inputs["Base Color"])
     links.new(noise.outputs["Fac"], bump.inputs["Height"])
     links.new(bump.outputs["Normal"], shader.inputs["Normal"])

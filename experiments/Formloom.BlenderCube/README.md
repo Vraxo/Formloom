@@ -12,7 +12,7 @@ A deliberately isolated proof of concept for evaluating Blender as a procedural 
 - A controlled baseline-versus-illustrated material/studio-treatment comparison without changing object geometry or camera.
 - Adjustable Cycles denoising using OpenImageDenoise.
 - An apple quality study comparing 12, 32, 64, and 128 raw samples; when denoising is enabled, it also includes a 64-sample denoised comparison. Per-render times are included in the manifest.
-- A controlled art-direction comparison using the same apple/vase geometry, placement, and camera: the studio baseline versus an illustrated still life with a bevelled procedural oak tabletop, textured warm plaster wall, softer materials, and warm studio lighting.
+- A controlled art-direction comparison using the same apple/vase geometry, camera, and composition: the current baseline versus a restrained illustrated material and warm studio-light treatment.
 - A geometry gallery with an explicitly authored cube, parametric UV sphere, and parametric cylinder.
 - An authored apple mesh with a smoothed rotational profile, broad rounded lower body, shallow blossom dimple, and five-lobed shoulders/base, a recessed stem well, and a curved tapered stem.
 - Three dedicated apple views plus a still-life composition reusing the same fruit mesh.
@@ -49,7 +49,7 @@ dotnet run --project experiments/Formloom.BlenderCube -- --resolution 768 --samp
 
 `--samples` accepts any integer from **1 to 256**; it is not a choice between fixed quality presets. The default is 32. Lower values make quick, noisy previews, while higher values progressively reduce Monte Carlo noise at the cost of render time. The CI run deliberately stays at 12 samples to keep its review artifact fast. Resolution is configurable from 64 to 2048 pixels. `--denoise true` enables OpenImageDenoise; it is off by default so the experiment remains usable with Blender builds that omit the denoiser. CI uses the official Blender 4.5.16 distribution, which includes the CPU denoiser.
 
-The illustrated still-life render uses a finite tabletop with a visible bevelled front edge and a separate softly textured wall, so contact shadows and the room-like setting can be judged independently of object geometry. The baseline render remains unchanged for comparison. The prototype deliberately uses Cycles on the CPU so the experiment runs on machines without a supported GPU. The quality study uses one fixed apple/camera/light setup so sample count and denoising are the only variables in that comparison. GPU configuration and performance comparison are deferred until the basic scene construction and visual output have been reviewed.
+The prototype deliberately uses Cycles on the CPU so the experiment runs on machines without a supported GPU. The quality study uses one fixed apple/camera/light setup so sample count and denoising are the only variables in that comparison. GPU configuration and performance comparison are deferred until the basic scene construction and visual output have been reviewed.
 
 ## Inspecting the scene
 
