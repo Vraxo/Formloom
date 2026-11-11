@@ -10,7 +10,7 @@ A deliberately isolated proof of concept for evaluating Blender as a procedural 
 - Three camera positions using the same geometry: three-quarter, elevated, and low.
 - A shared three-light studio setup, world fill, ground plane, and Cycles rendering.
 - A geometry gallery with an explicitly authored cube, parametric UV sphere, and parametric cylinder.
-- An authored apple mesh with a smoothed rotational profile, five-lobed shoulders and base, a recessed stem well, and a curved tapered stem.
+- An authored apple mesh with a smoothed rotational profile, broad rounded lower body, shallow blossom dimple, and five-lobed shoulders/base, a recessed stem well, and a curved tapered stem.
 - Three dedicated apple views plus a still-life composition reusing the same fruit mesh.
 - A C#/.NET launcher that invokes Blender as a separate background process.
 
