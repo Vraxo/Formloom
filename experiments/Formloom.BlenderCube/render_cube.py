@@ -750,9 +750,13 @@ def create_photorealistic_wood_material():
     links = material.node_tree.links
     links.new(coordinates.outputs["Generated"], mapping.inputs["Vector"])
     links.new(mapping.outputs["Vector"], wave.inputs["Vector"])
+    distortion = material.node_tree.nodes.new("ShaderNodeMath")
+    distortion.operation = "MULTIPLY"
+    distortion.inputs[1].default_value = 8.0
     links.new(mapping.outputs["Vector"], grain_noise.inputs["Vector"])
+    links.new(grain_noise.outputs["Fac"], distortion.inputs[0])
+    links.new(distortion.outputs["Value"], wave.inputs["Distortion"])
     links.new(wave.outputs["Color"], grain_ramp.inputs["Fac"])
-    links.new(grain_noise.outputs["Fac"], grain_ramp.inputs["Fac"])
     links.new(grain_ramp.outputs["Color"], shader.inputs["Base Color"])
     links.new(mapping.outputs["Vector"], fine_noise.inputs["Vector"])
     links.new(fine_noise.outputs["Fac"], bump.inputs["Height"])
