@@ -9,14 +9,16 @@ A deliberately isolated proof of concept for evaluating Blender as a procedural 
 - Four independently assigned materials: matte clay, glazed ceramic, metallic, and procedural wood.
 - Three camera positions using the same geometry: three-quarter, elevated, and low.
 - A three-light studio setup, world fill, 360-degree curved cyclorama, and Cycles rendering.
+- A controlled baseline-versus-illustrated material/studio-treatment comparison without changing object geometry or camera.
 - Adjustable Cycles denoising using OpenImageDenoise.
 - An apple quality study comparing 12, 32, 64, and 128 raw samples; when denoising is enabled, it also includes a 64-sample denoised comparison. Per-render times are included in the manifest.
+- A controlled art-direction comparison using the same apple/vase geometry, camera, and composition: the current baseline versus a restrained illustrated material and warm studio-light treatment.
 - A geometry gallery with an explicitly authored cube, parametric UV sphere, and parametric cylinder.
 - An authored apple mesh with a smoothed rotational profile, broad rounded lower body, shallow blossom dimple, and five-lobed shoulders/base, a recessed stem well, and a curved tapered stem.
 - Three dedicated apple views plus a still-life composition reusing the same fruit mesh.
 - A C#/.NET launcher that invokes Blender as a separate background process.
 
-With denoising enabled (as in CI), the output includes twelve cube material/view combinations, three geometry-gallery views, three apple-shape study views, five apple quality comparisons, and one still-life composition (24 PNGs total). With denoising disabled, the denoised comparison is omitted (23 PNGs). Both configurations include a JSON manifest recording render settings and quality-study timings.
+With denoising enabled (as in CI), the output includes twelve cube material/view combinations, three geometry-gallery views, three apple-shape study views, five apple quality comparisons, one baseline still-life, and one illustrated-treatment still-life (25 PNGs total). With denoising disabled, the denoised comparison is omitted (24 PNGs). Both configurations include a JSON manifest recording render settings, quality-study timings, and the art-direction comparison pairing.
 
 ## Requirements
 
