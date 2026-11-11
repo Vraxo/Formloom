@@ -6,6 +6,16 @@ The intended default visual direction is a naturalistic still-life illustration:
 
 Repository changes follow a deliberately incremental PR workflow. See [CONTRIBUTING.md](CONTRIBUTING.md); coding agents should also read [AGENTS.md](AGENTS.md).
 
+## Current development direction (November 2026)
+
+The next rendering-development phase is **3D-first**. The standalone [Blender experiment](experiments/Formloom.BlenderCube/README.md) has progressed from an explicitly authored cube to curved primitives, a custom apple, a vase, and a combined still-life scene. The user-reviewed outputs have shown more convincing volume, material response, and lighting than the current production 2D path.
+
+This changes the direction of new rendering research, **not the current desktop implementation**: Formloom Desktop still generates images through Core and the Skia CPU renderer. Blender remains an isolated evaluation backend; it is not a Formloom Core dependency or a finalized production-renderer choice.
+
+The existing 2D renderer is retained as a working reference and a possible alternate backend/style. No production migration or removal is planned until the 3D path demonstrates the required object coverage, composition, deterministic variation, visual quality, and CPU performance. The visual target remains [Naturalistic Still-Life Illustration](docs/art-direction.md), not photorealism. See [ADR-0003](docs/adr/0003-explore-a-3d-first-rendering-path.md) for the decision and boundaries.
+
+
+
 ## Current capability
 
 The desktop UI drives the Core scene generator and the Skia CPU renderer through one prompt-to-PNG path:

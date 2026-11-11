@@ -1,7 +1,7 @@
 # Visual direction and rendering style
 
-**Status:** Accepted art direction; implementation is incomplete  
-**Decision date:** 2026-11-10  
+**Status:** Accepted art direction; 3D-first implementation research in progress  
+**Decision date:** 2026-11-10; implementation direction updated 2026-11-11  
 **Applies to:** Default Formloom output and future rendering-style work
 
 ## 1. Direction
@@ -30,6 +30,8 @@ The current renderer has useful ingredients, but they have grown around individu
 These techniques do not yet form one coherent visual language. Light and shading are authored differently between object families; material identities are not consistently expressed; texture and edge treatment vary; and the main application still uses its legacy per-object renderer. The model-system work has improved the generic geometry foundation, but it has not unified the visual result.
 
 The desktop antialiasing toggle is a rasterization choice, not a visual style. There is no general style selector or completed style-profile system today.
+
+A separate Blender/Cycles experiment now constructs and renders the same kinds of procedural forms in three dimensions. It has progressed through cube materials and cameras, a geometry gallery, a custom apple, a lathed vase, and a composed apple-and-vase scene. The user has reviewed these outputs and judged the 3D results materially more convincing than the current 2D production output. This evidence is strong enough to change the direction of new rendering research, but not enough to claim production readiness or select Blender as the final runtime backend.
 
 ## 3. Principles for the default look
 
@@ -104,7 +106,7 @@ The current model schema and renderer do not yet implement this separation compl
 
 For this direction, "realistic" means believable form, lighting, and material character—not literal photographic reproduction. A successful result may simplify geometry, texture, and optical behavior as long as the simplification is consistent and intentional.
 
-This is a suitable goal for the current 2D procedural approach. It requires better shared rendering capabilities and more coherent art direction, not a claim that a few gradients make the output photorealistic.
+The direction can be pursued through a 2D or 3D rendering backend, but the implementation trajectory has changed: **3D is now the leading path for new rendering work**. The current Skia renderer remains operational and is retained as a reference/alternate path while the 3D approach is tested against more representative subjects and compositions. This is an implementation decision, not a change to the art direction and not a claim that the present Blender prototype is production-ready.
 
 ### Photorealism is a separate, longer-term research direction
 
@@ -153,14 +155,15 @@ Automated tests should separately cover deterministic output, material/geometry 
 
 ## 7. Implementation sequence
 
-1. Keep this document as the art-direction authority while the model-system architecture continues to evolve.
-2. Establish fixed reference renders and document the current baseline before broad visual changes. The initial user-captured apple and rose baselines, exact prompts, settings, and capture limitations are recorded in [the canonical render-baseline manifest](render-baselines.md) and [its machine-readable manifest](render-baselines.json).
-3. Choose one representative scene and prove a coherent shared lighting/material treatment on it. The rose in a blue vase is a useful first stress case; the apple/table scene must also be checked before claiming the treatment is general.
-4. Extract only the reusable rendering capabilities demonstrated by those outputs. Keep model-specific geometry and semantic material choices separate from the style implementation.
-5. Review the same treatment across the reference set before defining a runtime style-profile API or introducing additional styles.
-6. Integrate the generic model renderer into application generation only after the relevant geometry, material, scene, and visual requirements are sufficiently demonstrated.
+1. Keep this document as the visual authority. The accepted implementation-direction update is recorded in [ADR-0003](adr/0003-explore-a-3d-first-rendering-path.md).
+2. Preserve fixed 2D reference renders and their settings. The initial user-captured apple and rose baselines, exact prompts, settings, and capture limitations are recorded in [the canonical render-baseline manifest](render-baselines.md) and [its machine-readable manifest](render-baselines.json).
+3. Continue the isolated 3D experiment with representative organic forms, vessels, flowers, liquids, contact, occlusion, and multi-object composition. The current cube/apple/vase results establish a useful starting point, not broad model coverage.
+4. Develop the 3D visual treatment toward Naturalistic Still-Life Illustration. Compare restrained illustrated material/light treatments against the current conventional 3D appearance; do not equate realism with photorealism or add universal outlines by default.
+5. Measure rendering time, sample count, denoising, memory, repeatability, and output quality on realistic CPU workloads. Keep sample count continuously adjustable rather than hard-coding a small set of quality presets.
+6. Derive a backend-agnostic scene and material boundary from the needs demonstrated by actual models. Blender is the current evaluation backend, not yet a permanent production contract.
+7. Compare the 3D outputs against the preserved 2D reference set before deciding how much of the application should migrate. Retain the Skia path until the replacement has sufficient object coverage, automated verification, reviewed visuals, and acceptable CPU performance; consider keeping it as an alternate path rather than deleting it.
 
-This sequence does not require a full rendering rewrite in one step. Preserve working legacy behavior until replacements have automated coverage and reviewed visual evidence.
+Work remains incremental. A promising still-life render is evidence for the direction, not permission to rewrite the production application in one step.
 
 ## 8. Non-goals
 
@@ -169,7 +172,9 @@ This decision does not:
 - Claim that the current renderer already meets the target.
 - Specify a final JSON schema, style ID, style-selector UI, or public style customization API.
 - Require a universal physically based material system or physically exact simulation.
-- Commit to photorealism, 3D rendering, GPU use, or replacing SkiaSharp.
+- Select Blender as the final production runtime or make it a Formloom Core dependency.
+- Migrate or remove the existing Skia renderer before the 3D path has demonstrated the documented quality, coverage, determinism, and performance criteria.
+- Commit to photorealism or GPU use.
 - Require every existing object family to be migrated in one batch.
 - Justify model-specific renderer branches or a general-purpose shading/scripting language.
 

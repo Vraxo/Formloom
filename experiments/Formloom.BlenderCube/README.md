@@ -1,6 +1,6 @@
 # Blender cube rendering experiment
 
-A deliberately isolated proof of concept for evaluating Blender as a procedural rendering backend. It does not change the desktop application's rendering path or add a Blender dependency to Formloom Core.
+A deliberately isolated proof of concept for evaluating Blender as a procedural rendering backend. It is the current 3D-first research path described in [ADR-0003](../../docs/adr/0003-explore-a-3d-first-rendering-path.md). It does not change the desktop application's rendering path, make Blender a production dependency, or add a Blender dependency to Formloom Core.
 
 ## What it tests
 
@@ -55,4 +55,4 @@ The Python scene script is intentionally readable and self-contained. It constru
 
 ## Scope boundary
 
-This is an experiment, not a production renderer contract. It does not introduce a universal scene schema, integrate with prompt parsing, migrate any existing 2D renderer, or change the application's output path. Those decisions should follow from the results of this prototype.
+This experiment informs the 3D-first development direction, but it is not a production renderer contract. It does not introduce a universal scene schema, integrate with prompt parsing, or change the application's output path. The current Skia renderer remains intact and is not being migrated or removed at this stage. Scene/backend contracts and any production integration must follow from reviewed results across representative objects and compositions.
