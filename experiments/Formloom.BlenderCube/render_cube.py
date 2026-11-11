@@ -83,7 +83,7 @@ def principled_node(material):
     return shader
 
 
-def create_material(name, kind):
+def create_material(name, kind, treatment="baseline"):
     material = bpy.data.materials.new(name)
     shader = principled_node(material)
     shader.inputs["Metallic"].default_value = 0.0
@@ -97,6 +97,26 @@ def create_material(name, kind):
         coat = shader.inputs.get("Coat Weight") or shader.inputs.get("Clearcoat")
         if coat is not None:
             coat.default_value = 0.18
+        if treatment == "illustrated":
+            # A muted blue glaze, broad reflections, and restrained surface
+            # variation avoid the hard, plastic-like product-render finish.
+            shader.inputs["Base Color"].default_value = (0.055, 0.17, 0.29, 1.0)
+            shader.inputs["Roughness"].default_value = 0.36
+            if coat is not None:
+                coat.default_value = 0.10
+            coordinates = material.node_tree.nodes.new("ShaderNodeTexCoord")
+            glaze_noise = material.node_tree.nodes.new("ShaderNodeTexNoise")
+            glaze_noise.inputs["Scale"].default_value = 3.0
+            glaze_noise.inputs["Detail"].default_value = 1.5
+            glaze_ramp = material.node_tree.nodes.new("ShaderNodeValToRGB")
+            glaze_ramp.color_ramp.elements[0].position = 0.22
+            glaze_ramp.color_ramp.elements[0].color = (0.038, 0.12, 0.22, 1.0)
+            glaze_ramp.color_ramp.elements[1].position = 0.78
+            glaze_ramp.color_ramp.elements[1].color = (0.075, 0.23, 0.36, 1.0)
+            links = material.node_tree.links
+            links.new(coordinates.outputs["Generated"], glaze_noise.inputs["Vector"])
+            links.new(glaze_noise.outputs["Fac"], glaze_ramp.inputs["Fac"])
+            links.new(glaze_ramp.outputs["Color"], shader.inputs["Base Color"])
     elif kind == "apple":
         shader.inputs["Roughness"].default_value = 0.42
         coat = shader.inputs.get("Coat Weight") or shader.inputs.get("Clearcoat")
@@ -122,6 +142,19 @@ def create_material(name, kind):
         links.new(ramp.outputs["Color"], shader.inputs["Base Color"])
         links.new(noise.outputs["Fac"], bump.inputs["Height"])
         links.new(bump.outputs["Normal"], shader.inputs["Normal"])
+
+        if treatment == "illustrated":
+            # Softer satin skin, a warmer red/orange value range, and low-
+            # contrast pigment variation avoid a polished CG product finish.
+            shader.inputs["Roughness"].default_value = 0.58
+            if coat is not None:
+                coat.default_value = 0.025
+            ramp.color_ramp.elements[0].color = (0.19, 0.012, 0.012, 1.0)
+            ramp.color_ramp.elements[1].color = (0.50, 0.065, 0.026, 1.0)
+            noise.inputs["Scale"].default_value = 3.4
+            noise.inputs["Detail"].default_value = 1.35
+            bump.inputs["Strength"].default_value = 0.012
+            bump.inputs["Distance"].default_value = 0.005
     elif kind == "metal":
         shader.inputs["Base Color"].default_value = (0.48, 0.52, 0.58, 1.0)
         shader.inputs["Metallic"].default_value = 0.88
@@ -160,7 +193,7 @@ def create_material(name, kind):
     return material
 
 
-def create_ground():
+def create_ground(treatment="baseline"):
     # A 360-degree cyclorama replaces the finite floor plane. The raised,
     # rounded perimeter keeps distant studio horizons out of low camera views.
     floor_height = STUDIO_FLOOR_HEIGHT
@@ -219,6 +252,10 @@ def create_ground():
     shader = principled_node(material)
     shader.inputs["Base Color"].default_value = (0.255, 0.235, 0.215, 1.0)
     shader.inputs["Roughness"].default_value = 0.94
+    if treatment == "illustrated":
+        # Warm paper/linen neutral: a quiet, lighter field behind the objects.
+        shader.inputs["Base Color"].default_value = (0.34, 0.30, 0.25, 1.0)
+        shader.inputs["Roughness"].default_value = 0.98
     ground.data.materials.append(material)
     return ground
 
@@ -238,20 +275,29 @@ def create_camera(location, resolution):
     return camera
 
 
-def create_lighting():
+def create_lighting(treatment="baseline"):
     world = bpy.context.scene.world
     world.use_nodes = True
     world.node_tree.nodes["Background"].inputs["Color"].default_value = (0.28, 0.30, 0.34, 1.0)
     world.node_tree.nodes["Background"].inputs["Strength"].default_value = 0.36
 
     lights = [
-        ("Key", (-3.8, -4.5, 6.0), 780.0, 5.5),
-        ("Fill", (4.0, -1.0, 2.8), 300.0, 5.0),
-        ("Rim", (1.0, 4.0, 4.5), 480.0, 4.5),
+        ("Key", (-3.8, -4.5, 6.0), 780.0, 5.5, (1.0, 1.0, 1.0)),
+        ("Fill", (4.0, -1.0, 2.8), 300.0, 5.0, (1.0, 1.0, 1.0)),
+        ("Rim", (1.0, 4.0, 4.5), 480.0, 4.5, (1.0, 1.0, 1.0)),
     ]
-    for name, location, power, size in lights:
+    if treatment == "illustrated":
+        world.node_tree.nodes["Background"].inputs["Color"].default_value = (0.30, 0.27, 0.24, 1.0)
+        world.node_tree.nodes["Background"].inputs["Strength"].default_value = 0.30
+        lights = [
+            ("Key", (-3.8, -4.5, 6.0), 820.0, 6.8, (1.0, 0.86, 0.72)),
+            ("Fill", (4.0, -1.0, 2.8), 245.0, 6.0, (0.78, 0.86, 1.0)),
+            ("Rim", (1.0, 4.0, 4.5), 360.0, 5.5, (1.0, 0.91, 0.80)),
+        ]
+    for name, location, power, size, color in lights:
         data = bpy.data.lights.new(name, "AREA")
         data.energy = power
+        data.color = color
         data.shape = "DISK"
         data.size = size
         light = bpy.data.objects.new(name, data)
@@ -544,6 +590,34 @@ def render_view(output_dir, filename, camera_location, resolution):
     return filename
 
 
+def render_illustrated_still_life(output_dir, resolution):
+    # Rebuild the same geometry and composition as the baseline still-life
+    # render. Only material response, studio light colour/size, and cyclorama
+    # tone differ, so the image pair isolates the art-direction treatment.
+    clear_scene()
+    vase = create_lathed_vase("IllustratedStillLifeVase", (-0.95, 0.45, -1.08))
+    apple = create_grounded_apple("IllustratedStillLifeApple", 1.0, -0.35)
+    vase_material = create_material("IllustratedCeramicGlaze", "ceramic", "illustrated")
+    apple_material = create_material("IllustratedAppleSkin", "apple", "illustrated")
+    assign_material(vase, vase_material)
+    assign_material(apple, apple_material)
+    create_ground("illustrated")
+    create_lighting("illustrated")
+
+    filename = "still-life-illustrated-treatment.png"
+    camera_location = (4.6, -8.5, 4.0)
+    started = time.perf_counter()
+    render_view(output_dir, filename, camera_location, resolution)
+    return {
+        "file": filename,
+        "scene": "still-life-art-direction-study",
+        "treatment": "illustrated",
+        "geometry": "same lathed vase and grounded apple as baseline",
+        "camera": list(camera_location),
+        "render_seconds": round(time.perf_counter() - started, 3),
+    }
+
+
 def render_quality_variant(output_dir, sample_count, denoise, resolution):
     scene = bpy.context.scene
     scene.cycles.samples = sample_count
@@ -728,7 +802,18 @@ def main():
             "five-lobed silhouette and recessed stem well",
             "curved tapered stem",
         ],
+        "camera": [4.6, -8.5, 4.0],
     })
+
+    illustrated_render = render_illustrated_still_life(arguments.output_dir, arguments.resolution)
+    manifest["renders"].append(illustrated_render)
+    manifest["art_direction_study"] = {
+        "baseline": "still-life-vase-and-apple.png",
+        "illustrated": illustrated_render["file"],
+        "comparison": "same geometry, composition, camera, resolution, sample count, and denoising; material and studio treatment differ",
+        "samples": arguments.samples,
+        "denoising": arguments.denoise,
+    }
 
     manifest_path = os.path.join(arguments.output_dir, "manifest.json")
     with open(manifest_path, "w", encoding="utf-8") as manifest_file:
