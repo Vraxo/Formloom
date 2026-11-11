@@ -5,6 +5,7 @@ import json
 import math
 import os
 import sys
+import time
 
 import bpy
 from mathutils import Vector
@@ -16,7 +17,9 @@ def parse_arguments():
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--resolution", type=int, default=512)
     parser.add_argument("--samples", type=int, default=32)
+    parser.add_argument("--denoise", choices=("true", "false"), default="false")
     parsed = parser.parse_args(arguments)
+    parsed.denoise = parsed.denoise == "true"
     if not 1 <= parsed.samples <= 256:
         parser.error("--samples must be between 1 and 256")
     if not 64 <= parsed.resolution <= 2048:
@@ -85,15 +88,15 @@ def create_material(name, kind):
         shader.inputs["Base Color"].default_value = (0.62, 0.19, 0.075, 1.0)
     elif kind == "ceramic":
         shader.inputs["Base Color"].default_value = (0.045, 0.24, 0.48, 1.0)
-        shader.inputs["Roughness"].default_value = 0.2
+        shader.inputs["Roughness"].default_value = 0.28
         coat = shader.inputs.get("Coat Weight") or shader.inputs.get("Clearcoat")
         if coat is not None:
-            coat.default_value = 0.28
+            coat.default_value = 0.18
     elif kind == "apple":
-        shader.inputs["Roughness"].default_value = 0.3
+        shader.inputs["Roughness"].default_value = 0.42
         coat = shader.inputs.get("Coat Weight") or shader.inputs.get("Clearcoat")
         if coat is not None:
-            coat.default_value = 0.2
+            coat.default_value = 0.09
 
         coordinates = material.node_tree.nodes.new("ShaderNodeTexCoord")
         noise = material.node_tree.nodes.new("ShaderNodeTexNoise")
@@ -153,13 +156,64 @@ def create_material(name, kind):
 
 
 def create_ground():
-    bpy.ops.mesh.primitive_plane_add(size=200.0, location=(0.0, 0.0, -1.085))
-    ground = bpy.context.object
-    ground.name = "Ground"
-    material = bpy.data.materials.new("WarmNeutralGround")
+    # A 360-degree cyclorama replaces the finite floor plane. The raised,
+    # rounded perimeter keeps distant studio horizons out of low camera views.
+    floor_height = -1.085
+    profile = [
+        (14.0, floor_height),
+        (14.7, floor_height + 0.01),
+        (15.3, floor_height + 0.08),
+        (15.9, floor_height + 0.28),
+        (16.35, floor_height + 0.62),
+        (16.62, floor_height + 1.08),
+        (16.78, floor_height + 1.72),
+        (16.82, floor_height + 2.8),
+        (16.82, floor_height + 9.0),
+    ]
+    segments = 128
+    vertices = [(0.0, 0.0, floor_height)]
+    faces = []
+
+    for radius, height in profile:
+        for segment in range(segments):
+            angle = 2.0 * math.pi * segment / segments
+            vertices.append((
+                radius * math.cos(angle),
+                radius * math.sin(angle),
+                height,
+            ))
+
+    for segment in range(segments):
+        faces.append((
+            0,
+            1 + segment,
+            1 + (segment + 1) % segments,
+        ))
+
+    for ring in range(len(profile) - 1):
+        inner_start = 1 + ring * segments
+        outer_start = inner_start + segments
+        for segment in range(segments):
+            next_segment = (segment + 1) % segments
+            faces.append((
+                inner_start + segment,
+                outer_start + segment,
+                outer_start + next_segment,
+                inner_start + next_segment,
+            ))
+
+    mesh = bpy.data.meshes.new("StudioCycloramaMesh")
+    mesh.from_pydata(vertices, [], faces)
+    mesh.update()
+    ground = bpy.data.objects.new("StudioCyclorama", mesh)
+    bpy.context.collection.objects.link(ground)
+    for polygon in mesh.polygons:
+        polygon.use_smooth = True
+
+    material = bpy.data.materials.new("WarmNeutralCyclorama")
     shader = principled_node(material)
-    shader.inputs["Base Color"].default_value = (0.19, 0.17, 0.15, 1.0)
-    shader.inputs["Roughness"].default_value = 0.86
+    shader.inputs["Base Color"].default_value = (0.255, 0.235, 0.215, 1.0)
+    shader.inputs["Roughness"].default_value = 0.94
     ground.data.materials.append(material)
     return ground
 
@@ -182,13 +236,13 @@ def create_camera(location, resolution):
 def create_lighting():
     world = bpy.context.scene.world
     world.use_nodes = True
-    world.node_tree.nodes["Background"].inputs["Color"].default_value = (0.22, 0.25, 0.31, 1.0)
-    world.node_tree.nodes["Background"].inputs["Strength"].default_value = 0.28
+    world.node_tree.nodes["Background"].inputs["Color"].default_value = (0.28, 0.30, 0.34, 1.0)
+    world.node_tree.nodes["Background"].inputs["Strength"].default_value = 0.36
 
     lights = [
-        ("Key", (-3.8, -4.5, 6.0), 850.0, 4.0),
-        ("Fill", (4.0, -1.0, 2.8), 320.0, 3.5),
-        ("Rim", (1.0, 4.0, 4.5), 600.0, 3.0),
+        ("Key", (-3.8, -4.5, 6.0), 780.0, 5.5),
+        ("Fill", (4.0, -1.0, 2.8), 300.0, 5.0),
+        ("Rim", (1.0, 4.0, 4.5), 480.0, 4.5),
     ]
     for name, location, power, size in lights:
         data = bpy.data.lights.new(name, "AREA")
@@ -201,12 +255,14 @@ def create_lighting():
         light.rotation_euler = (Vector((0.0, 0.0, 0.0)) - light.location).to_track_quat("-Z", "Y").to_euler()
 
 
-def configure_render(resolution, samples):
+def configure_render(resolution, samples, denoise):
     scene = bpy.context.scene
     scene.render.engine = "CYCLES"
     scene.cycles.device = "CPU"
     scene.cycles.samples = samples
-    scene.cycles.use_denoising = False
+    scene.cycles.use_denoising = denoise
+    if denoise:
+        scene.cycles.denoiser = "OPENIMAGEDENOISE"
     scene.render.resolution_percentage = 100
     scene.render.image_settings.file_format = "PNG"
     scene.render.image_settings.color_mode = "RGBA"
@@ -216,7 +272,6 @@ def configure_render(resolution, samples):
     scene.render.resolution_x = resolution
     scene.render.resolution_y = resolution
     scene.render.image_settings.compression = 15
-
 
 
 def create_parametric_sphere(name, location, scale=(1.0, 1.0, 1.0), segments=48, rings=24):
@@ -476,6 +531,31 @@ def render_view(output_dir, filename, camera_location, resolution):
     return filename
 
 
+def render_quality_variant(output_dir, sample_count, denoise, resolution):
+    scene = bpy.context.scene
+    scene.cycles.samples = sample_count
+    scene.cycles.use_denoising = denoise
+    if denoise:
+        scene.cycles.denoiser = "OPENIMAGEDENOISE"
+
+    filename = f"apple-quality-{sample_count:03d}-samples"
+    if denoise:
+        filename += "-denoised"
+    filename += ".png"
+
+    started = time.perf_counter()
+    render_view(output_dir, filename, (3.8, -6.4, 2.2), resolution)
+    elapsed = time.perf_counter() - started
+    return {
+        "file": filename,
+        "scene": "apple-quality-study",
+        "samples": sample_count,
+        "denoising": denoise,
+        "render_seconds": round(elapsed, 3),
+        "view": "three-quarter",
+    }
+
+
 def main():
     arguments = parse_arguments()
     os.makedirs(arguments.output_dir, exist_ok=True)
@@ -483,7 +563,7 @@ def main():
     cube = create_cube()
     create_ground()
     create_lighting()
-    configure_render(arguments.resolution, arguments.samples)
+    configure_render(arguments.resolution, arguments.samples, arguments.denoise)
 
     materials = ("clay", "ceramic", "metal", "wood")
     views = {
@@ -497,6 +577,8 @@ def main():
         "device": "CPU",
         "resolution": [arguments.resolution, arguments.resolution],
         "samples": arguments.samples,
+        "denoising": arguments.denoise,
+        "denoiser": "OPENIMAGEDENOISE" if arguments.denoise else None,
         "geometry": {
             "source": "explicit eight-vertex, six-face mesh",
             "bevel_width": 0.075,
@@ -587,6 +669,28 @@ def main():
                 "curved tapered stem",
             ],
         })
+
+    # Compare the exact same apple and camera at progressively higher sample
+    # counts, then compare a denoised render at 64 samples. Timings are written
+    # to the manifest so quality can be weighed against CPU cost.
+    quality_study = []
+    for sample_count in (12, 32, 64, 128):
+        quality_study.append(render_quality_variant(
+            arguments.output_dir,
+            sample_count,
+            False,
+            arguments.resolution,
+        ))
+    quality_study.append(render_quality_variant(
+        arguments.output_dir,
+        64,
+        True,
+        arguments.resolution,
+    ))
+    manifest["quality_study"] = quality_study
+    manifest["renders"].extend(quality_study)
+
+    configure_render(arguments.resolution, arguments.samples, arguments.denoise)
 
     # Reuse the same fruit mesh in a minimal still-life composition.
     clear_scene()

@@ -144,30 +144,45 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      - name: Install Blender
+      - name: Install official Blender distribution with OpenImageDenoise
+        shell: bash
         run: |
+          set -euo pipefail
+          version="4.5.16"
+          archive="blender-\${version}-linux-x64.tar.xz"
+          checksum="blender-\${version}.sha256"
+          release_url="https://download.blender.org/release/Blender4.5"
           sudo apt-get update
-          sudo apt-get install --no-install-recommends -y blender
+          sudo apt-get install --no-install-recommends -y \
+            libegl1 libgl1 libice6 libsm6 libx11-6 libxfixes3 libxi6 \
+            libxkbcommon0 libxrender1 libxxf86vm1
+          curl --fail --location --retry 3 --output "$RUNNER_TEMP/$archive" "$release_url/$archive"
+          curl --fail --location --retry 3 --output "$RUNNER_TEMP/$checksum" "$release_url/$checksum"
+          grep -F "$archive" "$RUNNER_TEMP/$checksum" | (cd "$RUNNER_TEMP" && sha256sum --check --strict -)
+          tar -xJf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/blender-\${version}-linux-x64" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/blender-\${version}-linux-x64/blender" --version
 
-      - name: Render procedural cube variations
+      - name: Render procedural geometry and quality comparisons
         run: |
           dotnet run --project experiments/Formloom.BlenderCube/Formloom.BlenderCube.csproj --configuration Release -- \
             --blender blender \
             --output-dir artifacts/blender-cube \
             --resolution 384 \
-            --samples 12
+            --samples 12 \
+            --denoise true
 
       - name: Verify Blender experiment outputs
         run: |
           set -euo pipefail
           test -s artifacts/blender-cube/manifest.json
           count="$(find artifacts/blender-cube -maxdepth 1 -type f -name '*.png' | wc -l)"
-          if [[ "$count" -ne 19 ]]; then
-            echo "Expected 19 Blender renders, found $count" >&2
+          if [[ "$count" -ne 24 ]]; then
+            echo "Expected 24 Blender renders, found $count" >&2
             exit 1
           fi
 
-      - name: Upload Blender geometry review renders
+      - name: Upload Blender rendering-quality review renders
         if: always()
         uses: actions/upload-artifact@v4
         with:
