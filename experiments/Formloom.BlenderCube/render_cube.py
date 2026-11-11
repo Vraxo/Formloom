@@ -481,45 +481,25 @@ def interpolate_apple_profile(profile, subdivisions=8):
 
 
 def create_apple_stem(name, location, scale):
-    cavity_location = (
-        location[0],
-        location[1],
-        location[2] + 0.585 * scale[2],
-    )
-    bpy.ops.mesh.primitive_uv_sphere_add(
-        segments=24,
-        ring_count=12,
-        radius=0.055,
-        location=cavity_location,
-    )
-    cavity = bpy.context.object
-    cavity.name = name + "StemWell"
-    cavity.scale = (1.0, 1.0, 0.22)
-    for polygon in cavity.data.polygons:
-        polygon.use_smooth = True
-
-    cavity_material = bpy.data.materials.new(name + "StemWellMaterial")
-    cavity_shader = principled_node(cavity_material)
-    cavity_shader.inputs["Base Color"].default_value = (0.075, 0.022, 0.012, 1.0)
-    cavity_shader.inputs["Roughness"].default_value = 0.78
-    cavity.data.materials.append(cavity_material)
-
+    # The apple mesh itself forms the shallow recessed stem well. Keep the
+    # stem rooted inside that depression rather than adding a raised dark
+    # sphere, which reads like a glossy button on the fruit.
     stem_curve = bpy.data.curves.new(name + "StemCurve", "CURVE")
     stem_curve.dimensions = "3D"
     stem_curve.resolution_u = 16
-    stem_curve.bevel_depth = 0.025
-    stem_curve.bevel_resolution = 4
+    stem_curve.bevel_depth = 0.016
+    stem_curve.bevel_resolution = 3
     spline = stem_curve.splines.new("BEZIER")
     spline.bezier_points.add(2)
     stem_points = (
-        (0.0, 0.0, 0.575 * scale[2]),
-        (0.018 * scale[0], 0.004 * scale[1], 0.72 * scale[2]),
-        (0.065 * scale[0], 0.018 * scale[1], 0.88 * scale[2]),
+        (0.0, 0.0, 0.395 * scale[2]),
+        (0.012 * scale[0], 0.004 * scale[1], 0.54 * scale[2]),
+        (0.055 * scale[0], 0.016 * scale[1], 0.78 * scale[2]),
     )
     for point, coordinate, radius in zip(
         spline.bezier_points,
         stem_points,
-        (1.0, 0.78, 0.52),
+        (0.95, 0.68, 0.32),
     ):
         point.co = coordinate
         point.radius = radius
@@ -532,7 +512,7 @@ def create_apple_stem(name, location, scale):
     stem_material = bpy.data.materials.new(name + "StemMaterial")
     stem_shader = principled_node(stem_material)
     stem_shader.inputs["Base Color"].default_value = (0.16, 0.055, 0.018, 1.0)
-    stem_shader.inputs["Roughness"].default_value = 0.68
+    stem_shader.inputs["Roughness"].default_value = 0.82
     stem.data.materials.append(stem_material)
 
 
@@ -549,7 +529,10 @@ def create_apple(name, location, scale=(0.82, 0.78, 0.92), segments=96):
         (-0.55, 0.52), (-0.43, 0.62), (-0.26, 0.71),
         (-0.06, 0.78), (0.16, 0.80),
         (0.34, 0.76), (0.48, 0.66), (0.54, 0.51),
-        (0.55, 0.36), (0.51, 0.22), (0.48, 0.10), (0.47, 0.02),
+        # The crown rolls inward into a real shallow stem well instead of
+        # tapering to a pointed top. This keeps the shoulder full and soft.
+        (0.55, 0.38), (0.54, 0.29), (0.50, 0.21),
+        (0.43, 0.13), (0.405, 0.07), (0.395, 0.015),
     ]
     sampled_profile = interpolate_apple_profile(profile)
     vertices = []
@@ -564,9 +547,9 @@ def create_apple(name, location, scale=(0.82, 0.78, 0.92), segments=96):
             five_lobes = math.cos(5.0 * angle + 0.35)
             subtle_irregularity = math.cos(3.0 * angle - 0.8)
             radial_variation = (
-                0.032 * five_lobes + 0.008 * subtle_irregularity
+                0.042 * five_lobes + 0.012 * subtle_irregularity
             ) * lobe_strength
-            vertical_variation = 0.012 * five_lobes * lobe_strength
+            vertical_variation = 0.018 * five_lobes * lobe_strength
             radius = base_radius * (1.0 + radial_variation)
             vertices.append((
                 radius * math.cos(angle) * scale[0],
@@ -847,16 +830,17 @@ def render_photorealistic_still_life(output_dir, resolution):
 
     apple_material = create_material("PhotorealisticAppleSkin", "apple")
     apple_shader = apple_material.node_tree.nodes.get("Principled BSDF")
-    apple_shader.inputs["Roughness"].default_value = 0.30
+    # Real apple skin is satin-like, not a clear-coated plastic surface.
+    apple_shader.inputs["Roughness"].default_value = 0.42
     apple_coat = apple_shader.inputs.get("Coat Weight") or apple_shader.inputs.get("Clearcoat")
     if apple_coat is not None:
-        apple_coat.default_value = 0.16
+        apple_coat.default_value = 0.045
     micro_noise = apple_material.node_tree.nodes.new("ShaderNodeTexNoise")
     micro_noise.inputs["Scale"].default_value = 115.0
     micro_noise.inputs["Detail"].default_value = 2.0
     micro_bump = apple_material.node_tree.nodes.new("ShaderNodeBump")
-    micro_bump.inputs["Strength"].default_value = 0.12
-    micro_bump.inputs["Distance"].default_value = 0.0018
+    micro_bump.inputs["Strength"].default_value = 0.045
+    micro_bump.inputs["Distance"].default_value = 0.0009
     apple_coordinates = apple_material.node_tree.nodes.new("ShaderNodeTexCoord")
     apple_links = apple_material.node_tree.links
     apple_links.new(apple_coordinates.outputs["Generated"], micro_noise.inputs["Vector"])
