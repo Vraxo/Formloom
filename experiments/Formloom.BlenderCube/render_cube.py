@@ -799,11 +799,14 @@ def create_photorealistic_lighting():
     world = bpy.context.scene.world
     world.use_nodes = True
     world.node_tree.nodes["Background"].inputs["Color"].default_value = (0.32, 0.36, 0.42, 1.0)
-    world.node_tree.nodes["Background"].inputs["Strength"].default_value = 0.24
+    world.node_tree.nodes["Background"].inputs["Strength"].default_value = 0.30
     lights = [
-        ("LargeWindowKey", (-3.8, -4.5, 6.0), 1150.0, 4.8, (1.0, 0.91, 0.80)),
-        ("SoftSkyFill", (4.0, -1.0, 3.0), 210.0, 5.5, (0.78, 0.86, 1.0)),
-        ("WarmBackRim", (1.0, 4.0, 4.5), 420.0, 3.8, (1.0, 0.88, 0.72)),
+        # A broad window source gives the objects soft, readable form shadows
+        # instead of the hard-edged studio/product-light look.
+        ("LargeWindowKey", (-3.8, -4.5, 6.0), 1050.0, 7.5, (1.0, 0.93, 0.84)),
+        ("SoftSkyFill", (4.0, -1.0, 3.0), 300.0, 7.0, (0.82, 0.88, 1.0)),
+        # Keep a gentle separation highlight, not a bright outline.
+        ("WarmBackRim", (1.0, 4.0, 4.5), 180.0, 6.0, (1.0, 0.91, 0.80)),
     ]
     for name, location, power, size, color in lights:
         data = bpy.data.lights.new(name, "AREA")
