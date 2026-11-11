@@ -720,41 +720,38 @@ def render_illustrated_still_life(output_dir, resolution):
 def create_photorealistic_wood_material():
     material = bpy.data.materials.new("PhotorealisticNaturalOak")
     shader = principled_node(material)
-    shader.inputs["Roughness"].default_value = 0.68
+    shader.inputs["Roughness"].default_value = 0.62
 
     coordinates = material.node_tree.nodes.new("ShaderNodeTexCoord")
 
-    # Stretch broad noise across the board so the grain follows its long axis.
-    # Low distortion and a narrow colour range keep the pattern organic rather
-    # than turning it into high-contrast waves or mottled camouflage.
+    # Long, gently wandering grain lines, with restrained tonal contrast.
     grain_mapping = material.node_tree.nodes.new("ShaderNodeMapping")
-    grain_mapping.inputs["Scale"].default_value = (1.0, 4.5, 1.0)
+    grain_mapping.inputs["Scale"].default_value = (1.0, 18.0, 1.0)
     grain_noise = material.node_tree.nodes.new("ShaderNodeTexNoise")
-    grain_noise.inputs["Scale"].default_value = 2.4
-    grain_noise.inputs["Detail"].default_value = 2.2
-    grain_noise.inputs["Roughness"].default_value = 0.58
-    grain_noise.inputs["Distortion"].default_value = 0.18
+    grain_noise.inputs["Scale"].default_value = 3.2
+    grain_noise.inputs["Detail"].default_value = 2.6
+    grain_noise.inputs["Roughness"].default_value = 0.62
+    grain_noise.inputs["Distortion"].default_value = 0.32
 
     color_ramp = material.node_tree.nodes.new("ShaderNodeValToRGB")
-    color_ramp.color_ramp.elements[0].position = 0.22
-    color_ramp.color_ramp.elements[0].color = (0.16, 0.068, 0.027, 1.0)
-    middle = color_ramp.color_ramp.elements.new(0.52)
-    middle.color = (0.235, 0.115, 0.047, 1.0)
-    color_ramp.color_ramp.elements[1].position = 0.80
-    color_ramp.color_ramp.elements[1].color = (0.32, 0.175, 0.078, 1.0)
+    color_ramp.color_ramp.elements[0].position = 0.24
+    color_ramp.color_ramp.elements[0].color = (0.145, 0.060, 0.024, 1.0)
+    middle = color_ramp.color_ramp.elements.new(0.50)
+    middle.color = (0.225, 0.108, 0.043, 1.0)
+    color_ramp.color_ramp.elements[1].position = 0.76
+    color_ramp.color_ramp.elements[1].color = (0.295, 0.153, 0.064, 1.0)
 
-    # Fine, directionally stretched noise adds restrained wood pores without
-    # making the tabletop look rough or deeply embossed.
+    # A separate fine-grain layer supplies a slight tactile surface response.
     pore_mapping = material.node_tree.nodes.new("ShaderNodeMapping")
-    pore_mapping.inputs["Scale"].default_value = (1.0, 34.0, 1.0)
+    pore_mapping.inputs["Scale"].default_value = (1.0, 52.0, 1.0)
     pore_noise = material.node_tree.nodes.new("ShaderNodeTexNoise")
-    pore_noise.inputs["Scale"].default_value = 2.0
+    pore_noise.inputs["Scale"].default_value = 3.0
     pore_noise.inputs["Detail"].default_value = 2.0
-    pore_noise.inputs["Roughness"].default_value = 0.62
+    pore_noise.inputs["Roughness"].default_value = 0.65
 
     bump = material.node_tree.nodes.new("ShaderNodeBump")
-    bump.inputs["Strength"].default_value = 0.028
-    bump.inputs["Distance"].default_value = 0.003
+    bump.inputs["Strength"].default_value = 0.045
+    bump.inputs["Distance"].default_value = 0.006
 
     links = material.node_tree.links
     generated = coordinates.outputs["Generated"]
