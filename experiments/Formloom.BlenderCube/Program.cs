@@ -15,6 +15,7 @@ internal static class Program
         {
             throw new ArgumentException("Option --samples must be between 1 and 256.");
         }
+
         var scriptPath = Path.Combine(AppContext.BaseDirectory, "render_cube.py");
 
         if (!File.Exists(scriptPath))
