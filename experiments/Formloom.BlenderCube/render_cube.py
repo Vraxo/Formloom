@@ -2,7 +2,6 @@
 
 import argparse
 import json
-import math
 import os
 import sys
 
@@ -236,8 +235,10 @@ def main():
                 "view": view_name,
             })
             camera = bpy.context.scene.camera
+            camera_data = camera.data
+            bpy.context.scene.camera = None
             bpy.data.objects.remove(camera, do_unlink=True)
-            bpy.data.cameras.remove(camera.data)
+            bpy.data.cameras.remove(camera_data)
 
     manifest_path = os.path.join(arguments.output_dir, "manifest.json")
     with open(manifest_path, "w", encoding="utf-8") as manifest_file:
