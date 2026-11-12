@@ -279,6 +279,22 @@
             "type": "string",
             "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
           }
+        },
+        "gradients": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/linearGradient"
+          }
+        },
+        "gradientOverlays": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/$defs/linearGradient"
+            }
+          }
         }
       }
     },
@@ -775,6 +791,80 @@
         },
         "bend": {
           "$ref": "#/$defs/numberExpression"
+        }
+      }
+    },
+    "linearGradient": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end",
+        "stops"
+      ],
+      "properties": {
+        "start": {
+          "$ref": "#/$defs/point"
+        },
+        "end": {
+          "$ref": "#/$defs/point"
+        },
+        "startLandmark": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "endLandmark": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "stops": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "$ref": "#/$defs/linearGradientStop"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "startLandmark"
+            ]
+          },
+          "then": {
+            "required": [
+              "endLandmark"
+            ]
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "endLandmark"
+            ]
+          },
+          "then": {
+            "required": [
+              "startLandmark"
+            ]
+          }
+        }
+      ]
+    },
+    "linearGradientStop": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "offset",
+        "token"
+      ],
+      "properties": {
+        "offset": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "token": {
+          "$ref": "#/$defs/nonEmptyString"
         }
       }
     }

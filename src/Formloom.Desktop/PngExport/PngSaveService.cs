@@ -6,8 +6,6 @@ namespace Formloom.Desktop.PngExport;
 
 internal sealed class PngSaveService(PngFileWriter writer, ILogger<PngSaveService> logger)
 {
-    // Subject tokens the renderer can emit. Anything else falls back to "fruit", so a new
-    // subject token has to be whitelisted here before it can reach a file name.
     private static readonly string[] KnownSubjects =
     [
         "apple", "pear", "orange", "fruit-group",
@@ -31,7 +29,7 @@ internal sealed class PngSaveService(PngFileWriter writer, ILogger<PngSaveServic
 
     public static string SuggestedFileName(RenderedImage image, ulong seed)
     {
-        var subject = Array.IndexOf(KnownSubjects, image.Subject) >= 0 ? image.Subject : "fruit";
+        var subject = IsKnownSubject(image.Subject) ? image.Subject : "fruit";
         return FormattableString.Invariant($"formloom-{subject}-seed-{seed}.png");
     }
 
@@ -51,5 +49,33 @@ internal sealed class PngSaveService(PngFileWriter writer, ILogger<PngSaveServic
             logger.LogError(exception, "Saving the generated PNG failed");
             return new(true, "Could not save the PNG. Check the folder permissions and available disk space, then try again.");
         }
+    }
+
+    private static bool IsKnownSubject(string subject)
+    {
+        if (Array.IndexOf(KnownSubjects, subject) >= 0)
+        {
+            return true;
+        }
+
+        if (!subject.StartsWith("model-", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var suffix = subject.EndsWith("-in-blue-vase", StringComparison.Ordinal)
+            ? "-in-blue-vase"
+            : subject.EndsWith("-in-cream-vase", StringComparison.Ordinal)
+                ? "-in-cream-vase"
+                : string.Empty;
+        if (suffix.Length == 0)
+        {
+            return false;
+        }
+
+        var modelId = subject["model-".Length..^suffix.Length];
+        return modelId.Length > 0 &&
+            modelId.Split('-').All(part =>
+                part.Length > 0 && part.All(character => char.IsAsciiLetterOrDigit(character)));
     }
 }

@@ -131,7 +131,7 @@ This is the output contract only. It does not yet interpret ModelNodeDefinition,
 
 Definitions describe appearance without SkiaSharp types. A material variant contains named color tokens (petal base/light/shadow/edge/fold, stem/leaf base/light/edge, etc.). The first typed Core DTOs and schema represent these token maps. Renderer-neutral material slot/style definitions (fills, gradients, strokes, and detail bindings) still need to be finalized with the generic geometry output design. Parts will eventually bind to named material slots.
 
-The generic style vocabulary should begin with only what the rose needs: solid fill, linear/radial gradient with explicit stops, stroke, optional secondary detail paths, opacity, and supported blend/interpolation. Gradient endpoints may reference geometry landmarks such as a petal's \`root\` and \`tip\`; they must not be hard-coded scene coordinates.
+The generic style vocabulary should begin with only what the rose needs: solid fill, linear/radial gradient with explicit stops, stroke, optional secondary detail paths, opacity, and supported blend/interpolation. A gradient may use scene-normalized start/end coordinates or a pair of per-path landmark names (for example, root and tip). Landmark-anchored gradients resolve against each evaluated path independently, so repeated or rotated geometry receives a material gradient aligned to its own construction direction. Scene-normalized endpoints remain required fallback values and preserve compatibility with existing definitions.
 
 Skia rendering converts the renderer-neutral style into backend paints and shaders. Silhouette is a generic render pass over geometry. Detail omission filters generic detail parts/roles, not species-specific methods. Do not build a universal shading language.
 
@@ -268,7 +268,7 @@ The five current operation nodes produce the following results:
 | `array.radial` | Deterministically varied profile instances, each with a stable path ID and optional material tone. |
 | `geometry.group` | Child paths flattened into the declared group-member order. |
 
-The final model outputs are flattened in output declaration order and passed through `ModelGeometryValidator`. The evaluator preserves path material-slot keys, optional 0..1 material tone, and named `attachment`/`root`/`tip` landmarks for profile maps. The radial `tone` field is optional in schema v1; when absent, its base is 0 so existing v1 files remain valid.
+The final model outputs are flattened in output declaration order and passed through `ModelGeometryValidator`. The evaluator preserves path material-slot keys, optional 0..1 material tone, and named `attachment`/`root`/`tip` landmarks for profile maps. A renderer interprets path tone generically as a value hierarchy: 0 is darkest, 0.5 is neutral, and 1 is brightest; it modulates the selected solid color or each stop of the selected gradient without changing the model's palette tokens. The radial `tone` field is optional in schema v1; when absent, its base is 0 so existing v1 files remain valid.
 
 Expected definition/context/operation failures are returned as structured diagnostics carrying the model ID and a location such as `nodes[3](bloom.outer).radiusX`. The evaluator is callable from Core tests and has no Skia or desktop dependency.
 

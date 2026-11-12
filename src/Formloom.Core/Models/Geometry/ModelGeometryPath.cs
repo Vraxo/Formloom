@@ -11,6 +11,9 @@ public sealed record ModelGeometryPath(
     string? MaterialSlot,
     bool Detail)
 {
+    /// <summary>
+    /// Gets the optional normalized material tone: 0 is darkest, 0.5 is neutral, and 1 is brightest.
+    /// </summary>
     public float? MaterialTone { get; init; }
 
     /// <summary>Gets the optional stroke width in scene-normalized coordinate units.</summary>

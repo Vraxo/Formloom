@@ -343,6 +343,76 @@ public static class ModelDefinitionValidator
                 }
             }
 
+            if (material.GradientOverlays is null)
+            {
+                add("definition.invalid-material-gradient-overlays", $"${path}.gradientOverlays", "Material gradient overlays must be initialized.");
+                continue;
+            }
+
+            foreach (var (slot, overlays) in material.GradientOverlays)
+            {
+                var overlayPath = $"${path}.gradientOverlays.{slot}";
+                if (string.IsNullOrWhiteSpace(slot) || !material.Tokens.ContainsKey(slot) || overlays.IsDefaultOrEmpty)
+                {
+                    add("definition.invalid-material-gradient-overlay", overlayPath, "Gradient overlays require an existing material slot and at least one initialized gradient.");
+                    continue;
+                }
+
+                for (var index = 0; index < overlays.Length; index++)
+                {
+                    var gradient = overlays[index];
+                    var gradientPath = $${overlayPath}[${index}]";
+                    if (gradient is null)
+                    {
+                        add("definition.invalid-material-gradient-overlay", gradientPath, "A gradient overlay cannot be null.");
+                        continue;
+                    }
+
+                    var validStart = gradient.Start is { } startPoint &&
+                        float.IsFinite(startPoint.X) && float.IsFinite(startPoint.Y) &&
+                        startPoint.X is >= 0 and <= 1 && startPoint.Y is >= 0 and <= 1;
+                    var validEnd = gradient.End is { } endPoint &&
+                        float.IsFinite(endPoint.X) && float.IsFinite(endPoint.Y) &&
+                        endPoint.X is >= 0 and <= 1 && endPoint.Y is >= 0 and <= 1;
+                    if (!validStart || !validEnd || gradient.Start == gradient.End)
+                    {
+                        add("definition.invalid-gradient-overlay-endpoints", gradientPath, "Overlay endpoints must be distinct finite coordinates in the normalized 0..1 range.");
+                    }
+
+                    if ((gradient.StartLandmark is null) != (gradient.EndLandmark is null) ||
+                        (gradient.StartLandmark is not null &&
+                         (string.IsNullOrWhiteSpace(gradient.StartLandmark) || string.IsNullOrWhiteSpace(gradient.EndLandmark))))
+                    {
+                        add("definition.invalid-gradient-overlay-landmarks", gradientPath, "Overlay landmark names must either both be absent or both be non-empty.");
+                    }
+
+                    if (gradient.Stops.IsDefaultOrEmpty || gradient.Stops.Length < 2)
+                    {
+                        add("definition.invalid-gradient-overlay-stops", gradientPath, "A gradient overlay requires at least two color stops.");
+                        continue;
+                    }
+
+                    var previousOffset = -1f;
+                    for (var stopIndex = 0; stopIndex < gradient.Stops.Length; stopIndex++)
+                    {
+                        var stop = gradient.Stops[stopIndex];
+                        if (stop is null || !float.IsFinite(stop.Offset) ||
+                            stop.Offset is < 0 or > 1 || stop.Offset <= previousOffset)
+                        {
+                            add("definition.invalid-gradient-overlay-stop-offset", $${gradientPath}.stops[${stopIndex}].offset", "Overlay stop offsets must be finite, within 0..1, and strictly increasing.");
+                            continue;
+                        }
+
+                        if (string.IsNullOrWhiteSpace(stop.Token) || !material.Tokens.ContainsKey(stop.Token))
+                        {
+                            add("definition.invalid-gradient-overlay-stop-token", $${gradientPath}.stops[${stopIndex}].token", "Overlay stops must reference an existing material color token.");
+                        }
+
+                        previousOffset = stop.Offset;
+                    }
+                }
+            }
+
             if (material.Gradients is null)
             {
                 add("definition.invalid-material-gradients", $"{path}.gradients", "Material gradients must be initialized.");
@@ -372,6 +442,16 @@ public static class ModelDefinitionValidator
                 if (!validStart || !validEnd || gradient.Start == gradient.End)
                 {
                     add("definition.invalid-gradient-endpoints", $"{gradientPath}.start", "Gradient endpoints must be distinct finite coordinates in the normalized 0..1 range.");
+                }
+
+                if ((gradient.StartLandmark is null) != (gradient.EndLandmark is null) ||
+                    (gradient.StartLandmark is not null &&
+                     (string.IsNullOrWhiteSpace(gradient.StartLandmark) || string.IsNullOrWhiteSpace(gradient.EndLandmark))))
+                {
+                    add(
+                        "definition.invalid-gradient-landmarks",
+                        gradientPath,
+                        "Gradient startLandmark and endLandmark must either both be absent or both be non-empty names.");
                 }
 
                 if (gradient.Stops.IsDefaultOrEmpty || gradient.Stops.Length < 2)

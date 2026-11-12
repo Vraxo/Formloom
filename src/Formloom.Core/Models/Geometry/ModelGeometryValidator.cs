@@ -92,6 +92,8 @@ public static class ModelGeometryValidator
                 }
             }
 
+            ValidatePathGradientLandmarks(geometry, path, diagnostics);
+
             if (path.Segments.IsDefaultOrEmpty)
             {
                 diagnostics.Add(new("geometry.segments-required", path.Id, "A path must contain at least one cubic segment."));
@@ -102,6 +104,32 @@ public static class ModelGeometryValidator
         }
 
         return diagnostics.ToImmutable();
+    }
+
+    private static void ValidatePathGradientLandmarks(
+        ModelGeometry geometry,
+        ModelGeometryPath path,
+        ImmutableArray<ModelGeometryDiagnostic>.Builder diagnostics)
+    {
+        if (path.MaterialSlot is null ||
+            geometry.MaterialGradients is null ||
+            !geometry.MaterialGradients.TryGetValue(path.MaterialSlot, out var gradient) ||
+            gradient is null ||
+            gradient.StartLandmark is null ||
+            gradient.EndLandmark is null)
+        {
+            return;
+        }
+
+        if (path.Landmarks.IsDefault ||
+            !path.Landmarks.Any(item => string.Equals(item.Name, gradient.StartLandmark, StringComparison.Ordinal)) ||
+            !path.Landmarks.Any(item => string.Equals(item.Name, gradient.EndLandmark, StringComparison.Ordinal)))
+        {
+            diagnostics.Add(new(
+                "geometry.material-gradient-landmark-not-found",
+                path.Id,
+                $"Path '{path.Id}' must provide gradient landmarks '{gradient.StartLandmark}' and '{gradient.EndLandmark}'."));
+        }
     }
 
     private static void ValidateSegments(
@@ -141,49 +169,83 @@ public static class ModelGeometryValidator
         ModelGeometry geometry,
         ImmutableArray<ModelGeometryDiagnostic>.Builder diagnostics)
     {
-        if (geometry.MaterialGradients is null)
+        if (geometry.MaterialGradients is null || geometry.MaterialGradientOverlays is null)
         {
-            diagnostics.Add(new("geometry.material-gradients-uninitialized", null, "Material gradients must be initialized."));
+            diagnostics.Add(new("geometry.material-gradients-uninitialized", null, "Material gradient collections must be initialized."));
             return;
         }
 
         foreach (var (slot, gradient) in geometry.MaterialGradients)
         {
-            if (string.IsNullOrWhiteSpace(slot) || gradient is null)
+            ValidateGradient(geometry, slot, gradient, "geometry.material-gradient", diagnostics);
+        }
+
+        foreach (var (slot, overlays) in geometry.MaterialGradientOverlays)
+        {
+            if (string.IsNullOrWhiteSpace(slot) || overlays.IsDefaultOrEmpty)
             {
-                diagnostics.Add(new("geometry.material-gradient-invalid", null, "A material gradient requires a material slot and gradient definition."));
+                diagnostics.Add(new("geometry.material-gradient-overlays-invalid", slot, "Gradient overlays require a material slot and at least one initialized gradient."));
                 continue;
             }
 
-            if (!IsFinite(gradient.Start) || !IsFinite(gradient.End) ||
-                gradient.Start.X is < 0 or > 1 || gradient.Start.Y is < 0 or > 1 ||
-                gradient.End.X is < 0 or > 1 || gradient.End.Y is < 0 or > 1 ||
-                gradient.Start == gradient.End)
+            foreach (var overlay in overlays)
             {
-                diagnostics.Add(new("geometry.material-gradient-endpoints-invalid", slot, "Gradient endpoints must be distinct finite coordinates in the normalized 0..1 range."));
+                ValidateGradient(geometry, slot, overlay, "geometry.material-gradient-overlay", diagnostics);
+            }
+        }
+    }
+
+    private static void ValidateGradient(
+        ModelGeometry geometry,
+        string slot,
+        ModelGeometryLinearGradient? gradient,
+        string codePrefix,
+        ImmutableArray<ModelGeometryDiagnostic>.Builder diagnostics)
+    {
+        if (string.IsNullOrWhiteSpace(slot) || gradient is null)
+        {
+            diagnostics.Add(new(codePrefix + "-invalid", slot, "A material gradient requires a material slot and gradient definition."));
+            return;
+        }
+
+        if (!IsFinite(gradient.Start) || !IsFinite(gradient.End) ||
+            gradient.Start.X is < 0 or > 1 || gradient.Start.Y is < 0 or > 1 ||
+            gradient.End.X is < 0 or > 1 || gradient.End.Y is < 0 or > 1 ||
+            gradient.Start == gradient.End)
+        {
+            diagnostics.Add(new(codePrefix + "-endpoints-invalid", slot, "Gradient endpoints must be distinct finite coordinates in the normalized 0..1 range."));
+        }
+
+        if ((gradient.StartLandmark is null) != (gradient.EndLandmark is null) ||
+            (gradient.StartLandmark is not null &&
+             (string.IsNullOrWhiteSpace(gradient.StartLandmark) || string.IsNullOrWhiteSpace(gradient.EndLandmark))))
+        {
+            diagnostics.Add(new(
+                codePrefix + "-landmarks-invalid",
+                slot,
+                "Gradient start and end landmarks must either both be absent or both be non-empty names."));
+        }
+
+        if (gradient.Stops.IsDefaultOrEmpty || gradient.Stops.Length < 2)
+        {
+            diagnostics.Add(new(codePrefix + "-stops-invalid", slot, "A linear gradient requires at least two color stops."));
+            return;
+        }
+
+        var previousOffset = -1f;
+        foreach (var stop in gradient.Stops)
+        {
+            if (stop is null || !float.IsFinite(stop.Offset) ||
+                stop.Offset is < 0 or > 1 || stop.Offset <= previousOffset ||
+                string.IsNullOrWhiteSpace(stop.Token) ||
+                geometry.MaterialTokens is null ||
+                !geometry.MaterialTokens.ContainsKey(stop.Token))
+            {
+                diagnostics.Add(new(codePrefix + "-stop-invalid", slot, "Gradient stops require strictly increasing offsets in the normalized 0..1 range and existing material color tokens."));
+                break;
             }
 
-            if (gradient.Stops.IsDefaultOrEmpty || gradient.Stops.Length < 2)
-            {
-                diagnostics.Add(new("geometry.material-gradient-stops-invalid", slot, "A linear gradient requires at least two color stops."));
-                continue;
-            }
-
-            var previousOffset = -1f;
-            foreach (var stop in gradient.Stops)
-            {
-                if (stop is null || !float.IsFinite(stop.Offset) ||
-                    stop.Offset is < 0 or > 1 || stop.Offset <= previousOffset ||
-                    string.IsNullOrWhiteSpace(stop.Token) ||
-                    geometry.MaterialTokens is null ||
-                    !geometry.MaterialTokens.ContainsKey(stop.Token))
-                {
-                    diagnostics.Add(new("geometry.material-gradient-stop-invalid", slot, "Gradient stops require strictly increasing offsets in the normalized 0..1 range and existing material color tokens."));
-                    break;
-                }
-
-                previousOffset = stop.Offset;
-            }
+            previousOffset = stop.Offset;
         }
     }
 

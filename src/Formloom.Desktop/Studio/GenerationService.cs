@@ -1,4 +1,6 @@
+using Formloom.Core.Models.Generation;
 using Formloom.Core.Scenes;
+using Formloom.Rendering.Skia.Models;
 using Formloom.Rendering.Skia.Scenes;
 using Microsoft.Extensions.Logging;
 
@@ -15,6 +17,23 @@ internal sealed class GenerationService(ILogger<GenerationService> logger)
         {
             return await Task.Run(() =>
             {
+                var modelGenerated = ModelSceneGenerator.Generate(request);
+                if (modelGenerated.IsModelPrompt)
+                {
+                    if (!modelGenerated.IsSuccess)
+                    {
+                        return new DesktopGenerationResult(null, null, modelGenerated.Error);
+                    }
+
+                    var modelRendered = ModelSceneRenderer.Render(
+                        modelGenerated.HostScene!,
+                        modelGenerated.Geometry!,
+                        modelGenerated.SubjectToken!,
+                        renderOptions);
+                    var modelPreview = "data:image/png;base64," + Convert.ToBase64String(modelRendered.PngBytes);
+                    return new DesktopGenerationResult(modelRendered, modelPreview, null);
+                }
+
                 var generated = SceneGenerator.Generate(request);
                 if (!generated.IsSuccess)
                 {

@@ -83,13 +83,14 @@ public static class ModelGeometryRenderer
                 continue;
             }
 
-            var color = options.Silhouette ? SKColors.Black : colors[path.MaterialSlot];
+            var tone = path.MaterialTone ?? 0.5f;
+            var color = options.Silhouette ? SKColors.Black : ApplyTone(colors[path.MaterialSlot], tone);
             if (path.Closed)
             {
                 using var shape = CreatePath(path, close: true);
                 using var shader = !options.Silhouette &&
                     geometry.MaterialGradients.TryGetValue(path.MaterialSlot, out var gradient)
-                    ? CreateGradient(geometry, gradient)
+                    ? CreateGradient(geometry, gradient, path, tone)
                     : null;
                 using var paint = new SKPaint
                 {
@@ -99,6 +100,23 @@ public static class ModelGeometryRenderer
                     Style = SKPaintStyle.Fill,
                 };
                 canvas.DrawPath(shape, paint);
+
+                if (!options.Silhouette &&
+                    geometry.MaterialGradientOverlays.TryGetValue(path.MaterialSlot, out var overlays))
+                {
+                    foreach (var overlay in overlays)
+                    {
+                        using var overlayShader = CreateGradient(geometry, overlay, path, tone);
+                        using var overlayPaint = new SKPaint
+                        {
+                            Color = SKColors.White,
+                            IsAntialias = antialias,
+                            Shader = overlayShader,
+                            Style = SKPaintStyle.Fill,
+                        };
+                        canvas.DrawPath(shape, overlayPaint);
+                    }
+                }
             }
 
             if (path.StrokeWidth is { } strokeWidth)
@@ -161,19 +179,61 @@ public static class ModelGeometryRenderer
         return colors;
     }
 
-    private static SKShader CreateGradient(ModelGeometry geometry, ModelGeometryLinearGradient gradient)
+    private static SKColor ApplyTone(SKColor color, float tone)
+    {
+        var scale = 0.65f + (tone * 0.7f);
+        return new(
+            ScaleChannel(color.Red, scale),
+            ScaleChannel(color.Green, scale),
+            ScaleChannel(color.Blue, scale),
+            color.Alpha);
+    }
+
+    private static byte ScaleChannel(byte channel, float scale) =>
+        (byte)Math.Clamp((int)MathF.Round(channel * scale), 0, byte.MaxValue);
+
+    private static SKShader CreateGradient(
+        ModelGeometry geometry,
+        ModelGeometryLinearGradient gradient,
+        ModelGeometryPath path,
+        float tone)
     {
         var colors = gradient.Stops
-            .Select(stop => ParseColor(geometry.MaterialTokens[stop.Token]))
+            .Select(stop => ApplyTone(ParseColor(geometry.MaterialTokens[stop.Token]), tone))
             .ToArray();
         var positions = gradient.Stops.Select(stop => stop.Offset).ToArray();
+        var start = ResolveGradientPoint(path, gradient.Start, gradient.StartLandmark);
+        var end = ResolveGradientPoint(path, gradient.End, gradient.EndLandmark);
         return SKShader.CreateLinearGradient(
-            new(gradient.Start.X, gradient.Start.Y),
-            new(gradient.End.X, gradient.End.Y),
+            new(start.X, start.Y),
+            new(end.X, end.Y),
             colors,
             positions,
             SKShaderTileMode.Clamp) ??
             throw new InvalidOperationException("Could not create the model material gradient.");
+    }
+
+    private static System.Numerics.Vector2 ResolveGradientPoint(
+        ModelGeometryPath path,
+        System.Numerics.Vector2 fallback,
+        string? landmarkName)
+    {
+        if (landmarkName is null)
+        {
+            return fallback;
+        }
+
+        foreach (var landmark in path.Landmarks)
+        {
+            if (string.Equals(landmark.Name, landmarkName, StringComparison.Ordinal))
+            {
+                return landmark.Position;
+            }
+        }
+
+        throw new ArgumentException(
+            $"Path '{path.Id}' does not contain gradient landmark '{landmarkName}'.",
+            nameof(path));
     }
 
     private static SKColor ParseColor(string value)
