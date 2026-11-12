@@ -34,7 +34,7 @@ def render_photorealistic_still_life(output_dir, resolution):
     vase_links.new(vase_noise.outputs["Fac"], vase_bump.inputs["Height"])
     vase_links.new(vase_bump.outputs["Normal"], vase_shader.inputs["Normal"])
 
-    apple_material = create_photorealistic_apple_material()
+    apple_material = create_photorealistic_apple_material(apple)
     assign_material(vase, vase_material)
     assign_material(apple, apple_material)
 
