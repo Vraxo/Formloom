@@ -219,6 +219,50 @@ public sealed class ModelGeometryRendererTests
     }
 
     [Fact]
+    public void AppliesPerPathToneToSolidAndGradientMaterials()
+    {
+        var geometry = new ModelGeometry(
+            "models.material-tone-test",
+            ModelGeometryCoordinateSpace.SceneNormalized,
+            [
+                Rectangle("gradient-back", 0.05f, 0.05f, 0.45f, 0.45f, "petal.gradient") with { MaterialTone = 0.25f },
+                Rectangle("gradient-front", 0.55f, 0.05f, 0.95f, 0.45f, "petal.gradient") with { MaterialTone = 0.75f },
+                Rectangle("solid-back", 0.05f, 0.55f, 0.45f, 0.95f, "leaf") with { MaterialTone = 0.25f },
+                Rectangle("solid-front", 0.55f, 0.55f, 0.95f, 0.95f, "leaf") with { MaterialTone = 0.75f },
+            ])
+        {
+            MaterialTokens = ImmutableDictionary<string, string>.Empty
+                .Add("petal.gradient", "#804020")
+                .Add("petal.light", "#D06040")
+                .Add("petal.shadow", "#602010")
+                .Add("leaf", "#804020"),
+            MaterialGradients = ImmutableDictionary<string, ModelGeometryLinearGradient>.Empty.Add(
+                "petal.gradient",
+                new(
+                    new(0.5f, 0.05f),
+                    new(0.5f, 0.45f),
+                    [
+                        new(0f, "petal.light"),
+                        new(1f, "petal.shadow"),
+                    ])),
+        };
+
+        var rendered = ModelGeometryRenderer.Render(geometry, 256, 128, new RenderOptions(Antialiasing: false));
+
+        using var bitmap = Decode(rendered.PngBytes);
+        var gradientBack = bitmap.GetPixel(64, 32);
+        var gradientFront = bitmap.GetPixel(192, 32);
+        var solidBack = bitmap.GetPixel(64, 96);
+        var solidFront = bitmap.GetPixel(192, 96);
+
+        Assert.True(gradientFront.Red > gradientBack.Red);
+        Assert.True(gradientFront.Green > gradientBack.Green);
+        Assert.True(solidFront.Red > solidBack.Red);
+        Assert.True(solidFront.Green > solidBack.Green);
+        Assert.Equal("#804020", geometry.MaterialTokens["leaf"]);
+    }
+
+    [Fact]
     public void AppliesAlphaFromEightDigitMaterialTokens()
     {
         var geometry = new ModelGeometry(
