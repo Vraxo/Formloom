@@ -384,6 +384,62 @@ public sealed class ModelGeometryRendererTests
     }
 
     [Fact]
+    public void AppliesTranslucentGradientOverlaysAcrossPathLocalProfiles()
+    {
+        var geometry = new ModelGeometry(
+            "models.path-overlay-test",
+            ModelGeometryCoordinateSpace.SceneNormalized,
+            [
+                Rectangle("petal", 0.1f, 0.1f, 0.9f, 0.9f, "petal")
+                    with
+                    {
+                        Landmarks =
+                        [
+                            new("profile.left", new Vector2(0.1f, 0.5f)),
+                            new("profile.right", new Vector2(0.9f, 0.5f)),
+                        ],
+                    },
+            ])
+        {
+            MaterialTokens = ImmutableDictionary<string, string>.Empty
+                .Add("petal", "#804020")
+                .Add("cross.edge", "#40100880")
+                .Add("cross.clear", "#80402000")
+                .Add("cross.light", "#F0A050FF"),
+            MaterialGradientOverlays = ImmutableDictionary<string, ImmutableArray<ModelGeometryLinearGradient>>.Empty.Add(
+                "petal",
+                [
+                    new(
+                        new(0.1f, 0.5f),
+                        new(0.9f, 0.5f),
+                        [
+                            new(0f, "cross.edge"),
+                            new(0.45f, "cross.clear"),
+                            new(0.5f, "cross.light"),
+                            new(0.55f, "cross.clear"),
+                            new(1f, "cross.edge"),
+                        ])
+                    {
+                        StartLandmark = "profile.left",
+                        EndLandmark = "profile.right",
+                    },
+                ]),
+        };
+
+        var rendered = ModelGeometryRenderer.Render(geometry, 256, 128, new RenderOptions(Antialiasing: false));
+
+        using var bitmap = Decode(rendered.PngBytes);
+        var left = bitmap.GetPixel(64, 64);
+        var middle = bitmap.GetPixel(128, 64);
+        var right = bitmap.GetPixel(192, 64);
+
+        Assert.True(middle.Red > left.Red);
+        Assert.True(middle.Green > left.Green);
+        Assert.True(middle.Red > right.Red);
+        Assert.True(middle.Green > right.Green);
+    }
+
+    [Fact]
     public void ResolvesGradientEndpointsFromEachPathLandmarkPair()
     {
         var geometry = new ModelGeometry(
