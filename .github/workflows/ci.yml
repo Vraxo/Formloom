@@ -157,20 +157,18 @@ jobs:
           set -euo pipefail
           version="4.5.16"
           install_dir="$RUNNER_TEMP/blender-${version}-linux-x64"
+          # Blender still needs these shared libraries on a cache hit.
+          sudo grep -RIl 'azure.archive.ubuntu.com' /etc/apt 2>/dev/null \
+            | xargs -r sudo sed -i 's|azure.archive.ubuntu.com|mirrors.edge.kernel.org|g'
+          sudo apt-get -o Acquire::Retries=4 -o Acquire::https::Timeout=30 update
+          sudo apt-get -o Acquire::Retries=4 -o Acquire::https::Timeout=30 install \
+            --no-install-recommends -y \
+            libegl1 libgl1 libice6 libsm6 libx11-6 libxfixes3 libxi6 \
+            libxkbcommon0 libxrender1 libxxf86vm1
           if [[ ! -x "$install_dir/blender" ]]; then
             archive="blender-${version}-linux-x64.tar.xz"
             checksum="blender-${version}.sha256"
             release_url="https://download.blender.org/release/Blender4.5"
-            # The hosted runner's Azure Ubuntu mirror occasionally fails DNS resolution.
-            # Replace that mirror with a stable public mirror before resolving Blender's
-            # small set of runtime libraries.
-            sudo grep -RIl 'azure.archive.ubuntu.com' /etc/apt 2>/dev/null \
-              | xargs -r sudo sed -i 's|azure.archive.ubuntu.com|mirrors.edge.kernel.org|g'
-            sudo apt-get -o Acquire::Retries=4 -o Acquire::https::Timeout=30 update
-            sudo apt-get -o Acquire::Retries=4 -o Acquire::https::Timeout=30 install \
-              --no-install-recommends -y \
-              libegl1 libgl1 libice6 libsm6 libx11-6 libxfixes3 libxi6 \
-              libxkbcommon0 libxrender1 libxxf86vm1
             curl --fail --location --retry 3 --output "$RUNNER_TEMP/$archive" "$release_url/$archive"
             curl --fail --location --retry 3 --output "$RUNNER_TEMP/$checksum" "$release_url/$checksum"
             grep -F "$archive" "$RUNNER_TEMP/$checksum" | (cd "$RUNNER_TEMP" && sha256sum --check --strict -)
