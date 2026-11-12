@@ -13,7 +13,7 @@ namespace Formloom.Core.Models.Generation;
 public static class ModelSceneGenerator
 {
     private const string VaseOpeningMount = "vase-opening";
-    private const float TopMargin = 0.035f;
+    private const float TopMargin = 0.036f;
 
     /// <summary>
     /// Attempts to generate a model-first scene from the runtime model catalog.
@@ -73,8 +73,10 @@ public static class ModelSceneGenerator
         var radiusX = profile.MouthRadius.X * vase.Body.Size.X;
         var radiusY = profile.MouthRadius.Y * vase.Body.Size.Y;
         var mouthTop = openingCenter.Y - radiusY;
-        var headroom = mouthTop - TopMargin;
-        if (!float.IsFinite(headroom) || headroom <= 0)
+        var rimThickness = profile.RimThickness * vase.Body.Size.Y;
+        var rimCrest = mouthTop - rimThickness;
+        var headroom = MathF.Max(rimCrest - TopMargin, 0.02f);
+        if (!float.IsFinite(headroom))
         {
             return Failure("The vase does not leave enough space above its opening for this model.");
         }
@@ -84,7 +86,7 @@ public static class ModelSceneGenerator
             radiusX,
             radiusY,
             mouthTop,
-            profile.RimThickness * MathF.Min(vase.Body.Size.X, vase.Body.Size.Y),
+            rimThickness,
             headroom);
         var context = ModelEvaluationContext.Empty(request.Seed, (float)request.Variation) with
         {
