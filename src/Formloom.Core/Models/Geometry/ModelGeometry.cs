@@ -17,4 +17,8 @@ public sealed record ModelGeometry(
     /// <summary>Gets optional linear fill gradients keyed by material slot.</summary>
     public ImmutableDictionary<string, ModelGeometryLinearGradient> MaterialGradients { get; init; } =
         ImmutableDictionary<string, ModelGeometryLinearGradient>.Empty;
+
+    /// <summary>Gets ordered translucent shading gradients keyed by their target material slot.</summary>
+    public ImmutableDictionary<string, ImmutableArray<ModelGeometryLinearGradient>> MaterialGradientOverlays { get; init; } =
+        ImmutableDictionary<string, ImmutableArray<ModelGeometryLinearGradient>>.Empty;
 }
