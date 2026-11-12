@@ -209,8 +209,8 @@ jobs:
           set -euo pipefail
           test -s artifacts/blender-cube/manifest.json
           count="$(find artifacts/blender-cube -maxdepth 1 -type f -name '*.png' | wc -l)"
-          if [[ "$count" -ne 27 ]]; then
-            echo "Expected 27 Blender renders, found $count" >&2
+          if [[ "$count" -ne 30 ]]; then
+            echo "Expected 30 Blender PNG outputs (27 renders and 3 map diagnostics), found $count" >&2
             exit 1
           fi
 
