@@ -237,7 +237,7 @@ def _image_from_rgb(name, rgb, resolution):
             width=resolution,
             height=resolution,
             alpha=False,
-            float_buffer=False,
+            float_buffer=True,
         )
 
     rgba = np.empty((resolution, resolution, 4), dtype=np.float32)
@@ -248,10 +248,40 @@ def _image_from_rgb(name, rgb, resolution):
     else:
         rgba[:, :, :3] = rgb
     rgba[:, :, 3] = 1.0
-    image.pixels.foreach_set(rgba.ravel())
-    image.colorspace_settings.name = "Non-Color"
+    rgba = np.ascontiguousarray(rgba, dtype=np.float32)
+    source_min = float(rgb.min())
+    source_max = float(rgb.max())
+    source_mean = float(rgb.mean())
+    print(
+        "APPLE_ARRAY_DIAGNOSTIC="
+        + name
+        + " min=" + str(source_min)
+        + " max=" + str(source_max)
+        + " mean=" + str(source_mean)
+        + " first=" + str(tuple(float(value) for value in rgba[0, 0]))
+        + " center=" + str(tuple(float(value) for value in rgba[resolution // 2, resolution // 2]))
+    )
+    image.pixels.foreach_set(rgba.reshape(-1))
+    image.update()
+    before_color_space = tuple(float(value) for value in image.pixels[0:4])
+    print(
+        "APPLE_IMAGE_WRITE_DIAGNOSTIC="
+        + name
+        + " after_set=" + str(before_color_space)
+        + " size=" + str(tuple(image.size))
+        + " source=" + str(image.source)
+    )
+    if max(source_max, 0.0) > 0.0 and max(before_color_space[:3]) <= 1e-8:
+        raise RuntimeError("Blender image pixel write produced black pixels for " + name)
+    image.colorspace_settings.name = (
+        "sRGB" if name == IMAGE_NAMES["color"] else "Non-Color"
+    )
     image.alpha_mode = "NONE"
     image.update()
+    after_update = tuple(float(value) for value in image.pixels[0:4])
+    print("APPLE_IMAGE_UPDATE_DIAGNOSTIC=" + name + " after_update=" + str(after_update))
+    if max(source_max, 0.0) > 0.0 and max(after_update[:3]) <= 1e-8:
+        raise RuntimeError("Blender image update cleared pixels for " + name)
     image.use_fake_user = True
     return image
 
@@ -376,6 +406,12 @@ def create_apple_surface_maps(obj, resolution=MAP_RESOLUTION):
     ):
         raise RuntimeError("Apple procedural maps contain non-finite values.")
 
+    print(
+        "APPLE_GENERATED_MAP_DIAGNOSTIC="
+        + " color=" + str((float(color.min()), float(color.max()), float(color.mean())))
+        + " roughness=" + str((float(roughness.min()), float(roughness.max()), float(roughness.mean())))
+        + " height=" + str((float(height.min()), float(height.max()), float(height.mean())))
+    )
     images = {
         "color": _image_from_rgb(IMAGE_NAMES["color"], color, resolution),
         "roughness": _image_from_rgb(IMAGE_NAMES["roughness"], roughness, resolution),
