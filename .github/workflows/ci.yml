@@ -195,6 +195,25 @@ jobs:
           echo "$install_dir" >> "$GITHUB_PATH"
           "$install_dir/blender" --version
 
+      - name: Inspect CC0 apple asset download endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 https://artisticasset.com/downloads/apple/ -o "$RUNNER_TEMP/apple-asset-page.html"
+          python3 - "$RUNNER_TEMP/apple-asset-page.html" <<'PY'
+          import re
+          import sys
+          from pathlib import Path
+          html = Path(sys.argv[1]).read_text(errors="replace")
+          for match in re.finditer(r"Download Asset", html, re.IGNORECASE):
+              print("DOWNLOAD_BUTTON_CONTEXT_BEGIN")
+              print(html[max(0, match.start() - 1800):match.end() + 1800])
+              print("DOWNLOAD_BUTTON_CONTEXT_END")
+          for url in re.findall(r'''(?:href|src|data-[\\w-]+)=["']([^"']+)["']''', html, re.IGNORECASE):
+              if re.search(r"\\.(?:zip|blend|fbx|obj)(?:[?#]|$)|download", url, re.IGNORECASE):
+                  print("ASSET_CANDIDATE=" + url)
+          PY
+
       - name: Render geometry, quality, and art-direction comparisons
         run: |
           dotnet run --project experiments/Formloom.BlenderCube/Formloom.BlenderCube.csproj --configuration Release -- \
