@@ -8,14 +8,13 @@ Repository changes follow a deliberately incremental PR workflow. See [CONTRIBUT
 
 ## Current development direction (November 2026)
 
-The next rendering-development phase is **3D-first**. The standalone [Blender experiment](experiments/Formloom.BlenderCube/README.md) has progressed from an explicitly authored cube to curved primitives, a custom apple, a vase, and a combined still-life scene. The user-reviewed outputs have shown more convincing volume, material response, and lighting than the current production 2D path.
+Formloom's primary goal is a **symbolic procedural image generator**: descriptions are resolved into typed scene intent, model knowledge is loaded from ordinary declarative files, reusable algorithms construct geometry and materials, scene rules compose the result, and a rendering backend produces the image. The aim is image generation without machine learning—not a prompt-specific drawing catalogue and not a wrapper around an external 3D authoring tool.
 
-This changes the direction of new rendering research, **not the current desktop implementation**: Formloom Desktop still generates images through Core and the Skia CPU renderer. Blender remains an isolated evaluation backend; it is not a Formloom Core dependency or a finalized production-renderer choice.
+The immediate development priority is to connect the existing model-definition catalog, typed evaluator, generic geometry renderer, and desktop generation path into one genuine end-to-end workflow. The first integrated model is the rose, whose existing code-authored implementation remains the behavioral reference until the catalog-driven result passes automated and visual review. See [ADR-0004](docs/adr/0004-symbolic-image-construction-engine.md) and the [model-system contract](docs/model-system.md).
 
-The existing 2D renderer is retained as a working reference and a possible alternate backend/style. No production migration or removal is planned until the 3D path demonstrates the required object coverage, composition, deterministic variation, visual quality, and CPU performance. The visual target remains [Naturalistic Still-Life Illustration](docs/art-direction.md), not photorealism. See [ADR-0003](docs/adr/0003-explore-a-3d-first-rendering-path.md) for the decision and boundaries.
+Formloom Desktop continues to generate through Core and the Skia CPU renderer. Blender remains an isolated, optional evaluation tool; it is not a user runtime dependency or the source of model geometry/material knowledge. No external meshes, downloaded textures, stock images, or pre-rendered artwork are used in the generation path. The existing 2D implementation and current Blender experiments are retained as evidence and working references, not treated as competing product goals.
 
-
-
+The default visual target remains [Naturalistic Still-Life Illustration](docs/art-direction.md), not photorealism. No production renderer migration or removal is authorized until the symbolic model and scene representations demonstrate the required object coverage, composition, deterministic variation, visual quality, and CPU performance.
 ## Current capability
 
 The desktop UI drives the Core scene generator and the Skia CPU renderer through one prompt-to-PNG path:
