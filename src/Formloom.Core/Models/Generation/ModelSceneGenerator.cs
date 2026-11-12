@@ -102,8 +102,8 @@ public static class ModelSceneGenerator
             return Failure(details);
         }
 
-        var modelToken = definition.Id.Replace('.', '-');
-        var subjectToken = $"model-{modelToken}-in-{vase.Glaze.ToString().ToLowerInvariant()}-vase";
+        var subjectName = definition.Prompt.Noun.ToLowerInvariant();
+        var subjectToken = $"{variant}-{subjectName}-in-{vase.Glaze.ToString().ToLowerInvariant()}-vase";
         return new(true, hostScene, evaluated.Geometry, subjectToken, null);
     }
 
