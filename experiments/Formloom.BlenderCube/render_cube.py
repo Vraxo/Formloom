@@ -46,6 +46,53 @@ def parse_arguments():
     return parsed
 
 
+def render_apple_skin_closeup(output_dir, base_resolution, sample_count, denoise):
+    """Render the generated peel at macro scale under neutral studio lighting."""
+    clear_scene()
+    apple = create_grounded_apple("AppleSkinMacroStudy", 0.0, 0.0)
+    material = create_photorealistic_apple_material(apple)
+    assign_material(apple, material)
+    create_ground()
+    create_lighting()
+
+    resolution = min(1024, max(768, base_resolution * 2))
+    scene = bpy.context.scene
+    scene.cycles.samples = max(sample_count, 48)
+    scene.cycles.use_denoising = denoise
+    if denoise:
+        scene.cycles.denoiser = "OPENIMAGEDENOISE"
+
+    camera = create_camera(
+        (0.62, -3.25, 0.12),
+        resolution,
+        target=(0.0, 0.0, -0.46),
+        lens=70.0,
+    )
+    filename = "apple-skin-procedural-closeup.png"
+    path = os.path.join(output_dir, filename)
+    scene.render.filepath = path
+    bpy.ops.render.render(write_still=True)
+    if not os.path.isfile(path) or os.path.getsize(path) == 0:
+        raise RuntimeError("Apple skin close-up render was not created: " + path)
+
+    camera_data = camera.data
+    scene.camera = None
+    bpy.data.objects.remove(camera, do_unlink=True)
+    bpy.data.cameras.remove(camera_data)
+
+    return {
+        "file": filename,
+        "scene": "apple-skin-procedural-closeup",
+        "material": "procedural red apple cuticle with area-sampled lenticels",
+        "map_resolution": int(material.get("surface_map_resolution", 0)),
+        "lenticel_count": int(material.get("surface_lenticel_count", 0)),
+        "samples": scene.cycles.samples,
+        "denoising": denoise,
+        "resolution": [resolution, resolution],
+        "camera": [0.62, -3.25, 0.12],
+    }
+
+
 def main():
     arguments = parse_arguments()
     os.makedirs(arguments.output_dir, exist_ok=True)
@@ -134,7 +181,7 @@ def main():
     # shoulder lobes, recessed stem well, and overall silhouette.
     clear_scene()
     apple = create_grounded_apple("AppleShapeStudy", 0.0, 0.0)
-    apple_material = create_photorealistic_apple_material()
+    apple_material = create_photorealistic_apple_material(apple)
     assign_material(apple, apple_material)
     create_ground()
     create_lighting()
@@ -158,6 +205,20 @@ def main():
                 "curved tapered stem",
             ],
         })
+
+    macro_render = render_apple_skin_closeup(
+        arguments.output_dir,
+        arguments.resolution,
+        arguments.samples,
+        arguments.denoise,
+    )
+    manifest["renders"].append(macro_render)
+    manifest["apple_skin_study"] = {
+        "render": macro_render["file"],
+        "map_resolution": macro_render["map_resolution"],
+        "lenticel_count": macro_render["lenticel_count"],
+        "method": "area-weighted surface sampling with an inhomogeneous Poisson-disc spacing constraint",
+    }
 
     # Compare the exact same apple and camera at progressively higher sample
     # counts, then compare a denoised render at 64 samples. Timings are written
