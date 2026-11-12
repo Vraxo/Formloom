@@ -205,9 +205,6 @@ def create_photorealistic_apple_material():
     shader = principled_node(material)
     nodes = material.node_tree.nodes
     links = material.node_tree.links
-    shader = material.node_tree.nodes.get("Principled BSDF")
-    nodes = material.node_tree.nodes
-    links = material.node_tree.links
 
     # Scale the peel detail for the actual 384px output: the lenticels need to
     # occupy roughly one pixel, while epidermal relief should break up highlights
