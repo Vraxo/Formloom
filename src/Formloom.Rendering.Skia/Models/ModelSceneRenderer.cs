@@ -42,8 +42,8 @@ public static class ModelSceneRenderer
             ?? throw new InvalidOperationException("Could not allocate the composed raster surface.");
         var canvas = surface.Canvas;
         canvas.Clear(SKColors.Transparent);
-        canvas.DrawBitmap(hostBitmap, 0, 0);
-        canvas.DrawBitmap(modelBitmap, 0, 0);
+        canvas.DrawBitmap(hostBitmap, 0, 0, new SKSamplingOptions(SKFilterMode.Linear));
+        canvas.DrawBitmap(modelBitmap, 0, 0, new SKSamplingOptions(SKFilterMode.Linear));
 
         using var image = surface.Snapshot();
         using var encoded = image.Encode(SKEncodedImageFormat.Png, 100);
