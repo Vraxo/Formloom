@@ -183,15 +183,12 @@ def _sample_lenticels(obj, density_field, rng):
     return points
 
 
-def _stamp_lenticel(halo, core, height, roughness, point):
+def _stamp_lenticel(halo, core, height, roughness, point, meridian_length):
     width = halo.shape[1]
     image_height = halo.shape[0]
     u, v, radius, strength, aspect, angle, local_radius = point
     circumference = max(0.22, 2.0 * math.pi * local_radius)
-    meridian_length = max(0.25, float(bpy.context.object.data.get(
-        "apple_uv_meridian_length",
-        2.0,
-    )))
+    meridian_length = max(0.25, float(meridian_length))
 
     extent = radius * 2.25
     radius_x = max(2, int(math.ceil(extent * width / circumference)))
@@ -222,16 +219,12 @@ def _stamp_lenticel(halo, core, height, roughness, point):
     )
     outer = strength * (1.0 - _smoothstep((normalized_radius - 0.65) / 1.25))
     center = strength * (1.0 - _smoothstep((normalized_radius - 0.08) / 0.68))
-    local_halo = halo[np.ix_(y_indices, x_indices)]
-    local_core = core[np.ix_(y_indices, x_indices)]
-    np.maximum(local_halo, outer, out=local_halo)
-    np.maximum(local_core, center, out=local_core)
-
-    local_height = height[np.ix_(y_indices, x_indices)]
-    local_roughness = roughness[np.ix_(y_indices, x_indices)]
-    local_height -= center * 0.105
-    local_height += outer * 0.012
-    local_roughness += center * 0.055 + outer * 0.012
+    region = np.ix_(y_indices, x_indices)
+    halo[region] = np.maximum(halo[region], outer)
+    core[region] = np.maximum(core[region], center)
+    height[region] -= center * 0.105
+    height[region] += outer * 0.012
+    roughness[region] += center * 0.055 + outer * 0.012
 
 
 def _image_from_rgb(name, rgb, resolution):
@@ -346,8 +339,16 @@ def create_apple_surface_maps(obj, resolution=MAP_RESOLUTION):
     halo = np.zeros((resolution, resolution), dtype=np.float32)
     core = np.zeros((resolution, resolution), dtype=np.float32)
 
+    meridian_length = float(obj.data.get("apple_uv_meridian_length", 2.0))
     for lenticel in lenticels:
-        _stamp_lenticel(halo, core, height, roughness, lenticel)
+        _stamp_lenticel(
+            halo,
+            core,
+            height,
+            roughness,
+            lenticel,
+            meridian_length,
+        )
 
     # Lenticels are subdued brown-red pores with a soft warm margin, not
     # bright yellow dots. Their shallow pit and local roughness are separate.
