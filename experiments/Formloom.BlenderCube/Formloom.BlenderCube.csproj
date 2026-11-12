@@ -4,7 +4,14 @@
     <AssemblyName>Formloom.BlenderCube</AssemblyName>
     <RootNamespace>Formloom.BlenderCube</RootNamespace>
   </PropertyGroup>
-  <ItemGroup>
-    <None Update="render_cube.py" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
+
+  <Target Name="CopyBlenderPythonModules" AfterTargets="Build">
+    <ItemGroup>
+      <BlenderPythonModule Include="$(MSBuildProjectDirectory)/*.py" />
+    </ItemGroup>
+    <Copy
+      SourceFiles="@(BlenderPythonModule)"
+      DestinationFolder="$(TargetDir)"
+      SkipUnchangedFiles="true" />
+  </Target>
 </Project>
