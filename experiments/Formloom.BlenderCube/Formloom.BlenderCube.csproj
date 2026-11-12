@@ -5,6 +5,6 @@
     <RootNamespace>Formloom.BlenderCube</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <None Update="*.py" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="render_cube.py;geometry.py;materials.py;scene.py;illustrated.py;photorealistic.py" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
