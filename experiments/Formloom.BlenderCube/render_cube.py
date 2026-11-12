@@ -833,14 +833,14 @@ def render_photorealistic_still_life(output_dir, resolution):
     apple_nodes = apple_material.node_tree.nodes
     apple_links = apple_material.node_tree.links
 
-    # Apple peel needs three distinct signals: lenticel freckles, subtle epidermal
-    # relief, and spatially varying wax/roughness. Keep the detail in normalized
-    # generated coordinates so it remains legible on the small final still-life.
+    # Scale the peel detail for the actual 384px output: the lenticels need to
+    # occupy roughly one pixel, while epidermal relief should break up highlights
+    # without reading as coarse bumps.
     apple_coordinates = apple_nodes.new("ShaderNodeTexCoord")
     apple_vector = apple_coordinates.outputs["Generated"]
 
     pigment_noise = apple_nodes.new("ShaderNodeTexNoise")
-    pigment_noise.inputs["Scale"].default_value = 5.5
+    pigment_noise.inputs["Scale"].default_value = 8.5
     pigment_noise.inputs["Detail"].default_value = 3.0
     pigment_noise.inputs["Roughness"].default_value = 0.72
     pigment_ramp = apple_nodes.new("ShaderNodeValToRGB")
@@ -851,62 +851,77 @@ def render_photorealistic_still_life(output_dir, resolution):
     apple_links.new(apple_vector, pigment_noise.inputs["Vector"])
     apple_links.new(pigment_noise.outputs["Fac"], pigment_ramp.inputs["Fac"])
 
-    # Lenticels are the missing visual cue: irregular pale pinpricks with a
-    # slightly darker warm edge, scaled large enough to survive this render.
+    # Lenticels are small warm pinpricks, not large dots. At this scale the
+    # centre and soft edge survive the final render without covering the peel.
     lenticels = apple_nodes.new("ShaderNodeTexVoronoi")
-    lenticels.inputs["Scale"].default_value = 42.0
+    lenticels.inputs["Scale"].default_value = 24.0
     lenticels.inputs["Randomness"].default_value = 1.0
     lenticel_ramp = apple_nodes.new("ShaderNodeValToRGB")
-    lenticel_ramp.color_ramp.elements[0].position = 0.018
-    lenticel_ramp.color_ramp.elements[0].color = (0.72, 0.30, 0.16, 1.0)
-    lenticel_ramp.color_ramp.elements[1].position = 0.075
+    lenticel_ramp.color_ramp.elements[0].position = 0.01
+    lenticel_ramp.color_ramp.elements[0].color = (0.55, 0.24, 0.08, 1.0)
+    lenticel_ramp.color_ramp.elements[1].position = 0.20
     lenticel_ramp.color_ramp.elements[1].color = (0.20, 0.006, 0.010, 1.0)
+    lenticel_edge = lenticel_ramp.color_ramp.elements.new(0.065)
+    lenticel_edge.color = (0.31, 0.035, 0.014, 1.0)
+
     lenticel_mix = apple_nodes.new("ShaderNodeMixRGB")
     lenticel_mix.blend_type = "MIX"
-    lenticel_mix.inputs["Fac"].default_value = 0.52
+    lenticel_mix.inputs["Fac"].default_value = 0.42
     apple_links.new(apple_vector, lenticels.inputs["Vector"])
     apple_links.new(lenticels.outputs["Distance"], lenticel_ramp.inputs["Fac"])
     apple_links.new(pigment_ramp.outputs["Color"], lenticel_mix.inputs[1])
     apple_links.new(lenticel_ramp.outputs["Color"], lenticel_mix.inputs[2])
     apple_links.new(lenticel_mix.outputs["Color"], apple_shader.inputs["Base Color"])
 
-    # The peel has a fine, slightly pebbled epidermis rather than generic
-    # high-frequency noise alone. A medium-scale layer catches broad highlights.
+    # The peel has a gently pebbled epidermis. Lower spatial frequency is
+    # deliberate: sub-pixel noise was being erased by denoising at this size.
     epidermis_noise = apple_nodes.new("ShaderNodeTexNoise")
-    epidermis_noise.inputs["Scale"].default_value = 92.0
-    epidermis_noise.inputs["Detail"].default_value = 3.0
-    epidermis_noise.inputs["Roughness"].default_value = 0.68
+    epidermis_noise.inputs["Scale"].default_value = 55.0
+    epidermis_noise.inputs["Detail"].default_value = 2.5
+    epidermis_noise.inputs["Roughness"].default_value = 0.72
     epidermis_bump = apple_nodes.new("ShaderNodeBump")
-    epidermis_bump.inputs["Strength"].default_value = 0.24
-    epidermis_bump.inputs["Distance"].default_value = 0.0035
+    epidermis_bump.inputs["Strength"].default_value = 0.23
+    epidermis_bump.inputs["Distance"].default_value = 0.0026
     apple_links.new(apple_vector, epidermis_noise.inputs["Vector"])
     apple_links.new(epidermis_noise.outputs["Fac"], epidermis_bump.inputs["Height"])
 
-    # A finer pore layer sits on top of the epidermis; chained bump nodes keep
-    # both scales present instead of allowing one normal signal to overwrite another.
+    # A shallow depression beneath each lenticel gives the freckles a little
+    # physical definition instead of relying on colour contrast alone.
+    lenticel_height = apple_nodes.new("ShaderNodeValToRGB")
+    lenticel_height.color_ramp.elements[0].position = 0.015
+    lenticel_height.color_ramp.elements[0].color = (0.0, 0.0, 0.0, 1.0)
+    lenticel_height.color_ramp.elements[1].position = 0.20
+    lenticel_height.color_ramp.elements[1].color = (1.0, 1.0, 1.0, 1.0)
+    lenticel_bump = apple_nodes.new("ShaderNodeBump")
+    lenticel_bump.inputs["Strength"].default_value = 0.18
+    lenticel_bump.inputs["Distance"].default_value = 0.0016
+    apple_links.new(lenticels.outputs["Distance"], lenticel_height.inputs["Fac"])
+    apple_links.new(lenticel_height.outputs["Color"], lenticel_bump.inputs["Height"])
+    apple_links.new(epidermis_bump.outputs["Normal"], lenticel_bump.inputs["Normal"])
+
+    # Fine pores finish the surface, but remain subordinate to the epidermis.
     pore_noise = apple_nodes.new("ShaderNodeTexNoise")
-    pore_noise.inputs["Scale"].default_value = 235.0
+    pore_noise.inputs["Scale"].default_value = 125.0
     pore_noise.inputs["Detail"].default_value = 2.0
     pore_bump = apple_nodes.new("ShaderNodeBump")
-    pore_bump.inputs["Strength"].default_value = 0.14
-    pore_bump.inputs["Distance"].default_value = 0.00075
+    pore_bump.inputs["Strength"].default_value = 0.10
+    pore_bump.inputs["Distance"].default_value = 0.0007
     apple_links.new(apple_vector, pore_noise.inputs["Vector"])
     apple_links.new(pore_noise.outputs["Fac"], pore_bump.inputs["Height"])
-    apple_links.new(epidermis_bump.outputs["Normal"], pore_bump.inputs["Normal"])
+    apple_links.new(lenticel_bump.outputs["Normal"], pore_bump.inputs["Normal"])
     apple_links.new(pore_bump.outputs["Normal"], apple_shader.inputs["Normal"])
 
-    # Real peel has local differences in waxiness; vary roughness with the same
-    # epidermal field so highlights break up naturally instead of staying plastic-smooth.
+    # Waxy but not glossy: slight local roughness changes soften the highlights.
     roughness_ramp = apple_nodes.new("ShaderNodeValToRGB")
-    roughness_ramp.color_ramp.elements[0].color = (0.31, 0.31, 0.31, 1.0)
+    roughness_ramp.color_ramp.elements[0].color = (0.36, 0.36, 0.36, 1.0)
     roughness_ramp.color_ramp.elements[1].color = (0.48, 0.48, 0.48, 1.0)
     apple_links.new(epidermis_noise.outputs["Fac"], roughness_ramp.inputs["Fac"])
     apple_links.new(roughness_ramp.outputs["Color"], apple_shader.inputs["Roughness"])
 
-    apple_shader.inputs["Roughness"].default_value = 0.40
+    apple_shader.inputs["Roughness"].default_value = 0.41
     apple_coat = apple_shader.inputs.get("Coat Weight") or apple_shader.inputs.get("Clearcoat")
     if apple_coat is not None:
-        apple_coat.default_value = 0.035
+        apple_coat.default_value = 0.025
     assign_material(vase, vase_material)
     assign_material(apple, apple_material)
 
