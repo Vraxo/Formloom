@@ -178,15 +178,15 @@ def create_illustrated_backdrop():
     wall.data.materials.append(material)
     return wall
 
-def create_camera(location, resolution):
+def create_camera(location, resolution, target=(0.0, 0.0, -0.05), lens=52.0):
     data = bpy.data.cameras.new("ExperimentCamera")
     camera = bpy.data.objects.new("ExperimentCamera", data)
     bpy.context.collection.objects.link(camera)
     camera.location = location
-    target = Vector((0.0, 0.0, -0.05))
+    target = Vector(target)
     camera.rotation_euler = (target - camera.location).to_track_quat("-Z", "Y").to_euler()
     data.type = "PERSP"
-    data.lens = 52.0
+    data.lens = lens
     bpy.context.scene.camera = camera
     bpy.context.scene.render.resolution_x = resolution
     bpy.context.scene.render.resolution_y = resolution

@@ -197,3 +197,91 @@ def create_photorealistic_plaster_material():
     links.new(fine_noise.outputs["Fac"], bump.inputs["Height"])
     links.new(bump.outputs["Normal"], shader.inputs["Normal"])
     return material
+
+
+def create_photorealistic_apple_material(apple):
+    """Create an apple peel material from independently generated PBR surface maps."""
+    from apple_surface import create_apple_surface_maps
+
+    images = create_apple_surface_maps(apple)
+    material = bpy.data.materials.new("PhotorealisticAppleSkin")
+    shader = principled_node(material)
+    nodes = material.node_tree.nodes
+    links = material.node_tree.links
+
+    coordinates = nodes.new("ShaderNodeTexCoord")
+    coordinates.label = "Apple surface UVs"
+    uv = coordinates.outputs["UV"]
+
+    color_texture = nodes.new("ShaderNodeTexImage")
+    color_texture.label = "Natural pigment and lenticels"
+    color_texture.image = images["color"]
+    color_texture.interpolation = "Linear"
+    color_texture.extension = "REPEAT"
+    links.new(uv, color_texture.inputs["Vector"])
+    links.new(color_texture.outputs["Color"], shader.inputs["Base Color"])
+
+    roughness_texture = nodes.new("ShaderNodeTexImage")
+    roughness_texture.label = "Cuticle roughness variation"
+    roughness_texture.image = images["roughness"]
+    roughness_texture.interpolation = "Linear"
+    roughness_texture.extension = "REPEAT"
+    links.new(uv, roughness_texture.inputs["Vector"])
+    links.new(roughness_texture.outputs["Color"], shader.inputs["Roughness"])
+
+    height_texture = nodes.new("ShaderNodeTexImage")
+    height_texture.label = "Epidermis and shallow lenticel depressions"
+    height_texture.image = images["height"]
+    height_texture.interpolation = "Linear"
+    height_texture.extension = "REPEAT"
+    links.new(uv, height_texture.inputs["Vector"])
+
+    epidermis_bump = nodes.new("ShaderNodeBump")
+    epidermis_bump.label = "Subtle skin relief"
+    epidermis_bump.inputs["Strength"].default_value = 0.16
+    epidermis_bump.inputs["Distance"].default_value = 0.00115
+    links.new(height_texture.outputs["Color"], epidermis_bump.inputs["Height"])
+
+    # A much finer secondary scale breaks up broad reflections without turning
+    # the skin into grit. It is intentionally weaker than the cuticle relief.
+    micro_noise = nodes.new("ShaderNodeTexNoise")
+    micro_noise.label = "Fine cuticle grain"
+    micro_noise.inputs["Scale"].default_value = 540.0
+    micro_noise.inputs["Detail"].default_value = 2.0
+    micro_noise.inputs["Roughness"].default_value = 0.66
+    links.new(uv, micro_noise.inputs["Vector"])
+
+    micro_bump = nodes.new("ShaderNodeBump")
+    micro_bump.label = "Microscopic epidermal breakup"
+    micro_bump.inputs["Strength"].default_value = 0.035
+    micro_bump.inputs["Distance"].default_value = 0.00010
+    links.new(micro_noise.outputs["Fac"], micro_bump.inputs["Height"])
+    links.new(epidermis_bump.outputs["Normal"], micro_bump.inputs["Normal"])
+    links.new(micro_bump.outputs["Normal"], shader.inputs["Normal"])
+
+    # Apple flesh is mostly opaque at this scale. Keep subsurface restrained;
+    # the thin, waxy cuticle is represented by a weak, slightly rough coat.
+    subsurface = shader.inputs.get("Subsurface Weight")
+    if subsurface is not None:
+        subsurface.default_value = 0.012
+    subsurface_scale = shader.inputs.get("Subsurface Scale")
+    if subsurface_scale is not None:
+        subsurface_scale.default_value = 0.035
+    subsurface_radius = shader.inputs.get("Subsurface Radius")
+    if subsurface_radius is not None:
+        subsurface_radius.default_value = (1.0, 0.42, 0.22)
+
+    coat = shader.inputs.get("Coat Weight") or shader.inputs.get("Clearcoat")
+    if coat is not None:
+        coat.default_value = 0.055
+    coat_roughness = shader.inputs.get("Coat Roughness") or shader.inputs.get("Clearcoat Roughness")
+    if coat_roughness is not None:
+        coat_roughness.default_value = 0.30
+    ior = shader.inputs.get("IOR")
+    if ior is not None:
+        ior.default_value = 1.46
+
+    material["surface_model"] = "Procedural apple cuticle with inhomogeneous point-process lenticels"
+    material["surface_map_resolution"] = int(images["color"].size[0])
+    material["surface_lenticel_count"] = int(apple.get("apple_lenticel_count", 0))
+    return material
