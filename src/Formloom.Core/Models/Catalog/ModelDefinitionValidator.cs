@@ -374,6 +374,16 @@ public static class ModelDefinitionValidator
                     add("definition.invalid-gradient-endpoints", $"{gradientPath}.start", "Gradient endpoints must be distinct finite coordinates in the normalized 0..1 range.");
                 }
 
+                if ((gradient.StartLandmark is null) != (gradient.EndLandmark is null) ||
+                    (gradient.StartLandmark is not null &&
+                     (string.IsNullOrWhiteSpace(gradient.StartLandmark) || string.IsNullOrWhiteSpace(gradient.EndLandmark))))
+                {
+                    add(
+                        "definition.invalid-gradient-landmarks",
+                        gradientPath,
+                        "Gradient startLandmark and endLandmark must either both be absent or both be non-empty names.");
+                }
+
                 if (gradient.Stops.IsDefaultOrEmpty || gradient.Stops.Length < 2)
                 {
                     add("definition.invalid-gradient-stops", $"{gradientPath}.stops", "A linear gradient requires at least two color stops.");
