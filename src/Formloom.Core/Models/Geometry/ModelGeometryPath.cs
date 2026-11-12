@@ -1,5 +1,5 @@
 using System.Collections.Immutable;
-using System.Numerics;
+using Formloom.Core.Core;
 
 namespace Formloom.Core.Models.Geometry;
 
