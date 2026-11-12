@@ -100,6 +100,23 @@ public static class ModelGeometryRenderer
                     Style = SKPaintStyle.Fill,
                 };
                 canvas.DrawPath(shape, paint);
+
+                if (!options.Silhouette &&
+                    geometry.MaterialGradientOverlays.TryGetValue(path.MaterialSlot, out var overlays))
+                {
+                    foreach (var overlay in overlays)
+                    {
+                        using var overlayShader = CreateGradient(geometry, overlay, path, tone);
+                        using var overlayPaint = new SKPaint
+                        {
+                            Color = SKColors.White,
+                            IsAntialias = antialias,
+                            Shader = overlayShader,
+                            Style = SKPaintStyle.Fill,
+                        };
+                        canvas.DrawPath(shape, overlayPaint);
+                    }
+                }
             }
 
             if (path.StrokeWidth is { } strokeWidth)
