@@ -785,7 +785,11 @@
         "leaf.base": "#5E8034",
         "leaf.light": "#A2BA60",
         "leaf.edge": "#305022",
-        "leaf.vein": "#305022"
+        "leaf.vein": "#305022",
+        "petal.cross.edge": "#5B111F3A",
+        "petal.cross.inner": "#5B111F10",
+        "petal.cross.clear": "#B0223200",
+        "petal.cross.light": "#ED5D6764"
       },
       "gradients": {
         "petal.base": {
@@ -810,6 +814,52 @@
           "startLandmark": "root",
           "endLandmark": "tip"
         }
+      },
+      "gradientOverlays": {
+        "petal.base": [
+          {
+            "start": {
+              "x": 0.05,
+              "y": 0.5
+            },
+            "end": {
+              "x": 0.97,
+              "y": 0.5
+            },
+            "startLandmark": "profile.left",
+            "endLandmark": "profile.right",
+            "stops": [
+              {
+                "offset": 0,
+                "token": "petal.cross.edge"
+              },
+              {
+                "offset": 0.18,
+                "token": "petal.cross.inner"
+              },
+              {
+                "offset": 0.38,
+                "token": "petal.cross.clear"
+              },
+              {
+                "offset": 0.5,
+                "token": "petal.cross.light"
+              },
+              {
+                "offset": 0.62,
+                "token": "petal.cross.clear"
+              },
+              {
+                "offset": 0.82,
+                "token": "petal.cross.inner"
+              },
+              {
+                "offset": 1,
+                "token": "petal.cross.edge"
+              }
+            ]
+          }
+        ]
       }
     },
     "pink": {
@@ -825,7 +875,11 @@
         "leaf.base": "#5E8034",
         "leaf.light": "#A2BA60",
         "leaf.edge": "#305022",
-        "leaf.vein": "#305022"
+        "leaf.vein": "#305022",
+        "petal.cross.edge": "#6F1C453A",
+        "petal.cross.inner": "#6F1C4510",
+        "petal.cross.clear": "#D03A7400",
+        "petal.cross.light": "#FF91BE64"
       },
       "gradients": {
         "petal.base": {
@@ -850,6 +904,52 @@
           "startLandmark": "root",
           "endLandmark": "tip"
         }
+      },
+      "gradientOverlays": {
+        "petal.base": [
+          {
+            "start": {
+              "x": 0.05,
+              "y": 0.5
+            },
+            "end": {
+              "x": 0.97,
+              "y": 0.5
+            },
+            "startLandmark": "profile.left",
+            "endLandmark": "profile.right",
+            "stops": [
+              {
+                "offset": 0,
+                "token": "petal.cross.edge"
+              },
+              {
+                "offset": 0.18,
+                "token": "petal.cross.inner"
+              },
+              {
+                "offset": 0.38,
+                "token": "petal.cross.clear"
+              },
+              {
+                "offset": 0.5,
+                "token": "petal.cross.light"
+              },
+              {
+                "offset": 0.62,
+                "token": "petal.cross.clear"
+              },
+              {
+                "offset": 0.82,
+                "token": "petal.cross.inner"
+              },
+              {
+                "offset": 1,
+                "token": "petal.cross.edge"
+              }
+            ]
+          }
+        ]
       }
     }
   },
