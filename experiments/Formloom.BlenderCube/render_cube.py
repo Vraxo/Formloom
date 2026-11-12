@@ -197,8 +197,7 @@ def create_ground(treatment="baseline"):
     # A 360-degree cyclorama replaces the finite floor plane. The raised,
     # rounded perimeter keeps distant studio horizons out of low camera views.
     floor_height = STUDIO_FLOOR_HEIGHT
-    profile = [
-        (14.0, floor_height),
+    profile = [        (14.0, floor_height),
         (14.7, floor_height + 0.01),
         (15.3, floor_height + 0.08),
         (15.9, floor_height + 0.28),
@@ -397,8 +396,7 @@ def create_lighting(treatment="baseline"):
         data.shape = "DISK"
         data.size = size
         light = bpy.data.objects.new(name, data)
-        bpy.context.collection.objects.link(light)
-        light.location = location
+        bpy.context.collection.objects.link(light)        light.location = location
         light.rotation_euler = (Vector((0.0, 0.0, 0.0)) - light.location).to_track_quat("-Z", "Y").to_euler()
 
 
@@ -597,8 +595,7 @@ def create_parametric_cylinder(name, location, radius=0.72, depth=2.0, segments=
         for segment in range(segments):
             angle = 2.0 * 3.141592653589793 * segment / segments
             vertices.append((radius * __import__("math").cos(angle), radius * __import__("math").sin(angle), z))
-    faces.append(tuple(range(segments - 1, -1, -1)))
-    faces.append(tuple(range(segments, segments * 2)))
+    faces.append(tuple(range(segments - 1, -1, -1)))    faces.append(tuple(range(segments, segments * 2)))
     for segment in range(segments):
         next_segment = (segment + 1) % segments
         faces.append((segment, next_segment, segments + next_segment, segments + segment))
@@ -797,8 +794,7 @@ def create_photorealistic_lighting():
         data.color = color
         data.shape = "DISK"
         data.size = size
-        light = bpy.data.objects.new(name, data)
-        bpy.context.collection.objects.link(light)
+        light = bpy.data.objects.new(name, data)        bpy.context.collection.objects.link(light)
         light.location = location
         light.rotation_euler = (Vector((0.0, 0.0, 0.0)) - light.location).to_track_quat("-Z", "Y").to_euler()
 
@@ -833,58 +829,80 @@ def render_photorealistic_still_life(output_dir, resolution):
     apple_nodes = apple_material.node_tree.nodes
     apple_links = apple_material.node_tree.links
 
-    # Build visible, fine-grained apple skin rather than broad, smooth colour noise.
-    # Object coordinates keep detail density tied to the fruit's real dimensions.
+    # Apple peel needs three distinct signals: lenticel freckles, subtle epidermal
+    # relief, and spatially varying wax/roughness. Keep the detail in normalized
+    # generated coordinates so it remains legible on the small final still-life.
     apple_coordinates = apple_nodes.new("ShaderNodeTexCoord")
-    apple_vector = apple_coordinates.outputs["Object"]
+    apple_vector = apple_coordinates.outputs["Generated"]
 
     pigment_noise = apple_nodes.new("ShaderNodeTexNoise")
-    pigment_noise.inputs["Scale"].default_value = 8.0
-    pigment_noise.inputs["Detail"].default_value = 4.0
-    pigment_noise.inputs["Roughness"].default_value = 0.68
+    pigment_noise.inputs["Scale"].default_value = 5.5
+    pigment_noise.inputs["Detail"].default_value = 3.0
+    pigment_noise.inputs["Roughness"].default_value = 0.72
     pigment_ramp = apple_nodes.new("ShaderNodeValToRGB")
-    pigment_ramp.color_ramp.elements[0].position = 0.25
-    pigment_ramp.color_ramp.elements[0].color = (0.20, 0.004, 0.009, 1.0)
-    pigment_ramp.color_ramp.elements[1].position = 0.75
-    pigment_ramp.color_ramp.elements[1].color = (0.43, 0.028, 0.025, 1.0)
+    pigment_ramp.color_ramp.elements[0].position = 0.22
+    pigment_ramp.color_ramp.elements[0].color = (0.19, 0.004, 0.008, 1.0)
+    pigment_ramp.color_ramp.elements[1].position = 0.78
+    pigment_ramp.color_ramp.elements[1].color = (0.37, 0.022, 0.018, 1.0)
     apple_links.new(apple_vector, pigment_noise.inputs["Vector"])
     apple_links.new(pigment_noise.outputs["Fac"], pigment_ramp.inputs["Fac"])
 
-    # Small, irregular lenticels: fine warm flecks rather than large polka dots.
+    # Lenticels are the missing visual cue: irregular pale pinpricks with a
+    # slightly darker warm edge, scaled large enough to survive this render.
     lenticels = apple_nodes.new("ShaderNodeTexVoronoi")
-    lenticels.inputs["Scale"].default_value = 115.0
+    lenticels.inputs["Scale"].default_value = 42.0
     lenticels.inputs["Randomness"].default_value = 1.0
     lenticel_ramp = apple_nodes.new("ShaderNodeValToRGB")
-    lenticel_ramp.color_ramp.elements[0].position = 0.012
-    lenticel_ramp.color_ramp.elements[0].color = (0.56, 0.16, 0.10, 1.0)
-    lenticel_ramp.color_ramp.elements[1].position = 0.055
-    lenticel_ramp.color_ramp.elements[1].color = (0.22, 0.006, 0.012, 1.0)
+    lenticel_ramp.color_ramp.elements[0].position = 0.018
+    lenticel_ramp.color_ramp.elements[0].color = (0.72, 0.30, 0.16, 1.0)
+    lenticel_ramp.color_ramp.elements[1].position = 0.075
+    lenticel_ramp.color_ramp.elements[1].color = (0.20, 0.006, 0.010, 1.0)
     lenticel_mix = apple_nodes.new("ShaderNodeMixRGB")
     lenticel_mix.blend_type = "MIX"
-    lenticel_mix.inputs["Fac"].default_value = 0.32
+    lenticel_mix.inputs["Fac"].default_value = 0.52
     apple_links.new(apple_vector, lenticels.inputs["Vector"])
     apple_links.new(lenticels.outputs["Distance"], lenticel_ramp.inputs["Fac"])
     apple_links.new(pigment_ramp.outputs["Color"], lenticel_mix.inputs[1])
     apple_links.new(lenticel_ramp.outputs["Color"], lenticel_mix.inputs[2])
     apple_links.new(lenticel_mix.outputs["Color"], apple_shader.inputs["Base Color"])
 
-    # Layer fine pores over slightly larger skin undulation so the detail survives
-    # the final image without turning into coarse bumps or a noisy surface.
+    # The peel has a fine, slightly pebbled epidermis rather than generic
+    # high-frequency noise alone. A medium-scale layer catches broad highlights.
+    epidermis_noise = apple_nodes.new("ShaderNodeTexNoise")
+    epidermis_noise.inputs["Scale"].default_value = 92.0
+    epidermis_noise.inputs["Detail"].default_value = 3.0
+    epidermis_noise.inputs["Roughness"].default_value = 0.68
+    epidermis_bump = apple_nodes.new("ShaderNodeBump")
+    epidermis_bump.inputs["Strength"].default_value = 0.24
+    epidermis_bump.inputs["Distance"].default_value = 0.0035
+    apple_links.new(apple_vector, epidermis_noise.inputs["Vector"])
+    apple_links.new(epidermis_noise.outputs["Fac"], epidermis_bump.inputs["Height"])
+
+    # A finer pore layer sits on top of the epidermis; chained bump nodes keep
+    # both scales present instead of allowing one normal signal to overwrite another.
     pore_noise = apple_nodes.new("ShaderNodeTexNoise")
-    pore_noise.inputs["Scale"].default_value = 165.0
+    pore_noise.inputs["Scale"].default_value = 235.0
     pore_noise.inputs["Detail"].default_value = 2.0
     pore_bump = apple_nodes.new("ShaderNodeBump")
-    pore_bump.inputs["Strength"].default_value = 0.075
-    pore_bump.inputs["Distance"].default_value = 0.0012
+    pore_bump.inputs["Strength"].default_value = 0.14
+    pore_bump.inputs["Distance"].default_value = 0.00075
     apple_links.new(apple_vector, pore_noise.inputs["Vector"])
     apple_links.new(pore_noise.outputs["Fac"], pore_bump.inputs["Height"])
+    apple_links.new(epidermis_bump.outputs["Normal"], pore_bump.inputs["Normal"])
     apple_links.new(pore_bump.outputs["Normal"], apple_shader.inputs["Normal"])
 
-    # A natural waxy satin response: soft highlights, never a wet tomato gloss.
-    apple_shader.inputs["Roughness"].default_value = 0.38
+    # Real peel has local differences in waxiness; vary roughness with the same
+    # epidermal field so highlights break up naturally instead of staying plastic-smooth.
+    roughness_ramp = apple_nodes.new("ShaderNodeValToRGB")
+    roughness_ramp.color_ramp.elements[0].color = (0.31, 0.31, 0.31, 1.0)
+    roughness_ramp.color_ramp.elements[1].color = (0.48, 0.48, 0.48, 1.0)
+    apple_links.new(epidermis_noise.outputs["Fac"], roughness_ramp.inputs["Fac"])
+    apple_links.new(roughness_ramp.outputs["Color"], apple_shader.inputs["Roughness"])
+
+    apple_shader.inputs["Roughness"].default_value = 0.40
     apple_coat = apple_shader.inputs.get("Coat Weight") or apple_shader.inputs.get("Clearcoat")
     if apple_coat is not None:
-        apple_coat.default_value = 0.045
+        apple_coat.default_value = 0.035
     assign_material(vase, vase_material)
     assign_material(apple, apple_material)
 
@@ -997,8 +1015,7 @@ def main():
     gallery_cube = create_cube()
     gallery_sphere = create_parametric_sphere("GallerySphere", (-2.15, 0.0, -0.205), scale=(0.88, 0.88, 0.88))
     gallery_cylinder = create_parametric_cylinder("GalleryCylinder", (2.15, 0.0, -0.16), radius=0.72, depth=1.85)
-    gallery_material = create_material("GalleryClay", "clay")
-    for obj in (gallery_cube, gallery_sphere, gallery_cylinder):
+    gallery_material = create_material("GalleryClay", "clay")    for obj in (gallery_cube, gallery_sphere, gallery_cylinder):
         assign_material(obj, gallery_material)
     create_ground()
     create_lighting()
