@@ -96,7 +96,11 @@ public static class ModelDefinitionEvaluator
                     new(pair.Value.End.X, pair.Value.End.Y),
                     pair.Value.Stops
                         .Select(stop => new ModelGeometryGradientStop(stop.Offset, stop.Token))
-                        .ToImmutableArray()),
+                        .ToImmutableArray())
+                {
+                    StartLandmark = pair.Value.StartLandmark,
+                    EndLandmark = pair.Value.EndLandmark,
+                },
                 StringComparer.Ordinal),
         };
         foreach (var diagnostic in ModelGeometryValidator.Validate(geometry))
