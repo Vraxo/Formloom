@@ -268,7 +268,7 @@ The five current operation nodes produce the following results:
 | `array.radial` | Deterministically varied profile instances, each with a stable path ID and optional material tone. |
 | `geometry.group` | Child paths flattened into the declared group-member order. |
 
-The final model outputs are flattened in output declaration order and passed through `ModelGeometryValidator`. The evaluator preserves path material-slot keys, optional 0..1 material tone, and named `attachment`/`root`/`tip` landmarks for profile maps. The radial `tone` field is optional in schema v1; when absent, its base is 0 so existing v1 files remain valid.
+The final model outputs are flattened in output declaration order and passed through `ModelGeometryValidator`. The evaluator preserves path material-slot keys, optional 0..1 material tone, and named `attachment`/`root`/`tip` landmarks for profile maps. A renderer interprets path tone generically as a value hierarchy: 0 is darkest, 0.5 is neutral, and 1 is brightest; it modulates the selected solid color or each stop of the selected gradient without changing the model's palette tokens. The radial `tone` field is optional in schema v1; when absent, its base is 0 so existing v1 files remain valid.
 
 Expected definition/context/operation failures are returned as structured diagnostics carrying the model ID and a location such as `nodes[3](bloom.outer).radiusX`. The evaluator is callable from Core tests and has no Skia or desktop dependency.
 
