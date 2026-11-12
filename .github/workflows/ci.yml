@@ -158,17 +158,29 @@ jobs:
           version="4.5.16"
           install_dir="$RUNNER_TEMP/blender-${version}-linux-x64"
           # Blender still needs these shared libraries on a cache hit.
-          # Use Ubuntu's primary archive over HTTPS. The kernel.org mirror used
-          # previously is intermittently unreachable from hosted runners.
-          sudo grep -RIlE 'azure.archive.ubuntu.com|mirrors.edge.kernel.org' /etc/apt 2>/dev/null \
-            | xargs -r sudo sed -i -e 's|azure.archive.ubuntu.com|archive.ubuntu.com|g' \
-                                      -e 's|http://mirrors.edge.kernel.org/ubuntu|https://archive.ubuntu.com/ubuntu|g' \
-                                      -e 's|https://mirrors.edge.kernel.org/ubuntu|https://archive.ubuntu.com/ubuntu|g'
-          sudo apt-get -o Acquire::Retries=4 -o Acquire::https::Timeout=30 update
-          sudo apt-get -o Acquire::Retries=4 -o Acquire::https::Timeout=30 install \
-            --no-install-recommends -y \
-            libegl1 libgl1 libice6 libsm6 libx11-6 libxfixes3 libxi6 \
+          runtime_packages=(
+            libegl1 libgl1 libice6 libsm6 libx11-6 libxfixes3 libxi6
             libxkbcommon0 libxrender1 libxxf86vm1
+          )
+          missing_packages=()
+          for package in "${runtime_packages[@]}"; do
+            if ! dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q 'install ok installed'; then
+              missing_packages+=("$package")
+            fi
+          done
+          if (( ${#missing_packages[@]} > 0 )); then
+            # Use Ubuntu's primary archive over HTTPS. The kernel.org mirror used
+            # previously is intermittently unreachable from hosted runners.
+            sudo grep -RIlE 'azure.archive.ubuntu.com|mirrors.edge.kernel.org' /etc/apt 2>/dev/null \
+              | xargs -r sudo sed -i -e 's|azure.archive.ubuntu.com|archive.ubuntu.com|g' \
+                                        -e 's|http://mirrors.edge.kernel.org/ubuntu|https://archive.ubuntu.com/ubuntu|g' \
+                                        -e 's|https://mirrors.edge.kernel.org/ubuntu|https://archive.ubuntu.com/ubuntu|g'
+            sudo apt-get -o Acquire::Retries=4 -o Acquire::https::Timeout=30 update
+            sudo apt-get -o Acquire::Retries=4 -o Acquire::https::Timeout=30 install \
+              --no-install-recommends -y "${missing_packages[@]}"
+          else
+            echo "All Blender runtime libraries are already installed."
+          fi
           if [[ ! -x "$install_dir/blender" ]]; then
             archive="blender-${version}-linux-x64.tar.xz"
             checksum="blender-${version}.sha256"
