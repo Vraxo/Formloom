@@ -9,8 +9,8 @@ namespace Formloom.Desktop.Tests.Studio;
 public sealed class CatalogModelGenerationTests
 {
     [Theory]
-    [InlineData("a red rose in a blue ceramic vase on a wooden table", "model-flowers-rose-in-blue-vase")]
-    [InlineData("a pink rose in a cream ceramic vase on a wooden table", "model-flowers-rose-in-cream-vase")]
+    [InlineData("a red rose in a blue ceramic vase on a wooden table", "red-rose-in-blue-vase")]
+    [InlineData("a pink rose in a cream ceramic vase on a wooden table", "pink-rose-in-cream-vase")]
     public async Task DesktopPromptPipelineUsesTheDiscoveredModelDefinition(
         string prompt,
         string expectedSubject)
@@ -29,7 +29,7 @@ public sealed class CatalogModelGenerationTests
             PngSaveService.SuggestedFileName(image, 42));
         Assert.Equal("data:image/png;base64," + Convert.ToBase64String(image.PngBytes), result.PreviewUrl);
 
-        var artifactPath = Path.Combine(AppContext.BaseDirectory, expectedSubject + ".png");
+        var artifactPath = Path.Combine(AppContext.BaseDirectory, $"formloom-{expectedSubject}-seed-42.png");
         await File.WriteAllBytesAsync(artifactPath, image.PngBytes, TestContext.Current.CancellationToken);
     }
 }
