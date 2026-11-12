@@ -210,7 +210,10 @@ def create_photorealistic_apple_material():
     # occupy roughly one pixel, while epidermal relief should break up highlights
     # without reading as coarse bumps.
     coordinates = nodes.new("ShaderNodeTexCoord")
-    vector = coordinates.outputs["Object"]
+    # Generated coordinates are automatically mapped over this mesh. The Object
+    # output requires an explicit reference object; leaving it unset collapses
+    # these procedural textures and makes the peel appear uniformly smooth.
+    vector = coordinates.outputs["Generated"]
 
     pigment_noise = nodes.new("ShaderNodeTexNoise")
     pigment_noise.inputs["Scale"].default_value = 5.5
