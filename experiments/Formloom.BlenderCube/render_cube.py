@@ -197,7 +197,8 @@ def create_ground(treatment="baseline"):
     # A 360-degree cyclorama replaces the finite floor plane. The raised,
     # rounded perimeter keeps distant studio horizons out of low camera views.
     floor_height = STUDIO_FLOOR_HEIGHT
-    profile = [        (14.0, floor_height),
+    profile = [
+        (14.0, floor_height),
         (14.7, floor_height + 0.01),
         (15.3, floor_height + 0.08),
         (15.9, floor_height + 0.28),
@@ -396,7 +397,8 @@ def create_lighting(treatment="baseline"):
         data.shape = "DISK"
         data.size = size
         light = bpy.data.objects.new(name, data)
-        bpy.context.collection.objects.link(light)        light.location = location
+        bpy.context.collection.objects.link(light)
+        light.location = location
         light.rotation_euler = (Vector((0.0, 0.0, 0.0)) - light.location).to_track_quat("-Z", "Y").to_euler()
 
 
@@ -595,7 +597,8 @@ def create_parametric_cylinder(name, location, radius=0.72, depth=2.0, segments=
         for segment in range(segments):
             angle = 2.0 * 3.141592653589793 * segment / segments
             vertices.append((radius * __import__("math").cos(angle), radius * __import__("math").sin(angle), z))
-    faces.append(tuple(range(segments - 1, -1, -1)))    faces.append(tuple(range(segments, segments * 2)))
+    faces.append(tuple(range(segments - 1, -1, -1)))
+    faces.append(tuple(range(segments, segments * 2)))
     for segment in range(segments):
         next_segment = (segment + 1) % segments
         faces.append((segment, next_segment, segments + next_segment, segments + segment))
@@ -794,7 +797,8 @@ def create_photorealistic_lighting():
         data.color = color
         data.shape = "DISK"
         data.size = size
-        light = bpy.data.objects.new(name, data)        bpy.context.collection.objects.link(light)
+        light = bpy.data.objects.new(name, data)
+        bpy.context.collection.objects.link(light)
         light.location = location
         light.rotation_euler = (Vector((0.0, 0.0, 0.0)) - light.location).to_track_quat("-Z", "Y").to_euler()
 
@@ -1015,7 +1019,8 @@ def main():
     gallery_cube = create_cube()
     gallery_sphere = create_parametric_sphere("GallerySphere", (-2.15, 0.0, -0.205), scale=(0.88, 0.88, 0.88))
     gallery_cylinder = create_parametric_cylinder("GalleryCylinder", (2.15, 0.0, -0.16), radius=0.72, depth=1.85)
-    gallery_material = create_material("GalleryClay", "clay")    for obj in (gallery_cube, gallery_sphere, gallery_cylinder):
+    gallery_material = create_material("GalleryClay", "clay")
+    for obj in (gallery_cube, gallery_sphere, gallery_cylinder):
         assign_material(obj, gallery_material)
     create_ground()
     create_lighting()
