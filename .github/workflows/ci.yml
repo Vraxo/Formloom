@@ -73,7 +73,7 @@ jobs:
           path: |
             artifacts/bin/Formloom.Tests/**/formloom-*.png
             artifacts/bin/Formloom.Tests/**/formloom-*.timing.json
-          if-no-files-found: ignore
+          if-no-files-found: error
 
       - name: Assemble focused Phase 10 rose review bundle
         if: success()
@@ -206,4 +206,4 @@ jobs:
         with:
           name: blender-cube-review
           path: artifacts/blender-cube/
-          if-no-files-found: error
+          if-no-files-found: ignore
