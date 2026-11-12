@@ -384,6 +384,65 @@ public sealed class ModelGeometryRendererTests
     }
 
     [Fact]
+    public void ResolvesGradientEndpointsFromEachPathLandmarkPair()
+    {
+        var geometry = new ModelGeometry(
+            "models.path-gradient-test",
+            ModelGeometryCoordinateSpace.SceneNormalized,
+            [
+                Rectangle("left-petal", 0.05f, 0.1f, 0.45f, 0.9f, "petal")
+                    with
+                    {
+                        Landmarks =
+                        [
+                            new("root", new Vector2(0.25f, 0.12f)),
+                            new("tip", new Vector2(0.25f, 0.88f)),
+                        ],
+                    },
+                Rectangle("right-petal", 0.55f, 0.1f, 0.95f, 0.9f, "petal")
+                    with
+                    {
+                        Landmarks =
+                        [
+                            new("root", new Vector2(0.75f, 0.88f)),
+                            new("tip", new Vector2(0.75f, 0.12f)),
+                        ],
+                    },
+            ])
+        {
+            MaterialTokens = ImmutableDictionary<string, string>.Empty
+                .Add("petal", "#804020")
+                .Add("petal.light", "#F0A050")
+                .Add("petal.shadow", "#401008"),
+            MaterialGradients = ImmutableDictionary<string, ModelGeometryLinearGradient>.Empty.Add(
+                "petal",
+                new(
+                    new(0.5f, 0.1f),
+                    new(0.5f, 0.9f),
+                    [
+                        new(0f, "petal.light"),
+                        new(1f, "petal.shadow"),
+                    ])
+                {
+                    StartLandmark = "root",
+                    EndLandmark = "tip",
+                }),
+        };
+
+        var rendered = ModelGeometryRenderer.Render(geometry, 256, 128, new RenderOptions(Antialiasing: false));
+
+        using var bitmap = Decode(rendered.PngBytes);
+        var leftStart = bitmap.GetPixel(64, 25);
+        var leftEnd = bitmap.GetPixel(64, 102);
+        var rightStart = bitmap.GetPixel(192, 25);
+        var rightEnd = bitmap.GetPixel(192, 102);
+
+        Assert.True(leftStart.Red > leftEnd.Red);
+        Assert.True(rightEnd.Red > rightStart.Red);
+        Assert.False(leftStart == rightStart);
+    }
+
+    [Fact]
     public void RendersAndExportsBothExternalRoseMaterialVariants()
     {
         var red = EvaluateRose("red");
@@ -394,6 +453,8 @@ public sealed class ModelGeometryRendererTests
         Assert.Equal(
             new[] { "petal.light", "petal.base" },
             red.MaterialGradients["petal.base"].Stops.Select(stop => stop.Token));
+        Assert.Equal("root", red.MaterialGradients["petal.base"].StartLandmark);
+        Assert.Equal("tip", red.MaterialGradients["petal.base"].EndLandmark);
         Assert.Equal(
             new[] { "petal.light", "petal.base" },
             pink.MaterialGradients["petal.base"].Stops.Select(stop => stop.Token));
