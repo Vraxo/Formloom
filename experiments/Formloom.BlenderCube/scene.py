@@ -112,31 +112,36 @@ def create_illustrated_tabletop():
     shader.inputs["Roughness"].default_value = 0.76
     coordinates = material.node_tree.nodes.new("ShaderNodeTexCoord")
     mapping = material.node_tree.nodes.new("ShaderNodeMapping")
-    mapping.inputs["Scale"].default_value = (0.7, 18.0, 4.0)
-    wave = material.node_tree.nodes.new("ShaderNodeTexWave")
-    wave.wave_type = "BANDS"
-    wave.bands_direction = "Y"
-    wave.inputs["Scale"].default_value = 2.6
-    wave.inputs["Distortion"].default_value = 5.0
-    wave.inputs["Detail"].default_value = 3.0
-    noise = material.node_tree.nodes.new("ShaderNodeTexNoise")
-    noise.inputs["Scale"].default_value = 8.0
-    noise.inputs["Detail"].default_value = 2.0
+    # Stretch the noise across the tabletop so the grain follows its long axis.
+    # A low-contrast ramp keeps the wood tactile without turning the surface
+    # into a repeated striped pattern that competes with the still-life objects.
+    mapping.inputs["Scale"].default_value = (0.8, 16.0, 2.0)
+    grain = material.node_tree.nodes.new("ShaderNodeTexNoise")
+    grain.inputs["Scale"].default_value = 5.5
+    grain.inputs["Detail"].default_value = 3.0
+    grain.inputs["Roughness"].default_value = 0.68
+    grain.inputs["Distortion"].default_value = 0.38
     ramp = material.node_tree.nodes.new("ShaderNodeValToRGB")
-    ramp.color_ramp.elements[0].position = 0.18
-    ramp.color_ramp.elements[0].color = (0.075, 0.027, 0.009, 1.0)
-    ramp.color_ramp.elements[1].position = 0.82
-    ramp.color_ramp.elements[1].color = (0.34, 0.15, 0.052, 1.0)
+    ramp.color_ramp.elements[0].position = 0.22
+    ramp.color_ramp.elements[0].color = (0.105, 0.047, 0.019, 1.0)
+    ramp.color_ramp.elements[1].position = 0.78
+    ramp.color_ramp.elements[1].color = (0.185, 0.094, 0.041, 1.0)
+    middle = ramp.color_ramp.elements.new(0.5)
+    middle.color = (0.145, 0.068, 0.028, 1.0)
+    pore_noise = material.node_tree.nodes.new("ShaderNodeTexNoise")
+    pore_noise.inputs["Scale"].default_value = 72.0
+    pore_noise.inputs["Detail"].default_value = 2.0
     bump = material.node_tree.nodes.new("ShaderNodeBump")
-    bump.inputs["Strength"].default_value = 0.045
-    bump.inputs["Distance"].default_value = 0.012
+    bump.inputs["Strength"].default_value = 0.025
+    bump.inputs["Distance"].default_value = 0.0015
     links = material.node_tree.links
-    links.new(coordinates.outputs["Generated"], mapping.inputs["Vector"])
-    links.new(mapping.outputs["Vector"], wave.inputs["Vector"])
-    links.new(wave.outputs["Color"], ramp.inputs["Fac"])
-    links.new(coordinates.outputs["Generated"], noise.inputs["Vector"])
+    generated = coordinates.outputs["Generated"]
+    links.new(generated, mapping.inputs["Vector"])
+    links.new(mapping.outputs["Vector"], grain.inputs["Vector"])
+    links.new(grain.outputs["Fac"], ramp.inputs["Fac"])
     links.new(ramp.outputs["Color"], shader.inputs["Base Color"])
-    links.new(noise.outputs["Fac"], bump.inputs["Height"])
+    links.new(generated, pore_noise.inputs["Vector"])
+    links.new(pore_noise.outputs["Fac"], bump.inputs["Height"])
     links.new(bump.outputs["Normal"], shader.inputs["Normal"])
     tabletop.data.materials.append(material)
     return tabletop
