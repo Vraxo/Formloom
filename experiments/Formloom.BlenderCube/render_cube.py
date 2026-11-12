@@ -830,22 +830,67 @@ def render_photorealistic_still_life(output_dir, resolution):
 
     apple_material = create_material("PhotorealisticAppleSkin", "apple")
     apple_shader = apple_material.node_tree.nodes.get("Principled BSDF")
-    # Real apple skin is satin-like, not a clear-coated plastic surface.
-    apple_shader.inputs["Roughness"].default_value = 0.42
-    apple_coat = apple_shader.inputs.get("Coat Weight") or apple_shader.inputs.get("Clearcoat")
-    if apple_coat is not None:
-        apple_coat.default_value = 0.045
-    micro_noise = apple_material.node_tree.nodes.new("ShaderNodeTexNoise")
-    micro_noise.inputs["Scale"].default_value = 115.0
-    micro_noise.inputs["Detail"].default_value = 2.0
-    micro_bump = apple_material.node_tree.nodes.new("ShaderNodeBump")
-    micro_bump.inputs["Strength"].default_value = 0.045
-    micro_bump.inputs["Distance"].default_value = 0.0009
-    apple_coordinates = apple_material.node_tree.nodes.new("ShaderNodeTexCoord")
+    apple_nodes = apple_material.node_tree.nodes
     apple_links = apple_material.node_tree.links
+
+    # Replace the broad, tomato-like base mottling and coarse bump inherited
+    # from the baseline apple shader with finer apple-skin pigment structure.
+    for link in list(apple_links):
+        if link.to_node == apple_shader and link.to_socket.name in ("Base Color", "Normal"):
+            apple_links.remove(link)
+
+    # A restrained low-frequency pigment field gives the red skin natural,
+    # broad tonal variation without visible cloudy patches.
+    apple_coordinates = apple_nodes.new("ShaderNodeTexCoord")
+    pigment_noise = apple_nodes.new("ShaderNodeTexNoise")
+    pigment_noise.inputs["Scale"].default_value = 5.5
+    pigment_noise.inputs["Detail"].default_value = 3.0
+    pigment_noise.inputs["Roughness"].default_value = 0.62
+    pigment_ramp = apple_nodes.new("ShaderNodeValToRGB")
+    pigment_ramp.color_ramp.elements[0].position = 0.22
+    pigment_ramp.color_ramp.elements[0].color = (0.245, 0.008, 0.014, 1.0)
+    pigment_ramp.color_ramp.elements[1].position = 0.78
+    pigment_ramp.color_ramp.elements[1].color = (0.34, 0.018, 0.022, 1.0)
+    apple_links.new(apple_coordinates.outputs["Generated"], pigment_noise.inputs["Vector"])
+    apple_links.new(pigment_noise.outputs["Fac"], pigment_ramp.inputs["Fac"])
+
+    # Tiny, softly varied lenticels are characteristic of apple skin. Keep
+    # their contrast low so they read as pores, not painted-on dots.
+    lenticels = apple_nodes.new("ShaderNodeTexVoronoi")
+    lenticels.inputs["Scale"].default_value = 185.0
+    lenticels.inputs["Randomness"].default_value = 1.0
+    lenticel_ramp = apple_nodes.new("ShaderNodeValToRGB")
+    lenticel_ramp.color_ramp.elements[0].position = 0.018
+    lenticel_ramp.color_ramp.elements[0].color = (0.52, 0.075, 0.055, 1.0)
+    lenticel_ramp.color_ramp.elements[1].position = 0.075
+    lenticel_ramp.color_ramp.elements[1].color = (0.30, 0.012, 0.018, 1.0)
+    lenticel_mix = apple_nodes.new("ShaderNodeMixRGB")
+    lenticel_mix.blend_type = "MIX"
+    lenticel_mix.inputs["Fac"].default_value = 0.12
+    apple_links.new(apple_coordinates.outputs["Generated"], lenticels.inputs["Vector"])
+    apple_links.new(lenticels.outputs["Distance"], lenticel_ramp.inputs["Fac"])
+    apple_links.new(pigment_ramp.outputs["Color"], lenticel_mix.inputs[1])
+    apple_links.new(lenticel_ramp.outputs["Color"], lenticel_mix.inputs[2])
+    apple_links.new(lenticel_mix.outputs["Color"], apple_shader.inputs["Base Color"])
+
+    # Fine surface variation is nearly imperceptible at a distance, but gives
+    # highlights the softly pebbled response of real waxy fruit skin.
+    micro_noise = apple_nodes.new("ShaderNodeTexNoise")
+    micro_noise.inputs["Scale"].default_value = 210.0
+    micro_noise.inputs["Detail"].default_value = 2.0
+    micro_bump = apple_nodes.new("ShaderNodeBump")
+    micro_bump.inputs["Strength"].default_value = 0.012
+    micro_bump.inputs["Distance"].default_value = 0.00028
     apple_links.new(apple_coordinates.outputs["Generated"], micro_noise.inputs["Vector"])
     apple_links.new(micro_noise.outputs["Fac"], micro_bump.inputs["Height"])
     apple_links.new(micro_bump.outputs["Normal"], apple_shader.inputs["Normal"])
+
+    # A satin-wax response keeps broad reflections soft and avoids tomato-like
+    # wet gloss while retaining a small, natural highlight.
+    apple_shader.inputs["Roughness"].default_value = 0.39
+    apple_coat = apple_shader.inputs.get("Coat Weight") or apple_shader.inputs.get("Clearcoat")
+    if apple_coat is not None:
+        apple_coat.default_value = 0.035
     assign_material(vase, vase_material)
     assign_material(apple, apple_material)
 
