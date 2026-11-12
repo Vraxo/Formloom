@@ -51,6 +51,29 @@ def render_apple_skin_closeup(output_dir, base_resolution, sample_count, denoise
     clear_scene()
     apple = create_grounded_apple("AppleSkinMacroStudy", 0.0, 0.0)
     material = create_photorealistic_apple_material(apple)
+    for map_name, filename in (
+        ("FormloomAppleSkin_BaseColor", "apple-map-base-color.png"),
+        ("FormloomAppleSkin_Roughness", "apple-map-roughness.png"),
+        ("FormloomAppleSkin_Height", "apple-map-height.png"),
+    ):
+        image = bpy.data.images.get(map_name)
+        if image is None:
+            raise RuntimeError("Generated apple map is missing: " + map_name)
+        image.filepath_raw = os.path.join(output_dir, filename)
+        image.file_format = "PNG"
+        image.save()
+        pixel_count = image.size[0] * image.size[1]
+        center_offset = ((image.size[1] // 2) * image.size[0] + image.size[0] // 2) * 4
+        print(
+            "APPLE_MAP_DIAGNOSTIC="
+            + map_name
+            + " first="
+            + str(tuple(image.pixels[0:4]))
+            + " center="
+            + str(tuple(image.pixels[center_offset:center_offset + 4]))
+            + " pixels="
+            + str(pixel_count)
+        )
     assign_material(apple, material)
     create_ground()
     create_lighting()
