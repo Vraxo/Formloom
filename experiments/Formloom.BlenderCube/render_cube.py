@@ -7,6 +7,8 @@ import sys
 
 import bpy
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from geometry import (
     assign_material,
     create_cube,
