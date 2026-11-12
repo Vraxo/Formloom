@@ -102,6 +102,19 @@ public static class ModelDefinitionEvaluator
                     EndLandmark = pair.Value.EndLandmark,
                 },
                 StringComparer.Ordinal),
+            MaterialGradientOverlays = definition.Materials[materialVariant].GradientOverlays.ToImmutableDictionary(
+                pair => pair.Key,
+                pair => pair.Value.Select(gradient => new ModelGeometryLinearGradient(
+                    new(gradient.Start.X, gradient.Start.Y),
+                    new(gradient.End.X, gradient.End.Y),
+                    gradient.Stops
+                        .Select(stop => new ModelGeometryGradientStop(stop.Offset, stop.Token))
+                        .ToImmutableArray())
+                {
+                    StartLandmark = gradient.StartLandmark,
+                    EndLandmark = gradient.EndLandmark,
+                }).ToImmutableArray(),
+                StringComparer.Ordinal),
         };
         foreach (var diagnostic in ModelGeometryValidator.Validate(geometry))
         {
@@ -716,10 +729,18 @@ public static class ModelDefinitionEvaluator
         var tipT = mapping.ReverseLongitudinal ? 0f : 1f;
         var root = MapProfileLandmark(origin, direction, mapping, new(0.5f, rootT));
         var tip = MapProfileLandmark(origin, direction, mapping, new(0.5f, tipT));
+        var minimumX = profile.Points.Min(point => point.X);
+        var maximumX = profile.Points.Max(point => point.X);
         var landmarks = ImmutableArray.Create(
             new ModelGeometryLandmark("attachment", origin),
             new ModelGeometryLandmark("root", root),
-            new ModelGeometryLandmark("tip", tip));
+            new ModelGeometryLandmark("tip", tip),
+            new ModelGeometryLandmark(
+                "profile.left",
+                MapProfileLandmark(origin, direction, mapping, new(minimumX, 0.5f))),
+            new ModelGeometryLandmark(
+                "profile.right",
+                MapProfileLandmark(origin, direction, mapping, new(maximumX, 0.5f)));
         return new ModelGeometryPath(id, sourceNodeId, pathSegments, profile.Closed, materialSlot, detail)
         {
             MaterialTone = materialTone,
