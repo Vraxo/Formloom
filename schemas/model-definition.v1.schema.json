@@ -285,6 +285,16 @@
           "additionalProperties": {
             "$ref": "#/$defs/linearGradient"
           }
+        },
+        "gradientOverlays": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/$defs/linearGradient"
+            }
+          }
         }
       }
     },
