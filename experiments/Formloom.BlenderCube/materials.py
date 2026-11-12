@@ -199,102 +199,89 @@ def create_photorealistic_plaster_material():
     return material
 
 
-def create_photorealistic_apple_material():
-    """Create a waxy red apple material with visible natural peel detail."""
+def create_photorealistic_apple_material(apple):
+    """Create an apple peel material from independently generated PBR surface maps."""
+    from apple_surface import create_apple_surface_maps
+
+    images = create_apple_surface_maps(apple)
     material = bpy.data.materials.new("PhotorealisticAppleSkin")
     shader = principled_node(material)
     nodes = material.node_tree.nodes
     links = material.node_tree.links
 
-    # Scale the peel detail for the actual 384px output: the lenticels need to
-    # occupy roughly one pixel, while epidermal relief should break up highlights
-    # without reading as coarse bumps.
     coordinates = nodes.new("ShaderNodeTexCoord")
-    # Generated coordinates are automatically mapped over this mesh. The Object
-    # output requires an explicit reference object; leaving it unset collapses
-    # these procedural textures and makes the peel appear uniformly smooth.
-    vector = coordinates.outputs["Generated"]
+    coordinates.label = "Apple surface UVs"
+    uv = coordinates.outputs["UV"]
 
-    pigment_noise = nodes.new("ShaderNodeTexNoise")
-    pigment_noise.inputs["Scale"].default_value = 3.2
-    pigment_noise.inputs["Detail"].default_value = 1.6
-    pigment_noise.inputs["Roughness"].default_value = 0.72
-    pigment_ramp = nodes.new("ShaderNodeValToRGB")
-    pigment_ramp.color_ramp.elements[0].position = 0.20
-    pigment_ramp.color_ramp.elements[0].color = (0.235, 0.008, 0.010, 1.0)
-    pigment_ramp.color_ramp.elements[1].position = 0.80
-    pigment_ramp.color_ramp.elements[1].color = (0.32, 0.018, 0.014, 1.0)
-    links.new(vector, pigment_noise.inputs["Vector"])
-    links.new(pigment_noise.outputs["Fac"], pigment_ramp.inputs["Fac"])
+    color_texture = nodes.new("ShaderNodeTexImage")
+    color_texture.label = "Natural pigment and lenticels"
+    color_texture.image = images["color"]
+    color_texture.interpolation = "Linear"
+    color_texture.extension = "REPEAT"
+    links.new(uv, color_texture.inputs["Vector"])
+    links.new(color_texture.outputs["Color"], shader.inputs["Base Color"])
 
-    # Lenticels are small warm pinpricks, not large dots. At this scale the
-    # centre and soft edge survive the final render without covering the peel.
-    lenticels = nodes.new("ShaderNodeTexVoronoi")
-    lenticels.inputs["Scale"].default_value = 48.0
-    lenticels.inputs["Randomness"].default_value = 1.0
-    lenticel_ramp = nodes.new("ShaderNodeValToRGB")
-    lenticel_ramp.color_ramp.elements[0].position = 0.055
-    lenticel_ramp.color_ramp.elements[0].color = (0.31, 0.075, 0.032, 1.0)
-    lenticel_ramp.color_ramp.elements[1].position = 0.22
-    lenticel_ramp.color_ramp.elements[1].color = (0.29, 0.012, 0.012, 1.0)
-    lenticel_edge = lenticel_ramp.color_ramp.elements.new(0.12)
-    lenticel_edge.color = (0.30, 0.035, 0.018, 1.0)
+    roughness_texture = nodes.new("ShaderNodeTexImage")
+    roughness_texture.label = "Cuticle roughness variation"
+    roughness_texture.image = images["roughness"]
+    roughness_texture.interpolation = "Linear"
+    roughness_texture.extension = "REPEAT"
+    links.new(uv, roughness_texture.inputs["Vector"])
+    links.new(roughness_texture.outputs["Color"], shader.inputs["Roughness"])
 
-    lenticel_mix = nodes.new("ShaderNodeMixRGB")
-    lenticel_mix.blend_type = "MIX"
-    lenticel_mix.inputs["Fac"].default_value = 0.08
-    links.new(vector, lenticels.inputs["Vector"])
-    links.new(lenticels.outputs["Distance"], lenticel_ramp.inputs["Fac"])
-    links.new(pigment_ramp.outputs["Color"], lenticel_mix.inputs[1])
-    links.new(lenticel_ramp.outputs["Color"], lenticel_mix.inputs[2])
-    links.new(lenticel_mix.outputs["Color"], shader.inputs["Base Color"])
+    height_texture = nodes.new("ShaderNodeTexImage")
+    height_texture.label = "Epidermis and shallow lenticel depressions"
+    height_texture.image = images["height"]
+    height_texture.interpolation = "Linear"
+    height_texture.extension = "REPEAT"
+    links.new(uv, height_texture.inputs["Vector"])
 
-    # The peel has a gently pebbled epidermis. Lower spatial frequency is
-    # deliberate: sub-pixel noise was being erased by denoising at this size.
-    epidermis_noise = nodes.new("ShaderNodeTexNoise")
-    epidermis_noise.inputs["Scale"].default_value = 92.0
-    epidermis_noise.inputs["Detail"].default_value = 2.5
-    epidermis_noise.inputs["Roughness"].default_value = 0.72
     epidermis_bump = nodes.new("ShaderNodeBump")
-    epidermis_bump.inputs["Strength"].default_value = 0.065
-    epidermis_bump.inputs["Distance"].default_value = 0.00055
-    links.new(vector, epidermis_noise.inputs["Vector"])
-    links.new(epidermis_noise.outputs["Fac"], epidermis_bump.inputs["Height"])
+    epidermis_bump.label = "Subtle skin relief"
+    epidermis_bump.inputs["Strength"].default_value = 0.16
+    epidermis_bump.inputs["Distance"].default_value = 0.00115
+    links.new(height_texture.outputs["Color"], epidermis_bump.inputs["Height"])
 
-    # A shallow depression beneath each lenticel gives the freckles a little
-    # physical definition instead of relying on colour contrast alone.
-    lenticel_height = nodes.new("ShaderNodeValToRGB")
-    lenticel_height.color_ramp.elements[0].position = 0.055
-    lenticel_height.color_ramp.elements[0].color = (0.0, 0.0, 0.0, 1.0)
-    lenticel_height.color_ramp.elements[1].position = 0.22
-    lenticel_height.color_ramp.elements[1].color = (1.0, 1.0, 1.0, 1.0)
-    lenticel_bump = nodes.new("ShaderNodeBump")
-    lenticel_bump.inputs["Strength"].default_value = 0.025
-    lenticel_bump.inputs["Distance"].default_value = 0.00022
-    links.new(lenticels.outputs["Distance"], lenticel_height.inputs["Fac"])
-    links.new(lenticel_height.outputs["Color"], lenticel_bump.inputs["Height"])
-    links.new(epidermis_bump.outputs["Normal"], lenticel_bump.inputs["Normal"])
+    # A much finer secondary scale breaks up broad reflections without turning
+    # the skin into grit. It is intentionally weaker than the cuticle relief.
+    micro_noise = nodes.new("ShaderNodeTexNoise")
+    micro_noise.label = "Fine cuticle grain"
+    micro_noise.inputs["Scale"].default_value = 540.0
+    micro_noise.inputs["Detail"].default_value = 2.0
+    micro_noise.inputs["Roughness"].default_value = 0.66
+    links.new(uv, micro_noise.inputs["Vector"])
 
-    # Fine pores finish the surface, but remain subordinate to the epidermis.
-    pore_noise = nodes.new("ShaderNodeTexNoise")
-    pore_noise.inputs["Scale"].default_value = 220.0
-    pore_noise.inputs["Detail"].default_value = 2.0
-    pore_bump = nodes.new("ShaderNodeBump")
-    pore_bump.inputs["Strength"].default_value = 0.025
-    pore_bump.inputs["Distance"].default_value = 0.00016
-    links.new(vector, pore_noise.inputs["Vector"])
-    links.new(pore_noise.outputs["Fac"], pore_bump.inputs["Height"])
-    links.new(lenticel_bump.outputs["Normal"], pore_bump.inputs["Normal"])
-    links.new(pore_bump.outputs["Normal"], shader.inputs["Normal"])
+    micro_bump = nodes.new("ShaderNodeBump")
+    micro_bump.label = "Microscopic epidermal breakup"
+    micro_bump.inputs["Strength"].default_value = 0.035
+    micro_bump.inputs["Distance"].default_value = 0.00010
+    links.new(micro_noise.outputs["Fac"], micro_bump.inputs["Height"])
+    links.new(epidermis_bump.outputs["Normal"], micro_bump.inputs["Normal"])
+    links.new(micro_bump.outputs["Normal"], shader.inputs["Normal"])
 
-    # Waxy but not glossy: slight local roughness changes soften the highlights.
-    roughness_ramp = nodes.new("ShaderNodeValToRGB")
-    roughness_ramp.color_ramp.elements[0].color = (0.37, 0.37, 0.37, 1.0)
-    roughness_ramp.color_ramp.elements[1].color = (0.46, 0.46, 0.46, 1.0)
-    links.new(epidermis_noise.outputs["Fac"], roughness_ramp.inputs["Fac"])
-    links.new(roughness_ramp.outputs["Color"], shader.inputs["Roughness"])
+    # Apple flesh is mostly opaque at this scale. Keep subsurface restrained;
+    # the thin, waxy cuticle is represented by a weak, slightly rough coat.
+    subsurface = shader.inputs.get("Subsurface Weight")
+    if subsurface is not None:
+        subsurface.default_value = 0.012
+    subsurface_scale = shader.inputs.get("Subsurface Scale")
+    if subsurface_scale is not None:
+        subsurface_scale.default_value = 0.035
+    subsurface_radius = shader.inputs.get("Subsurface Radius")
+    if subsurface_radius is not None:
+        subsurface_radius.default_value = (1.0, 0.42, 0.22)
 
-    apple_coat = shader.inputs.get("Coat Weight") or shader.inputs.get("Clearcoat")
-    if apple_coat is not None:
-        apple_coat.default_value = 0.025
+    coat = shader.inputs.get("Coat Weight") or shader.inputs.get("Clearcoat")
+    if coat is not None:
+        coat.default_value = 0.055
+    coat_roughness = shader.inputs.get("Coat Roughness") or shader.inputs.get("Clearcoat Roughness")
+    if coat_roughness is not None:
+        coat_roughness.default_value = 0.30
+    ior = shader.inputs.get("IOR")
+    if ior is not None:
+        ior.default_value = 1.46
+
+    material["surface_model"] = "Procedural apple cuticle with inhomogeneous point-process lenticels"
+    material["surface_map_resolution"] = int(images["color"].size[0])
+    material["surface_lenticel_count"] = int(apple.get("apple_lenticel_count", 0))
     return material
