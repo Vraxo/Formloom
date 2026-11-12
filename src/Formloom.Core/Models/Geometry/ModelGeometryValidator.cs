@@ -92,6 +92,8 @@ public static class ModelGeometryValidator
                 }
             }
 
+            ValidatePathGradientLandmarks(geometry, path, diagnostics);
+
             if (path.Segments.IsDefaultOrEmpty)
             {
                 diagnostics.Add(new("geometry.segments-required", path.Id, "A path must contain at least one cubic segment."));
@@ -102,6 +104,32 @@ public static class ModelGeometryValidator
         }
 
         return diagnostics.ToImmutable();
+    }
+
+    private static void ValidatePathGradientLandmarks(
+        ModelGeometry geometry,
+        ModelGeometryPath path,
+        ImmutableArray<ModelGeometryDiagnostic>.Builder diagnostics)
+    {
+        if (path.MaterialSlot is null ||
+            geometry.MaterialGradients is null ||
+            !geometry.MaterialGradients.TryGetValue(path.MaterialSlot, out var gradient) ||
+            gradient is null ||
+            gradient.StartLandmark is null ||
+            gradient.EndLandmark is null)
+        {
+            return;
+        }
+
+        if (path.Landmarks.IsDefault ||
+            !path.Landmarks.Any(item => string.Equals(item.Name, gradient.StartLandmark, StringComparison.Ordinal)) ||
+            !path.Landmarks.Any(item => string.Equals(item.Name, gradient.EndLandmark, StringComparison.Ordinal)))
+        {
+            diagnostics.Add(new(
+                "geometry.material-gradient-landmark-not-found",
+                path.Id,
+                $"Path '{path.Id}' must provide gradient landmarks '{gradient.StartLandmark}' and '{gradient.EndLandmark}'."));
+        }
     }
 
     private static void ValidateSegments(
@@ -161,6 +189,16 @@ public static class ModelGeometryValidator
                 gradient.Start == gradient.End)
             {
                 diagnostics.Add(new("geometry.material-gradient-endpoints-invalid", slot, "Gradient endpoints must be distinct finite coordinates in the normalized 0..1 range."));
+            }
+
+            if ((gradient.StartLandmark is null) != (gradient.EndLandmark is null) ||
+                (gradient.StartLandmark is not null &&
+                 (string.IsNullOrWhiteSpace(gradient.StartLandmark) || string.IsNullOrWhiteSpace(gradient.EndLandmark))))
+            {
+                diagnostics.Add(new(
+                    "geometry.material-gradient-landmarks-invalid",
+                    slot,
+                    "Gradient start and end landmarks must either both be absent or both be non-empty names."));
             }
 
             if (gradient.Stops.IsDefaultOrEmpty || gradient.Stops.Length < 2)
