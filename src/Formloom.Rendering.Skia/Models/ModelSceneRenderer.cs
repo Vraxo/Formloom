@@ -1,5 +1,6 @@
 using Formloom.Core.Models.Geometry;
 using Formloom.Core.Scenes;
+using Formloom.Rendering.Skia.Ceramics;
 using Formloom.Rendering.Skia.Scenes;
 using SkiaSharp;
 
@@ -21,11 +22,16 @@ public static class ModelSceneRenderer
 
         var renderOptions = options ?? new RenderOptions();
         var hostImage = StillLifeRenderer.Render(hostScene, renderOptions);
-        var modelImage = ModelGeometryRenderer.Render(
+        var vase = hostScene.Ceramics.Single();
+        using var nearRimMask = CeramicOcclusionMask.BelowVaseNearRim(vase);
+        var modelImage = ModelGeometryRenderer.RenderWithOptions(
             geometry,
             hostScene.Width,
             hostScene.Height,
-            renderOptions);
+            new ModelGeometryRenderOptions(Antialiasing: renderOptions.Antialiasing)
+            {
+                OcclusionMask = nearRimMask,
+            });
 
         using var hostBitmap = SKBitmap.Decode(hostImage.PngBytes)
             ?? throw new InvalidOperationException("The host still-life PNG could not be decoded.");
