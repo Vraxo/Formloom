@@ -261,27 +261,31 @@ def _image_from_rgb(name, rgb, resolution):
         + " first=" + str(tuple(float(value) for value in rgba[0, 0]))
         + " center=" + str(tuple(float(value) for value in rgba[resolution // 2, resolution // 2]))
     )
-    image.pixels.foreach_set(rgba.reshape(-1))
-    image.update()
-    before_color_space = tuple(float(value) for value in image.pixels[0:4])
-    print(
-        "APPLE_IMAGE_WRITE_DIAGNOSTIC="
-        + name
-        + " after_set=" + str(before_color_space)
-        + " size=" + str(tuple(image.size))
-        + " source=" + str(image.source)
-    )
-    if max(source_max, 0.0) > 0.0 and max(before_color_space[:3]) <= 1e-8:
-        raise RuntimeError("Blender image pixel write produced black pixels for " + name)
+    # Configure the image before writing its buffer. In Blender 4.5,
+    # calling image.update() after foreach_set() on a generated image resets
+    # the pixel buffer to black; foreach_set() already updates the CPU buffer.
     image.colorspace_settings.name = (
         "sRGB" if name == IMAGE_NAMES["color"] else "Non-Color"
     )
     image.alpha_mode = "NONE"
-    image.update()
-    after_update = tuple(float(value) for value in image.pixels[0:4])
-    print("APPLE_IMAGE_UPDATE_DIAGNOSTIC=" + name + " after_update=" + str(after_update))
-    if max(source_max, 0.0) > 0.0 and max(after_update[:3]) <= 1e-8:
-        raise RuntimeError("Blender image update cleared pixels for " + name)
+    image.pixels.foreach_set(rgba.reshape(-1))
+    written_pixel = tuple(float(value) for value in image.pixels[0:4])
+    center_offset = ((resolution // 2) * resolution + resolution // 2) * 4
+    center_pixel = tuple(
+        float(value) for value in image.pixels[center_offset:center_offset + 4]
+    )
+    print(
+        "APPLE_IMAGE_WRITE_DIAGNOSTIC="
+        + name
+        + " first=" + str(written_pixel)
+        + " center=" + str(center_pixel)
+        + " size=" + str(tuple(image.size))
+        + " source=" + str(image.source)
+    )
+    if max(source_max, 0.0) > 0.0 and (
+        max(written_pixel[:3]) <= 1e-8 or max(center_pixel[:3]) <= 1e-8
+    ):
+        raise RuntimeError("Blender image pixel write produced black pixels for " + name)
     image.use_fake_user = True
     return image
 
