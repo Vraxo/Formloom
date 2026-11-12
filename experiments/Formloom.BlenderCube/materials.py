@@ -216,33 +216,33 @@ def create_photorealistic_apple_material():
     vector = coordinates.outputs["Generated"]
 
     pigment_noise = nodes.new("ShaderNodeTexNoise")
-    pigment_noise.inputs["Scale"].default_value = 5.5
-    pigment_noise.inputs["Detail"].default_value = 3.0
+    pigment_noise.inputs["Scale"].default_value = 3.2
+    pigment_noise.inputs["Detail"].default_value = 1.6
     pigment_noise.inputs["Roughness"].default_value = 0.72
     pigment_ramp = nodes.new("ShaderNodeValToRGB")
-    pigment_ramp.color_ramp.elements[0].position = 0.22
-    pigment_ramp.color_ramp.elements[0].color = (0.19, 0.004, 0.008, 1.0)
-    pigment_ramp.color_ramp.elements[1].position = 0.78
-    pigment_ramp.color_ramp.elements[1].color = (0.37, 0.022, 0.018, 1.0)
+    pigment_ramp.color_ramp.elements[0].position = 0.20
+    pigment_ramp.color_ramp.elements[0].color = (0.235, 0.008, 0.010, 1.0)
+    pigment_ramp.color_ramp.elements[1].position = 0.80
+    pigment_ramp.color_ramp.elements[1].color = (0.32, 0.018, 0.014, 1.0)
     links.new(vector, pigment_noise.inputs["Vector"])
     links.new(pigment_noise.outputs["Fac"], pigment_ramp.inputs["Fac"])
 
     # Lenticels are small warm pinpricks, not large dots. At this scale the
     # centre and soft edge survive the final render without covering the peel.
     lenticels = nodes.new("ShaderNodeTexVoronoi")
-    lenticels.inputs["Scale"].default_value = 34.0
+    lenticels.inputs["Scale"].default_value = 48.0
     lenticels.inputs["Randomness"].default_value = 1.0
     lenticel_ramp = nodes.new("ShaderNodeValToRGB")
-    lenticel_ramp.color_ramp.elements[0].position = 0.22
-    lenticel_ramp.color_ramp.elements[0].color = (0.45, 0.16, 0.055, 1.0)
-    lenticel_ramp.color_ramp.elements[1].position = 0.60
-    lenticel_ramp.color_ramp.elements[1].color = (0.20, 0.006, 0.010, 1.0)
-    lenticel_edge = lenticel_ramp.color_ramp.elements.new(0.40)
-    lenticel_edge.color = (0.34, 0.06, 0.025, 1.0)
+    lenticel_ramp.color_ramp.elements[0].position = 0.055
+    lenticel_ramp.color_ramp.elements[0].color = (0.31, 0.075, 0.032, 1.0)
+    lenticel_ramp.color_ramp.elements[1].position = 0.22
+    lenticel_ramp.color_ramp.elements[1].color = (0.29, 0.012, 0.012, 1.0)
+    lenticel_edge = lenticel_ramp.color_ramp.elements.new(0.12)
+    lenticel_edge.color = (0.30, 0.035, 0.018, 1.0)
 
     lenticel_mix = nodes.new("ShaderNodeMixRGB")
     lenticel_mix.blend_type = "MIX"
-    lenticel_mix.inputs["Fac"].default_value = 0.28
+    lenticel_mix.inputs["Fac"].default_value = 0.08
     links.new(vector, lenticels.inputs["Vector"])
     links.new(lenticels.outputs["Distance"], lenticel_ramp.inputs["Fac"])
     links.new(pigment_ramp.outputs["Color"], lenticel_mix.inputs[1])
@@ -252,36 +252,36 @@ def create_photorealistic_apple_material():
     # The peel has a gently pebbled epidermis. Lower spatial frequency is
     # deliberate: sub-pixel noise was being erased by denoising at this size.
     epidermis_noise = nodes.new("ShaderNodeTexNoise")
-    epidermis_noise.inputs["Scale"].default_value = 68.0
+    epidermis_noise.inputs["Scale"].default_value = 92.0
     epidermis_noise.inputs["Detail"].default_value = 2.5
     epidermis_noise.inputs["Roughness"].default_value = 0.72
     epidermis_bump = nodes.new("ShaderNodeBump")
-    epidermis_bump.inputs["Strength"].default_value = 0.19
-    epidermis_bump.inputs["Distance"].default_value = 0.0022
+    epidermis_bump.inputs["Strength"].default_value = 0.065
+    epidermis_bump.inputs["Distance"].default_value = 0.00055
     links.new(vector, epidermis_noise.inputs["Vector"])
     links.new(epidermis_noise.outputs["Fac"], epidermis_bump.inputs["Height"])
 
     # A shallow depression beneath each lenticel gives the freckles a little
     # physical definition instead of relying on colour contrast alone.
     lenticel_height = nodes.new("ShaderNodeValToRGB")
-    lenticel_height.color_ramp.elements[0].position = 0.22
+    lenticel_height.color_ramp.elements[0].position = 0.055
     lenticel_height.color_ramp.elements[0].color = (0.0, 0.0, 0.0, 1.0)
-    lenticel_height.color_ramp.elements[1].position = 0.60
+    lenticel_height.color_ramp.elements[1].position = 0.22
     lenticel_height.color_ramp.elements[1].color = (1.0, 1.0, 1.0, 1.0)
     lenticel_bump = nodes.new("ShaderNodeBump")
-    lenticel_bump.inputs["Strength"].default_value = 0.09
-    lenticel_bump.inputs["Distance"].default_value = 0.0008
+    lenticel_bump.inputs["Strength"].default_value = 0.025
+    lenticel_bump.inputs["Distance"].default_value = 0.00022
     links.new(lenticels.outputs["Distance"], lenticel_height.inputs["Fac"])
     links.new(lenticel_height.outputs["Color"], lenticel_bump.inputs["Height"])
     links.new(epidermis_bump.outputs["Normal"], lenticel_bump.inputs["Normal"])
 
     # Fine pores finish the surface, but remain subordinate to the epidermis.
     pore_noise = nodes.new("ShaderNodeTexNoise")
-    pore_noise.inputs["Scale"].default_value = 155.0
+    pore_noise.inputs["Scale"].default_value = 220.0
     pore_noise.inputs["Detail"].default_value = 2.0
     pore_bump = nodes.new("ShaderNodeBump")
-    pore_bump.inputs["Strength"].default_value = 0.07
-    pore_bump.inputs["Distance"].default_value = 0.00045
+    pore_bump.inputs["Strength"].default_value = 0.025
+    pore_bump.inputs["Distance"].default_value = 0.00016
     links.new(vector, pore_noise.inputs["Vector"])
     links.new(pore_noise.outputs["Fac"], pore_bump.inputs["Height"])
     links.new(lenticel_bump.outputs["Normal"], pore_bump.inputs["Normal"])
@@ -289,8 +289,8 @@ def create_photorealistic_apple_material():
 
     # Waxy but not glossy: slight local roughness changes soften the highlights.
     roughness_ramp = nodes.new("ShaderNodeValToRGB")
-    roughness_ramp.color_ramp.elements[0].color = (0.34, 0.34, 0.34, 1.0)
-    roughness_ramp.color_ramp.elements[1].color = (0.50, 0.50, 0.50, 1.0)
+    roughness_ramp.color_ramp.elements[0].color = (0.37, 0.37, 0.37, 1.0)
+    roughness_ramp.color_ramp.elements[1].color = (0.46, 0.46, 0.46, 1.0)
     links.new(epidermis_noise.outputs["Fac"], roughness_ramp.inputs["Fac"])
     links.new(roughness_ramp.outputs["Color"], shader.inputs["Roughness"])
 
