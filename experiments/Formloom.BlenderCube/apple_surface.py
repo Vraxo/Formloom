@@ -265,6 +265,9 @@ def create_apple_surface_maps(obj, resolution=MAP_RESOLUTION):
         and image.size[1] == resolution
         for image in cached
     ):
+        cached_count = int(cached[0].get("lenticel_count", 0))
+        obj["apple_lenticel_count"] = cached_count
+        obj["apple_skin_map_resolution"] = resolution
         return {
             key: bpy.data.images[name]
             for key, name in IMAGE_NAMES.items()
@@ -378,6 +381,7 @@ def create_apple_surface_maps(obj, resolution=MAP_RESOLUTION):
         "roughness": _image_from_rgb(IMAGE_NAMES["roughness"], roughness, resolution),
         "height": _image_from_rgb(IMAGE_NAMES["height"], height, resolution),
     }
+    images["color"]["lenticel_count"] = len(lenticels)
     obj["apple_lenticel_count"] = len(lenticels)
     obj["apple_skin_map_resolution"] = resolution
     return images
