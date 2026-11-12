@@ -135,6 +135,37 @@ def create_apple_stem(name, location, scale):
     stem_shader.inputs["Roughness"].default_value = 0.82
     stem.data.materials.append(stem_material)
 
+def assign_apple_skin_uvs(mesh, sampled_profile, segments, scale):
+    """Map the rotational apple surface with approximately uniform physical V scale."""
+    radial_scale = 0.5 * (scale[0] + scale[1])
+    cumulative = [0.0]
+    for index in range(1, len(sampled_profile)):
+        previous_height, previous_radius = sampled_profile[index - 1]
+        height, radius = sampled_profile[index]
+        vertical_distance = (height - previous_height) * scale[2]
+        radial_distance = (radius - previous_radius) * radial_scale
+        cumulative.append(cumulative[-1] + math.hypot(vertical_distance, radial_distance))
+
+    total_length = max(cumulative[-1], 1e-6)
+    v_coordinates = [distance / total_length for distance in cumulative]
+    uv_layer = mesh.uv_layers.new(name="AppleSkinUV")
+    for ring in range(len(sampled_profile) - 1):
+        for segment in range(segments):
+            polygon = mesh.polygons[ring * segments + segment]
+            u0 = segment / segments
+            u1 = (segment + 1) / segments
+            coordinates = (
+                (u0, v_coordinates[ring]),
+                (u1, v_coordinates[ring]),
+                (u1, v_coordinates[ring + 1]),
+                (u0, v_coordinates[ring + 1]),
+            )
+            for loop_index, coordinate in zip(polygon.loop_indices, coordinates):
+                uv_layer.data[loop_index].uv = coordinate
+
+    mesh["apple_uv_meridian_length"] = total_length
+
+
 def create_apple(name, location, scale=(0.82, 0.78, 0.92), segments=96):
     # A hand-authored rotational profile replaces the earlier deformed sphere.
     # The narrow center caps form shallow blossom and stem wells; the broad
@@ -192,6 +223,7 @@ def create_apple(name, location, scale=(0.82, 0.78, 0.92), segments=96):
     mesh = bpy.data.meshes.new(name + "Mesh")
     mesh.from_pydata(vertices, [], faces)
     mesh.update()
+    assign_apple_skin_uvs(mesh, sampled_profile, segments, scale)
     apple = bpy.data.objects.new(name, mesh)
     bpy.context.collection.objects.link(apple)
     apple.location = location
