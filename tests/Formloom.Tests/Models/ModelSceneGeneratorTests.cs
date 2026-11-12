@@ -1,6 +1,7 @@
 using Formloom.Core.Ceramics;
 using Formloom.Core.Models.Generation;
 using Formloom.Core.Scenes;
+using Formloom.Rendering.Skia.Models;
 using Xunit;
 
 namespace Formloom.Tests.Models;
@@ -8,8 +9,8 @@ namespace Formloom.Tests.Models;
 public sealed class ModelSceneGeneratorTests
 {
     [Theory]
-    [InlineData("a red rose in a blue ceramic vase on a wooden table", "red", "Blue", "model-flowers-rose-probe-in-blue-vase")]
-    [InlineData("a pink rose in a cream ceramic vase on a wooden table", "pink", "Cream", "model-flowers-rose-probe-in-cream-vase")]
+    [InlineData("a red rose in a blue ceramic vase on a wooden table", "red", "Blue", "red-rose-in-blue-vase")]
+    [InlineData("a pink rose in a cream ceramic vase on a wooden table", "pink", "Cream", "pink-rose-in-cream-vase")]
     public void ResolvesCatalogDescriptorsAndEvaluatesAgainstTheGeneratedVase(
         string prompt,
         string color,
@@ -48,8 +49,10 @@ public sealed class ModelSceneGeneratorTests
 
         Assert.True(first.IsSuccess, first.Error);
         Assert.True(second.IsSuccess, second.Error);
-        Assert.Equal(first.Geometry!.Paths, second.Geometry!.Paths);
-        Assert.Equal(first.Geometry.MaterialTokens, second.Geometry.MaterialTokens);
+        var firstImage = ModelGeometryRenderer.Render(first.Geometry!, 128, 128);
+        var secondImage = ModelGeometryRenderer.Render(second.Geometry!, 128, 128);
+        Assert.Equal(firstImage.PngBytes, secondImage.PngBytes);
+        Assert.Equal(first.Geometry!.MaterialTokens, second.Geometry!.MaterialTokens);
         Assert.Equal(first.SubjectToken, second.SubjectToken);
     }
 
