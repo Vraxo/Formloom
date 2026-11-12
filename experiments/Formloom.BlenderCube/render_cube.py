@@ -18,7 +18,7 @@ from geometry import (
     create_parametric_sphere,
 )
 from illustrated import render_illustrated_still_life
-from materials import create_material
+from materials import create_material, create_photorealistic_apple_material
 from photorealistic import render_photorealistic_still_life, render_quality_variant
 from scene import (
     clear_scene,
@@ -134,7 +134,7 @@ def main():
     # shoulder lobes, recessed stem well, and overall silhouette.
     clear_scene()
     apple = create_grounded_apple("AppleShapeStudy", 0.0, 0.0)
-    apple_material = create_material("AppleSkin", "apple")
+    apple_material = create_photorealistic_apple_material()
     assign_material(apple, apple_material)
     create_ground()
     create_lighting()
