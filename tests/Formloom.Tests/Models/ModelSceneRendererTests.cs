@@ -10,8 +10,8 @@ namespace Formloom.Tests.Models;
 public sealed class ModelSceneRendererTests
 {
     [Theory]
-    [InlineData("a red rose in a blue ceramic vase on a wooden table", "model-flowers-rose-probe-in-blue-vase")]
-    [InlineData("a pink rose in a cream ceramic vase on a wooden table", "model-flowers-rose-probe-in-cream-vase")]
+    [InlineData("a red rose in a blue ceramic vase on a wooden table", "red-rose-in-blue-vase")]
+    [InlineData("a pink rose in a cream ceramic vase on a wooden table", "pink-rose-in-cream-vase")]
     public void RendersCatalogModelWithItsGeneratedHostSceneAndExportsReviewPng(
         string prompt,
         string expectedSubject)
@@ -35,7 +35,7 @@ public sealed class ModelSceneRendererTests
         Assert.Equal(512, bitmap.Height);
         Assert.Equal((byte)255, bitmap.GetPixel(256, 256).Alpha);
 
-        var destination = Path.Combine(AppContext.BaseDirectory, expectedSubject + ".png");
+        var destination = Path.Combine(AppContext.BaseDirectory, $"formloom-{expectedSubject}-seed-42.png");
         File.WriteAllBytes(destination, rendered.PngBytes);
     }
 }
