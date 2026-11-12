@@ -230,19 +230,19 @@ def create_photorealistic_apple_material():
     # Lenticels are small warm pinpricks, not large dots. At this scale the
     # centre and soft edge survive the final render without covering the peel.
     lenticels = nodes.new("ShaderNodeTexVoronoi")
-    lenticels.inputs["Scale"].default_value = 38.0
+    lenticels.inputs["Scale"].default_value = 34.0
     lenticels.inputs["Randomness"].default_value = 1.0
     lenticel_ramp = nodes.new("ShaderNodeValToRGB")
     lenticel_ramp.color_ramp.elements[0].position = 0.22
-    lenticel_ramp.color_ramp.elements[0].color = (0.62, 0.34, 0.16, 1.0)
+    lenticel_ramp.color_ramp.elements[0].color = (0.45, 0.16, 0.055, 1.0)
     lenticel_ramp.color_ramp.elements[1].position = 0.60
     lenticel_ramp.color_ramp.elements[1].color = (0.20, 0.006, 0.010, 1.0)
     lenticel_edge = lenticel_ramp.color_ramp.elements.new(0.40)
-    lenticel_edge.color = (0.38, 0.065, 0.025, 1.0)
+    lenticel_edge.color = (0.34, 0.06, 0.025, 1.0)
 
     lenticel_mix = nodes.new("ShaderNodeMixRGB")
     lenticel_mix.blend_type = "MIX"
-    lenticel_mix.inputs["Fac"].default_value = 0.55
+    lenticel_mix.inputs["Fac"].default_value = 0.28
     links.new(vector, lenticels.inputs["Vector"])
     links.new(lenticels.outputs["Distance"], lenticel_ramp.inputs["Fac"])
     links.new(pigment_ramp.outputs["Color"], lenticel_mix.inputs[1])
@@ -269,8 +269,8 @@ def create_photorealistic_apple_material():
     lenticel_height.color_ramp.elements[1].position = 0.60
     lenticel_height.color_ramp.elements[1].color = (1.0, 1.0, 1.0, 1.0)
     lenticel_bump = nodes.new("ShaderNodeBump")
-    lenticel_bump.inputs["Strength"].default_value = 0.16
-    lenticel_bump.inputs["Distance"].default_value = 0.0013
+    lenticel_bump.inputs["Strength"].default_value = 0.09
+    lenticel_bump.inputs["Distance"].default_value = 0.0008
     links.new(lenticels.outputs["Distance"], lenticel_height.inputs["Fac"])
     links.new(lenticel_height.outputs["Color"], lenticel_bump.inputs["Height"])
     links.new(epidermis_bump.outputs["Normal"], lenticel_bump.inputs["Normal"])
