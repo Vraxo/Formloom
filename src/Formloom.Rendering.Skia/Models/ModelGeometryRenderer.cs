@@ -83,13 +83,14 @@ public static class ModelGeometryRenderer
                 continue;
             }
 
-            var color = options.Silhouette ? SKColors.Black : colors[path.MaterialSlot];
+            var tone = path.MaterialTone ?? 0.5f;
+            var color = options.Silhouette ? SKColors.Black : ApplyTone(colors[path.MaterialSlot], tone);
             if (path.Closed)
             {
                 using var shape = CreatePath(path, close: true);
                 using var shader = !options.Silhouette &&
                     geometry.MaterialGradients.TryGetValue(path.MaterialSlot, out var gradient)
-                    ? CreateGradient(geometry, gradient)
+                    ? CreateGradient(geometry, gradient, tone)
                     : null;
                 using var paint = new SKPaint
                 {
@@ -161,10 +162,23 @@ public static class ModelGeometryRenderer
         return colors;
     }
 
-    private static SKShader CreateGradient(ModelGeometry geometry, ModelGeometryLinearGradient gradient)
+    private static SKColor ApplyTone(SKColor color, float tone)
+    {
+        var scale = 0.65f + (tone * 0.7f);
+        return new(
+            ScaleChannel(color.Red, scale),
+            ScaleChannel(color.Green, scale),
+            ScaleChannel(color.Blue, scale),
+            color.Alpha);
+    }
+
+    private static byte ScaleChannel(byte channel, float scale) =>
+        (byte)Math.Clamp((int)MathF.Round(channel * scale), 0, byte.MaxValue);
+
+    private static SKShader CreateGradient(ModelGeometry geometry, ModelGeometryLinearGradient gradient, float tone)
     {
         var colors = gradient.Stops
-            .Select(stop => ParseColor(geometry.MaterialTokens[stop.Token]))
+            .Select(stop => ApplyTone(ParseColor(geometry.MaterialTokens[stop.Token]), tone))
             .ToArray();
         var positions = gradient.Stops.Select(stop => stop.Offset).ToArray();
         return SKShader.CreateLinearGradient(
