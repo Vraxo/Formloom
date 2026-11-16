@@ -44,7 +44,7 @@ Source projects live under `src/`, test projects under `tests/`; the repository 
 
 ## Prerequisites and commands
 
-Use the latest installed **.NET 10 SDK** servicing release (C# 14); a runtime alone is insufficient. Restore needs NuGet connectivity. The Windows desktop host requires **Microsoft Edge WebView2 Runtime**.
+Use the latest installed **.NET 11 SDK** servicing release (C# 15); a runtime alone is insufficient. Restore needs NuGet connectivity. The Windows desktop host requires **Microsoft Edge WebView2 Runtime**.
 
 From the repository root:
 
@@ -82,6 +82,8 @@ Versions are centrally managed; no selected stack dependency was substituted:
 | NewStyleCop.Analyzers | 1.2.1 | Repository analyzer |
 
 `global.json` selects Microsoft.Testing.Platform; use `--solution` and `--report-trx`, not VSTest's positional solution and `--logger` syntax.
+
+Every project targets `net11.0` (C# 15) through `Directory.Build.props`, and `global.json` pins SDK `11.0.100` with `rollForward: latestFeature`, so a later 11.0.x servicing or feature-band SDK is used when installed. .NET 11 is a **Standard Term Support** release, supported through 14 November 2028 — the same end date as .NET 10 LTS.
 
 [CI](.github/workflows/ci.yml) runs one Ubuntu **Linux / Release** job for PRs, main pushes and manual dispatch: restore, warnings-as-errors build, and full solution tests. NuGet packages are cached; test results and a **procedural-preview** artifact are uploaded. Routine artifacts include the established preview/review sheets and canonical family samples, the Phase 8 daisy sheet (`formloom-vasedaisy-sheet.png` plus its manifest), and the Phase 9 review sheet (`formloom-vase-tulip-daisy-sheet.png`, 1280 × 960, 4 columns × 3 rows) with its manifest. Phase 9 also retains all ten 1024 × 1024 pair samples (four default colour/glaze combinations, two alternate seeds and four low/high-variation cases), each with a silhouette and timing sidecar. The first four Phase 9 sheet cells are red/blue, red/cream, yellow/blue and yellow/cream at seed 42, variation 0.35; the sidecar identifies every cell by prompt, colors, glaze, seed, variation and filename. Phase 10 adds canonical and robustness rose sheets (`formloom-vase-rose-canonical-sheet.png` and `formloom-vase-rose-robustness-sheet.png`), each 1024 × 1024 as a 2 × 2 grid of 512 px renders, with manifests; an opaque-white 2 × 2 canonical silhouette review sheet; eight full-size rose PNGs with timing/geometry sidecars; and four original transparent canonical silhouettes. Exhaustive per-case export for the other families remains behind **`FORMFLOOM_EXPORT_ALL=1`**; gating file writes never gates rendering or pixel assertions. Locally the same files land beside the test assembly under `artifacts/bin/Formloom.Tests/`.
 

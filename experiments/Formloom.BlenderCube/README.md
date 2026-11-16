@@ -22,7 +22,7 @@ With denoising enabled (as in CI), the output includes twelve cube material/view
 
 ## Requirements
 
-- .NET 10 SDK.
+- .NET 11 SDK.
 - Blender 3.6 or newer, available as `blender` on PATH (or pass `--blender` with its executable path).
 
 No Blender installation, Python package, or Blender assembly is required by the .NET project itself.
