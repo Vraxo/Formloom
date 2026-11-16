@@ -32,7 +32,7 @@ The first milestone is complete when all of the following are true:
 
 Use the following stack unless a package incompatibility is demonstrated by an actual build or runtime test:
 
-- **Language/runtime:** C# 14 and .NET 10 (`net10.0`). Use the latest installed .NET 10 SDK servicing release.
+- **Language/runtime:** C# 15 and .NET 11 (`net11.0`). Use the latest installed .NET 11 SDK servicing release.
 - **Desktop host/UI:** Blazor hosted by **PhotinoX.Blazor 5.3.5**. This is the independently maintained Photino fork, not the original `Photino.Blazor` package. Verify the package/runtime setup rather than substituting a different UI framework pre-emptively.
 - **Raster renderer:** **SkiaSharp 4.154.0**, using CPU raster surfaces for this milestone.
 - **Math:** `System.Numerics` plus small, project-owned helpers where needed.
